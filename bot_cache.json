@@ -22,5 +22,6 @@
     "server": "MetaQuotes-Demo",
     "currency": "USD",
     "company": "MetaQuotes Ltd."
-  }
+  },
+  "last_broker_type": "real"
 }

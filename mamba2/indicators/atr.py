@@ -1,43 +1,47 @@
-import pandas as pd
-import MetaTrader5 as mt5
-import logging
+from mamba2.crew.logger import logger
+from typing import List
 
-def get_atr(symbol="EURUSD", timeframe=mt5.TIMEFRAME_M5, atr_period=14):
+def get_atr(symbol="EURUSD", timeframe=None, atr_period=14, rate_fetcher=None):
     """
-    Calculate Average True Range (ATR) for a symbol
+    Calculate Average True Range (ATR) for a symbol using cached rates
     
     Args:
         symbol: Trading symbol (default: EURUSD)
-        timeframe: MT5 timeframe (default: M5)
+        timeframe: Timeframe string (e.g. 'M5')
         atr_period: ATR calculation period (default: 14)
+        rate_fetcher: RateFetcher instance for cached rates
         
     Returns:
-        Current ATR value or None if error occurs
+        Current ATR value or None if not available
     """
+    if rate_fetcher is None:
+        logger.error("No rate_fetcher provided to get_atr")
+        return None
+        
     try:
-        rates = mt5.copy_rates_from_pos(symbol, timeframe, 0, atr_period+1)
+        # Get cached rates
+        rates = rate_fetcher.get_rates(symbol, str(timeframe))
         if rates is None:
-            logging.error(f"Failed to get rates for {symbol}: {mt5.last_error()}")
+            logger.error(f"No cached rates available for {symbol} {timeframe}")
             return None
             
         if len(rates) < atr_period+1:
-            logging.error(f"Insufficient rates for {symbol} (got {len(rates)}, need {atr_period+1})")
-            return None
-            
-        df = pd.DataFrame(rates)
-        df['time'] = pd.to_datetime(df['time'], unit='s')
+            logger.warning(f"Insufficient rates for {symbol} (got {len(rates)}, need {atr_period+1})")
+            return 0.0
+        
+        logger.info(f"Using {len(rates)} candles for {symbol} ATR calculation")
         
         # Calculate True Range
-        df['prev_close'] = df['close'].shift(1)
-        df['high-low'] = df['high'] - df['low']
-        df['high-prev_close'] = abs(df['high'] - df['prev_close'])
-        df['low-prev_close'] = abs(df['low'] - df['prev_close'])
-        df['tr'] = df[['high-low', 'high-prev_close', 'low-prev_close']].max(axis=1)
+        rates['prev_close'] = rates['close'].shift(1)
+        rates['high-low'] = rates['high'] - rates['low']
+        rates['high-prev_close'] = abs(rates['high'] - rates['prev_close'])
+        rates['low-prev_close'] = abs(rates['low'] - rates['prev_close'])
+        rates['tr'] = rates[['high-low', 'high-prev_close', 'low-prev_close']].max(axis=1)
         
         # Calculate ATR
-        atr = df['tr'].rolling(atr_period).mean().iloc[-1]
+        atr = rates['tr'].rolling(atr_period).mean().iloc[-1]
         return atr
         
     except Exception as e:
-        logging.error(f"Error calculating ATR for {symbol}: {str(e)}")
+        logger.error(f"Error calculating ATR for {symbol}: {str(e)}")
         return None

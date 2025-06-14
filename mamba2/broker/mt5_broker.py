@@ -89,40 +89,6 @@ class MT5Broker(Broker):
             'real_volume': int(rate['real_volume'])
         } for rate in rates]
     
-    def copy_rates_from_range(
-        self,
-        symbol: str,
-        timeframe: int,
-        date_from: int,
-        date_to: int
-    ) -> List[BarData]:
-        """Get historical data between two timestamps.
-        
-        Args:
-            symbol: Symbol name (e.g. "EURUSD")
-            timeframe: MT5 timeframe constant (e.g. mt5.TIMEFRAME_M1)
-            date_from: Start timestamp (Unix time)
-            date_to: End timestamp (Unix time)
-            
-        Returns:
-            List of BarData dictionaries
-        """
-        rates = mt5.copy_rates_range(symbol, timeframe, date_from, date_to)
-        if rates is None:
-            error = mt5.last_error()
-            raise RuntimeError(f"Failed to get rates: {error}")
-        
-        return [{
-            'time': int(rate['time']),
-            'open': float(rate['open']),
-            'high': float(rate['high']),
-            'low': float(rate['low']),
-            'close': float(rate['close']),
-            'tick_volume': int(rate['tick_volume']),
-            'spread': int(rate['spread']),
-            'real_volume': int(rate['real_volume'])
-        } for rate in rates]
-    
     # --- Account Information ---
     
     def account_info(self) -> Dict[str, Any]:
