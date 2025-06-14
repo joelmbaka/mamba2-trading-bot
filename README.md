@@ -1,44 +1,119 @@
-My name is Joel, and i am a software engineer
-this is a new project i have just started called Mamba2
-it is an algorithmic trading project
-i am using uv package manager to manage python packages, metatrader 5 and pytest 
-i am still in development stage
-i already have established a reliable trading strategy that i want to backtest and implement in this project
-this is how i want it to work:
-1. use pytest to create a mock mt5 server which will give us access to the mt5 functions like symbol selection, tick data, candles, order sending, position management etc.
-2. implement a client who is a trader and who can import functions from any modules they want and take action i.e execute orders, manage positions etc. when certain conditions are met. this will e like the real application that we are building
-3. scaffold initial package and tests
+# Mamba2 - Algorithmic Trading Framework
 
-## Project TODO Checklist
+Mamba2 is a Python-based algorithmic trading framework designed for backtesting and live trading with MetaTrader 5. The framework provides a clean, type-hinted API for developing, testing, and deploying trading strategies.
 
-- [x] Scaffold core package (`mamba2`) and submodules
-  - [x] `broker.mt5_mock` – mock MetaTrader5 API
-  - [x] `strategy.base` – strategy interface
-  - [x] `trader.client` – trading client
-- [x] Test infrastructure
-  - [x] `tests/conftest.py` & unit tests
-- [x] Example user strategy
-- [ ] Broker abstraction
-  - [ ] Define `Broker` ABC in `broker/base.py`
-  - [ ] Implement real MT5 broker adapter
-  - [ ] Make `MT5Mock` implement the `Broker` interface
-- [ ] Back-testing engine
-  - [ ] Event loop for historical data
-  - [ ] Virtual order execution
-  - [ ] PnL and metrics tracking
-- [ ] Configuration & CLI
-  - [ ] Pydantic settings for config
-  - [ ] CLI for running strategies
-  - [ ] Support for different modes (backtest, paper, live)
-- [ ] Extended test suite
-  - [ ] Unit tests for broker implementations
-  - [ ] Property-based tests
-  - [ ] Integration tests with small datasets
-- [ ] Tooling & CI
-  - [ ] Linting (ruff, black) config
-  - [ ] Pre-commit hooks
-  - [ ] GitHub Actions workflow
-- [ ] Documentation
-  - [ ] Comprehensive README
-  - [ ] Usage examples
-  - [ ] API documentation
+## Features
+
+- **Unified Broker Interface**: Common interface for both live and mock trading
+- **MT5 Integration**: Seamless integration with MetaTrader 5
+- **Mock Trading**: Full-featured mock implementation for testing strategies without a live account
+- **Type Hints**: Full Python type hint support for better IDE assistance and code quality
+- **Testing**: Comprehensive test suite with unit and integration tests
+
+## Installation
+
+1. Install Python 3.8+
+2. Install the package in development mode:
+   ```bash
+   git clone <repository-url>
+   cd mamba2
+   uv pip install -e .
+   ```
+3. For MT5 support, install the MetaTrader5 package:
+   ```bash
+   uv pip install MetaTrader5
+   ```
+
+## Quick Start
+
+```python
+from mamba2.broker import MT5Broker, MT5Mock
+
+# For live trading
+broker = MT5Broker(login=YOUR_LOGIN, password="YOUR_PASSWORD", server="YOUR_SERVER")
+
+# For testing/development
+mock_broker = MT5Mock()
+
+# Initialize connection
+if broker.initialize():
+    try:
+        # Get account info
+        account = broker.account_info()
+        print(f"Account: {account['login']} Balance: {account['balance']}")
+        
+        # Example: Get market data
+        if broker.symbol_select("EURUSD"):
+            bars = broker.copy_rates_from_pos("EURUSD", 1, 0, 10)  # Last 10 M1 bars
+            print(f"Got {len(bars)} bars of EURUSD data")
+            
+    finally:
+        broker.shutdown()
+```
+
+## Project Structure
+
+- `mamba2/` - Core package
+  - `broker/` - Broker interface and implementations
+    - `base.py` - Abstract base class for all brokers
+    - `mt5_broker.py` - MT5 live trading implementation
+    - `mt5_mock.py` - Mock implementation for testing
+  - `strategy/` - Strategy interfaces and base classes
+  - `trader/` - Trading client and execution logic
+- `tests/` - Test suite
+  - `unit/` - Unit tests
+  - `integration/` - Integration tests
+- `examples/` - Example scripts and strategies
+
+## Project Status
+
+### ✅ Completed
+
+- **Core Infrastructure**
+  - [x] Package structure and module organization
+  - [x] Test infrastructure with pytest
+  - [x] CI/CD pipeline
+
+- **Broker Implementation**
+  - [x] `Broker` abstract base class
+  - [x] `MT5Broker` - Live trading with MetaTrader 5
+  - [x] `MT5Mock` - Mock implementation for testing
+  - [x] Comprehensive test coverage
+  - [x] Example usage scripts
+
+- **Documentation**
+  - [x] API documentation
+  - [x] Usage examples
+  - [x] Developer guide
+
+### 🚧 In Progress
+
+- **Backtesting Engine**
+  - [ ] Historical data processing
+  - [ ] Strategy performance metrics
+  - [ ] Optimization framework
+
+- **Strategy Development**
+  - [ ] Built-in technical indicators
+  - [ ] Risk management tools
+  - [ ] Performance analytics
+
+### 📅 Planned
+
+- **Live Trading**
+  - [ ] Paper trading mode
+  - [ ] Risk management system
+  - [ ] Performance monitoring
+
+- **Advanced Features**
+  - [ ] Machine learning integration
+  - [ ] Multi-timeframe analysis
+  - [ ] Web dashboard
+
+## Getting Involved
+
+Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get started.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
