@@ -28,12 +28,16 @@ class MT5Mock(Broker):
             'GBPUSD': (1.2, 1.4)  # Typical GBPUSD range
         }
         
-        # Volatility parameters for each symbol (mean, stddev)
+        # More realistic volatility parameters
         self._symbol_volatility = {
-            'EURUSD': (0.00005, 0.001),  # Lower volatility
-            'EURJPY': (0.0001, 0.002),   # Higher volatility
-            'GBPUSD': (0.00008, 0.0015)  # Medium volatility
+            'EURUSD': (0.0001, 0.0005),  # More realistic daily volatility
+            'EURJPY': (0.0002, 0.0008),
+            'GBPUSD': (0.00015, 0.0006)
         }
+        
+        # Minimum and maximum price movement constraints
+        self._min_move = 0.0002  # 2 pips minimum movement
+        self._max_move = 0.0020  # 20 pips maximum movement
 
     # --- connection helpers
     def initialize(self) -> bool:
@@ -51,76 +55,52 @@ class MT5Mock(Broker):
         return True
 
     def _generate_price_series(self, symbol: str, count: int) -> Tuple[List[float], List[float], List[float], List[float]]:
-        """Generate realistic price series for the given symbol with trend reversals.
-        
-        Args:
-            symbol: Symbol to generate prices for
-            count: Number of bars to generate
-            
-        Returns:
-            Tuple of (open_prices, high_prices, low_prices, close_prices)
-        """
+        """Generate more realistic price series with constrained movements."""
         price_range = self._symbol_ranges.get(symbol, (1.0, 1.2))
-        mean_return, stddev = self._symbol_volatility.get(symbol, (0.0005, 0.01))  # Increased volatility
+        mean_return, stddev = self._symbol_volatility.get(symbol, (0.0001, 0.0005))
         
-        # Get the last close price if available, otherwise generate a random starting price
+        # Get the last close price if available
         last_close = None
         if symbol in self._price_history and len(self._price_history[symbol][3]) > 0:
             last_close = self._price_history[symbol][3][-1]
         
         if last_close is None:
-            # First time generating prices for this symbol
-            np.random.seed(self._price_seed + hash(symbol) % 10000)  # Use symbol-specific seed
+            np.random.seed(self._price_seed + hash(symbol) % 10000)
             last_close = np.random.uniform(price_range[0], price_range[1])
         
-        # Initialize arrays
-        opens = []
-        highs = []
-        lows = []
-        closes = []
-        
         current_price = last_close
+        opens, highs, lows, closes = [], [], [], []
         
-        # Generate each bar one at a time to ensure continuity
         for _ in range(count):
-            # Generate random price movement with volatility
-            price_change = np.random.normal(mean_return, stddev) * current_price
+            # Generate constrained price movement
+            while True:
+                price_change = np.random.normal(mean_return, stddev) * current_price
+                if abs(price_change) >= self._min_move and abs(price_change) <= self._max_move:
+                    break
             
-            # Add some trend component
-            trend_strength = np.random.uniform(0.5, 2.0)
-            if len(closes) > 1:
-                # Continue the trend from previous bars
-                prev_trend = closes[-1] - opens[-1] if len(closes) > 0 else 0
-                price_change += trend_strength * prev_trend * 0.1  # Continue trend weakly
-            
-            # Calculate OHLC for this bar
+            # Calculate OHLC with realistic spreads
             open_price = current_price
             close_price = open_price + price_change
             
-            # Ensure price stays within reasonable bounds
-            close_price = max(price_range[0] * 0.99, min(price_range[1] * 1.01, close_price))
+            # Constrain high/low to be within reasonable bounds of open/close
+            spread = abs(price_change) * np.random.uniform(0.1, 0.3)
+            high_price = max(open_price, close_price) + spread
+            low_price = min(open_price, close_price) - spread
             
-            # Calculate high and low with some randomness
-            price_range_this_bar = abs(price_change) * np.random.uniform(1.0, 3.0)
-            high = max(open_price, close_price) + price_range_this_bar * 0.5
-            low = min(open_price, close_price) - price_range_this_bar * 0.5
+            # Ensure prices stay within symbol range
+            min_bound, max_bound = price_range
+            close_price = np.clip(close_price, min_bound, max_bound)
+            high_price = np.clip(high_price, min_bound, max_bound)
+            low_price = np.clip(low_price, min_bound, max_bound)
             
-            # Ensure high > low and prices are within overall range
-            high = max(open_price, close_price, high)
-            low = min(open_price, close_price, low)
-            high = min(high, price_range[1] * 1.01)
-            low = max(low, price_range[0] * 0.99)
-            
-            # Add to our lists
             opens.append(open_price)
-            highs.append(high)
-            lows.append(low)
+            highs.append(high_price)
+            lows.append(low_price)
             closes.append(close_price)
             
-            # Next bar's open is this bar's close
             current_price = close_price
         
-        return opens.tolist(), highs.tolist(), lows.tolist(), closes.tolist()
+        return opens, highs, lows, closes
         
     def copy_rates_from_pos(
         self,
@@ -332,6 +312,36 @@ class MT5Mock(Broker):
             self.positions.append(position)
             
         return order_result
+
+    def order_modify(self, ticket: int, sl: float = 0.0, tp: float = 0.0) -> Dict[str, Any]:
+        """Modify an existing order's stop loss and take profit levels.
+        
+        Args:
+            ticket: Order ticket number
+            sl: New stop loss price
+            tp: New take profit price
+            
+        Returns:
+            Dictionary with modification result
+        """
+        # Find the order
+        order = next((o for o in self.orders if o['ticket'] == ticket), None)
+        
+        if not order:
+            return {'retcode': 1, 'error': 'Order not found'}
+            
+        # Update the order
+        order['sl'] = sl
+        order['tp'] = tp
+        
+        return {
+            'retcode': 0,
+            'ticket': ticket,
+            'sl': sl,
+            'tp': tp,
+            'bid': self._get_current_price(order['symbol'], 'bid'),
+            'ask': self._get_current_price(order['symbol'], 'ask')
+        }
 
 # global singleton (to imitate `import MetaTrader5 as mt5` usage)
 mt5 = MT5Mock()

@@ -12,6 +12,7 @@ import pandas as pd
 from mamba2.crew.cache_manager import CacheManager
 from mamba2.crew.logger import logger
 import config
+from mamba2.indicators.atr import get_atr
 
 class ATRManager:
     def __init__(self, rate_fetcher):
@@ -75,18 +76,23 @@ class ATRManager:
                             logger.warning(f"No rates available for {symbol} {timeframe_str}")
                             continue
                             
-                        # Calculate ATR (simplified example)
-                        atr = 0.001  # Mock ATR calculation
-                        
-                        # Store result
+                        # Calculate ATR using cached rates
+                        atr = get_atr(symbol=symbol,
+                                      timeframe=timeframe_str,
+                                      atr_period=config.atr_period,
+                                      rate_fetcher=self.rate_fetcher)
+                        if atr is None:
+                            logger.warning(f"ATR not available for {symbol} {timeframe_str}")
+                            continue
+
+                        # Store result thread-safely
                         with self._lock:
                             if symbol not in self.atr_cache:
                                 self.atr_cache[symbol] = {}
                             self.atr_cache[symbol][timeframe_str] = atr
-                            
+
                         # Determine decimal places based on currency pair
                         decimals = 3 if symbol.endswith('JPY') else 5
-                        
                         logger.info(f"Calculated ATR for {symbol} {timeframe_str}: {atr:.{decimals}f}")
                     except Exception as e:
                         logger.error(f"Error calculating ATR for {symbol} {timeframe_str}: {e}")

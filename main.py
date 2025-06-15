@@ -4,27 +4,24 @@ Main bot file with improved shutdown sequence
 import asyncio
 import os
 import signal
-import sys
 import time
-from typing import Optional
 import threading
 
 # Import cache manager
 from mamba2.crew.cache_manager import CacheManager
 from mamba2.crew.logger import logger
 
-# Import configuration
-from config import config, MT5Config
-
 # Import brokers
 from mamba2.broker.mt5_mock import MT5Mock
 from mamba2.broker.mt5_broker import MT5Broker
 
 # Import components
+from mamba2.crew.rates import RatesFetcher
 from mamba2.crew.position_manager import PositionManager
 from mamba2.crew.day_trader import DayTrader
 from mamba2.crew.atr_manager import ATRManager
-from mamba2.crew.rates import RateFetcher
+
+import config
 
 class Bot:
     def __init__(self):
@@ -73,7 +70,7 @@ class Bot:
     async def run(self):
         """Main bot event loop with improved shutdown handling."""
         # Initialize crew members
-        self.rate_fetcher = RateFetcher(self.broker)
+        self.rate_fetcher = RatesFetcher(self.broker)
         self.atr_manager = ATRManager(self.rate_fetcher)
         self.position_manager = PositionManager(self.broker, self.atr_manager)
         self.day_trader = DayTrader(
@@ -85,8 +82,8 @@ class Bot:
         
         # Start components and store tasks
         try:
-            rate_task = asyncio.create_task(asyncio.to_thread(self.rate_fetcher.start))
-            self.active_tasks.append(rate_task)
+            # Start rate fetcher thread directly (non-blocking)
+            self.rate_fetcher.start()
             
             if not await self._wait_for_initial_rates():
                 logger.error("Failed to get initial rate data. Cannot start ATR manager.")
@@ -154,6 +151,7 @@ class Bot:
                     # Run blocking stop in a thread
                     loop = asyncio.get_event_loop()
                     await loop.run_in_executor(None, self.rate_fetcher.stop)
+                    
                 if hasattr(self, 'broker') and self.broker:
                     self.broker.shutdown()
                     

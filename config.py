@@ -16,7 +16,7 @@ class MT5Config:
 class Config:
     """Main configuration class."""
     # Broker settings
-    use_mock: bool = False  # Set to False to use real MT5
+    use_mock: bool = True  # Set to False to use real MT5
     mt5: MT5Config = MT5Config()
     
     # Rate fetcher settings
@@ -45,7 +45,14 @@ class Config:
     atr_update_interval: int = 60  # Seconds between ATR recalculations
 
     # Trading interval (in seconds)
-    trading_interval_seconds: int = 60  # 60 seconds
+    trading_interval_seconds: int = 0.5  # 60 seconds
+    
+    # Stochastic strategy settings
+    stochastic_timeframes: dict = field(default_factory=lambda: {"higher": "M15", "trading": "M5", "entry": "M1"})
+    stochastic_k_period: int = 14
+    ema_period_entry: int = 7
+    price_action_lookback: int = 10
+    doji_body_pct: float = 0.1
     
     # Default timeframes to monitor (in minutes)
     timeframes: dict = field(default_factory=lambda: {
@@ -53,8 +60,7 @@ class Config:
         'M5': 5,
         'M15': 15
     })
-    # Number of candles to fetch for each timeframe
-    candles_count: int = 200
+
     # Cache TTL in seconds (5 minutes)
     cache_ttl: int = 300
 
@@ -62,6 +68,7 @@ class Config:
 config = Config()
 
 # For backward compatibility, expose needed attributes directly
+use_mock = config.use_mock
 symbols = config.symbols
 timeframes = config.timeframes
 atr_period = config.atr_period
@@ -77,6 +84,12 @@ trading_interval_seconds = config.trading_interval_seconds
 cache_ttl = config.cache_ttl
 rates_count = config.rates_count
 atr_update_interval = config.atr_update_interval
+stochastic_timeframes = config.stochastic_timeframes
+stochastic_k_period = config.stochastic_k_period
+
+ema_period_entry = config.ema_period_entry
+price_action_lookback = config.price_action_lookback
+doji_body_pct = config.doji_body_pct
 
 def load_config(config_path: Optional[str] = None) -> Config:
     """Load configuration from a file if provided, otherwise return default."""

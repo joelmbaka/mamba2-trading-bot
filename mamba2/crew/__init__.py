@@ -1,9 +1,9 @@
 # Initialize crew package
-from .rates import RateFetcher, RateData
+from .rates import RatesFetcher, RateData
 from .atr_manager import ATRManager
 
 __all__ = [
-    'RateFetcher',
+    'RatesFetcher',
     'RateData',
     'ATRManager'
 ]

@@ -1,9 +1,8 @@
 """Day trader implementation for executing trading strategies."""
 import asyncio
 from loguru import logger
-from mamba2.strategy.double_crossover import DoubleCrossoverStrategy
+from mamba2.strategy.stochastic_triple_tf import StochasticTripleTFStrategy
 from config import config
-import pandas as pd
 import inspect
 
 class DayTrader:
@@ -23,7 +22,7 @@ class DayTrader:
         self.cache = cache
         self.rate_fetcher = rate_fetcher
         self.running = False
-        self.strategy = DoubleCrossoverStrategy(fast_period=10, slow_period=30)
+        self.strategies = {symbol: StochasticTripleTFStrategy(symbol) for symbol in config.symbols}
         self.symbols = config.symbols
         self.risk_per_trade = config.risk_per_trade
     
@@ -46,17 +45,17 @@ class DayTrader:
             # Get current price for symbol
             current_price = self.broker.copy_rates_from_pos(symbol, 1, 0, 1)[0]['close']
             
-            logger.info(f"Symbol: {symbol}, Position: {position.volume if position else 0} lots, "
+            logger.info(f"Symbol: {symbol}, Position: {position.volume if hasattr(position, 'volume') else 0} lots, "
                        f"Price: {current_price:.5f}, "
                        f"Leverage: 1:{account_info['leverage']}, "
-                       f"Margin Required: ${position.margin if position else 100:.2f}")
+                       f"Margin Required: ${position.margin if hasattr(position, 'margin') else 100:.2f}")
             
             # Evaluate strategy
-            if hasattr(self.strategy, 'evaluate') and callable(self.strategy.evaluate):
-                if inspect.iscoroutinefunction(self.strategy.evaluate):
-                    await self.strategy.evaluate(market_context)
+            if hasattr(self.strategies[symbol], 'evaluate') and callable(self.strategies[symbol].evaluate):
+                if inspect.iscoroutinefunction(self.strategies[symbol].evaluate):
+                    await self.strategies[symbol].evaluate(market_context)
                 else:
-                    self.strategy.evaluate(market_context)
+                    self.strategies[symbol].evaluate(market_context)
             
         except asyncio.CancelledError:
             logger.warning(f"Strategy evaluation cancelled for {symbol}")

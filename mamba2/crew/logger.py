@@ -70,7 +70,7 @@ def configure_logger(
 
 # Default logger configuration
 configure_logger(
-    log_level="INFO",
+    log_level="DEBUG",
     log_file="logs/mamba2.log"
 )
 

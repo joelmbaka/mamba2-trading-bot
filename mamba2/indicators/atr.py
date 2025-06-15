@@ -19,8 +19,10 @@ def get_atr(symbol="EURUSD", timeframe=None, atr_period=14, rate_fetcher=None):
         return None
         
     try:
-        # Get cached rates
+        # Get cached rates and work on a copy to avoid mutating shared cache
         rates = rate_fetcher.get_rates(symbol, str(timeframe))
+        if rates is not None:
+            rates = rates.copy()
         if rates is None:
             logger.error(f"No cached rates available for {symbol} {timeframe}")
             return None

@@ -1,6 +1,5 @@
 """Position manager for handling open positions and trailing stops."""
 import asyncio
-from typing import Dict, Any, Optional
 
 from mamba2.crew.logger import logger
 from mamba2.crew.atr_manager import ATRManager
@@ -102,11 +101,20 @@ class PositionManager:
     async def _update_position_sl(self, ticket: int, symbol: str, new_sl: float, take_profit: float):
         """Update the stop loss for a position."""
         try:
+            # First verify the position exists with the broker
+            position = await self.broker.positions_get(ticket)
+            if not position:
+                logger.error(f"Position {ticket} not found in broker state")
+                return False
+            
             logger.info(f"Updating position {ticket} ({symbol}): SL={new_sl:.5f}, TP={take_profit:.5f}")
             result = self.broker.order_modify(ticket, sl=new_sl, tp=take_profit)
+            
             if result.retcode != TRADE_RETCODE_DONE:
                 logger.error(f"Failed to update SL/TP for position {ticket}: {result.comment}")
+                logger.debug(f"Full broker response: {result}")
                 return False
+            
             logger.success(f"Successfully updated position {ticket} (SL={new_sl:.5f}, TP={take_profit:.5f})")
             return True
         except Exception as e:

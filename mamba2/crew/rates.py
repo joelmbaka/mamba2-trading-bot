@@ -1,8 +1,7 @@
 import time
 import threading
-from datetime import datetime, timedelta
 import pandas as pd
-from typing import Dict, List, Optional, Union
+from typing import Dict,  Optional, Union
 from dataclasses import dataclass
 import asyncio
 
@@ -21,7 +20,7 @@ class RateData:
     rates: pd.DataFrame
     last_updated: float
 
-class RateFetcher(threading.Thread):
+class RatesFetcher(threading.Thread):
     """Thread that fetches and caches rate data for multiple symbols and timeframes."""
     
     def __init__(self, broker, update_interval: int = 60):
@@ -32,7 +31,7 @@ class RateFetcher(threading.Thread):
             mt5: MT5 connection instance
             update_interval: How often to update rates (in seconds, default: 60)
         """
-        super().__init__(daemon=True)
+        super().__init__(daemon=True, name="RateFetcherThread")
         self.broker = broker
         self.update_interval = update_interval
         self._stop_event = threading.Event()
@@ -91,7 +90,7 @@ class RateFetcher(threading.Thread):
                     logger.debug(f"Missing rate data for {symbol} {timeframe}")
                     return False
                 rate_data = self.rates_cache[cache_key]
-                if rate_data.rates.empty or len(rate_data.rates) < 10:  # Minimum 10 candles required
+                if rate_data.rates.empty or len(rate_data.rates) < 200:  # Minimum 200 candles required
                     logger.debug(f"Insufficient data for {symbol} {timeframe} (got {len(rate_data.rates)} candles)")
                     return False
                     
