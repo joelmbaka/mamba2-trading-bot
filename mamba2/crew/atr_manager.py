@@ -64,33 +64,33 @@ class ATRManager:
         try:
             while not self._stop_event.is_set():
                 for symbol in config.symbols:
-                    for timeframe_str, _ in config.timeframes.items():
-                        if self._stop_event.is_set():
-                            break
+                    # Only calculate ATR for the configured timeframe (default 'M5')
+                    timeframe_str = config.atr_timeframe
+                    if self._stop_event.is_set():
+                        break
+                        
+                    try:
+                        rates = self.rate_fetcher.get_rates(symbol, timeframe_str)
+                        if rates is None or rates.empty:
+                            logger.warning(f"No rates available for {symbol} {timeframe_str}")
+                            continue
                             
-                        try:
-                            rates = self.rate_fetcher.get_rates(symbol, timeframe_str)
-                            if rates is None or rates.empty:
-                                logger.warning(f"No rates available for {symbol} {timeframe_str}")
-                                continue
-                                
-                            # Calculate ATR (simplified example)
-                            atr = 0.001  # Mock ATR calculation
+                        # Calculate ATR (simplified example)
+                        atr = 0.001  # Mock ATR calculation
+                        
+                        # Store result
+                        with self._lock:
+                            if symbol not in self.atr_cache:
+                                self.atr_cache[symbol] = {}
+                            self.atr_cache[symbol][timeframe_str] = atr
                             
-                            # Store result
-                            with self._lock:
-                                if symbol not in self.atr_cache:
-                                    self.atr_cache[symbol] = {}
-                                self.atr_cache[symbol][timeframe_str] = atr
-                                
-                            # Determine decimal places based on currency pair
-                            decimals = 3 if symbol.endswith('JPY') else 5
-                            
-                            logger.info(f"Calculated ATR for {symbol} {timeframe_str}: {atr:.{decimals}f}")
-                            
-                        except Exception as e:
-                            logger.error(f"Error calculating ATR for {symbol} {timeframe_str}: {e}")
-                            
+                        # Determine decimal places based on currency pair
+                        decimals = 3 if symbol.endswith('JPY') else 5
+                        
+                        logger.info(f"Calculated ATR for {symbol} {timeframe_str}: {atr:.{decimals}f}")
+                    except Exception as e:
+                        logger.error(f"Error calculating ATR for {symbol} {timeframe_str}: {e}")
+                        
                 # Wait for next update interval
                 if not self._stop_event.is_set():
                     await asyncio.sleep(config.atr_update_interval)
