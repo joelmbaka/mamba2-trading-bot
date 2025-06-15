@@ -145,7 +145,7 @@ class PositionManager:
             except asyncio.CancelledError:
                 logger.warning("Position manager task cancelled")
                 self.running = False
-                break
+                raise
             except Exception as e:
                 logger.error("Unexpected error in position manager")
                 logger.opt(exception=e).error("Error details:")
@@ -153,7 +153,7 @@ class PositionManager:
         
         logger.info("🛑 Position manager stopped")
     
-    def stop(self):
+    async def stop(self):
         """Stop the position manager."""
         if self.running:
             logger.info("🛑 Stopping position manager...")

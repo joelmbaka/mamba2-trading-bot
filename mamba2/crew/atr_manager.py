@@ -112,14 +112,23 @@ class ATRManager:
             
             if self._thread and self._thread.is_alive():
                 # Wait for thread to complete
-                self._thread.join(timeout=10)
-                
-                if self._thread.is_alive():
-                    logger.warning("ATR manager thread did not stop cleanly")
-                else:
-                    logger.info("ATR manager thread stopped")
+                try:
+                    # Run blocking thread join in executor
+                    loop = asyncio.get_event_loop()
+                    await loop.run_in_executor(None, self._thread.join, 10)
+                    
+                    if self._thread.is_alive():
+                        logger.warning("ATR manager thread did not stop cleanly")
+                    else:
+                        logger.info("ATR manager thread stopped")
+                except Exception as e:
+                    logger.error(f"Error stopping ATR manager thread: {e}")
             
-            self._shutdown_complete.wait(timeout=5)
+            # Cleanup resources
+            if hasattr(self, 'atr_cache'):
+                self.atr_cache.clear()
+            
+            self._shutdown_complete.set()
             logger.info("ATR manager shutdown complete")
 
     def get_atr(self, symbol: str, timeframe: str) -> Optional[float]:

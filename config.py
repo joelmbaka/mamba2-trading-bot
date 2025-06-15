@@ -74,7 +74,6 @@ trailing_step_pips = config.trailing_step_pips
 atr_sl_multiplier = config.atr_sl_multiplier
 atr_tp_multiplier = config.atr_tp_multiplier
 trading_interval_seconds = config.trading_interval_seconds
-candles_count = config.candles_count
 cache_ttl = config.cache_ttl
 rates_count = config.rates_count
 atr_update_interval = config.atr_update_interval

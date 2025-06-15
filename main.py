@@ -150,7 +150,10 @@ class Bot:
                     logger.info("Stopping ATR manager and waiting for calculations to complete...")
                     await self.atr_manager.stop()
                 if hasattr(self, 'rate_fetcher'):
-                    self.rate_fetcher.stop()
+                    logger.info("Stopping rate fetcher...")
+                    # Run blocking stop in a thread
+                    loop = asyncio.get_event_loop()
+                    await loop.run_in_executor(None, self.rate_fetcher.stop)
                 if hasattr(self, 'broker') and self.broker:
                     self.broker.shutdown()
                     
@@ -169,7 +172,7 @@ class Bot:
 
 def setup_signal_handlers(bot):
     """Setup signal handlers for graceful shutdown."""
-    def shutdown(signal, frame):
+    def shutdown(signal, frame=None):
         logger.info(f"Received shutdown signal {signal}")
         
         # First try graceful shutdown

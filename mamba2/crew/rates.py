@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from typing import Dict, List, Optional, Union
 from dataclasses import dataclass
+import asyncio
 
 # Import from the same package
 from .logger import logger as loguru_logger
@@ -38,10 +39,38 @@ class RateFetcher(threading.Thread):
         self.rates_cache: Dict[str, RateData] = {}
         self._initial_fetch_complete = False
         self._initial_fetch_lock = threading.Lock()
+        self._loop = None  # Store event loop reference
         
     def stop(self):
-        """Signal the thread to stop."""
-        self._stop_event.set()
+        """Signal the thread to stop and wait for cleanup."""
+        if not self._stop_event.is_set():
+            logger.info("Stopping rate fetcher thread...")
+            self._stop_event.set()
+            
+            # Wait for thread to complete
+            if self.is_alive():
+                self.join(timeout=5)
+                if self.is_alive():
+                    logger.warning("Rate fetcher thread did not stop cleanly")
+                else:
+                    logger.info("Rate fetcher thread stopped")
+        
+        # Cleanup resources
+        if hasattr(self, 'rates_cache'):
+            self.rates_cache.clear()
+        
+    def _run_thread_wrapper(self):
+        """Wrapper to run the async loop in a thread with proper cleanup."""
+        try:
+            self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
+            self._loop.run_until_complete(self._run_loop())
+        except Exception as e:
+            logger.error(f"Fatal error in rate fetcher thread: {e}")
+        finally:
+            if self._loop and not self._loop.is_closed():
+                self._loop.close()
+            self._loop = None
     
     def is_ready(self) -> bool:
         """Check if rate data has been loaded for all symbols and timeframes."""
@@ -158,13 +187,40 @@ class RateFetcher(threading.Thread):
             logger.error(f"Error fetching {symbol} {timeframe}: {str(e)}")
             return None
     
-    def _update_all_rates(self):
+    async def _run_loop(self):
+        """Main thread loop."""
+        logger.info("📈 Starting rate fetcher thread")
+        
+        try:
+            # Initial fetch
+            logger.info("Performing initial rate fetch...")
+            await self._update_all_rates()
+            
+            with self._initial_fetch_lock:
+                self._initial_fetch_complete = True
+                logger.info("Initial rate fetch completed")
+            
+            # Main update loop
+            while not self._stop_event.is_set():
+                try:
+                    await self._update_all_rates()
+                    await asyncio.sleep(self.update_interval)
+                except Exception as e:
+                    logger.error(f"Error in rate fetcher: {str(e)}")
+                    await asyncio.sleep(5)  # Prevent tight loop on errors
+            
+            logger.info("Rate fetcher thread stopped")
+        except Exception as e:
+            logger.error(f"Fatal error in rate fetcher thread: {str(e)}")
+            raise
+    
+    async def _update_all_rates(self):
         """Update all rates for all symbols and timeframes."""
         for symbol in config.symbols:
             for timeframe in config.timeframes.keys():
-                self._update_rates(symbol, timeframe)
+                await self._update_rates(symbol, timeframe)
     
-    def _update_rates(self, symbol: str, timeframe: str):
+    async def _update_rates(self, symbol: str, timeframe: str):
         """Update rates for a specific symbol and timeframe."""
         try:
             # Normalize timeframe to ensure consistent cache keys
@@ -181,7 +237,7 @@ class RateFetcher(threading.Thread):
             
             if needs_update:
                 logger.debug(f"Updating {symbol} {normalized_tf}...")
-                rates = self._fetch_rates(symbol, timeframe)
+                rates = await asyncio.to_thread(self._fetch_rates, symbol, timeframe)
                 if rates is not None:
                     self.rates_cache[cache_key] = RateData(
                         symbol=symbol,
@@ -197,28 +253,4 @@ class RateFetcher(threading.Thread):
             logger.error(f"Error updating rates for {symbol}_{timeframe}: {str(e)}")
     
     def run(self):
-        """Main thread loop."""
-        logger.info("📈 Starting rate fetcher thread")
-        
-        try:
-            # Initial fetch
-            logger.info("Performing initial rate fetch...")
-            self._update_all_rates()
-            
-            with self._initial_fetch_lock:
-                self._initial_fetch_complete = True
-                logger.info("Initial rate fetch completed")
-            
-            # Main update loop
-            while not self._stop_event.is_set():
-                try:
-                    self._update_all_rates()
-                    time.sleep(self.update_interval)
-                except Exception as e:
-                    logger.error(f"Error in rate fetcher: {str(e)}")
-                    time.sleep(5)  # Prevent tight loop on errors
-            
-            logger.info("Rate fetcher thread stopped")
-        except Exception as e:
-            logger.error(f"Fatal error in rate fetcher thread: {str(e)}")
-            raise
+        self._run_thread_wrapper()

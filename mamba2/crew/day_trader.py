@@ -34,7 +34,7 @@ class DayTrader:
         # Create market context with access to both broker and rate fetcher
         market_context = {
             'broker': self.broker,
-            'rate_fetcher': self.rate_fetcher,  # Pass rate fetcher to strategies
+            'rate_fetcher': self.rate_fetcher,
             'position_manager': self.position_manager
         }
         
@@ -58,8 +58,12 @@ class DayTrader:
                 else:
                     self.strategy.evaluate(market_context)
             
+        except asyncio.CancelledError:
+            logger.warning(f"Strategy evaluation cancelled for {symbol}")
+            raise
         except Exception as e:
             logger.error(f"Error evaluating {symbol}: {str(e)}")
+            logger.opt(exception=e).debug("Full error details")
             return
         
     async def run(self):
@@ -72,23 +76,25 @@ class DayTrader:
                 try:
                     # Execute the strategy
                     for symbol in self.symbols:
+                        if not self.running:
+                            break
                         await self.run_strategy(symbol)
                     
-                    # Wait for the next interval (default 60 seconds if not specified)
+                    # Wait for the next interval
                     trading_interval = getattr(config, 'trading_interval_seconds', 60)
                     await asyncio.sleep(trading_interval)
                     
                 except asyncio.CancelledError:
                     logger.info("📈 Trading loop cancelled")
-                    break
-                    
+                    raise
                 except Exception as e:
                     logger.error(f"Error in trading loop: {e}")
-                    # Wait a bit before retrying
-                    await asyncio.sleep(5)
+                    logger.opt(exception=e).debug("Full error details")
+                    await asyncio.sleep(5)  # Wait before retrying
                     
         except Exception as e:
             logger.error(f"Fatal error in day trader: {e}")
+            logger.opt(exception=e).debug("Full error details")
             raise
         finally:
             self.running = False
