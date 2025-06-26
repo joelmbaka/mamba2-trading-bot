@@ -16,7 +16,7 @@ mock_config = MagicMock()
 mock_config.symbols = ['EURUSD', 'EURJPY', 'GBPUSD']
 mock_config.timeframes = {'M1': 1, 'M5': 5, 'M15': 15}
 mock_config.atr_period = 14
-mock_config.rates_count = 200
+mock_config.rates_fetcher = {'update_interval': 30, 'rates_count': 200}
 mock_config.cache_ttl = 300
 
 # Replace the real config with our mock

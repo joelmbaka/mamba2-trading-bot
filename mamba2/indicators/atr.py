@@ -30,9 +30,7 @@ def get_atr(symbol="EURUSD", timeframe=None, atr_period=14, rate_fetcher=None):
         if len(rates) < atr_period+1:
             logger.warning(f"Insufficient rates for {symbol} (got {len(rates)}, need {atr_period+1})")
             return 0.0
-        
-        logger.info(f"Using {len(rates)} candles for {symbol} ATR calculation")
-        
+                
         # Calculate True Range
         rates['prev_close'] = rates['close'].shift(1)
         rates['high-low'] = rates['high'] - rates['low']

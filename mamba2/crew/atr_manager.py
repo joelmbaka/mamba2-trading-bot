@@ -2,12 +2,8 @@
 ATR Manager with improved thread-safe shutdown
 """
 import asyncio
-import logging
 import threading
-import time
 from typing import Dict, Optional
-
-import pandas as pd
 
 from mamba2.crew.cache_manager import CacheManager
 from mamba2.crew.logger import logger
@@ -23,6 +19,12 @@ class ATRManager:
         self._lock = threading.Lock()  # Thread safety
         self._shutdown_complete = threading.Event()
         self.cache = CacheManager("atr_cache.json")  # Initialize cache manager
+        self._initialized = False  # Track initialization status
+
+    def is_ready(self):
+        """Check if ATR manager has initialized and has data."""
+        with self._lock:
+            return self._initialized and bool(self.atr_cache)
 
     async def start(self):
         """Start the ATR manager in a dedicated thread."""
@@ -53,16 +55,13 @@ class ATRManager:
 
     async def _run_loop(self):
         """Main ATR calculation loop with improved shutdown handling."""
-        logger.info("Starting ATR calculation loop")
         
         # Wait for rate fetcher to initialize
         while not self.rate_fetcher.is_ready() and not self._stop_event.is_set():
-            logger.debug("Waiting for rate fetcher to initialize...")
             await asyncio.sleep(1)
             
-        logger.info(f"Rate fetcher ready: {self.rate_fetcher.is_ready()}")
-        
         try:
+            first_run = True
             while not self._stop_event.is_set():
                 for symbol in config.symbols:
                     # Only calculate ATR for the configured timeframe (default 'M5')
@@ -90,10 +89,15 @@ class ATRManager:
                             if symbol not in self.atr_cache:
                                 self.atr_cache[symbol] = {}
                             self.atr_cache[symbol][timeframe_str] = atr
+                            
+                            # Mark as initialized after first successful calculation
+                            if first_run:
+                                self._initialized = True
+                                first_run = False
+                          #      logger.info("ATR manager initialized with first set of values")
 
                         # Determine decimal places based on currency pair
                         decimals = 3 if symbol.endswith('JPY') else 5
-                        logger.info(f"Calculated ATR for {symbol} {timeframe_str}: {atr:.{decimals}f}")
                     except Exception as e:
                         logger.error(f"Error calculating ATR for {symbol} {timeframe_str}: {e}")
                         

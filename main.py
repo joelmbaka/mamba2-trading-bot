@@ -20,6 +20,7 @@ from mamba2.crew.rates import RatesFetcher
 from mamba2.crew.position_manager import PositionManager
 from mamba2.crew.day_trader import DayTrader
 from mamba2.crew.atr_manager import ATRManager
+from mamba2.crew.get_position_pl import update_position_pl
 
 import config
 
@@ -92,9 +93,16 @@ class Bot:
                 
             atr_task = asyncio.create_task(self.atr_manager.start())
             position_task = asyncio.create_task(self.position_manager.run())
-            trader_task = asyncio.create_task(self.day_trader.run())
             
-            self.active_tasks.extend([atr_task, position_task, trader_task])
+            self.active_tasks.extend([atr_task, position_task])
+            
+            if config.RUN_TRADER:
+                trader_task = asyncio.create_task(self.day_trader.run())
+                self.active_tasks.append(trader_task)
+            
+            # Start the periodic P/L update task
+            pl_task = asyncio.create_task(update_pl_periodically(self.broker))
+            self.active_tasks.append(pl_task)
             
             # Main event loop
             while self.running:
@@ -168,6 +176,12 @@ class Bot:
                 logger.info("Shutdown completed")
                 self.active_tasks.clear()
 
+async def update_pl_periodically(broker):
+    csv_path = "e:\\mamba2\\backtest\\market_metrics.csv"
+    while True:
+        await asyncio.sleep(300)  # 5 minutes
+        await update_position_pl(csv_path, broker)
+
 def setup_signal_handlers(bot):
     """Setup signal handlers for graceful shutdown."""
     def shutdown(signal, frame=None):
@@ -211,6 +225,7 @@ async def main():
     try:
         print("Initializing bot...")
         await bot.initialize()
+        asyncio.create_task(update_pl_periodically(bot.broker))
         print("Bot initialized. Starting main loop...")
         await bot.run()
     except Exception as e:

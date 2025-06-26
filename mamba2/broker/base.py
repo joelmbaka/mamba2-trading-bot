@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Any, Optional, Literal, TypedDict
 from datetime import datetime
 
-
 class BarData(TypedDict):
     """Market data bar/candle structure."""
     time: int  # Timestamp in seconds since epoch
@@ -169,27 +168,30 @@ class Broker(ABC):
             Number of open positions.
         """
         pass
-    
+  
+        
     @abstractmethod
-    def position_get_ticket(self, ticket: int) -> Optional[PositionInfo]:
-        """Get position by ticket number.
+    async def order_modify(self, ticket: int, sl: float = 0.0, tp: float = 0.0) -> Dict[str, Any]:
+        """Modify an existing position's stop loss and take profit levels.
         
         Args:
-            ticket: Position ticket number.
+            ticket: Position ticket number
+            sl: New stop loss price
+            tp: New take profit price
             
         Returns:
-            Position information or None if not found.
+            Dictionary with modification result including 'retcode' (0 for success)
         """
         pass
     
     @abstractmethod
-    def position_close(self, ticket: int) -> bool:
-        """Close an open position.
-        
+    async def position_by_ticket(self, ticket: int) -> Optional[Dict[str, Any]]:
+        """Get a position by its ticket number.
+
         Args:
-            ticket: Position ticket number.
-            
+            ticket: The position ticket number.
+
         Returns:
-            True if successful, False otherwise.
+            A dictionary containing the position details, or None if not found.
         """
         pass

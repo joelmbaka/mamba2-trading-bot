@@ -1,9 +1,10 @@
 import time
 import threading
 import pandas as pd
-from typing import Dict,  Optional, Union
+from typing import Dict, Optional, Union
 from dataclasses import dataclass
 import asyncio
+from datetime import datetime, timedelta, timezone
 
 # Import from the same package
 from .logger import logger as loguru_logger
@@ -23,17 +24,17 @@ class RateData:
 class RatesFetcher(threading.Thread):
     """Thread that fetches and caches rate data for multiple symbols and timeframes."""
     
-    def __init__(self, broker, update_interval: int = 60):
+    def __init__(self, broker):
         """
         Initialize the rate fetcher thread.
         
         Args:
-            mt5: MT5 connection instance
-            update_interval: How often to update rates (in seconds, default: 60)
+            broker: Broker connection instance
         """
         super().__init__(daemon=True, name="RateFetcherThread")
         self.broker = broker
-        self.update_interval = update_interval
+        self.update_interval = config.rates_fetcher['update_interval']
+        self.rates_count = config.rates_fetcher['rates_count']
         self._stop_event = threading.Event()
         self.rates_cache: Dict[str, RateData] = {}
         self._initial_fetch_complete = False
@@ -114,8 +115,6 @@ class RatesFetcher(threading.Thread):
     def _fetch_rates(self, symbol: str, timeframe: str) -> Optional[pd.DataFrame]:
         """Fetch rates from MT5."""
         try:
-            logger.debug(f"Checking cache for {symbol} {timeframe}")
-            logger.debug(f"Fetching rates for {symbol} {timeframe}...")
             
             # Validate timeframe exists in config
             if timeframe not in config.timeframes:
@@ -125,23 +124,29 @@ class RatesFetcher(threading.Thread):
                 
             timeframe_minutes = config.timeframes[timeframe]
             
-            # Log rate fetching parameters
-            logger.debug(f"Fetching {config.rates_count} rates for {symbol} {timeframe} ({timeframe_minutes} min)")
-            
             # Fetch rates from broker
             rates = self.broker.copy_rates_from_pos(
                 symbol=symbol,
                 timeframe=timeframe_minutes,
                 start_pos=1,
-                count=config.rates_count
+                count=self.rates_count
             )
-            
+            """
+            if rates is not None and len(rates) > 0:
+                last_candle = rates.iloc[-1] if hasattr(rates, 'iloc') else rates[-1]
+                last_candle_time = datetime.fromtimestamp(last_candle['time'])
+                logger.info(
+                    f"Fetched rates - Symbol: {symbol}, Timeframe: {timeframe}, "
+                    f"Last Candle - Time: {last_candle_time}, "
+                    f"Open: {last_candle['open']}, High: {last_candle['high']}, "
+                    f"Low: {last_candle['low']}, Close: {last_candle['close']}, "
+                    f"Volume: {last_candle['tick_volume'] if 'tick_volume' in last_candle else last_candle.get('real_volume', 'N/A')}"
+                )
+            """
             if rates is None or len(rates) == 0:
                 logger.error(f"No rates returned for {symbol} {timeframe}")
                 return None
-                
-            logger.debug(f"Received {len(rates)} rates for {symbol} {timeframe}")
-            
+                            
             # Convert numpy array to DataFrame with proper column names
             # The mock broker returns: [time, open, high, low, close, tick_volume, spread, real_volume]
             column_names = ['time', 'open', 'high', 'low', 'close', 'tick_volume', 'spread', 'real_volume']
@@ -178,8 +183,6 @@ class RatesFetcher(threading.Thread):
                 logger.error(f"Error processing rates for {symbol} {timeframe}: {str(e)}")
                 return None
             
-            logger.debug(f"Processed rates DataFrame for {symbol} {timeframe} (shape: {df.shape})")
-            logger.debug(f"Cached {len(df)} rates for {symbol} {timeframe}")
             return df
             
         except Exception as e:
@@ -191,13 +194,19 @@ class RatesFetcher(threading.Thread):
         logger.info("📈 Starting rate fetcher thread")
         
         try:
+            # Align to the next whole minute
+            if not hasattr(self, '_initial_delay_done'):
+                import time
+                now = time.time()
+                next_run = (now // 60 + 1) * 60
+                time.sleep(next_run - now)
+                self._initial_delay_done = True
+
             # Initial fetch
-            logger.info("Performing initial rate fetch...")
             await self._update_all_rates()
             
             with self._initial_fetch_lock:
                 self._initial_fetch_complete = True
-                logger.info("Initial rate fetch completed")
             
             # Main update loop
             while not self._stop_event.is_set():
@@ -208,7 +217,6 @@ class RatesFetcher(threading.Thread):
                     logger.error(f"Error in rate fetcher: {str(e)}")
                     await asyncio.sleep(5)  # Prevent tight loop on errors
             
-            logger.info("Rate fetcher thread stopped")
         except Exception as e:
             logger.error(f"Fatal error in rate fetcher thread: {str(e)}")
             raise
@@ -226,27 +234,17 @@ class RatesFetcher(threading.Thread):
             normalized_tf = f"M{timeframe}" if isinstance(timeframe, int) else timeframe
             cache_key = f"{symbol}_{normalized_tf}"
             
-            # Check if we need to update (cache expired or first time)
-            now = time.time()
-            needs_update = True
-            
-            if cache_key in self.rates_cache:
-                last_updated = self.rates_cache[cache_key].last_updated
-                needs_update = (now - last_updated) > config.cache_ttl
-            
-            if needs_update:
-                logger.debug(f"Updating {symbol} {normalized_tf}...")
-                rates = await asyncio.to_thread(self._fetch_rates, symbol, timeframe)
-                if rates is not None:
-                    self.rates_cache[cache_key] = RateData(
-                        symbol=symbol,
-                        timeframe=normalized_tf,
-                        rates=rates,
-                        last_updated=now
-                    )
-                    logger.debug(f"Successfully cached {len(rates)} rates for {cache_key}")
-                else:
-                    logger.warning(f"Failed to fetch rates for {cache_key}")
+            # Always update the rates when this method is called
+            rates = await asyncio.to_thread(self._fetch_rates, symbol, timeframe)
+            if rates is not None:
+                self.rates_cache[cache_key] = RateData(
+                    symbol=symbol,
+                    timeframe=normalized_tf,
+                    rates=rates,
+                    last_updated=time.time()
+                )
+            else:
+                logger.warning(f"Failed to fetch rates for {cache_key}")
                     
         except Exception as e:
             logger.error(f"Error updating rates for {symbol}_{timeframe}: {str(e)}")

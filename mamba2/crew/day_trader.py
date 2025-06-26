@@ -1,7 +1,7 @@
 """Day trader implementation for executing trading strategies."""
 import asyncio
 from loguru import logger
-from mamba2.strategy.stochastic_triple_tf import StochasticTripleTFStrategy
+from mamba2.strategy.triple_cross import StochasticTripleTFStrategy
 from config import config
 import inspect
 
@@ -24,44 +24,54 @@ class DayTrader:
         self.running = False
         self.strategies = {symbol: StochasticTripleTFStrategy(symbol) for symbol in config.symbols}
         self.symbols = config.symbols
-        self.risk_per_trade = config.risk_per_trade
     
     async def run_strategy(self, symbol: str):
-        """Run trading strategy for a specific symbol."""
-        logger.info(f"Analyzing {symbol} for trading opportunities...")
-        
-        # Create market context with access to both broker and rate fetcher
-        market_context = {
-            'broker': self.broker,
-            'rate_fetcher': self.rate_fetcher,
-            'position_manager': self.position_manager
-        }
+        """Run trading strategy for a single symbol."""
         
         try:
-            # Get current position for symbol
-            position = self.position_manager.get_position(symbol)
-            account_info = self.broker.account_info()
+            # Skip if symbol already has an open position
+            positions = await self.broker.positions_get(symbol=symbol)
+            if positions:
+ #               logger.debug(f"Skipping {symbol} - already has {len(positions)} open positions")
+                return
+                            
+            # Create market context with access to both broker and rate fetcher
+            market_context = {
+                'broker': self.broker,
+                'rate_fetcher': self.rate_fetcher,
+                'position_manager': self.position_manager
+            }
             
-            # Get current price for symbol
-            current_price = self.broker.copy_rates_from_pos(symbol, 1, 0, 1)[0]['close']
+            try:
+                # Get current position for symbol
+                position = self.position_manager.get_position(symbol)
+                account_info = self.broker.account_info()
+                
+                # Get current price for symbol
+                current_price = self.broker.copy_rates_from_pos(symbol, 1, 0, 1)[0]['close']
+                """
+                logger.info(f"Symbol: {symbol}, Position: {position.volume if hasattr(position, 'volume') else 0} lots, "
+                           f"Price: {current_price:.5f}, "
+                           f"Leverage: 1:{account_info['leverage']}, "
+                           f"Margin Required: ${position.margin if hasattr(position, 'margin') else 100:.2f}")
+                """
+                # Evaluate strategy
+                if hasattr(self.strategies[symbol], 'evaluate') and callable(self.strategies[symbol].evaluate):
+                    if inspect.iscoroutinefunction(self.strategies[symbol].evaluate):
+                        await self.strategies[symbol].evaluate(market_context)
+                    else:
+                        self.strategies[symbol].evaluate(market_context)
             
-            logger.info(f"Symbol: {symbol}, Position: {position.volume if hasattr(position, 'volume') else 0} lots, "
-                       f"Price: {current_price:.5f}, "
-                       f"Leverage: 1:{account_info['leverage']}, "
-                       f"Margin Required: ${position.margin if hasattr(position, 'margin') else 100:.2f}")
-            
-            # Evaluate strategy
-            if hasattr(self.strategies[symbol], 'evaluate') and callable(self.strategies[symbol].evaluate):
-                if inspect.iscoroutinefunction(self.strategies[symbol].evaluate):
-                    await self.strategies[symbol].evaluate(market_context)
-                else:
-                    self.strategies[symbol].evaluate(market_context)
-            
-        except asyncio.CancelledError:
-            logger.warning(f"Strategy evaluation cancelled for {symbol}")
-            raise
+            except asyncio.CancelledError:
+                logger.warning(f"Strategy evaluation cancelled for {symbol}")
+                raise
+            except Exception as e:
+                logger.error(f"Error evaluating {symbol}: {str(e)}")
+                logger.opt(exception=e).debug("Full error details")
+                return
+        
         except Exception as e:
-            logger.error(f"Error evaluating {symbol}: {str(e)}")
+            logger.error(f"Error running strategy for {symbol}: {e}")
             logger.opt(exception=e).debug("Full error details")
             return
         

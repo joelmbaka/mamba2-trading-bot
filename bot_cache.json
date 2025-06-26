@@ -1,16 +1,27 @@
 {
   "last_account_info": {
-    "balance": 10000.0,
-    "equity": 10000.0,
-    "margin": 0,
-    "free_margin": 10000.0,
-    "leverage": 1000,
-    "currency": "USD",
-    "margin_level": 0,
-    "margin_mode": 0,
+    "login": 5037284070,
+    "trade_mode": 0,
+    "leverage": 500,
+    "margin_mode": 2,
+    "currency_digits": 2,
+    "balance": 99259.94,
+    "credit": 0.0,
+    "profit": 20.15,
+    "equity": 99280.09,
+    "margin": 50.75,
+    "margin_free": 99229.34,
+    "margin_level": 195625.79310344826,
     "margin_so_mode": 0,
     "margin_initial": 0.0,
-    "margin_maintenance": 0.0
+    "margin_maintenance": 0.0,
+    "assets": 0.0,
+    "liabilities": 0.0,
+    "commission_blocked": 0.0,
+    "name": "Echui Nyamatonto",
+    "server": "MetaQuotes-Demo",
+    "currency": "USD",
+    "company": "MetaQuotes Ltd."
   },
-  "last_broker_type": "mock"
+  "last_broker_type": "real"
 }

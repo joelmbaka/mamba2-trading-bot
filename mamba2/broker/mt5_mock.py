@@ -189,18 +189,23 @@ class MT5Mock(Broker):
         }
 
     # --- position management
-    def positions_get(self, symbol: str = "") -> List[PositionInfo]:
-        """Get open positions, optionally filtered by symbol."""
-        # Combine mock broker positions with PositionManager cache
-        all_positions = self.positions.copy()
-        if hasattr(self, '_position_manager'):
-            for symbol, position in getattr(self._position_manager, 'positions', {}).items():
-                if position not in all_positions:
-                    all_positions.append(position)
+    async def positions_get(self, symbol: Optional[str] = None, ticket: Optional[int] = None) -> List[Dict[str, Any]]:
+        """Get open positions.
         
-        if not symbol:
-            return all_positions
-        return [p for p in all_positions if p["symbol"] == symbol]
+        Args:
+            symbol: Optional symbol filter (e.g. "EURUSD")
+            ticket: Optional position ticket filter
+            
+        Returns:
+            List of position information dictionaries
+        """
+        if symbol and ticket:
+            return [p for p in self.positions if p['symbol'] == symbol and p['ticket'] == ticket]
+        elif symbol:
+            return [p for p in self.positions if p['symbol'] == symbol]
+        elif ticket:
+            return [p for p in self.positions if p['ticket'] == ticket]
+        return self.positions
 
     def positions_total(self) -> int:
         """Get the number of open positions."""
@@ -214,20 +219,43 @@ class MT5Mock(Broker):
                 return pos
         return None
     
+    async def position_by_ticket(self, ticket: int) -> Optional[Dict[str, Any]]:
+        """Get a position by its ticket number.
+
+        Args:
+            ticket: The position ticket number.
+
+        Returns:
+            A dictionary containing the position details, or None if not found.
+        """
+        for position in self.positions:
+            if position.get('ticket') == ticket:
+                return position.copy()
+        return None
+        
     def position_close(self, ticket: int) -> bool:
-        """Close an open position."""
+        """Close an open position by ticket."""
+        position = self.position_get_ticket(ticket)
+        if not position:
+            return False
+            
+        # Create a close request
+        symbol = position['symbol']
+        volume = position['volume']
+        position_type = position['type']
+        
+        # Calculate P/L (simplified)
+        current_price = position['price_current']
+        price_diff = current_price - position['price_open'] if position['type'] == 0 else position['price_open'] - current_price
+        profit = price_diff * position['volume'] * 100000  # 1 lot = 100,000 units
+                
+        # Update account balance
+        self._account_balance += profit
+        self._account_equity = self._account_balance
+                
+        # Remove position
         for i, pos in enumerate(self.positions):
-            if pos["ticket"] == ticket:
-                # Calculate P/L (simplified)
-                current_price = pos['price_current']
-                price_diff = current_price - pos['price_open'] if pos['type'] == 0 else pos['price_open'] - current_price
-                profit = price_diff * pos['volume'] * 100000  # 1 lot = 100,000 units
-                
-                # Update account balance
-                self._account_balance += profit
-                self._account_equity = self._account_balance
-                
-                # Remove position
+            if pos['ticket'] == ticket:
                 del self.positions[i]
                 return True
         return False
@@ -341,6 +369,26 @@ class MT5Mock(Broker):
             'tp': tp,
             'bid': self._get_current_price(order['symbol'], 'bid'),
             'ask': self._get_current_price(order['symbol'], 'ask')
+        }
+
+    def symbol_info_tick(self, symbol: str) -> Dict[str, Any]:
+        """Get current tick data for a symbol.
+        
+        Args:
+            symbol: Symbol name (e.g. "EURUSD")
+            
+        Returns:
+            Dictionary containing current bid/ask prices and other tick data
+        """
+        if symbol not in self._price_history or len(self._price_history[symbol][3]) == 0:
+            self._generate_price_series(symbol, 1)
+            
+        return {
+            'bid': self._price_history[symbol][3][-1] - 0.0001,  # bid slightly below last close
+            'ask': self._price_history[symbol][3][-1] + 0.0001,  # ask slightly above last close
+            'last': self._price_history[symbol][3][-1],
+            'volume': random.randint(1000, 5000),
+            'time': int(time.time())
         }
 
 # global singleton (to imitate `import MetaTrader5 as mt5` usage)

@@ -117,3 +117,32 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📈 Understanding Trend Lines
+
+Trend lines are simple straight lines that help you see the market’s direction. Use them to spot potential support (in an up-trend) or resistance (in a down-trend). Here are the essentials:
+
+1. **Minimum touches**  
+   • A reliable line needs at least **three** touches.  
+   • Only two touches? Treat the line as *tentative* until there is a third test.
+
+2. **Drawing an up-trend line**  
+   • Start at the lowest visible swing low (Point A).  
+   • Connect it to the next higher swing low that price has not crossed (Point B).  
+   • Extend the line to the right; it marks possible future support.
+
+3. **Drawing a down-trend line**  
+   • Start at the highest visible swing high.  
+   • Connect it to the next lower swing high that price has not crossed.  
+   • Extend to the right; it marks possible future resistance.
+
+4. **Typical price behaviour**  
+   • Respect: price bounces off the line and the trend continues.  
+   • Break: price closes beyond the line, often followed by consolidation and a new trend.
+
+5. **Best-practice tips**  
+   • Aim for a 30°–45° slope. Extremely steep lines break easily.  
+   • Do not force the line through candles—let it fit naturally.  
+   • Very rapid price moves can ignore any drawn line, so always watch live price action.
+
+Follow these rules and trend lines will become a quick, reliable tool in your trading toolkit.
