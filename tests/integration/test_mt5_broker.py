@@ -2,11 +2,10 @@
 
 These tests require an explicitly enabled MT5 terminal and account.
 """
-import os
-import pytest
-import MetaTrader5 as mt5
-from mamba2.broker import MT5Broker
 import datetime
+import os
+
+import pytest
 
 pytestmark = pytest.mark.integration
 
@@ -15,6 +14,12 @@ if os.getenv("MAMBA_RUN_MT5_INTEGRATION") != "1":
         "MT5 integration tests require MAMBA_RUN_MT5_INTEGRATION=1",
         allow_module_level=True,
     )
+
+mt5 = pytest.importorskip(
+    "MetaTrader5",
+    reason="MT5 integration tests require the Windows-only MetaTrader5 package",
+)
+from mamba2.broker import MT5Broker
 
 @pytest.fixture(scope="module")
 def mt5_broker():
