@@ -82,6 +82,7 @@ def export_fixture(tmp_path):
         end_utc="2025-01-02T10:15:00Z",
         output_dir=tmp_path,
         exported_at_utc="2025-01-03T00:00:00Z",
+        history_sync_wait_seconds=0,
     )
 
 
@@ -179,3 +180,66 @@ def test_mt5_initialize_kwargs_require_complete_explicit_credentials():
         "timeout": 45000,
         "portable": True,
     }
+
+
+class SyncingFakeMT5(FakeMT5):
+    def __init__(self):
+        super().__init__()
+        self._synced = set()
+        self.range_calls = {1: 0, 5: 0, 15: 0}
+        self.warmup_calls = []
+
+    def copy_rates_range(self, symbol, timeframe, date_from, date_to):
+        self.range_calls[timeframe] += 1
+        if timeframe not in self._synced:
+            return []
+        return super().copy_rates_range(symbol, timeframe, date_from, date_to)
+
+    def copy_rates_from_pos(self, symbol, timeframe, start_pos, count):
+        assert symbol == "EURUSD"
+        assert start_pos == 0
+        self.warmup_calls.append((timeframe, count))
+        self._synced.add(timeframe)
+        return self._bars[timeframe]
+
+
+def test_exporter_warms_empty_mt5_history_once_then_retries_exact_range(tmp_path):
+    mt5 = SyncingFakeMT5()
+    manifest_path = export_mt5_dataset(
+        mt5,
+        symbols=["EURUSD"],
+        timeframes=["M1", "M5", "M15"],
+        start_utc="2025-01-02T10:00:00Z",
+        end_utc="2025-01-02T10:15:00Z",
+        output_dir=tmp_path,
+        exported_at_utc="2025-01-03T00:00:00Z",
+        history_warmup_count=321,
+        history_sync_wait_seconds=0,
+    )
+
+    manifest = load_mt5_dataset(manifest_path).manifest
+    files = manifest["symbols"]["EURUSD"]["files"]
+
+    assert mt5.warmup_calls == [(1, 321), (5, 321), (15, 321)]
+    assert mt5.range_calls == {1: 2, 5: 2, 15: 2}
+    assert all(files[timeframe]["history_sync_retry"] is True for timeframe in files)
+
+
+def test_exporter_skips_history_warmup_when_range_is_already_available(tmp_path):
+    mt5 = FakeMT5()
+    manifest_path = export_mt5_dataset(
+        mt5,
+        symbols=["EURUSD"],
+        timeframes=["M1", "M5", "M15"],
+        start_utc="2025-01-02T10:00:00Z",
+        end_utc="2025-01-02T10:15:00Z",
+        output_dir=tmp_path,
+        exported_at_utc="2025-01-03T00:00:00Z",
+        history_sync_wait_seconds=0,
+    )
+
+    manifest = load_mt5_dataset(manifest_path).manifest
+    assert all(
+        entry["history_sync_retry"] is False
+        for entry in manifest["symbols"]["EURUSD"]["files"].values()
+    )

@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import time
 from typing import Any, Mapping, Sequence
 
 import pandas as pd
@@ -71,6 +72,50 @@ def _timeframe_value(mt5_module: Any, timeframe: str) -> Any:
     if not hasattr(mt5_module, name):
         raise RuntimeError(f"MT5 module does not expose {name}")
     return getattr(mt5_module, name)
+
+def _fetch_rates_with_history_sync(
+    mt5_module: Any,
+    *,
+    symbol: str,
+    mt5_timeframe: Any,
+    start_utc: pd.Timestamp,
+    end_utc: pd.Timestamp,
+    warmup_count: int,
+    sync_wait_seconds: float,
+) -> tuple[Any, bool]:
+    """Fetch an MT5 range and retry once after a bounded history warm-up.
+
+    MetaTrader 5 can return an empty copy_rates_range result until chart
+    history for that symbol/timeframe has been requested. The bounded
+    copy_rates_from_pos probe is read-only and gives the terminal one
+    opportunity to synchronize history before the exact range is retried.
+    """
+
+    rates = mt5_module.copy_rates_range(
+        symbol,
+        mt5_timeframe,
+        start_utc.to_pydatetime(),
+        end_utc.to_pydatetime(),
+    )
+    if rates is not None and len(rates) > 0:
+        return rates, False
+
+    mt5_module.copy_rates_from_pos(
+        symbol,
+        mt5_timeframe,
+        0,
+        warmup_count,
+    )
+    if sync_wait_seconds > 0:
+        time.sleep(sync_wait_seconds)
+
+    retry = mt5_module.copy_rates_range(
+        symbol,
+        mt5_timeframe,
+        start_utc.to_pydatetime(),
+        end_utc.to_pydatetime(),
+    )
+    return retry, True
 
 
 def _normalize_rates(
@@ -134,6 +179,8 @@ def export_mt5_dataset(
     end_utc: str | datetime | pd.Timestamp,
     output_dir: str | Path,
     exported_at_utc: str | datetime | pd.Timestamp | None = None,
+    history_warmup_count: int = 5000,
+    history_sync_wait_seconds: float = 2.0,
 ) -> Path:
     """Export completed native MT5 bars without invoking any trading API."""
     start = _utc_timestamp(start_utc)
@@ -142,6 +189,10 @@ def export_mt5_dataset(
         raise ValueError("end_utc must be later than start_utc")
     if not symbols:
         raise ValueError("at least one symbol is required")
+    if history_warmup_count < 1:
+        raise ValueError("history_warmup_count must be at least 1")
+    if history_sync_wait_seconds < 0:
+        raise ValueError("history_sync_wait_seconds cannot be negative")
 
     normalized_timeframes = tuple(dict.fromkeys(timeframes))
     if "M1" not in normalized_timeframes:
@@ -196,11 +247,14 @@ def export_mt5_dataset(
 
         for timeframe in normalized_timeframes:
             mt5_timeframe = _timeframe_value(mt5_module, timeframe)
-            rates = mt5_module.copy_rates_range(
-                symbol,
-                mt5_timeframe,
-                start.to_pydatetime(),
-                end.to_pydatetime(),
+            rates, history_sync_retry = _fetch_rates_with_history_sync(
+                mt5_module,
+                symbol=symbol,
+                mt5_timeframe=mt5_timeframe,
+                start_utc=start,
+                end_utc=end,
+                warmup_count=history_warmup_count,
+                sync_wait_seconds=history_sync_wait_seconds,
             )
             frame = _normalize_rates(
                 rates,
@@ -222,6 +276,7 @@ def export_mt5_dataset(
                 "last_bar_available_utc": _iso_utc(
                     frame.index[-1] + pd.Timedelta(minutes=minutes)
                 ),
+                "history_sync_retry": history_sync_retry,
             }
 
         manifest["symbols"][symbol] = symbol_entry
@@ -367,6 +422,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--from-utc", required=True)
     parser.add_argument("--to-utc", required=True)
     parser.add_argument("--output-dir", default="backtest_data/mt5")
+    parser.add_argument("--history-warmup-count", type=int, default=5000)
+    parser.add_argument("--history-sync-wait-seconds", type=float, default=2.0)
     args = parser.parse_args(argv)
 
     from config import mt5 as mt5_config
@@ -390,6 +447,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             start_utc=args.from_utc,
             end_utc=args.to_utc,
             output_dir=args.output_dir,
+            history_warmup_count=args.history_warmup_count,
+            history_sync_wait_seconds=args.history_sync_wait_seconds,
         )
         print(manifest)
     finally:
