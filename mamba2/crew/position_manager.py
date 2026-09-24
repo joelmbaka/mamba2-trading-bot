@@ -29,13 +29,12 @@ class PositionManager:
         self.positions = {}  # Initialize positions dictionary
     
     async def update_trailing_stops(self):
-        """Update trailing stop losses for all open positions."""
+        """Update trailing stops during the live wall-clock loop."""
         if not self.running:
             return
-            
-        # Wait for ATR manager to be ready if available
+
         if self.atr_manager:
-            timeout = 30  # seconds
+            timeout = 30
             start_time = time.time()
             while not self.atr_manager.is_ready() and self.running:
                 if time.time() - start_time > timeout:
@@ -43,7 +42,17 @@ class PositionManager:
                     break
                 logger.debug("Waiting for ATR manager to initialize...")
                 await asyncio.sleep(1)
-        
+
+        await self.update_once()
+
+    async def update_once(self):
+        """Run one production position-management cycle without sleeping.
+
+        This is the deterministic entry point used by historical replay. Any
+        stop/target change calculated from a just-completed candle therefore
+        applies from the following candle onward.
+        """
+
         try:
             positions = await self.broker.positions_get()
             if not positions:

@@ -53,61 +53,59 @@ class ATRManager:
             loop.close()
             self._shutdown_complete.set()
 
+    def refresh_once(self) -> int:
+        """Refresh the ATR cache once from the currently visible rate data.
+
+        The live thread calls this method on its normal cadence. Deterministic
+        backtests can call the same production calculation once per replay
+        boundary without introducing wall-clock sleeps or background threads.
+        """
+
+        updated = 0
+        for symbol in config.symbols:
+            timeframe_str = config.atr_timeframe
+            try:
+                rates = self.rate_fetcher.get_rates(symbol, timeframe_str)
+                if rates is None or rates.empty:
+                    continue
+
+                atr = get_atr(
+                    symbol=symbol,
+                    timeframe=timeframe_str,
+                    atr_period=config.atr_period,
+                    rate_fetcher=self.rate_fetcher,
+                )
+                if atr is None:
+                    continue
+
+                with self._lock:
+                    if symbol not in self.atr_cache:
+                        self.atr_cache[symbol] = {}
+                    self.atr_cache[symbol][timeframe_str] = atr
+                    self._initialized = True
+                updated += 1
+            except Exception as e:
+                logger.error(
+                    f"Error calculating ATR for {symbol} {timeframe_str}: {e}"
+                )
+        return updated
+
     async def _run_loop(self):
         """Main ATR calculation loop with improved shutdown handling."""
-        
-        # Wait for rate fetcher to initialize
+
         while not self.rate_fetcher.is_ready() and not self._stop_event.is_set():
             await asyncio.sleep(1)
-            
+
         try:
-            first_run = True
             while not self._stop_event.is_set():
-                for symbol in config.symbols:
-                    # Only calculate ATR for the configured timeframe (default 'M5')
-                    timeframe_str = config.atr_timeframe
-                    if self._stop_event.is_set():
-                        break
-                        
-                    try:
-                        rates = self.rate_fetcher.get_rates(symbol, timeframe_str)
-                        if rates is None or rates.empty:
-                            logger.warning(f"No rates available for {symbol} {timeframe_str}")
-                            continue
-                            
-                        # Calculate ATR using cached rates
-                        atr = get_atr(symbol=symbol,
-                                      timeframe=timeframe_str,
-                                      atr_period=config.atr_period,
-                                      rate_fetcher=self.rate_fetcher)
-                        if atr is None:
-                            logger.warning(f"ATR not available for {symbol} {timeframe_str}")
-                            continue
+                self.refresh_once()
 
-                        # Store result thread-safely
-                        with self._lock:
-                            if symbol not in self.atr_cache:
-                                self.atr_cache[symbol] = {}
-                            self.atr_cache[symbol][timeframe_str] = atr
-                            
-                            # Mark as initialized after first successful calculation
-                            if first_run:
-                                self._initialized = True
-                                first_run = False
-                          #      logger.info("ATR manager initialized with first set of values")
-
-                        # Determine decimal places based on currency pair
-                        decimals = 3 if symbol.endswith('JPY') else 5
-                    except Exception as e:
-                        logger.error(f"Error calculating ATR for {symbol} {timeframe_str}: {e}")
-                        
-                # Wait for next update interval
                 if not self._stop_event.is_set():
                     await asyncio.sleep(config.atr_update_interval)
-                    
+
         except Exception as e:
             logger.error(f"Error in ATR calculation loop: {e}")
-            
+
         finally:
             logger.info("ATR calculation loop stopped")
 

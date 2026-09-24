@@ -54,12 +54,18 @@ class BacktestRunner:
         strategy: Any,
         *,
         position_manager: Any | None = None,
+        atr_manager: Any | None = None,
         rate_fetcher: Any | None = None,
     ):
         self.feed = feed
         self.broker = broker
         self.strategy = strategy
         self.position_manager = position_manager
+        self.atr_manager = (
+            atr_manager
+            if atr_manager is not None
+            else getattr(position_manager, "atr_manager", None)
+        )
         self.rate_fetcher = rate_fetcher or feed
         self.strategy_broker = BacktestBrokerAdapter(broker)
 
@@ -72,14 +78,36 @@ class BacktestRunner:
             context["position_manager"] = self.position_manager
         return context
 
+    async def _strategy_is_blocked_by_open_position(self) -> bool:
+        """Mirror DayTrader's one-open-position-per-symbol guard when possible."""
+        if self.position_manager is None:
+            return False
+        symbol = getattr(self.strategy, "symbol", None)
+        if not symbol:
+            return False
+        return bool(await self.broker.positions_get(symbol=symbol))
+
     async def run_async(self, *, max_steps: int | None = None) -> BacktestResult:
         result = BacktestResult()
-        while not self.feed.finished and (max_steps is None or result.evaluations < max_steps):
+        while not self.feed.finished and (
+            max_steps is None or result.evaluations < max_steps
+        ):
             timestamp = self.broker.advance()
-            await self.strategy.evaluate(self.market_context())
+
+            if self.atr_manager is not None:
+                self.atr_manager.refresh_once()
+
+            if not await self._strategy_is_blocked_by_open_position():
+                await self.strategy.evaluate(self.market_context())
+
             self.broker.settle_pending_orders()
+
+            if self.position_manager is not None:
+                await self.position_manager.update_once()
+
             result.evaluations += 1
             result.timestamps.append(timestamp)
+
         result.accepted_orders = list(self.strategy_broker.accepted_responses)
         return result
 
