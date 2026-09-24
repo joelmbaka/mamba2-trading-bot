@@ -38,7 +38,19 @@ class Bot:
             print("Using mock MT5 broker")
             broker = MT5Mock()
         else:
-            print(f"Connecting to real MT5 account: {config.mt5.login}")
+            required = {
+                "MAMBA_MT5_LOGIN": config.mt5.login,
+                "MAMBA_MT5_PASSWORD": config.mt5.password,
+                "MAMBA_MT5_SERVER": config.mt5.server,
+            }
+            missing = [name for name, value in required.items() if not value]
+            if missing:
+                raise RuntimeError(
+                    "Real MT5 requires explicit environment configuration: "
+                    + ", ".join(missing)
+                )
+
+            print("Connecting to real MT5 account configured by environment")
             broker = MT5Broker(
                 path=config.mt5.path,
                 login=config.mt5.login,
