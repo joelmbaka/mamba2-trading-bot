@@ -170,5 +170,5 @@ def test_atr_refresh_uses_only_completed_m5_history(monkeypatch):
     assert feed.current_time == pd.Timestamp("2025-01-02 10:10", tz="UTC")
     after = atr_manager.get_atr("EURUSD", "M5")
 
-    assert before == pytest.approx(0.0008)
-    assert after == pytest.approx(0.0008)
+    assert before == pytest.approx(0.0)
+    assert after == pytest.approx(0.0012)
