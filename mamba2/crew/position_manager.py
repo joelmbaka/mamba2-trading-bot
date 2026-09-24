@@ -69,77 +69,100 @@ class PositionManager:
                 stop_loss = position['sl']
                 take_profit = position['tp']
                 
-                # If no stop loss or take profit is set, calculate SL/TP based on ATR
-                if (stop_loss == 0 or take_profit == 0) and self.atr_manager:
-                    logger.trace(f"No SL set for position {ticket}, getting ATR-based SL/TP")
-                    
-                    # Get ATR value using the configured timeframe (default 'M5')
+                # If no stop loss or take profit is set, calculate SL/TP based on ATR.
+                if stop_loss == 0 or take_profit == 0:
+                    if not self.atr_manager:
+                        self.positions[symbol] = position
+                        continue
+
+                    logger.trace(
+                        f"No SL/TP set for position {ticket}, getting ATR-based levels"
+                    )
                     timeframe = getattr(config, 'atr_timeframe', 'M5')
                     atr = self.atr_manager.get_atr(symbol, timeframe)
-                    
-                    if atr is not None and atr > 0:
-                        # Use the CURRENT price to calculate SL/TP
-                        # Calculate SL/TP around the CURRENT price
-                        if position_type == 0:  # Buy position
-                            stop_loss = current_price - (atr * config.atr_sl_multiplier)
-                            take_profit = current_price + (atr * config.atr_tp_multiplier)
-                        else:  # Sell position
-                            stop_loss = current_price + (atr * config.atr_sl_multiplier)
-                            take_profit = current_price - (atr * config.atr_tp_multiplier)
-                        
-                        # Log the calculation details
-                        logger.debug(
-                            f"Calculated initial SL/TP for {symbol}: "
-                            f"Current={current_price:.5f}, ATR={atr:.5f}, "
-                            f"SL={stop_loss:.5f}, TP={take_profit:.5f}"
+
+                    # A replay boundary can legitimately arrive before enough
+                    # completed M5 history exists for ATR. Keep the position
+                    # untouched until a positive ATR becomes available.
+                    if atr is None or atr <= 0:
+                        self.positions[symbol] = position
+                        continue
+
+                    if position_type == 0:  # Buy position
+                        stop_loss = current_price - (
+                            atr * config.atr_sl_multiplier
                         )
-    
-                        # Then update the position with new SL/TP
-                    #    logger.info(f"Setting ATR-based SL/TP for {symbol} position {ticket}: SL={stop_loss:.5f}, TP={take_profit:.5f}")
-                        success = await self._update_position_sl(position, stop_loss, take_profit)
-                        if success is None:
-                            continue
-                        elif success:
-                            logger.trace(f"Successfully set ATR-based SL/TP for position {ticket}")
-                        continue  # Skip trailing for this position as we just set initial SL/TP
+                        take_profit = current_price + (
+                            atr * config.atr_tp_multiplier
+                        )
+                    else:  # Sell position
+                        stop_loss = current_price + (
+                            atr * config.atr_sl_multiplier
+                        )
+                        take_profit = current_price - (
+                            atr * config.atr_tp_multiplier
+                        )
 
-                # Check if we should adjust SL/TP when price is close to take profit
+                    logger.debug(
+                        f"Calculated initial SL/TP for {symbol}: "
+                        f"Current={current_price:.5f}, ATR={atr:.5f}, "
+                        f"SL={stop_loss:.5f}, TP={take_profit:.5f}"
+                    )
+                    success = await self._update_position_sl(
+                        position,
+                        stop_loss,
+                        take_profit,
+                    )
+                    if success:
+                        logger.trace(
+                            f"Successfully set ATR-based SL/TP for position {ticket}"
+                        )
+                    self.positions[symbol] = position
+                    continue
+
+                # Existing protected positions may be trailed only when a
+                # positive ATR is currently available.
                 if self.atr_manager:
-                    if position_type == 0:  # Buy
-                        if (take_profit - current_price) < (1/3) * (take_profit - stop_loss):
-                            atr = self.atr_manager.get_atr(symbol, getattr(config, 'atr_timeframe', 'M5'))
-                            if atr:
-                                await self._update_position_sl(position, 
-                                    current_price - (atr * config.atr_sl_multiplier),
-                                    current_price + (atr * config.atr_tp_multiplier))
-                                continue
-                    else:  # Sell
-                        if (current_price - take_profit) < (1/3) * (stop_loss - take_profit):
-                            atr = self.atr_manager.get_atr(symbol, getattr(config, 'atr_timeframe', 'M5'))
-                            if atr:
-                                await self._update_position_sl(position,
-                                    current_price + (atr * config.atr_sl_multiplier),
-                                    current_price - (atr * config.atr_tp_multiplier))
-                                continue
+                    atr = self.atr_manager.get_atr(
+                        symbol,
+                        getattr(config, 'atr_timeframe', 'M5'),
+                    )
+                    if atr is not None and atr > 0:
+                        if position_type == 0:
+                            near_target = (
+                                take_profit - current_price
+                            ) < (1 / 3) * (take_profit - stop_loss)
+                            if near_target:
+                                new_sl = current_price - (
+                                    atr * config.atr_sl_multiplier
+                                )
+                                new_tp = current_price + (
+                                    atr * config.atr_tp_multiplier
+                                )
+                                if new_sl > stop_loss:
+                                    await self._update_position_sl(
+                                        position,
+                                        new_sl,
+                                        new_tp,
+                                    )
+                        else:
+                            near_target = (
+                                current_price - take_profit
+                            ) < (1 / 3) * (stop_loss - take_profit)
+                            if near_target:
+                                new_sl = current_price + (
+                                    atr * config.atr_sl_multiplier
+                                )
+                                new_tp = current_price - (
+                                    atr * config.atr_tp_multiplier
+                                )
+                                if new_sl < stop_loss:
+                                    await self._update_position_sl(
+                                        position,
+                                        new_sl,
+                                        new_tp,
+                                    )
 
-                # Check if price is near take profit (within 1/3 of the range)
-                if position_type == 0 and (take_profit - current_price) < (1/3) * (take_profit - stop_loss):  # Buy position
-                    new_sl = current_price - (atr * config.atr_sl_multiplier)
-                    new_tp = current_price + (atr * config.atr_tp_multiplier)
-                    # Only move stop up if it would lock in more profit
-                    if new_sl > stop_loss:
-                        logger.trace(f"Updating BUY position {ticket} SL from {stop_loss:.5f} to {new_sl:.5f}")
-                        success = await self._update_position_sl(position, new_sl, new_tp)
-                
-                elif position_type == 1 and (current_price - take_profit) < (1/3) * (stop_loss - take_profit):  # Sell position
-                    new_sl = current_price + (atr * config.atr_sl_multiplier)
-                    new_tp = current_price - (atr * config.atr_tp_multiplier)
-                    # Only move stop down if it would lock in more profit
-                    if new_sl < stop_loss:
-                        logger.trace(f"Updating SELL position {ticket} SL from {stop_loss:.5f} to {new_sl:.5f}")
-                        success = await self._update_position_sl(position, new_sl, new_tp)
-                
-                # Store the position in the dictionary
                 self.positions[symbol] = position
         
         except Exception as e:

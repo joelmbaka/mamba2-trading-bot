@@ -141,10 +141,23 @@ def test_runner_sets_initial_atr_stop_and_target_on_same_fill_boundary(monkeypat
 
 
 def test_runner_mirrors_live_one_open_position_per_symbol_guard(monkeypatch):
+    # Isolate the DayTrader-style guard from ATR/exit behavior. With no ATR
+    # manager the first position remains open, so later strategy evaluations
+    # for the same symbol must be blocked.
+    configure_lifecycle(monkeypatch)
     strategy = RepeatingStrategy()
-    _feed, broker, _atr_manager, _position_manager, runner = build_lifecycle(
-        monkeypatch,
+    feed = ReplayFeed(lifecycle_bars())
+    broker = HistoricalBroker(feed)
+    position_manager = PositionManager(
+        broker,
+        atr_manager=None,
+        rates_fetcher=feed,
+    )
+    runner = BacktestRunner(
+        feed,
+        broker,
         strategy,
+        position_manager=position_manager,
     )
 
     result = runner.run(max_steps=13)
@@ -172,3 +185,40 @@ def test_atr_refresh_uses_only_completed_m5_history(monkeypatch):
 
     assert before == pytest.approx(0.0)
     assert after == pytest.approx(0.0012)
+
+
+@pytest.mark.asyncio
+async def test_position_manager_waits_cleanly_when_atr_is_unavailable(monkeypatch):
+    configure_lifecycle(monkeypatch)
+    feed = ReplayFeed(lifecycle_bars())
+    broker = HistoricalBroker(feed)
+
+    # Fill one unprotected position before any completed M5 history can
+    # produce a positive ATR.
+    broker.advance()
+    broker.order_send(
+        {
+            "symbol": "EURUSD",
+            "type": 0,
+            "volume": 0.1,
+            "sl": 0.0,
+            "tp": 0.0,
+        }
+    )
+    broker.settle_pending_orders()
+
+    atr_manager = ATRManager(feed)
+    position_manager = PositionManager(
+        broker,
+        atr_manager=atr_manager,
+        rates_fetcher=feed,
+    )
+
+    assert atr_manager.refresh_once() == 0
+    await position_manager.update_once()
+
+    position = broker.position_get_ticket(1)
+    assert position is not None
+    assert position["sl"] == 0.0
+    assert position["tp"] == 0.0
+    assert position_manager.get_position("EURUSD") is not None
