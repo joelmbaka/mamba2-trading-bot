@@ -311,21 +311,46 @@ def load_mt5_dataset(manifest_path: str | Path) -> LoadedHistoricalDataset:
     )
 
 
-def _require_mt5_config(config: Any) -> None:
-    missing = [
-        name
-        for name, value in {
-            "MAMBA_MT5_LOGIN": config.login,
-            "MAMBA_MT5_PASSWORD": config.password,
-            "MAMBA_MT5_SERVER": config.server,
-        }.items()
-        if not value
-    ]
-    if missing:
+def _mt5_initialize_kwargs(config: Any) -> dict[str, Any]:
+    """Build safe MT5 initialize kwargs for the read-only exporter.
+
+    The exporter may use an already authenticated terminal session when login,
+    password, and server are all absent. If any credential field is supplied,
+    all three are required so a partial configuration cannot silently select
+    an unintended account.
+    """
+
+    credentials = {
+        "MAMBA_MT5_LOGIN": config.login,
+        "MAMBA_MT5_PASSWORD": config.password,
+        "MAMBA_MT5_SERVER": config.server,
+    }
+    provided = [name for name, value in credentials.items() if value]
+    missing = [name for name, value in credentials.items() if not value]
+
+    if provided and missing:
         raise RuntimeError(
-            "MT5 historical export requires explicit environment configuration: "
-            + ", ".join(missing)
+            "MT5 historical export received partial environment configuration; "
+            "provide all of: MAMBA_MT5_LOGIN, MAMBA_MT5_PASSWORD, "
+            "MAMBA_MT5_SERVER, or leave all three unset to use the terminal "
+            "session already authenticated in MT5."
         )
+
+    kwargs: dict[str, Any] = {
+        "timeout": config.timeout,
+        "portable": config.portable,
+    }
+    if config.path:
+        kwargs["path"] = config.path
+
+    if not missing:
+        kwargs.update(
+            login=config.login,
+            password=config.password,
+            server=config.server,
+        )
+
+    return kwargs
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -346,7 +371,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     from config import mt5 as mt5_config
 
-    _require_mt5_config(mt5_config)
+    initialize_kwargs = _mt5_initialize_kwargs(mt5_config)
     try:
         import MetaTrader5 as mt5
     except ModuleNotFoundError as exc:
@@ -354,14 +379,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "MT5 historical export requires the Windows-only MetaTrader5 package"
         ) from exc
 
-    if not mt5.initialize(
-        path=mt5_config.path,
-        login=mt5_config.login,
-        password=mt5_config.password,
-        server=mt5_config.server,
-        timeout=mt5_config.timeout,
-        portable=mt5_config.portable,
-    ):
+    if not mt5.initialize(**initialize_kwargs):
         raise ConnectionError(f"Failed to initialize MT5: {mt5.last_error()}")
 
     try:

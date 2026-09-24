@@ -7,6 +7,7 @@ import pytest
 
 from mamba2.backtest.mt5_dataset import (
     DatasetIntegrityError,
+    _mt5_initialize_kwargs,
     export_mt5_dataset,
     load_mt5_dataset,
 )
@@ -130,3 +131,51 @@ def test_exporter_surface_is_read_only_by_construction(tmp_path):
     # The export succeeds, proving no order-management API is required.
     manifest_path = export_fixture(tmp_path)
     assert manifest_path.is_file()
+
+
+def test_mt5_initialize_kwargs_allow_existing_terminal_session():
+    config = SimpleNamespace(
+        login=None,
+        password="",
+        server="",
+        path="",
+        timeout=60000,
+        portable=False,
+    )
+
+    assert _mt5_initialize_kwargs(config) == {
+        "timeout": 60000,
+        "portable": False,
+    }
+
+
+def test_mt5_initialize_kwargs_require_complete_explicit_credentials():
+    partial = SimpleNamespace(
+        login=123456,
+        password="",
+        server="Example-Demo",
+        path="",
+        timeout=60000,
+        portable=False,
+    )
+    with pytest.raises(RuntimeError, match="partial environment configuration"):
+        _mt5_initialize_kwargs(partial)
+
+    complete = SimpleNamespace(
+        login=123456,
+        password="placeholder-secret",
+        server="Example-Demo",
+        path=r"C:\\Example\\terminal64.exe",
+        timeout=45000,
+        portable=True,
+    )
+    kwargs = _mt5_initialize_kwargs(complete)
+
+    assert kwargs == {
+        "path": r"C:\\Example\\terminal64.exe",
+        "login": 123456,
+        "password": "placeholder-secret",
+        "server": "Example-Demo",
+        "timeout": 45000,
+        "portable": True,
+    }
