@@ -24,6 +24,10 @@ Mamba2 is a Python-based algorithmic trading framework designed for backtesting 
    uv pip install MetaTrader5
    ```
 
+## MT5 credentials
+
+Mamba2 does not store MT5 credentials in source code. Configure MT5 access through local environment variables (or an ignored `.env` file copied from `.env.example`): `MAMBA_MT5_LOGIN`, `MAMBA_MT5_PASSWORD`, and `MAMBA_MT5_SERVER`. Optional settings are `MAMBA_MT5_PATH`, `MAMBA_MT5_TIMEOUT`, and `MAMBA_MT5_PORTABLE`.
+
 ## Quick Start
 
 ```python
