@@ -1,4 +1,9 @@
-"""A completed-candle-only historical replay feed."""
+"""A completed-candle-only historical replay feed.
+
+Historical source indexes are BAR OPEN timestamps. The replay clock is an
+information-availability timestamp, so a source candle is strategy-visible
+only when ``bar_open + timeframe <= replay_time``.
+"""
 
 from __future__ import annotations
 
@@ -15,10 +20,11 @@ TIMEFRAME_MINUTES = {"M1": 1, "M5": 5, "M15": 15}
 class ReplayFeed:
     """Advance through M1 bars and expose only completed historical views.
 
-    ``advance`` makes one M1 candle visible. A derived M5/M15 candle becomes
-    visible only after all of its constituent M1 candles are visible. The
-    feed's clock is therefore the only source of historical time; callers
-    cannot request bars beyond ``current_time``.
+    ``advance`` moves the information clock to the next M1 completion
+    boundary. A derived M5/M15 candle becomes visible only after all of its
+    constituent M1 candles are visible. The feed's clock is therefore the
+    only source of historical time; callers cannot request bars beyond
+    ``current_time``.
     """
 
     def __init__(self, bars: pd.DataFrame | Mapping[str, pd.DataFrame], *, symbol: str = "EURUSD"):
@@ -28,7 +34,13 @@ class ReplayFeed:
             self._bars = {symbol: canonicalize_bars(bars)}
         if not self._bars or any(frame.empty for frame in self._bars.values()):
             raise ValueError("at least one non-empty symbol history is required")
-        self._timeline = pd.DatetimeIndex(sorted(set().union(*(frame.index for frame in self._bars.values()))))
+        self._timeline = pd.DatetimeIndex(
+            sorted(
+                set().union(
+                    *(frame.index + pd.Timedelta(minutes=1) for frame in self._bars.values())
+                )
+            )
+        )
         self._position = -1
 
     @property
@@ -51,10 +63,24 @@ class ReplayFeed:
         return self.current_time  # type: ignore[return-value]
 
     def current_bar(self, symbol: str) -> pd.Series | None:
+        """Return the latest completed source bar visible to strategy code."""
         visible = self.get_rates(symbol, "M1")
-        if visible.empty or self.current_time not in visible.index:
+        return None if visible.empty else visible.iloc[-1]
+
+    def completed_bar(self, symbol: str) -> pd.Series | None:
+        """Return the M1 bar whose range became known at current_time."""
+        if self.current_time is None or symbol not in self._bars:
             return None
-        return visible.loc[self.current_time]
+        opening = self.current_time - pd.Timedelta(minutes=1)
+        source = self._bars[symbol]
+        return source.loc[opening] if opening in source.index else None
+
+    def execution_bar(self, symbol: str) -> pd.Series | None:
+        """Return only the current bar open used for broker execution."""
+        if self.current_time is None or symbol not in self._bars:
+            return None
+        source = self._bars[symbol]
+        return source.loc[self.current_time] if self.current_time in source.index else None
 
     def get_rates(self, symbol: str, timeframe: str | int) -> pd.DataFrame:
         """Return completed bars visible at the current replay instant."""
@@ -65,7 +91,9 @@ class ReplayFeed:
             raise ValueError(f"unsupported replay timeframe: {timeframe_name}")
 
         source = self._bars[symbol]
-        visible = source.loc[source.index <= self.current_time]
+        visible = source.loc[
+            source.index + pd.Timedelta(minutes=1) <= self.current_time
+        ]
         if timeframe_name == "M1":
             return visible.copy()
 

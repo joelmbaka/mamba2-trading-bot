@@ -98,19 +98,27 @@ def test_forced_buy_is_accepted_but_fills_on_next_bar(monkeypatch):
     strategy = triple_cross.StochasticTripleTFStrategy("EURUSD")
     runner = BacktestRunner(feed, broker, strategy, rate_fetcher=recorder)
 
+    settlement_positions = []
+    original_settle = broker.settle_pending_orders
+
+    def record_settlement():
+        settlement_positions.append(broker.positions_total())
+        original_settle()
+
+    monkeypatch.setattr(broker, "settle_pending_orders", record_settlement)
     result = runner.run(max_steps=2)
 
     assert len(result.accepted_orders) == 1
     assert result.accepted_orders[0]["retcode"] == 0
     assert result.accepted_orders[0]["price"] == 0.0
-    assert broker.positions_total() == 0
-    assert all(
-        visible_time is None or visible_time <= evaluation_time
-        for evaluation_time, _timeframe, visible_time in recorder.calls
-    )
-
-    broker.advance()
+    assert settlement_positions[-1] == 0
+    assert broker.positions_total() == 1
     position = broker.position_get_ticket(1)
-    assert position is not None
     assert position["price_open"] == 102
     assert position["time"] == int(pd.Timestamp("2025-01-02 10:02", tz="UTC").timestamp())
+    timeframe_minutes = {"M1": 1, "M5": 5, "M15": 15}
+    assert all(
+        visible_time is None
+        or visible_time + pd.Timedelta(minutes=timeframe_minutes[timeframe]) <= evaluation_time
+        for evaluation_time, timeframe, visible_time in recorder.calls
+    )

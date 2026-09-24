@@ -30,6 +30,7 @@ def make_broker(opens, highs, lows, closes):
 def open_position(broker, *, side=0, volume=1.0, **request):
     broker.advance()
     response = broker.order_send({"symbol": "EURUSD", "type": side, "volume": volume, **request})
+    broker.settle_pending_orders()
     broker.advance()
     return response, broker.position_get_ticket(1)
 
@@ -107,6 +108,20 @@ def test_buy_and_sell_take_profit_exits():
     assert position is None
     assert sell.closed_trades[0].close_price == 97
     assert sell.closed_trades[0].exit_reason == "take_profit"
+
+
+def test_sl_tp_is_not_evaluated_until_execution_candle_completes():
+    broker = make_broker([100, 100, 102], [101, 105, 103], [99, 95, 101], [100, 102, 102])
+    broker.advance()  # replay time 10:01; source 10:00 is visible
+    broker.order_send({"symbol": "EURUSD", "type": 0, "volume": 1.0, "sl": 98, "tp": 104})
+    broker.settle_pending_orders()  # fill at 10:01 open
+
+    assert broker.positions_total() == 1
+    assert broker.closed_trades == ()
+
+    broker.advance()  # replay time 10:02; source 10:01 range is now known
+    assert broker.positions_total() == 0
+    assert broker.closed_trades[0].exit_reason == "stop_loss"
 
 
 def test_adverse_stop_gaps_fill_at_next_bar_open_for_buy_and_sell():

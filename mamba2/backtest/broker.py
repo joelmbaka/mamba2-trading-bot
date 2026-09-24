@@ -80,10 +80,14 @@ class HistoricalBroker:
 
     def advance(self):
         timestamp = self.feed.advance()
-        self._fill_pending()
-        self._mark_positions()
         self._process_exits()
+        self._mark_positions()
+        self.settle_pending_orders()
         return timestamp
+
+    def settle_pending_orders(self) -> None:
+        """Fill orders eligible at the current replay boundary."""
+        self._fill_pending()
 
     def symbol_select(self, symbol: str, enable: bool = True) -> bool:
         return enable and symbol in self.feed.symbols
@@ -202,11 +206,11 @@ class HistoricalBroker:
         remaining = []
         for order in self._pending:
             submitted_at = order["submitted_at"]
-            if submitted_at is not None and current <= submitted_at:
+            if submitted_at is not None and current < submitted_at:
                 remaining.append(order)
                 continue
             request = order["request"]
-            bar = self.feed.current_bar(request["symbol"])
+            bar = self.feed.execution_bar(request["symbol"])
             if bar is None:
                 remaining.append(order)
                 continue
@@ -229,7 +233,7 @@ class HistoricalBroker:
 
     def _mark_positions(self) -> None:
         for position in self._positions:
-            bar = self.feed.current_bar(position["symbol"])
+            bar = self.feed.completed_bar(position["symbol"])
             if bar is None:
                 continue
             current = float(bar["close"])
@@ -238,7 +242,7 @@ class HistoricalBroker:
 
     def _process_exits(self) -> None:
         for position in list(self._positions):
-            bar = self.feed.current_bar(position["symbol"])
+            bar = self.feed.completed_bar(position["symbol"])
             if bar is None:
                 continue
             reason = self._exit_reason(position, bar)

@@ -77,6 +77,7 @@ class BacktestRunner:
         while not self.feed.finished and (max_steps is None or result.evaluations < max_steps):
             timestamp = self.broker.advance()
             await self.strategy.evaluate(self.market_context())
+            self.broker.settle_pending_orders()
             result.evaluations += 1
             result.timestamps.append(timestamp)
         result.accepted_orders = list(self.strategy_broker.accepted_responses)

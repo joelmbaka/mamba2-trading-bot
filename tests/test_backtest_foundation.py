@@ -39,29 +39,36 @@ def test_bar_validation_and_timezone_normalization():
 
 def test_future_m1_and_incomplete_higher_timeframes_are_hidden():
     feed = ReplayFeed(fixture_bars())
-    feed.advance()  # 10:00
+    assert feed.get_rates("EURUSD", "M1").empty
+    feed.advance()  # replay time 10:01; source bar 10:00 is complete
     assert len(feed.get_rates("EURUSD", "M1")) == 1
+    assert feed.get_rates("EURUSD", "M1").index[-1] == pd.Timestamp("2025-01-02 10:00", tz="UTC")
+    assert pd.Timestamp("2025-01-02 10:01", tz="UTC") not in feed.get_rates("EURUSD", "M1").index
     assert feed.get_rates("EURUSD", "M1").index[-1].minute == 0
     assert feed.get_rates("EURUSD", "M5").empty
     assert feed.get_rates("EURUSD", "M15").empty
 
-    for _ in range(7):
-        feed.advance()  # 10:01 through 10:07
-    assert len(feed.get_rates("EURUSD", "M1")) == 8
+    for _ in range(6):
+        feed.advance()  # replay time 10:02 through 10:07
+    assert len(feed.get_rates("EURUSD", "M1")) == 7
     assert len(feed.get_rates("EURUSD", "M5")) == 1
     assert feed.get_rates("EURUSD", "M5").index[-1] == pd.Timestamp("2025-01-02 10:00", tz="UTC")
     assert pd.Timestamp("2025-01-02 10:05", tz="UTC") not in feed.get_rates("EURUSD", "M5").index
     assert feed.get_rates("EURUSD", "M15").empty
 
-    feed.advance()  # 10:08
-    feed.advance()  # 10:09: the 10:05 M5 bar is now complete
+    feed.advance()  # replay time 10:08
+    feed.advance()  # replay time 10:09; 10:05 M5 is still incomplete
+    assert len(feed.get_rates("EURUSD", "M5")) == 1
+    feed.advance()  # replay time 10:10; 10:05 M5 is complete
     assert len(feed.get_rates("EURUSD", "M5")) == 2
 
 
 def test_boundary_crossing_releases_completed_m15_bar():
     feed = ReplayFeed(fixture_bars())
-    for _ in range(15):
-        feed.advance()
+    for _ in range(14):
+        feed.advance()  # replay time 10:14
+    assert feed.get_rates("EURUSD", "M15").empty
+    feed.advance()  # replay time 10:15
     m15 = feed.get_rates("EURUSD", "M15")
     assert len(m15) == 1
     assert m15.index[0] == pd.Timestamp("2025-01-02 10:00", tz="UTC")
@@ -73,12 +80,12 @@ def test_order_fills_on_next_m1_open_not_signal_candle():
     feed = ReplayFeed(fixture_bars())
     broker = HistoricalBroker(feed)
     broker.initialize()
-    broker.advance()  # signal candle 10:00
+    broker.advance()  # replay time 10:01; source 10:00 is visible
     submitted = broker.order_send({"symbol": "EURUSD", "type": 0, "volume": 1.0})
     assert submitted["deal"] == 0
     assert broker.positions_total() == 0
 
-    broker.advance()  # execution candle 10:01
+    broker.settle_pending_orders()  # fill at 10:01 open before its OHLC is visible
     position = broker.position_get_ticket(1)
     assert position is not None
     assert position["time"] == int(pd.Timestamp("2025-01-02 10:01", tz="UTC").timestamp())
@@ -117,22 +124,22 @@ def test_copy_rates_from_pos_cannot_read_future_bars():
 
 
 def test_pending_order_waits_for_a_real_symbol_candle():
-    sparse_symbol = fixture_bars(3).iloc[[0, 2]].copy()
-    other_symbol = fixture_bars(3).copy()
+    sparse_symbol = fixture_bars(4).iloc[[0, 3]].copy()
+    other_symbol = fixture_bars(4).copy()
     feed = ReplayFeed({"EURUSD": sparse_symbol, "GBPUSD": other_symbol})
     broker = HistoricalBroker(feed)
 
-    broker.advance()  # both symbols have 10:00
+    broker.advance()  # replay time 10:01; both symbols have completed 10:00
     broker.order_send({"symbol": "EURUSD", "type": 0, "volume": 1.0})
 
-    broker.advance()  # 10:01 exists only for GBPUSD
+    broker.advance()  # replay time 10:02; EURUSD has no 10:02 execution bar
     assert broker.positions_total() == 0
 
-    broker.advance()  # EURUSD's next real candle is 10:02
+    broker.advance()  # replay time 10:03; EURUSD's 10:03 bar is available
     position = broker.position_get_ticket(1)
     assert position is not None
-    assert position["time"] == int(pd.Timestamp("2025-01-02 10:02", tz="UTC").timestamp())
-    assert position["price_open"] == 102
+    assert position["time"] == int(pd.Timestamp("2025-01-02 10:03", tz="UTC").timestamp())
+    assert position["price_open"] == 103
 
 
 def replay_snapshot():
