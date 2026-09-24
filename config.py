@@ -1,87 +1,122 @@
 """Configuration settings for the trading bot."""
+
 from dataclasses import dataclass, field
+import os
 from typing import Optional
+
+from dotenv import load_dotenv
+
+
+load_dotenv()
+
+
+def _env_int(name: str, default: int | None = None) -> int | None:
+    value = os.getenv(name)
+    if value is None or not value.strip():
+        return default
+    return int(value)
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
 
 @dataclass
 class MT5Config:
-    """MT5 connection configuration."""
-    login: int = 5037284070
-    password: str = "UiRf!a8q"
-    server: str = "MetaQuotes-Demo"
-    path: str = ""  # Path to MT5 terminal executable
-    timeout: int = 60000
-    portable: bool = False
-    """ Name     : echui nyamatonto
-Type     : Forex Hedged USD
-Server   : MetaQuotes-Demo
-Login    : 5037284070
-Password : UiRf!a8q
-Investor : @sW4JdHo
+    """MT5 connection configuration sourced from environment variables."""
 
-    """
+    login: Optional[int] = field(
+        default_factory=lambda: _env_int("MAMBA_MT5_LOGIN")
+    )
+    password: str = field(
+        default_factory=lambda: os.getenv("MAMBA_MT5_PASSWORD", "")
+    )
+    server: str = field(
+        default_factory=lambda: os.getenv("MAMBA_MT5_SERVER", "")
+    )
+    path: str = field(
+        default_factory=lambda: os.getenv("MAMBA_MT5_PATH", "")
+    )
+    timeout: int = field(
+        default_factory=lambda: _env_int("MAMBA_MT5_TIMEOUT", 60000) or 60000
+    )
+    portable: bool = field(
+        default_factory=lambda: _env_bool("MAMBA_MT5_PORTABLE", False)
+    )
+
 
 @dataclass
 class Config:
     """Main configuration class."""
-    # Broker settings
-    use_mock: bool = False  # Set to False to use real MT5
-    mt5: MT5Config = MT5Config()
 
-    use_higher_tf: bool = False   
+    use_mock: bool = False
+    mt5: MT5Config = field(default_factory=MT5Config)
+
+    use_higher_tf: bool = False
     ENABLE_TREND_CONDITION = False
     ENABLE_RSI_CONDITION = False
-    
-    # Trading symbols configuration
-    symbols: list = field(default_factory=lambda: ['EURUSD', 'EURJPY', 'GBPUSD', 'GBPJPY', 'USDJPY'])
-    
-    # Trading settings
+
+    symbols: list = field(
+        default_factory=lambda: [
+            "EURUSD",
+            "EURJPY",
+            "GBPUSD",
+            "GBPJPY",
+            "USDJPY",
+        ]
+    )
+
     timeframe: str = "M1"
-    
-    # Position sizing
-    position_size: float = 0.1  # 1 standard lot = 100,000 units
-    leverage: int = 1000  # Account leverage
-    
-    # Position manager
+    position_size: float = 0.1
+    leverage: int = 1000
 
-    atr_sl_multiplier: float = 1.0  # Stop loss multiplier for ATR (2:4 risk-reward ratio)
-    atr_tp_multiplier: float = 2.0  # Take profit multiplier for ATR (2:4 risk-reward ratio)
-    atr_period: int = 14  # ATR calculation period
-    atr_timeframe: str = 'M5'  # MT5 timeframe for ATR calculation (M5 by default)
-    atr_update_interval: int = 30  # Seconds between ATR recalculations
+    atr_sl_multiplier: float = 1.0
+    atr_tp_multiplier: float = 2.0
+    atr_period: int = 14
+    atr_timeframe: str = "M5"
+    atr_update_interval: int = 30
 
-    # Trading interval (in seconds)
-    trading_interval_seconds: int = 30  # 60 seconds
-    
-    # Stochastic strategy settings
-    stochastic_timeframes: dict = field(default_factory=lambda: {"higher": "M15", "trading": "M5", "entry": "M1"})
+    trading_interval_seconds: int = 30
+
+    stochastic_timeframes: dict = field(
+        default_factory=lambda: {
+            "higher": "M15",
+            "trading": "M5",
+            "entry": "M1",
+        }
+    )
     stochastic_k_period: int = 14
-    
-    # Default timeframes to monitor (in minutes)
-    timeframes: dict = field(default_factory=lambda: {
-        'M1': 1,
-        'M5': 5,
-        'M15': 15
-    })
 
-    # Cache TTL in seconds (5 minutes)
+    timeframes: dict = field(
+        default_factory=lambda: {
+            "M1": 1,
+            "M5": 5,
+            "M15": 15,
+        }
+    )
+
     cache_ttl: int = 300
-    
-    # Rates Fetcher Configuration
-    rates_fetcher: dict = field(default_factory=lambda: {
-        'update_interval': 30,  # How often to fetch new rates in seconds
-        'rates_count': 200,      # Number of historical rates to fetch
-    })
 
-    # Analytics settings
-    analytics_config: dict = field(default_factory=lambda: {
-        'enable_analytics': True,  # Set to False to disable position analytics
-        'analysis_lookback_period': 180  # Minutes of historical data to show in charts
-    })
+    rates_fetcher: dict = field(
+        default_factory=lambda: {
+            "update_interval": 30,
+            "rates_count": 200,
+        }
+    )
 
-# Create a global config instance
+    analytics_config: dict = field(
+        default_factory=lambda: {
+            "enable_analytics": True,
+            "analysis_lookback_period": 180,
+        }
+    )
+
+
 config = Config()
 
-# For backward compatibility, expose needed attributes directly
 use_mock = config.use_mock
 mt5 = config.mt5
 symbols = config.symbols
@@ -103,13 +138,11 @@ analytics_config = config.analytics_config
 ENABLE_TREND_CONDITION = config.ENABLE_TREND_CONDITION
 ENABLE_RSI_CONDITION = config.ENABLE_RSI_CONDITION
 
+RUN_TRADER = False
 
-RUN_TRADER = False  # Set to False to disable trader task
 
 def load_config(config_path: Optional[str] = None) -> Config:
     """Load configuration from a file if provided, otherwise return default."""
     if config_path:
-        # TODO: Implement loading from file if needed
         pass
     return config
-
