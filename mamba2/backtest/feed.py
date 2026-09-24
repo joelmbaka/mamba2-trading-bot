@@ -3,6 +3,11 @@
 Historical source indexes are BAR OPEN timestamps. The replay clock is an
 information-availability timestamp, so a source candle is strategy-visible
 only when ``bar_open + timeframe <= replay_time``.
+
+M1 history drives the replay clock. Optional broker-native M5/M15 histories
+may be supplied for strategy parity with live MT5 data. When a native
+higher-timeframe series is present it is preferred over M1 resampling; when
+it is absent, ReplayFeed deterministically derives the timeframe from M1.
 """
 
 from __future__ import annotations
@@ -17,27 +22,93 @@ from .data import REQUIRED_BAR_COLUMNS, canonicalize_bars
 TIMEFRAME_MINUTES = {"M1": 1, "M5": 5, "M15": 15}
 
 
+def _empty_rates() -> pd.DataFrame:
+    return pd.DataFrame(
+        columns=REQUIRED_BAR_COLUMNS,
+        index=pd.DatetimeIndex([], name="time"),
+    )
+
+
+def _timeframe_name(timeframe: str | int) -> str:
+    name = f"M{timeframe}" if isinstance(timeframe, int) else timeframe
+    if name not in TIMEFRAME_MINUTES:
+        raise ValueError(f"unsupported replay timeframe: {name}")
+    return name
+
+
 class ReplayFeed:
     """Advance through M1 bars and expose only completed historical views.
 
     ``advance`` moves the information clock to the next M1 completion
-    boundary. A derived M5/M15 candle becomes visible only after all of its
-    constituent M1 candles are visible. The feed's clock is therefore the
-    only source of historical time; callers cannot request bars beyond
-    ``current_time``.
+    boundary. A candle is visible only after its full duration has elapsed.
+
+    Higher-timeframe data may come from either:
+
+    - broker-native M5/M15 OHLC supplied via ``native_timeframe_bars``; or
+    - deterministic aggregation of the replay's M1 source history.
+
+    Native bars are preferred when available so a later MT5 exporter can
+    reproduce exactly the timeframe candles seen by the live strategy.
     """
 
-    def __init__(self, bars: pd.DataFrame | Mapping[str, pd.DataFrame], *, symbol: str = "EURUSD"):
+    def __init__(
+        self,
+        bars: pd.DataFrame | Mapping[str, pd.DataFrame],
+        *,
+        symbol: str = "EURUSD",
+        native_timeframe_bars: Mapping[
+            str, Mapping[str | int, pd.DataFrame]
+        ] | None = None,
+    ):
         if isinstance(bars, Mapping):
-            self._bars = {name: canonicalize_bars(frame) for name, frame in bars.items()}
+            self._bars = {
+                name: canonicalize_bars(frame)
+                for name, frame in bars.items()
+            }
         else:
             self._bars = {symbol: canonicalize_bars(bars)}
+
         if not self._bars or any(frame.empty for frame in self._bars.values()):
             raise ValueError("at least one non-empty symbol history is required")
+
+        self._native_timeframe_bars: dict[
+            str, dict[str, pd.DataFrame]
+        ] = {}
+        for native_symbol, timeframe_map in (native_timeframe_bars or {}).items():
+            if native_symbol not in self._bars:
+                raise ValueError(
+                    f"native timeframe history has no M1 source for symbol: "
+                    f"{native_symbol}"
+                )
+
+            normalized: dict[str, pd.DataFrame] = {}
+            for timeframe, frame in timeframe_map.items():
+                name = _timeframe_name(timeframe)
+                if name == "M1":
+                    raise ValueError(
+                        "M1 must be supplied through the primary bars source"
+                    )
+
+                native = canonicalize_bars(frame)
+                minutes = TIMEFRAME_MINUTES[name]
+                aligned = native.index == native.index.floor(f"{minutes}min")
+                if not aligned.all():
+                    raise ValueError(
+                        f"{native_symbol} {name} bars must use aligned "
+                        "bar-open timestamps"
+                    )
+                normalized[name] = native
+
+            if normalized:
+                self._native_timeframe_bars[native_symbol] = normalized
+
         self._timeline = pd.DatetimeIndex(
             sorted(
                 set().union(
-                    *(frame.index + pd.Timedelta(minutes=1) for frame in self._bars.values())
+                    *(
+                        frame.index + pd.Timedelta(minutes=1)
+                        for frame in self._bars.values()
+                    )
                 )
             )
         )
@@ -56,14 +127,14 @@ class ReplayFeed:
         return self._position >= len(self._timeline) - 1
 
     def advance(self) -> pd.Timestamp:
-        """Expose exactly one more timestamp and return the replay time."""
+        """Expose exactly one more M1 completion boundary."""
         if self.finished:
             raise StopIteration("replay has no more M1 candles")
         self._position += 1
         return self.current_time  # type: ignore[return-value]
 
     def current_bar(self, symbol: str) -> pd.Series | None:
-        """Return the latest completed source bar visible to strategy code."""
+        """Return the latest completed M1 source bar visible to strategy code."""
         visible = self.get_rates(symbol, "M1")
         return None if visible.empty else visible.iloc[-1]
 
@@ -76,32 +147,53 @@ class ReplayFeed:
         return source.loc[opening] if opening in source.index else None
 
     def execution_bar(self, symbol: str) -> pd.Series | None:
-        """Return only the current bar open used for broker execution."""
+        """Return only the M1 bar whose open is usable for execution now."""
         if self.current_time is None or symbol not in self._bars:
             return None
         source = self._bars[symbol]
-        return source.loc[self.current_time] if self.current_time in source.index else None
+        return (
+            source.loc[self.current_time]
+            if self.current_time in source.index
+            else None
+        )
 
-    def get_rates(self, symbol: str, timeframe: str | int) -> pd.DataFrame:
+    def get_rates(
+        self,
+        symbol: str,
+        timeframe: str | int,
+    ) -> pd.DataFrame:
         """Return completed bars visible at the current replay instant."""
         if symbol not in self._bars or self.current_time is None:
-            return pd.DataFrame(columns=REQUIRED_BAR_COLUMNS, index=pd.DatetimeIndex([], name="time"))
-        timeframe_name = f"M{timeframe}" if isinstance(timeframe, int) else timeframe
-        if timeframe_name not in TIMEFRAME_MINUTES:
-            raise ValueError(f"unsupported replay timeframe: {timeframe_name}")
+            return _empty_rates()
 
+        timeframe_name = _timeframe_name(timeframe)
         source = self._bars[symbol]
-        visible = source.loc[
+        visible_m1 = source.loc[
             source.index + pd.Timedelta(minutes=1) <= self.current_time
         ]
         if timeframe_name == "M1":
-            return visible.copy()
+            return visible_m1.copy()
 
         minutes = TIMEFRAME_MINUTES[timeframe_name]
-        groups = visible.groupby(visible.index.floor(f"{minutes}min"), sort=True)
+        native = self._native_timeframe_bars.get(symbol, {}).get(timeframe_name)
+        if native is not None:
+            return native.loc[
+                native.index + pd.Timedelta(minutes=minutes)
+                <= self.current_time
+            ].copy()
+
+        groups = visible_m1.groupby(
+            visible_m1.index.floor(f"{minutes}min"),
+            sort=True,
+        )
         rows: list[dict] = []
         for start, group in groups:
-            expected = pd.date_range(start, periods=minutes, freq="min", tz="UTC")
+            expected = pd.date_range(
+                start,
+                periods=minutes,
+                freq="min",
+                tz="UTC",
+            )
             if len(group) != minutes or not group.index.equals(expected):
                 continue
             rows.append(
@@ -116,7 +208,5 @@ class ReplayFeed:
                     "real_volume": group["real_volume"].sum(),
                 }
             )
-        return canonicalize_bars(rows) if rows else pd.DataFrame(
-            columns=REQUIRED_BAR_COLUMNS,
-            index=pd.DatetimeIndex([], name="time"),
-        )
+
+        return canonicalize_bars(rows) if rows else _empty_rates()

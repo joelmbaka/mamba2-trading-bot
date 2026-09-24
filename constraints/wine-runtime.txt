@@ -1,0 +1,6 @@
+# Validated Wine / Windows Python runtime constraints.
+# These pins capture the known-good MT5 bridge environment used on 2026-09-24.
+# Native Linux backtests do not require MetaTrader5 or pywin32.
+numpy==2.2.1
+MetaTrader5==5.0.6180
+pywin32==310
