@@ -30,3 +30,9 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["mamba2*"]
+
+[tool.pytest.ini_options]
+addopts = ["-m", "not integration"]
+markers = [
+    "integration: tests requiring an explicitly configured MT5 terminal/account",
+]

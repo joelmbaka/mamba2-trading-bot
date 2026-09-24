@@ -1,10 +1,16 @@
+from unittest.mock import MagicMock
+
 from mamba2.trader.client import TraderClient
-from mamba2.broker.mt5_mock import mt5
 
 
 def test_load_and_run_strategy(broker):
+    broker.copy_rates_from_pos = MagicMock(
+        return_value=[{"open": 1.0, "close": 1.1}]
+    )
+    broker.order_send = MagicMock(return_value={"retcode": 0})
+
     client = TraderClient(broker)
     client.load_strategy("examples.simple_strategy")
     client.run()
 
-    assert len(broker.orders) == 1
+    broker.order_send.assert_called_once_with({"symbol": "EURUSD", "type": "BUY"})

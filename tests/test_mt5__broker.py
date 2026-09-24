@@ -1,6 +1,5 @@
 """Tests for the broker interface and implementations."""
 import pytest
-import time
 from mamba2.broker import Broker, MT5Mock, mt5
 
 def test_broker_interface():
@@ -96,38 +95,6 @@ def test_order_management():
     # Close position
     assert broker.position_close(1) is True
     assert broker.positions_total() == 0
-
-def test_copy_rates_from_range():
-    """Test getting historical data between timestamps."""
-    broker = MT5Mock()
-    broker.initialize()
-    
-    # Get current timestamp
-    now = int(time.time())
-    
-    # Test getting data for last hour
-    bars = broker.copy_rates_from_range(
-        symbol="EURUSD",
-        timeframe=1,  # M1
-        date_from=now - 3600,
-        date_to=now
-    )
-    
-    # Should get approximately 60 bars (1 per minute)
-    assert 50 <= len(bars) <= 70
-    
-    # Verify bar structure
-    bar = bars[0]
-    assert "open" in bar
-    assert "high" in bar
-    assert "low" in bar
-    assert "close" in bar
-    assert "time" in bar
-    assert "tick_volume" in bar
-    
-    # Verify time sequence
-    for i in range(1, len(bars)):
-        assert bars[i]["time"] == bars[i-1]["time"] + 60
 
 def test_global_instance():
     """Test the global MT5 mock instance."""

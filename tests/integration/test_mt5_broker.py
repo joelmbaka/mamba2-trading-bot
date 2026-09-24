@@ -1,30 +1,36 @@
 """Integration tests for the MT5Broker class.
 
-These tests require a running MetaTrader 5 terminal with a demo account.
-They are skipped if MT5 is not available.
+These tests require an explicitly enabled MT5 terminal and account.
 """
 import os
 import pytest
-import time
 import MetaTrader5 as mt5
 from mamba2.broker import MT5Broker
-import time
 import datetime
 
-# Skip all tests in this module if MT5 is not available
-pytestmark = pytest.mark.skipif(
-    not mt5.initialize(),
-    reason="MT5 terminal is not available"
-)
+pytestmark = pytest.mark.integration
+
+if os.getenv("MAMBA_RUN_MT5_INTEGRATION") != "1":
+    pytest.skip(
+        "MT5 integration tests require MAMBA_RUN_MT5_INTEGRATION=1",
+        allow_module_level=True,
+    )
 
 @pytest.fixture(scope="module")
 def mt5_broker():
     """Fixture that provides an initialized MT5Broker instance with demo account."""
-    broker = MT5Broker(
-        login=93117167,
-        password="B*8hZaYl",
-        server="MetaQuotes-Demo"
-    )
+    login = os.getenv("MAMBA_MT5_LOGIN")
+    password = os.getenv("MAMBA_MT5_PASSWORD")
+    server = os.getenv("MAMBA_MT5_SERVER")
+    if not all((login, password, server)):
+        pytest.skip("MT5 credentials must be supplied through MAMBA_MT5_* environment variables")
+
+    try:
+        login_number = int(login)
+    except ValueError:
+        pytest.skip("MAMBA_MT5_LOGIN must be an integer")
+
+    broker = MT5Broker(login=login_number, password=password, server=server)
     if not broker.initialize():
         pytest.skip("Could not connect to MT5 terminal with provided credentials")
     

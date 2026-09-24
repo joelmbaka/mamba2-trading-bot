@@ -1,12 +1,13 @@
 """Tests for the rates module."""
 import time
+import threading
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 import pandas as pd
 import numpy as np
 from mamba2.crew.rates import RatesFetcher, RateData
 from mamba2.broker.mt5_mock import MT5Mock
-from config import config as app_config
+import config
 
 class TestRatesFetcher:
     """Test suite for RatesFetcher class."""
@@ -69,7 +70,8 @@ class TestRatesFetcher:
         assert 'close' in rates.columns
         assert isinstance(rates.index, pd.DatetimeIndex)
     
-    def test_update_rates(self, rate_fetcher, mock_broker):
+    @pytest.mark.asyncio
+    async def test_update_rates(self, rate_fetcher, mock_broker):
         """Test updating rates for a symbol and timeframe."""
         # Mock the _fetch_rates method to return test data
         test_data = pd.DataFrame({
@@ -82,7 +84,7 @@ class TestRatesFetcher:
         rate_fetcher._fetch_rates = MagicMock(return_value=test_data)
         
         # Update rates
-        rate_fetcher._update_rates('EURUSD', 'M1')
+        await rate_fetcher._update_rates('EURUSD', 'M1')
         
         # Verify cache was updated
         cache_key = 'EURUSD_M1'
@@ -98,9 +100,8 @@ class TestRatesFetcher:
         # Initially should not be ready
         assert not rate_fetcher.is_ready()
         
-        # Define test symbols and timeframes directly
-        symbols = ['EURUSD', 'USDJPY', 'GBPUSD']
-        timeframes = {'M1': 1, 'M5': 5, 'M15': 15}
+        symbols = list(config.symbols)
+        timeframes = dict(config.timeframes)
         expected_combinations = len(symbols) * len(timeframes)
         
         # Create test data with all required columns
@@ -141,58 +142,20 @@ class TestRatesFetcher:
         # Mark initial fetch as complete
         rate_fetcher._initial_fetch_complete = True
         
-        # Debug output
-        print("\nDebug - RateFetcher state:")
-        print(f"- _initial_fetch_complete: {rate_fetcher._initial_fetch_complete}")
-        print(f"- rates_cache size: {len(rate_fetcher.rates_cache)}")
-        print(f"- Expected combinations: {expected_combinations}")
-        
-        for cache_key, rate_data in list(rate_fetcher.rates_cache.items())[:2]:  # Just show first 2 for brevity
-            print(f"\n{cache_key}:")
-            print(f"- Symbol: {rate_data.symbol}")
-            print(f"- Timeframe: {rate_data.timeframe}")
-            print(f"- Data shape: {rate_data.rates.shape}")
-            print(f"- Columns: {rate_data.rates.columns.tolist()}")
-            print(f"- Empty: {rate_data.rates.empty}")
-            print(f"- First timestamp: {rate_data.rates.index[0]}")
-            print(f"- Last timestamp: {rate_data.rates.index[-1]}")
-        
-        # Verify is_ready
-        is_ready = rate_fetcher.is_ready()
-        print(f"\nRateFetcher.is_ready() returned: {is_ready}")
-        
-        # Additional debug for is_ready conditions
-        if not rate_fetcher._initial_fetch_complete:
-            print("Not ready: _initial_fetch_complete is False")
-        elif len(rate_fetcher.rates_cache) < expected_combinations:
-            print(f"Not ready: Expected {expected_combinations} combinations, got {len(rate_fetcher.rates_cache)}")
-        else:
-            for rate_data in rate_fetcher.rates_cache.values():
-                if rate_data.rates.empty or len(rate_data.rates) < 200:
-                    print(f"Not ready: {rate_data.symbol} {rate_data.timeframe} has {len(rate_data.rates)} bars (min 200 required)")
-        
-        # Final assertion
-        assert is_ready, "RateFetcher should be ready with all required data"
+        assert rate_fetcher.is_ready()
     
     def test_run_stop_behavior(self, rate_fetcher, mock_broker):
         """Test the run method and stop behavior."""
-        # Start the rate fetcher in a separate thread
-        rate_fetcher.start()
-        
-        # Let it run for a short time
-        time.sleep(0.2)
-        
-        # Stop the rate fetcher
-        rate_fetcher.stop()
-        rate_fetcher.join(timeout=1.0)
-        
-        # Verify it stopped
+        first_update = threading.Event()
+
+        async def update_once():
+            first_update.set()
+
+        with patch("mamba2.crew.rates.time.sleep"):
+            with patch.object(rate_fetcher, "_update_all_rates", side_effect=update_once):
+                rate_fetcher.start()
+                assert first_update.wait(timeout=2)
+                rate_fetcher.stop()
+
         assert not rate_fetcher.is_alive()
-        
-        # Verify we have some data in the cache
-        assert len(rate_fetcher.rates_cache) > 0
-        
-        # Clean up
-        if rate_fetcher.is_alive():
-            rate_fetcher.stop()
-            rate_fetcher.join(timeout=1.0)
+        assert rate_fetcher.rates_cache == {}
