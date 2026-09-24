@@ -7,7 +7,7 @@ import asyncio
 import threading
 
 from mamba2.crew.atr_manager import ATRManager
-from mamba2.crew.rates import RateFetcher
+from mamba2.crew.rates import RatesFetcher
 
 class TestATRManager:
     """Test suite for ATRManager class."""
@@ -15,7 +15,7 @@ class TestATRManager:
     @pytest.fixture
     def mock_rate_fetcher(self):
         """Create a mock rate fetcher."""
-        fetcher = Mock(spec=RateFetcher)
+        fetcher = Mock(spec=RatesFetcher)
         fetcher.get_rates.return_value = pd.DataFrame({
             'open': [1.1, 1.11, 1.12, 1.13, 1.14],
             'high': [1.12, 1.115, 1.125, 1.135, 1.145],
@@ -106,7 +106,7 @@ class TestATRManager:
 
 @pytest.fixture
 def mock_rate_fetcher():
-    fetcher = Mock(spec=RateFetcher)
+    fetcher = Mock(spec=RatesFetcher)
     fetcher.is_ready.return_value = True
     return fetcher
 

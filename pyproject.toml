@@ -28,3 +28,5 @@ dev = [
     "ipython>=8.24",
 ]
 
+[tool.setuptools.packages.find]
+include = ["mamba2*"]

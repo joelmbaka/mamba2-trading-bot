@@ -4,12 +4,12 @@ import pytest
 from unittest.mock import patch, MagicMock
 import pandas as pd
 import numpy as np
-from mamba2.crew.rates import RateFetcher, RateData
+from mamba2.crew.rates import RatesFetcher, RateData
 from mamba2.broker.mt5_mock import MT5Mock
 from config import config as app_config
 
-class TestRateFetcher:
-    """Test suite for RateFetcher class."""
+class TestRatesFetcher:
+    """Test suite for RatesFetcher class."""
     
     @pytest.fixture
     def mock_broker(self):
@@ -20,18 +20,20 @@ class TestRateFetcher:
     
     @pytest.fixture
     def rate_fetcher(self, mock_broker):
-        """Create a RateFetcher instance for testing."""
-        return RateFetcher(broker=mock_broker, update_interval=0.1)
+        """Create a RatesFetcher instance for testing."""
+        fetcher = RatesFetcher(broker=mock_broker)
+        fetcher.update_interval = 0.1
+        return fetcher
     
     def test_initialization(self, rate_fetcher):
-        """Test RateFetcher initialization."""
+        """Test RatesFetcher initialization."""
         assert rate_fetcher is not None
         assert not rate_fetcher._stop_event.is_set()
         assert rate_fetcher.update_interval == 0.1
         assert len(rate_fetcher.rates_cache) == 0
     
     def test_stop(self, rate_fetcher):
-        """Test stopping the rate fetcher."""
+        """Test stopping the rates fetcher."""
         rate_fetcher.stop()
         assert rate_fetcher._stop_event.is_set()
     
@@ -102,7 +104,7 @@ class TestRateFetcher:
         expected_combinations = len(symbols) * len(timeframes)
         
         # Create test data with all required columns
-        num_bars = 15  # More than the minimum required 10
+        num_bars = 200  # Current RatesFetcher readiness threshold
         timestamps = [int(time.time() - i*60) for i in range(num_bars)]
         
         # Create test data in the expected format
@@ -166,8 +168,8 @@ class TestRateFetcher:
             print(f"Not ready: Expected {expected_combinations} combinations, got {len(rate_fetcher.rates_cache)}")
         else:
             for rate_data in rate_fetcher.rates_cache.values():
-                if rate_data.rates.empty or len(rate_data.rates) < 10:
-                    print(f"Not ready: {rate_data.symbol} {rate_data.timeframe} has {len(rate_data.rates)} bars (min 10 required)")
+                if rate_data.rates.empty or len(rate_data.rates) < 200:
+                    print(f"Not ready: {rate_data.symbol} {rate_data.timeframe} has {len(rate_data.rates)} bars (min 200 required)")
         
         # Final assertion
         assert is_ready, "RateFetcher should be ready with all required data"
