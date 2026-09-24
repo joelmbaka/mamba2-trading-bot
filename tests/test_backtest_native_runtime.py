@@ -137,3 +137,10 @@ def test_native_timeframes_require_matching_m1_symbol_and_alignment():
             m1_fixture(),
             native_timeframe_bars={"EURUSD": {"M5": misaligned}},
         )
+
+
+def test_native_trend_module_imports_without_package_cycle():
+    from mamba2.indicators.detect_trend import calculate_5min_trendline
+
+    rates = m1_fixture(5).set_index("time")
+    assert calculate_5min_trendline(rates) == "uptrend"
