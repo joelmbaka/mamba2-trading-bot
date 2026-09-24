@@ -85,6 +85,56 @@ def test_order_fills_on_next_m1_open_not_signal_candle():
     assert position["price_open"] == 101
 
 
+def test_copy_rates_from_pos_returns_visible_bars_and_respects_slices():
+    feed = ReplayFeed(fixture_bars())
+    broker = HistoricalBroker(feed)
+    for _ in range(8):
+        broker.advance()  # visible through 10:07
+
+    bars = broker.copy_rates_from_pos("EURUSD", 1, 0, 3)
+    assert len(bars) == 3
+    assert all(
+        set(bar) == {"time", "open", "high", "low", "close", "tick_volume", "spread", "real_volume"}
+        for bar in bars
+    )
+    assert [bar["open"] for bar in bars] == [105, 106, 107]
+    assert [bar["close"] for bar in bars] == [106, 107, 108]
+    assert all(bar["time"] <= int(feed.current_time.timestamp()) for bar in bars)
+
+    prior_bars = broker.copy_rates_from_pos("EURUSD", 1, 1, 2)
+    assert len(prior_bars) == 2
+    assert [bar["open"] for bar in prior_bars] == [105, 106]
+
+
+def test_copy_rates_from_pos_cannot_read_future_bars():
+    feed = ReplayFeed(fixture_bars())
+    broker = HistoricalBroker(feed)
+    broker.advance()  # only 10:00 is visible
+
+    bars = broker.copy_rates_from_pos("EURUSD", 1, 0, 100)
+    assert len(bars) == 1
+    assert bars[0]["open"] == 100
+
+
+def test_pending_order_waits_for_a_real_symbol_candle():
+    sparse_symbol = fixture_bars(3).iloc[[0, 2]].copy()
+    other_symbol = fixture_bars(3).copy()
+    feed = ReplayFeed({"EURUSD": sparse_symbol, "GBPUSD": other_symbol})
+    broker = HistoricalBroker(feed)
+
+    broker.advance()  # both symbols have 10:00
+    broker.order_send({"symbol": "EURUSD", "type": 0, "volume": 1.0})
+
+    broker.advance()  # 10:01 exists only for GBPUSD
+    assert broker.positions_total() == 0
+
+    broker.advance()  # EURUSD's next real candle is 10:02
+    position = broker.position_get_ticket(1)
+    assert position is not None
+    assert position["time"] == int(pd.Timestamp("2025-01-02 10:02", tz="UTC").timestamp())
+    assert position["price_open"] == 102
+
+
 def replay_snapshot():
     feed = ReplayFeed(fixture_bars())
     snapshot = []

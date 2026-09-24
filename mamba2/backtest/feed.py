@@ -52,7 +52,9 @@ class ReplayFeed:
 
     def current_bar(self, symbol: str) -> pd.Series | None:
         visible = self.get_rates(symbol, "M1")
-        return None if visible.empty else visible.iloc[-1]
+        if visible.empty or self.current_time not in visible.index:
+            return None
+        return visible.loc[self.current_time]
 
     def get_rates(self, symbol: str, timeframe: str | int) -> pd.DataFrame:
         """Return completed bars visible at the current replay instant."""

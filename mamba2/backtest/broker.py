@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .feed import ReplayFeed, TIMEFRAME_MINUTES
+from .feed import ReplayFeed
 
 
 class HistoricalBroker:
@@ -54,10 +54,12 @@ class HistoricalBroker:
         if start_pos:
             frame = frame.iloc[:-start_pos]
         frame = frame.tail(count)
-        return [
-            {"time": int(row.Index.timestamp()), **{column: row[column] for column in frame.columns}}
-            for row in frame.itertuples()
-        ]
+        bars = []
+        for timestamp, row in frame.iterrows():
+            bar = {"time": int(timestamp.timestamp())}
+            bar.update({column: row[column] for column in frame.columns})
+            bars.append(bar)
+        return bars
 
     def account_info(self) -> dict[str, float | str]:
         unrealized = sum(position["profit"] for position in self._positions)
