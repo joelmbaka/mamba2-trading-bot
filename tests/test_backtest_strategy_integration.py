@@ -2,9 +2,6 @@
 
 from types import SimpleNamespace
 from unittest.mock import Mock
-import sys
-import types
-
 import pandas as pd
 
 from mamba2.backtest import BacktestRunner, HistoricalBroker, ReplayFeed
@@ -37,11 +34,9 @@ def strategy_config(*, trend_enabled=False):
 
 
 def load_strategy(monkeypatch):
-    """Avoid importing Wine-incompatible SciPy during this test-only path."""
-    trend_module = types.ModuleType("mamba2.indicators.detect_trend")
-    trend_module.calculate_5min_trendline = lambda rates: "range"
-    monkeypatch.setitem(sys.modules, "mamba2.indicators.detect_trend", trend_module)
+    """Import the real strategy module; trend detection is Wine-safe."""
     from mamba2.strategy import triple_cross
+
     return triple_cross
 
 
