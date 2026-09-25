@@ -1,7 +1,9 @@
 {
   "version": 1,
-  "id": "mamba2-local-control-bootstrap-status-20260925",
-  "action": "status",
-  "args": {},
+  "id": "mamba2-switch-repo-ops-foundation-20260925-1122",
+  "action": "switch_branch",
+  "args": {
+    "branch": "repo-ops-foundation"
+  },
   "requested_by": "chatgpt"
 }
