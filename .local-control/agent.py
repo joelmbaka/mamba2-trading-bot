@@ -61,6 +61,18 @@ def fetch_control():
     ])
 
 
+def fetch_remote_branch(branch):
+    branch = str(branch or "").strip()
+    if not branch:
+        raise RuntimeError("branch is required")
+    return run([
+        "git",
+        "fetch",
+        "origin",
+        f"{branch}:refs/remotes/origin/{branch}",
+    ], check=False)
+
+
 def read_command():
     proc = run([
         "git", "show",
@@ -83,6 +95,7 @@ def git_status():
     status_proc, clean = _clean_status()
     divergence = None
     if branch:
+        fetch_remote_branch(branch)
         remote = run(
             ["git", "rev-parse", "--verify", f"refs/remotes/origin/{branch}"],
             check=False,
@@ -145,6 +158,11 @@ def git_sync(fetch=True):
     branch = branch_proc.stdout.strip()
     if branch_proc.returncode != 0 or not branch:
         return sync_result(False, branch, before, before, commands, "refusing detached HEAD")
+
+    branch_fetch = fetch_remote_branch(branch)
+    commands.append(record(branch_fetch))
+    if branch_fetch.returncode != 0:
+        return sync_result(False, branch, before, before, commands, "failed to refresh current remote branch")
 
     remote_ref = f"refs/remotes/origin/{branch}"
     remote_proc = run(["git", "rev-parse", "--verify", remote_ref], check=False)
@@ -231,10 +249,10 @@ def git_switch_branch(target, fetch=True):
         return switch_result(False, target, before_branch, before_branch, before, before, commands, "refusing dirty worktree")
 
     if fetch:
-        fetch_proc = run(["git", "fetch", "origin"], check=False)
+        fetch_proc = fetch_remote_branch(target)
         commands.append(record(fetch_proc))
         if fetch_proc.returncode != 0:
-            return switch_result(False, target, before_branch, before_branch, before, before, commands, "git fetch origin failed")
+            return switch_result(False, target, before_branch, before_branch, before, before, commands, "failed to refresh target remote branch")
 
     remote_ref = f"refs/remotes/origin/{target}"
     remote_proc = run(["git", "rev-parse", "--verify", remote_ref], check=False)
