@@ -138,3 +138,12 @@ treatment result is interpreted.
 
 The action is historical/read-only, strips MT5 credential/integration
 environment variables, and never enables real trading.
+
+
+After the control gate is accepted, `controlled_experiment_m020a_pair` runs
+the single documented M020-A treatment twice on the same immutable dataset.
+It requires deterministic treatment baseline/diagnostic artifacts, zero
+00:00–03:59 UTC entries, the existing wrong-side-TP and negative-TP safety
+gates, and no new strategy-reporting artifacts. It returns control/treatment
+aggregate, per-symbol, side, and calendar-subperiod comparisons without
+changing any other strategy parameter.
