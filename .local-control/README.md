@@ -92,3 +92,12 @@ The exporter clears credential environment variables and uses the already-authen
 trade-level diagnostic replay twice, proves that the ordinary baseline report
 still has the accepted M016 SHA-256, and requires both diagnostic JSON artifacts
 to be byte-identical before publishing compact analysis evidence.
+
+
+## Proven-defect review workflow
+
+`defect_review_diagnostic_run_pair` is the fixed M018 acceptance action. It
+requires `backtest-proven-defect-review`, reuses the accepted M016 dataset,
+runs the corrected diagnostic replay twice, requires byte-identical corrected
+baseline and diagnostic artifacts, compares aggregate results to accepted M016,
+and verifies that no initial take-profit remains on the wrong side of its fill.
