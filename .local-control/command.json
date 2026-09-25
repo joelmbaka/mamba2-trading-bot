@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m017-real-diagnostic-pair-20260925-1430",
-  "action": "baseline_diagnostic_run_pair",
+  "id": "mamba2-m017-closeout-checks-20260925-1538",
+  "action": "repo_checks",
   "args": {},
   "requested_by": "chatgpt"
 }
