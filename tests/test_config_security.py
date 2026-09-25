@@ -65,3 +65,15 @@ def test_mt5_config_reads_explicit_environment(monkeypatch):
     assert cfg.path == r"C:\\Example\\terminal64.exe"
     assert cfg.timeout == 45000
     assert cfg.portable is True
+
+
+
+def test_runtime_cache_does_not_persist_account_info():
+    root = Path(__file__).resolve().parents[1]
+    main_source = (root / "main.py").read_text(encoding="utf-8")
+    gitignore = (root / ".gitignore").read_text(encoding="utf-8")
+
+    assert 'self.cache.set("last_account_info"' not in main_source
+    assert "Bot started with account info" not in main_source
+    assert "bot_cache.json" in gitignore
+    assert "atr_cache.json" in gitignore

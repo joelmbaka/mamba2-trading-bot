@@ -69,14 +69,15 @@ class Bot:
             broker_type = "mock" if config.use_mock else "real"
             raise RuntimeError(f"Failed to initialize {broker_type} MT5 connection")
         
-        # Log account info on startup
-        account_info = self.broker.account_info()
-        print(f"Bot started with account info: {account_info}")
-        
-        # Store account info in cache
-        self.cache.set("last_account_info", account_info)
-        self.cache.set("last_broker_type", "mock" if config.use_mock else "real", save=True)
-        
+        # Persist only non-sensitive runtime state. Account metadata must not
+        # be printed or cached because live broker account_info includes
+        # account identifiers and holder/account details.
+        self.cache.set(
+            "last_broker_type",
+            "mock" if config.use_mock else "real",
+            save=True,
+        )
+
         self.running = True
         print(f"Using {'mock' if config.use_mock else 'real'} MT5 broker")
 
