@@ -149,7 +149,16 @@ def get_stochastic(
         return None
 
     try:
-        rates = rate_fetcher.get_rates(symbol, str(timeframe))
+        replay_getter = getattr(
+            rate_fetcher,
+            "get_visible_rates_for_indicator",
+            None,
+        )
+        rates = (
+            replay_getter(symbol, str(timeframe))
+            if callable(replay_getter)
+            else rate_fetcher.get_rates(symbol, str(timeframe))
+        )
         if rates is None:
             logger.error(f"No cached rates available for {symbol} {timeframe}")
             return None
