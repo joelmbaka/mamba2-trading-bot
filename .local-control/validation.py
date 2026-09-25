@@ -1666,26 +1666,29 @@ def broader_history_run_pair():
     }
 
 
+ACTION_HANDLERS = {
+    "repo_checks": repo_checks,
+    "bootstrap_wine_test_env": bootstrap_wine_test_env,
+    "runtime_discovery": runtime_discovery,
+    "runtime_versions": runtime_versions,
+    "test_core": test_core,
+    "test_full_native": test_full_native,
+    "test_full_wine": test_full_wine,
+    "first_baseline_cleanup": first_baseline_cleanup,
+    "first_baseline_export": first_baseline_export,
+    "first_baseline_run_pair": first_baseline_run_pair,
+    "baseline_diagnostic_run_pair": baseline_diagnostic_run_pair,
+    "defect_review_diagnostic_run_pair": defect_review_diagnostic_run_pair,
+    "broader_history_coverage_probe": broader_history_coverage_probe,
+    "broader_history_cleanup": broader_history_cleanup,
+    "broader_history_export": broader_history_export,
+    "broader_history_run_pair": broader_history_run_pair,
+}
+
+
 def execute(action):
-    handlers = {
-        "repo_checks": repo_checks,
-        "bootstrap_wine_test_env": bootstrap_wine_test_env,
-        "runtime_discovery": runtime_discovery,
-        "runtime_versions": runtime_versions,
-        "test_core": test_core,
-        "test_full_native": test_full_native,
-        "test_full_wine": test_full_wine,
-        "first_baseline_cleanup": first_baseline_cleanup,
-        "first_baseline_export": first_baseline_export,
-        "first_baseline_run_pair": first_baseline_run_pair,
-        "baseline_diagnostic_run_pair": baseline_diagnostic_run_pair,
-        "defect_review_diagnostic_run_pair": defect_review_diagnostic_run_pair,
-        "broader_history_coverage_probe": broader_history_coverage_probe,
-        "broader_history_cleanup": broader_history_cleanup,
-        "broader_history_export": broader_history_export,
-        "broader_history_run_pair": broader_history_run_pair,
-    }
     try:
-        return handlers[action]()
+        handler = ACTION_HANDLERS[action]
     except KeyError as exc:
         raise ValueError(f"unsupported validation action: {action!r}") from exc
+    return handler()
