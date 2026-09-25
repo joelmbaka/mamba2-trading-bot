@@ -59,7 +59,7 @@ set -euo pipefail
 export LOCAL_PROJECT_DIR="$REPO"
 export LOCAL_RESULTS_DIR="$RESULTS"
 export LOCAL_AGENT_POLL_SECONDS="5"
-exec /usr/bin/python3 "$AGENT"
+exec /usr/bin/python3 "$AGENT" "$@"
 EOF
 chmod 700 "$RUNNER"
 
@@ -82,6 +82,16 @@ EOF
 
 systemctl --user daemon-reload
 systemctl --user enable chatgpt-mamba2-local-agent.service
+
+echo
+echo "=== PROCESS CURRENT QUEUED COMMAND ONCE ==="
+systemctl --user stop chatgpt-mamba2-local-agent.service || true
+set +e
+"$RUNNER" --once
+ONCE_STATUS=$?
+set -e
+echo "One-shot command exit status: $ONCE_STATUS"
+
 systemctl --user restart chatgpt-mamba2-local-agent.service
 
 sleep 3
