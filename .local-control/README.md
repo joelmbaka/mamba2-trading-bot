@@ -28,6 +28,7 @@ status
 sync
 switch_branch
 repo_checks
+runtime_discovery
 runtime_versions
 test_core
 test_full_native
