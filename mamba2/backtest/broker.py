@@ -16,6 +16,11 @@ class SymbolExecutionMetadata:
     digits: int = 5
     contract_size: float = 100_000.0
     quote_currency: str = "USD"
+    base_currency: str = ""
+
+
+class AccountCurrencyConversionError(ValueError):
+    """Raised when quote-currency P/L cannot be converted deterministically."""
 
 
 @dataclass(frozen=True)
@@ -44,8 +49,9 @@ class HistoricalBroker:
     data and each bar's integer spread is converted from points using the
     symbol point size. BUY entries fill at Ask; SELL entries fill at Bid.
     BUY positions are marked/exited on Bid and SELL positions on synthetic Ask.
-    P/L remains ``price_delta * direction * lots * contract_size`` for
-    USD-quoted symbols.
+    Raw P/L is ``price_delta * direction * lots * contract_size`` in the
+    traded symbol's quote currency. It is then converted into account currency
+    using historical conversion prices from the same replay boundary.
 
     When tick-derived Ask M1 OHLC is available it is preferred. Otherwise the
     bar spread is applied uniformly to Bid OHLC as a deterministic fallback.
@@ -62,11 +68,15 @@ class HistoricalBroker:
         *,
         balance: float = 10_000.0,
         symbol_metadata: Mapping[str, SymbolExecutionMetadata] | None = None,
+        account_currency: str = "USD",
     ):
         self.feed = feed
         self.connected = False
         self._balance = float(balance)
         self._realized_pl = 0.0
+        self.account_currency = str(account_currency).upper()
+        if not self.account_currency:
+            raise ValueError("account_currency must be non-empty")
         defaults = symbol_metadata or {}
         self._metadata = {
             symbol: defaults.get(symbol, SymbolExecutionMetadata())
@@ -131,7 +141,7 @@ class HistoricalBroker:
             "unrealized_profit": unrealized,
             "profit": unrealized,
             "equity": self._balance + unrealized,
-            "currency": "USD",
+            "currency": self.account_currency,
             "margin": 0.0,
             "free_margin": self._balance,
         }
@@ -207,7 +217,13 @@ class HistoricalBroker:
                 "close",
                 ask_bar=self.feed.current_ask_bar(position["symbol"]),
             )
-        self._close_position(position, float(price), reason)
+        self._close_position(
+            position,
+            float(price),
+            reason,
+            conversion_phase="current",
+            conversion_field="close",
+        )
         return True
 
     async def position_by_ticket(self, ticket: int):
@@ -252,7 +268,12 @@ class HistoricalBroker:
                 "price_current": current_price,
                 "profit": 0.0,
             }
-            position["profit"] = self._calculate_pl(position, current_price)
+            position["profit"] = self._calculate_pl(
+                position,
+                current_price,
+                conversion_phase="execution",
+                conversion_field="open",
+            )
             self._next_position_ticket += 1
             self._positions.append(position)
         self._pending = remaining
@@ -269,7 +290,12 @@ class HistoricalBroker:
                 ask_bar=self.feed.completed_ask_bar(position["symbol"]),
             )
             position["price_current"] = current
-            position["profit"] = self._calculate_pl(position, current)
+            position["profit"] = self._calculate_pl(
+                position,
+                current,
+                conversion_phase="completed",
+                conversion_field="close",
+            )
 
     def _process_exits(self) -> None:
         for position in list(self._positions):
@@ -286,7 +312,13 @@ class HistoricalBroker:
                 reason,
                 ask_bar=ask_bar,
             )
-            self._close_position(position, price, reason)
+            self._close_position(
+                position,
+                price,
+                reason,
+                conversion_phase="completed",
+                conversion_field="close",
+            )
 
     def _exit_reason(
         self,
@@ -334,8 +366,21 @@ class HistoricalBroker:
             adverse_gap = reason == "stop_loss" and opening >= level
         return opening if adverse_gap else float(level)
 
-    def _close_position(self, position: dict[str, Any], price: float, reason: str) -> None:
-        realized = self._calculate_pl(position, price)
+    def _close_position(
+        self,
+        position: dict[str, Any],
+        price: float,
+        reason: str,
+        *,
+        conversion_phase: str,
+        conversion_field: str,
+    ) -> None:
+        realized = self._calculate_pl(
+            position,
+            price,
+            conversion_phase=conversion_phase,
+            conversion_field=conversion_field,
+        )
         close_time = self.feed.current_time
         if close_time is None:
             raise RuntimeError("cannot close a position before replay starts")
@@ -397,7 +442,138 @@ class HistoricalBroker:
             ask_bar=ask_bar,
         )
 
-    def _calculate_pl(self, position: dict[str, Any], price: float) -> float:
+    def _calculate_quote_pl(
+        self,
+        position: dict[str, Any],
+        price: float,
+    ) -> float:
         metadata = self._metadata[position["symbol"]]
         direction = 1 if position["type"] == 0 else -1
-        return (price - position["price_open"]) * direction * position["volume"] * metadata.contract_size
+        return (
+            (price - position["price_open"])
+            * direction
+            * position["volume"]
+            * metadata.contract_size
+        )
+
+    def _symbol_currencies(self, symbol: str) -> tuple[str, str]:
+        metadata = self._metadata[symbol]
+        base = str(metadata.base_currency).upper()
+        quote = str(metadata.quote_currency).upper()
+        if not base and len(symbol) >= 6:
+            candidate = symbol[:6].upper()
+            if candidate.isalpha():
+                base = candidate[:3]
+                if not quote:
+                    quote = candidate[3:6]
+        return base, quote
+
+    def _conversion_route(
+        self,
+        quote_currency: str,
+    ) -> tuple[str, str]:
+        quote = quote_currency.upper()
+        account = self.account_currency
+
+        direct_name = f"{account}{quote}"
+        inverse_name = f"{quote}{account}"
+        if direct_name in self._metadata:
+            return direct_name, "direct"
+        if inverse_name in self._metadata:
+            return inverse_name, "inverse"
+
+        for symbol in self._metadata:
+            base, symbol_quote = self._symbol_currencies(symbol)
+            if base == account and symbol_quote == quote:
+                return symbol, "direct"
+            if base == quote and symbol_quote == account:
+                return symbol, "inverse"
+
+        raise AccountCurrencyConversionError(
+            f"no historical conversion pair for {quote}->{account}"
+        )
+
+    def _conversion_bar(
+        self,
+        symbol: str,
+        *,
+        phase: str,
+    ):
+        if phase == "execution":
+            bid_bar = self.feed.execution_bar(symbol)
+            ask_bar = self.feed.execution_ask_bar(symbol)
+        elif phase == "completed":
+            bid_bar = self.feed.completed_bar(symbol)
+            ask_bar = self.feed.completed_ask_bar(symbol)
+        elif phase == "current":
+            bid_bar = self.feed.current_bar(symbol)
+            ask_bar = self.feed.current_ask_bar(symbol)
+        else:
+            raise ValueError(f"unsupported conversion phase: {phase}")
+
+        if bid_bar is None:
+            current = self.feed.current_time
+            raise AccountCurrencyConversionError(
+                f"no {phase} conversion bar for {symbol} at {current}"
+            )
+        return bid_bar, ask_bar
+
+    def _convert_quote_pl(
+        self,
+        amount: float,
+        *,
+        quote_currency: str,
+        phase: str,
+        field: str,
+    ) -> float:
+        quote = quote_currency.upper()
+        if amount == 0.0 or quote == self.account_currency:
+            return amount
+        if not quote:
+            raise AccountCurrencyConversionError(
+                "position quote currency is missing"
+            )
+
+        symbol, route = self._conversion_route(quote)
+        bid_bar, ask_bar = self._conversion_bar(symbol, phase=phase)
+        bid = self._bid_price(bid_bar, field)
+        ask = self._ask_price(
+            symbol,
+            bid_bar,
+            field,
+            ask_bar=ask_bar,
+        )
+        if bid <= 0 or ask <= 0:
+            raise AccountCurrencyConversionError(
+                f"invalid conversion price for {symbol}"
+            )
+
+        # Direct pair ACCOUNT/QUOTE, e.g. USDJPY:
+        # positive JPY is sold to buy USD at Ask; a JPY loss is funded by
+        # selling USD at Bid.
+        if route == "direct":
+            rate = ask if amount > 0 else bid
+            return amount / rate
+
+        # Inverse pair QUOTE/ACCOUNT, e.g. JPYUSD:
+        # positive quote currency is sold at Bid; a quote-currency loss must
+        # be bought at Ask.
+        rate = bid if amount > 0 else ask
+        return amount * rate
+
+    def _calculate_pl(
+        self,
+        position: dict[str, Any],
+        price: float,
+        *,
+        conversion_phase: str,
+        conversion_field: str,
+    ) -> float:
+        metadata = self._metadata[position["symbol"]]
+        quote_pl = self._calculate_quote_pl(position, price)
+        return self._convert_quote_pl(
+            quote_pl,
+            quote_currency=metadata.quote_currency,
+            phase=conversion_phase,
+            field=conversion_field,
+        )

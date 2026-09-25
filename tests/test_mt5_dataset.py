@@ -157,6 +157,8 @@ def test_verified_loader_returns_native_timeframes_and_execution_metadata(tmp_pa
     assert metadata.digits == 5
     assert metadata.contract_size == pytest.approx(100000.0)
     assert metadata.quote_currency == "USD"
+    assert metadata.base_currency == "EUR"
+    assert dataset.account_currency == "USD"
 
 
 def test_loader_rejects_tampered_csv(tmp_path):

@@ -49,6 +49,7 @@ class LoadedHistoricalDataset:
     native_timeframe_bars: Mapping[str, Mapping[str, pd.DataFrame]]
     ask_m1_bars: Mapping[str, pd.DataFrame]
     symbol_metadata: Mapping[str, SymbolExecutionMetadata]
+    account_currency: str
     manifest: Mapping[str, Any]
 
 
@@ -555,6 +556,7 @@ def load_mt5_dataset(manifest_path: str | Path) -> LoadedHistoricalDataset:
             digits=int(symbol_entry["digits"]),
             contract_size=float(symbol_entry["contract_size"]),
             quote_currency=str(symbol_entry["quote_currency"]),
+            base_currency=str(symbol_entry.get("base_currency", "")),
         )
 
         native_symbol: dict[str, pd.DataFrame] = {}
@@ -643,11 +645,16 @@ def load_mt5_dataset(manifest_path: str | Path) -> LoadedHistoricalDataset:
     if not m1_bars:
         raise DatasetIntegrityError("dataset contains no M1 histories")
 
+    account_currency = str(manifest.get("account_currency") or "").upper()
+    if not account_currency:
+        raise DatasetIntegrityError("dataset account currency is missing")
+
     return LoadedHistoricalDataset(
         m1_bars=m1_bars,
         native_timeframe_bars=native,
         ask_m1_bars=ask_m1,
         symbol_metadata=metadata,
+        account_currency=account_currency,
         manifest=manifest,
     )
 

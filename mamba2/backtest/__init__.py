@@ -1,6 +1,11 @@
 """Deterministic, offline historical replay primitives."""
 
-from .broker import ClosedTrade, HistoricalBroker, SymbolExecutionMetadata
+from .broker import (
+    AccountCurrencyConversionError,
+    ClosedTrade,
+    HistoricalBroker,
+    SymbolExecutionMetadata,
+)
 from .data import (
     PRICE_BAR_COLUMNS,
     REQUIRED_BAR_COLUMNS,
@@ -19,6 +24,7 @@ from .runner import BacktestBrokerAdapter, BacktestResult, BacktestRunner
 
 __all__ = [
     "HistoricalBroker",
+    "AccountCurrencyConversionError",
     "ClosedTrade",
     "SymbolExecutionMetadata",
     "BacktestBrokerAdapter",
