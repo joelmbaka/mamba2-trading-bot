@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m020-treatment-native-20260925-2141",
-  "action": "test_full_native",
+  "id": "mamba2-m020-treatment-wine-20260925-2143",
+  "action": "test_full_wine",
   "args": {},
   "requested_by": "chatgpt"
 }
