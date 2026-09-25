@@ -22,8 +22,19 @@ def get_moving_average(symbol: str = "EURUSD", timeframe: Union[str, int] = None
         return None
 
     try:
-        # Get cached rates and work on a copy to avoid mutating shared cache
-        rates = rate_fetcher.get_rates(symbol, str(timeframe))
+        # ReplayFeed exposes a causal read-only view so historical
+        # evaluation does not deep-copy the whole visible prefix. Production
+        # fetchers keep using their ordinary get_rates contract.
+        replay_getter = getattr(
+            rate_fetcher,
+            "get_visible_rates_for_indicator",
+            None,
+        )
+        rates = (
+            replay_getter(symbol, str(timeframe))
+            if callable(replay_getter)
+            else rate_fetcher.get_rates(symbol, str(timeframe))
+        )
         if rates is None:
             logger.error(f"No cached rates available for {symbol} {timeframe}")
             return None
