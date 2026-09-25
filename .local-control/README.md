@@ -9,7 +9,7 @@ This branch is a GitHub-mailbox control plane for the physical Mamba2 checkout.
 
 ## Safety model
 
-- The workstation agent polls GitHub every five seconds.
+- A systemd timer invokes a fresh one-shot worker every 15 seconds.
 - It may automatically fast-forward only the branch already checked out locally.
 - Automatic sync refuses dirty trees, detached HEAD, missing remotes, and divergence.
 - Branch switching is explicit only.
@@ -57,11 +57,16 @@ bash <(git show origin/local-control:.local-control/bootstrap.sh)
 
 Re-run the same bootstrap command to update the installed control agent.
 
-Service:
+Worker and timer:
 
 ```text
 chatgpt-mamba2-local-agent.service
+chatgpt-mamba2-local-agent.timer
 ```
+
+The service is a one-shot allowlisted worker. The timer is the persistent
+polling mechanism, which avoids stale long-running process state and prevents
+overlapping command execution.
 
 Installed files live under:
 
