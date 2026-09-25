@@ -36,6 +36,12 @@ ACCEPTED_M018_BASELINE_SHA256 = (
 ACCEPTED_M018_DIAGNOSTIC_SHA256 = (
     "1497db0918bac89c8d10224745db4a522492ac577e845bfc1731450c39e3dda7"
 )
+ACCEPTED_M019_BASELINE_SHA256 = (
+    "114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983"
+)
+ACCEPTED_M019_DIAGNOSTIC_SHA256 = (
+    "84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8"
+)
 M017_DIAGNOSTIC_A = FIRST_BASELINE_DIR / "diagnostic-a.json"
 M017_DIAGNOSTIC_B = FIRST_BASELINE_DIR / "diagnostic-b.json"
 M017_BASELINE_A = FIRST_BASELINE_DIR / "diagnostic-baseline-a.json"
@@ -65,6 +71,11 @@ M019_TICK_CHECKPOINTS = [
     "2026-09-01T12:00:00Z",
     "2026-09-24T12:00:00Z",
 ]
+
+M020_CONTROL_BASELINE_A = M019_DIR / "m020-control-baseline-a.json"
+M020_CONTROL_BASELINE_B = M019_DIR / "m020-control-baseline-b.json"
+M020_CONTROL_DIAGNOSTIC_A = M019_DIR / "m020-control-diagnostic-a.json"
+M020_CONTROL_DIAGNOSTIC_B = M019_DIR / "m020-control-diagnostic-b.json"
 
 
 def _safe_env(wine=False):
@@ -556,6 +567,48 @@ def _require_m019_branch():
     ):
         raise RuntimeError(
             "M019 action requires local HEAD to match origin/backtest-broader-history"
+        )
+
+
+def _require_m020_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "backtest-controlled-experiments":
+        raise RuntimeError(
+            "M020 action requires branch backtest-controlled-experiments"
+        )
+
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("M020 action refuses a dirty worktree")
+
+    refresh = _run([
+        "git",
+        "fetch",
+        "origin",
+        (
+            "backtest-controlled-experiments:"
+            "refs/remotes/origin/backtest-controlled-experiments"
+        ),
+    ])
+    if refresh["exit_code"] != 0:
+        raise RuntimeError("M020 action could not refresh remote branch")
+
+    head = _run(["git", "rev-parse", "HEAD"])
+    remote = _run([
+        "git",
+        "rev-parse",
+        "--verify",
+        "refs/remotes/origin/backtest-controlled-experiments",
+    ])
+    if (
+        head["exit_code"] != 0
+        or remote["exit_code"] != 0
+        or head["stdout"].strip() != remote["stdout"].strip()
+    ):
+        raise RuntimeError(
+            "M020 action requires local HEAD to match "
+            "origin/backtest-controlled-experiments"
         )
 
 
@@ -1818,6 +1871,116 @@ def broader_history_run_pair():
     }
 
 
+
+
+def controlled_experiment_control_pair():
+    """Prove the M020 harness reproduces accepted M019 control bytes."""
+
+    _require_m020_branch()
+    if not M019_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M019 dataset manifest is missing",
+        }
+
+    outputs = (
+        M020_CONTROL_BASELINE_A,
+        M020_CONTROL_BASELINE_B,
+        M020_CONTROL_DIAGNOSTIC_A,
+        M020_CONTROL_DIAGNOSTIC_B,
+    )
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    runs = []
+    for baseline_output, diagnostic_output in (
+        (M020_CONTROL_BASELINE_A, M020_CONTROL_DIAGNOSTIC_A),
+        (M020_CONTROL_BASELINE_B, M020_CONTROL_DIAGNOSTIC_B),
+    ):
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.experiments",
+                "--manifest",
+                str(M019_MANIFEST.relative_to(REPO)),
+                "--baseline-output",
+                str(baseline_output.relative_to(REPO)),
+                "--diagnostic-output",
+                str(diagnostic_output.relative_to(REPO)),
+                "--expected-baseline-sha256",
+                ACCEPTED_M019_BASELINE_SHA256,
+                "--expected-diagnostic-sha256",
+                ACCEPTED_M019_DIAGNOSTIC_SHA256,
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M020 control harness failed accepted-M019 gate",
+                "runs": runs,
+            }
+
+    baseline_sha_a = _sha256(M020_CONTROL_BASELINE_A)
+    baseline_sha_b = _sha256(M020_CONTROL_BASELINE_B)
+    diagnostic_sha_a = _sha256(M020_CONTROL_DIAGNOSTIC_A)
+    diagnostic_sha_b = _sha256(M020_CONTROL_DIAGNOSTIC_B)
+
+    baseline_identical = (
+        M020_CONTROL_BASELINE_A.read_bytes()
+        == M020_CONTROL_BASELINE_B.read_bytes()
+    )
+    diagnostic_identical = (
+        M020_CONTROL_DIAGNOSTIC_A.read_bytes()
+        == M020_CONTROL_DIAGNOSTIC_B.read_bytes()
+    )
+    baseline_preserved = (
+        baseline_sha_a == ACCEPTED_M019_BASELINE_SHA256
+        and baseline_sha_b == ACCEPTED_M019_BASELINE_SHA256
+    )
+    diagnostic_preserved = (
+        diagnostic_sha_a == ACCEPTED_M019_DIAGNOSTIC_SHA256
+        and diagnostic_sha_b == ACCEPTED_M019_DIAGNOSTIC_SHA256
+    )
+
+    first_payload = None
+    try:
+        first_payload = json.loads(
+            runs[0]["stdout"].strip().splitlines()[-1]
+        )
+    except (json.JSONDecodeError, IndexError):
+        first_payload = None
+
+    return {
+        "ok": bool(
+            baseline_identical
+            and diagnostic_identical
+            and baseline_preserved
+            and diagnostic_preserved
+        ),
+        "baseline_reports_identical": baseline_identical,
+        "baseline_preserved": baseline_preserved,
+        "baseline_sha256_a": baseline_sha_a,
+        "baseline_sha256_b": baseline_sha_b,
+        "accepted_m019_baseline_sha256": ACCEPTED_M019_BASELINE_SHA256,
+        "diagnostics_identical": diagnostic_identical,
+        "diagnostic_preserved": diagnostic_preserved,
+        "diagnostic_sha256_a": diagnostic_sha_a,
+        "diagnostic_sha256_b": diagnostic_sha_b,
+        "accepted_m019_diagnostic_sha256": ACCEPTED_M019_DIAGNOSTIC_SHA256,
+        "aggregate": (
+            first_payload.get("aggregate")
+            if isinstance(first_payload, dict)
+            else None
+        ),
+        "runs": runs,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -1837,6 +2000,7 @@ ACTION_HANDLERS = {
     "broader_history_export": broader_history_export,
     "broader_history_m018_regression_pair": broader_history_m018_regression_pair,
     "broader_history_run_pair": broader_history_run_pair,
+    "controlled_experiment_control_pair": controlled_experiment_control_pair,
 }
 
 
