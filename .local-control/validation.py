@@ -33,6 +33,10 @@ M017_DIAGNOSTIC_A = FIRST_BASELINE_DIR / "diagnostic-a.json"
 M017_DIAGNOSTIC_B = FIRST_BASELINE_DIR / "diagnostic-b.json"
 M017_BASELINE_A = FIRST_BASELINE_DIR / "diagnostic-baseline-a.json"
 M017_BASELINE_B = FIRST_BASELINE_DIR / "diagnostic-baseline-b.json"
+M018_DIAGNOSTIC_A = FIRST_BASELINE_DIR / "m018-diagnostic-a.json"
+M018_DIAGNOSTIC_B = FIRST_BASELINE_DIR / "m018-diagnostic-b.json"
+M018_BASELINE_A = FIRST_BASELINE_DIR / "m018-baseline-a.json"
+M018_BASELINE_B = FIRST_BASELINE_DIR / "m018-baseline-b.json"
 
 
 def _safe_env(wine=False):
@@ -457,6 +461,19 @@ def _require_m017_branch():
         )
 
 
+def _require_m018_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "backtest-proven-defect-review":
+        raise RuntimeError(
+            "M018 diagnostic action requires branch "
+            "backtest-proven-defect-review"
+        )
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("M018 diagnostic action refuses a dirty worktree")
+
+
 def _ensure_baseline_path(path):
     root = (REPO / "backtest_data").resolve()
     resolved = Path(path).resolve()
@@ -841,6 +858,194 @@ def baseline_diagnostic_run_pair():
     }
 
 
+def defect_review_diagnostic_run_pair():
+    _require_m018_branch()
+    if not FIRST_BASELINE_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M016 dataset manifest is missing",
+        }
+    if not FIRST_BASELINE_REPORT_A.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M016 report-a.json is missing",
+        }
+
+    accepted_bytes = FIRST_BASELINE_REPORT_A.read_bytes()
+    accepted_sha = _sha256(FIRST_BASELINE_REPORT_A)
+    if accepted_sha != ACCEPTED_M016_REPORT_SHA256:
+        return {
+            "ok": False,
+            "reason": "local M016 report does not match accepted SHA-256",
+            "expected_sha256": ACCEPTED_M016_REPORT_SHA256,
+            "actual_sha256": accepted_sha,
+        }
+    accepted_report = json.loads(accepted_bytes.decode("utf-8"))
+
+    outputs = (
+        M018_DIAGNOSTIC_A,
+        M018_DIAGNOSTIC_B,
+        M018_BASELINE_A,
+        M018_BASELINE_B,
+    )
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    artifacts_before = _artifact_snapshot()
+    runs = []
+    for diagnostic_output, baseline_output in (
+        (M018_DIAGNOSTIC_A, M018_BASELINE_A),
+        (M018_DIAGNOSTIC_B, M018_BASELINE_B),
+    ):
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.diagnostics",
+                "--manifest",
+                str(FIRST_BASELINE_MANIFEST.relative_to(REPO)),
+                "--output",
+                str(diagnostic_output.relative_to(REPO)),
+                "--baseline-output",
+                str(baseline_output.relative_to(REPO)),
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M018 corrected diagnostic replay failed",
+                "runs": runs,
+            }
+
+    if any(not output.is_file() for output in outputs):
+        return {
+            "ok": False,
+            "reason": "M018 corrected output missing after successful command",
+            "runs": runs,
+        }
+
+    baseline_bytes_a = M018_BASELINE_A.read_bytes()
+    baseline_bytes_b = M018_BASELINE_B.read_bytes()
+    baseline_sha_a = _sha256(M018_BASELINE_A)
+    baseline_sha_b = _sha256(M018_BASELINE_B)
+    baseline_identical = (
+        baseline_bytes_a == baseline_bytes_b
+        and baseline_sha_a == baseline_sha_b
+    )
+
+    diagnostic_bytes_a = M018_DIAGNOSTIC_A.read_bytes()
+    diagnostic_bytes_b = M018_DIAGNOSTIC_B.read_bytes()
+    diagnostic_sha_a = _sha256(M018_DIAGNOSTIC_A)
+    diagnostic_sha_b = _sha256(M018_DIAGNOSTIC_B)
+    diagnostic_identical = (
+        diagnostic_bytes_a == diagnostic_bytes_b
+        and diagnostic_sha_a == diagnostic_sha_b
+    )
+
+    corrected_report = json.loads(baseline_bytes_a.decode("utf-8"))
+    diagnostic = json.loads(diagnostic_bytes_a.decode("utf-8"))
+    aggregate = corrected_report.get("aggregate", {})
+    accepted_aggregate = accepted_report.get("aggregate", {})
+    trades = diagnostic.get("trades", [])
+
+    target_direction_violations = []
+    negative_take_profit = []
+    for trade in trades:
+        protection = trade.get("initial_protection") or {}
+        target = protection.get("applied_tp")
+        entry = trade.get("entry_price")
+        side = trade.get("side")
+        if target is not None and entry is not None:
+            crossed = (
+                side == "BUY" and float(target) <= float(entry)
+            ) or (
+                side == "SELL" and float(target) >= float(entry)
+            )
+            if crossed:
+                target_direction_violations.append(
+                    int(trade["position_ticket"])
+                )
+        if (
+            trade.get("exit_reason") == "take_profit"
+            and float(trade.get("net_realized_pl", 0.0)) < 0
+        ):
+            negative_take_profit.append(
+                {
+                    "ticket": int(trade["position_ticket"]),
+                    "symbol": trade["symbol"],
+                    "side": side,
+                    "net_realized_pl": float(trade["net_realized_pl"]),
+                }
+            )
+
+    aggregate_deltas = {}
+    for key in (
+        "accepted_orders",
+        "closed_trades",
+        "remaining_open_positions",
+        "ending_realized_balance",
+        "ending_unrealized_pl",
+        "ending_equity",
+        "gross_realized_pl",
+        "commission",
+        "net_realized_pl",
+        "wins",
+        "losses",
+        "flats",
+        "non_flat_win_rate_pct",
+        "largest_closed_gain",
+        "largest_closed_loss",
+        "max_equity_drawdown",
+        "max_equity_drawdown_pct",
+    ):
+        old = accepted_aggregate.get(key)
+        new = aggregate.get(key)
+        if isinstance(old, (int, float)) and isinstance(new, (int, float)):
+            aggregate_deltas[key] = new - old
+        else:
+            aggregate_deltas[key] = None
+
+    artifacts_after = _artifact_snapshot()
+    no_new_strategy_artifacts = artifacts_after == artifacts_before
+
+    return {
+        "ok": bool(
+            baseline_identical
+            and diagnostic_identical
+            and not target_direction_violations
+            and not negative_take_profit
+            and no_new_strategy_artifacts
+        ),
+        "baseline_reports_identical": baseline_identical,
+        "baseline_sha256_a": baseline_sha_a,
+        "baseline_sha256_b": baseline_sha_b,
+        "accepted_m016_sha256": ACCEPTED_M016_REPORT_SHA256,
+        "baseline_changed_from_m016": (
+            baseline_sha_a != ACCEPTED_M016_REPORT_SHA256
+        ),
+        "diagnostics_identical": diagnostic_identical,
+        "diagnostic_sha256_a": diagnostic_sha_a,
+        "diagnostic_sha256_b": diagnostic_sha_b,
+        "aggregate": aggregate,
+        "accepted_m016_aggregate": accepted_aggregate,
+        "aggregate_deltas": aggregate_deltas,
+        "per_symbol": corrected_report.get("per_symbol"),
+        "analysis": diagnostic.get("analysis"),
+        "target_direction_violation_count": len(
+            target_direction_violations
+        ),
+        "target_direction_violation_tickets": target_direction_violations,
+        "negative_take_profit_count": len(negative_take_profit),
+        "negative_take_profit_trades": negative_take_profit,
+        "no_new_strategy_artifacts": no_new_strategy_artifacts,
+        "runs": runs,
+    }
+
+
 def execute(action):
     handlers = {
         "repo_checks": repo_checks,
@@ -854,6 +1059,7 @@ def execute(action):
         "first_baseline_export": first_baseline_export,
         "first_baseline_run_pair": first_baseline_run_pair,
         "baseline_diagnostic_run_pair": baseline_diagnostic_run_pair,
+        "defect_review_diagnostic_run_pair": defect_review_diagnostic_run_pair,
     }
     try:
         return handlers[action]()
