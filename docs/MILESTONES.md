@@ -1,6 +1,8 @@
 # Milestone Ledger
 
-Each accepted milestone records the exact implementation SHA. Future milestones should append a dated record here or add a dedicated file under `docs/milestones/`.
+Each accepted milestone records the exact implementation SHA. Future milestones
+should append a dated record here or add a dedicated file under
+`docs/milestones/`.
 
 | # | Milestone | Accepted implementation SHA | Core result |
 |---|---|---|---|
@@ -21,48 +23,54 @@ Each accepted milestone records the exact implementation SHA. Future milestones 
 | 015 | Repository operations foundation | `32da1d846960cbc2b196da1c2f8c8a8561a5c322` | Durable docs/local-control + dead/generated repository cleanup |
 | 016 | First real five-symbol baseline | `4d8a15937f461c0e39d434be6639bfde83698d7f` | Deterministic Sep 1–24 baseline; real-data replay blockers corrected |
 | 017 | Baseline diagnosis | `e653ba87df2ff1e8afbad5704f9a8d81428d7b27` | Deterministic trade evidence; M016 report preserved byte-for-byte |
+| 018 | Proven-defect review and correction | `fb03bc197d60d5d7b5b218a86288811f72ec4f60` | Wrong-side initial ATR TP defect proven and narrowly corrected |
 
 ## Current acceptance evidence
 
-Milestone 017 closed with:
+Milestone 018 closed with:
 
-- implementation SHA: `e653ba87df2ff1e8afbad5704f9a8d81428d7b27`;
-- full native: **173 passed, 2 skipped**;
-- full Wine: **173 passed, 2 skipped**;
+- implementation SHA:
+  `fb03bc197d60d5d7b5b218a86288811f72ec4f60`;
+- full native: **175 passed, 2 skipped**;
+- full Wine: **175 passed, 2 skipped**;
 - Wine Python 3.10.11 AMD64;
 - Wine NumPy 2.2.1;
 - Wine MetaTrader5 5.0.6180;
 - Wine pytest 9.1.1;
-- diagnostic pair byte-identical;
-- diagnostic SHA-256:
-  `edf01f4a1f936d386e618faa65fb9a7afb65fff6ae7ae9b4373c35692ced987a`;
-- ordinary baseline report preserved byte-for-byte at accepted M016 SHA-256:
-  `d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`;
-- 1,393 accepted orders / 1,393 closed trades / 1,393 diagnostic rows;
+- corrected baseline pair byte-identical;
+- corrected baseline SHA-256:
+  `e33a5400f70494356d12faebbb1e2588bd2075769da5539e9c6584dc88cedcca`;
+- corrected diagnostic pair byte-identical;
+- corrected diagnostic SHA-256:
+  `1497db0918bac89c8d10224745db4a522492ac577e845bfc1731450c39e3dda7`;
+- wrong-side initial TP violations: **0**;
+- negative-P/L take-profit exits: **0**;
+- 1,389 accepted orders / 1,389 closed trades;
 - 0 remaining positions;
-- ending realized balance/equity USD 9,731.45700985454;
-- net realized P/L USD -268.54299014546086;
+- ending realized balance/equity: **USD 9,785.824347114009**;
+- net realized P/L: **USD -214.17565288599144**;
+- maximum equity drawdown:
+  **USD 400.156643608565 / 3.9953123082355586%**;
 - no new strategy-reporting artifacts.
 
-Key descriptive evidence:
+The accepted M016 comparison report remains:
 
-- BUY: USD -330.9923055212326; SELL: USD +62.44931537578547,
-  despite almost identical non-flat win rates;
-- 1,339 stop-loss exits, including 528 profitable stop exits after protection
-  movement;
-- 54 take-profit exits, including 3 negative-P/L exits requiring M018 review;
-- losing trades had mean entry spread 7.174661746617466 points versus
-  3.538860103626943 points for winners, with equal median 2-point spread;
-- all 1,393 trades received initial ATR protection;
-- 619 trades had successful trailing modifications;
-- realized JPY exits used direct same-boundary USDJPY conversion, not the
-  sparse two-leg fallback;
-- maximum consecutive losses: 17;
-- deepest drawdown: USD 400.156643608565 / 3.9953123082355586%, recovered;
-- later USD 312.44186473816626 / 3.112078553673229% drawdown remained
-  unrecovered at end of data.
+`d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`
 
-See `docs/milestones/017-baseline-diagnosis.md` for the complete record.
+The corrected M018 result differs by **+USD 54.36733725946942** net P/L and
+four fewer accepted/closed trades. This is documented as the consequence of a
+semantic defect correction, not a strategy optimization result.
+
+The proven defect was limited to initial TP placement under sufficiently wide
+spread: a current-price-derived target could cross to the loss side of the
+actual fill. Normal targets remain current-price-based; only an invalid crossed
+target is re-anchored from `price_open`. Initial SL and trailing semantics are
+unchanged.
+
+Extreme spread tails were verified in the accepted historical data and no
+spread/session/symbol filter was added.
+
+See `docs/milestones/018-proven-defect-review.md` for the complete record.
 
 ## Closeout format for future milestones
 
