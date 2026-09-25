@@ -34,6 +34,9 @@ runtime_versions
 test_core
 test_full_native
 test_full_wine
+first_baseline_cleanup
+first_baseline_export
+first_baseline_run_pair
 ```
 
 `switch_branch` requires:
@@ -69,3 +72,14 @@ The application checkout is never converted into a control worktree. Results use
 
 
 `bootstrap_wine_test_env` is a fixed recovery action. It creates only `.venv-wine` from the pinned Wine Python/constraints and never initializes MT5 or reads account state.
+
+
+## First-baseline workflows
+
+These are fixed milestone-016 actions, not arbitrary commands.
+
+- `first_baseline_cleanup` removes only `backtest_data/first-baseline-20260901-20260925`.
+- `first_baseline_export` performs the read-only MT5 export for Sep 1–24, 2026 using the five configured symbols, M1/M5/M15, and tick-derived Ask.
+- `first_baseline_run_pair` runs the accepted baseline twice, verifies byte-identical reports/SHA-256, and publishes only compact report metrics.
+
+The exporter clears credential environment variables and uses the already-authenticated terminal session. These actions never enable the live MT5 integration marker and never place/modify/close orders.
