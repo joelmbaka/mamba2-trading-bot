@@ -225,6 +225,145 @@ def test_conversion_does_not_use_future_usdjpy_bar():
         broker.advance()
 
 
+
+def test_missing_direct_execution_bar_uses_same_boundary_two_leg_route():
+    eurjpy = make_frame(
+        "EURJPY",
+        opens=[160.0, 160.0],
+        closes=[160.0, 160.0],
+        point_size=0.001,
+        spread=10,
+    )
+    usdjpy = make_frame(
+        "USDJPY",
+        opens=[150.0, 150.0],
+        closes=[150.0, 150.0],
+        point_size=0.001,
+    ).iloc[[0]].copy()
+    eurusd = make_frame(
+        "EURUSD",
+        opens=[1.2, 1.2],
+        closes=[1.2, 1.2],
+        point_size=0.00001,
+        spread=10,
+    )
+
+    feed = ReplayFeed(
+        {
+            "EURJPY": eurjpy,
+            "USDJPY": usdjpy,
+            "EURUSD": eurusd,
+        }
+    )
+    broker = HistoricalBroker(
+        feed,
+        symbol_metadata=metadata(),
+        account_currency="USD",
+    )
+
+    broker.advance()  # 10:01; EURJPY/EURUSD execution bars exist, USDJPY does not
+    broker.order_send({"symbol": "EURJPY", "type": 0, "volume": 1.0})
+    broker.settle_pending_orders()
+
+    position = broker.position_get_ticket(1)
+    assert position is not None
+    assert position["price_open"] == pytest.approx(160.01)
+    assert position["price_current"] == pytest.approx(160.0)
+
+    # Initial spread loss = -1,000 JPY.
+    # JPY->EUR uses EURJPY Bid for a negative amount: -1000 / 160.
+    # EUR->USD uses EURUSD Ask for a negative amount: * 1.2001.
+    assert position["profit"] == pytest.approx(
+        (-1000.0 / 160.0) * 1.2001
+    )
+
+
+def test_missing_direct_completed_bar_uses_same_boundary_two_leg_route():
+    eurjpy = make_frame(
+        "EURJPY",
+        opens=[160.0, 160.0, 161.0],
+        closes=[160.0, 161.0, 161.0],
+        point_size=0.001,
+    )
+    usdjpy = make_frame(
+        "USDJPY",
+        opens=[150.0, 150.0],
+        closes=[150.0, 150.0],
+        point_size=0.001,
+    ).iloc[[0]].copy()
+    eurusd = make_frame(
+        "EURUSD",
+        opens=[1.2, 1.2, 1.21],
+        closes=[1.2, 1.21, 1.21],
+        point_size=0.00001,
+    )
+
+    feed = ReplayFeed(
+        {
+            "EURJPY": eurjpy,
+            "USDJPY": usdjpy,
+            "EURUSD": eurusd,
+        }
+    )
+    broker = HistoricalBroker(
+        feed,
+        symbol_metadata=metadata(),
+        account_currency="USD",
+    )
+
+    broker.advance()
+    broker.order_send({"symbol": "EURJPY", "type": 0, "volume": 1.0})
+    broker.settle_pending_orders()
+    broker.advance()  # 10:02; direct USDJPY completed bar is absent
+
+    # +100,000 JPY -> EUR at EURJPY Ask/Bid (zero spread => 161),
+    # then EUR -> USD at the same-boundary EURUSD Bid close (1.21).
+    expected = (100_000.0 / 161.0) * 1.21
+    assert broker.position_get_ticket(1)["profit"] == pytest.approx(expected)
+
+
+def test_direct_conversion_pair_remains_preferred_over_two_leg_route():
+    eurjpy = make_frame(
+        "EURJPY",
+        opens=[160.0, 160.0, 161.0],
+        closes=[160.0, 161.0, 161.0],
+        point_size=0.001,
+    )
+    usdjpy = make_frame(
+        "USDJPY",
+        opens=[150.0, 150.0, 150.0],
+        closes=[150.0, 150.0, 150.0],
+        point_size=0.001,
+    )
+    eurusd = make_frame(
+        "EURUSD",
+        opens=[1.2, 1.2, 2.0],
+        closes=[1.2, 2.0, 2.0],
+        point_size=0.00001,
+    )
+
+    feed = ReplayFeed(
+        {
+            "EURJPY": eurjpy,
+            "USDJPY": usdjpy,
+            "EURUSD": eurusd,
+        }
+    )
+    broker = HistoricalBroker(
+        feed,
+        symbol_metadata=metadata(),
+        account_currency="USD",
+    )
+
+    broker.advance()
+    broker.order_send({"symbol": "EURJPY", "type": 0, "volume": 1.0})
+    broker.settle_pending_orders()
+    broker.advance()
+
+    assert broker.position_get_ticket(1)["profit"] == pytest.approx(
+        100_000.0 / 150.0
+    )
+
 def test_inverse_conversion_pair_uses_bid_for_profit_and_ask_for_loss():
     eurjpy_up = make_frame(
         "EURJPY",
