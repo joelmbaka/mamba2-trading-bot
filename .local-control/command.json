@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-local-control-long-timeout-20260925-1709",
-  "action": "configure_local_control_runtime",
+  "id": "mamba2-m019-broader-run-pair-20260925-1825",
+  "action": "broader_history_run_pair",
   "args": {},
   "requested_by": "chatgpt"
 }
