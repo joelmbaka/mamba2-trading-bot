@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m016-diagnose-conversion-coverage-20260925-1255",
-  "action": "test_full_native",
+  "id": "mamba2-m016-reexport-cleanup-20260925-1258",
+  "action": "first_baseline_cleanup",
   "args": {},
   "requested_by": "chatgpt"
 }
