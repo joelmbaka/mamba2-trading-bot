@@ -26,6 +26,13 @@ FIRST_BASELINE_MANIFEST = FIRST_BASELINE_DIR / "manifest.json"
 FIRST_BASELINE_REPORT_A = FIRST_BASELINE_DIR / "report-a.json"
 FIRST_BASELINE_REPORT_B = FIRST_BASELINE_DIR / "report-b.json"
 FIRST_BASELINE_SYMBOLS = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+ACCEPTED_M016_REPORT_SHA256 = (
+    "d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a"
+)
+M017_DIAGNOSTIC_A = FIRST_BASELINE_DIR / "diagnostic-a.json"
+M017_DIAGNOSTIC_B = FIRST_BASELINE_DIR / "diagnostic-b.json"
+M017_BASELINE_A = FIRST_BASELINE_DIR / "diagnostic-baseline-a.json"
+M017_BASELINE_B = FIRST_BASELINE_DIR / "diagnostic-baseline-b.json"
 
 
 def _safe_env(wine=False):
@@ -435,6 +442,21 @@ def _require_first_baseline_branch():
         raise RuntimeError("first-baseline action refuses a dirty worktree")
 
 
+def _require_m017_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "backtest-baseline-diagnosis":
+        raise RuntimeError(
+            "baseline-diagnostic action requires branch "
+            "backtest-baseline-diagnosis"
+        )
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError(
+            "baseline-diagnostic action refuses a dirty worktree"
+        )
+
+
 def _ensure_baseline_path(path):
     root = (REPO / "backtest_data").resolve()
     resolved = Path(path).resolve()
@@ -664,6 +686,161 @@ def first_baseline_run_pair():
     }
 
 
+def baseline_diagnostic_run_pair():
+    _require_m017_branch()
+    if not FIRST_BASELINE_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M016 dataset manifest is missing",
+        }
+    if not FIRST_BASELINE_REPORT_A.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M016 report-a.json is missing",
+        }
+
+    accepted_sha = _sha256(FIRST_BASELINE_REPORT_A)
+    if accepted_sha != ACCEPTED_M016_REPORT_SHA256:
+        return {
+            "ok": False,
+            "reason": "local M016 report does not match accepted SHA-256",
+            "expected_sha256": ACCEPTED_M016_REPORT_SHA256,
+            "actual_sha256": accepted_sha,
+        }
+
+    outputs = (
+        M017_DIAGNOSTIC_A,
+        M017_DIAGNOSTIC_B,
+        M017_BASELINE_A,
+        M017_BASELINE_B,
+    )
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    artifacts_before = _artifact_snapshot()
+    runs = []
+    pairs = (
+        (M017_DIAGNOSTIC_A, M017_BASELINE_A),
+        (M017_DIAGNOSTIC_B, M017_BASELINE_B),
+    )
+    parsed = []
+    for diagnostic_output, baseline_output in pairs:
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.diagnostics",
+                "--manifest",
+                str(FIRST_BASELINE_MANIFEST.relative_to(REPO)),
+                "--output",
+                str(diagnostic_output.relative_to(REPO)),
+                "--baseline-output",
+                str(baseline_output.relative_to(REPO)),
+                "--expected-baseline-report",
+                str(FIRST_BASELINE_REPORT_A.relative_to(REPO)),
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "baseline diagnostic execution failed",
+                "runs": runs,
+            }
+        try:
+            parsed.append(
+                json.loads(result["stdout"].strip().splitlines()[-1])
+            )
+        except (json.JSONDecodeError, IndexError) as exc:
+            raise RuntimeError(
+                "unable to parse diagnostic summary"
+            ) from exc
+
+    required = outputs
+    if any(not output.is_file() for output in required):
+        return {
+            "ok": False,
+            "reason": "diagnostic output missing after successful command",
+            "runs": runs,
+        }
+
+    diagnostic_sha_a = _sha256(M017_DIAGNOSTIC_A)
+    diagnostic_sha_b = _sha256(M017_DIAGNOSTIC_B)
+    diagnostic_identical = (
+        M017_DIAGNOSTIC_A.read_bytes() == M017_DIAGNOSTIC_B.read_bytes()
+        and diagnostic_sha_a == diagnostic_sha_b
+    )
+    baseline_sha_a = _sha256(M017_BASELINE_A)
+    baseline_sha_b = _sha256(M017_BASELINE_B)
+    baseline_preserved = (
+        baseline_sha_a == ACCEPTED_M016_REPORT_SHA256
+        and baseline_sha_b == ACCEPTED_M016_REPORT_SHA256
+        and M017_BASELINE_A.read_bytes() == FIRST_BASELINE_REPORT_A.read_bytes()
+        and M017_BASELINE_B.read_bytes() == FIRST_BASELINE_REPORT_A.read_bytes()
+    )
+
+    diagnostic = json.loads(M017_DIAGNOSTIC_A.read_text(encoding="utf-8"))
+    reconciliation = diagnostic.get("reconciliation", {})
+    totals_ok = (
+        reconciliation.get("accepted_orders") == 1393
+        and reconciliation.get("closed_trades") == 1393
+        and reconciliation.get("remaining_open_positions") == 0
+        and reconciliation.get("ending_realized_balance")
+        == 9731.45700985454
+        and reconciliation.get("diagnostic_trade_rows") == 1393
+    )
+
+    artifacts_after = _artifact_snapshot()
+    no_new_strategy_artifacts = artifacts_after == artifacts_before
+    analysis = diagnostic.get("analysis", {})
+
+    return {
+        "ok": bool(
+            diagnostic_identical
+            and baseline_preserved
+            and totals_ok
+            and no_new_strategy_artifacts
+        ),
+        "baseline_preserved": baseline_preserved,
+        "accepted_baseline_sha256": ACCEPTED_M016_REPORT_SHA256,
+        "baseline_sha256_a": baseline_sha_a,
+        "baseline_sha256_b": baseline_sha_b,
+        "diagnostics_identical": diagnostic_identical,
+        "diagnostic_sha256_a": diagnostic_sha_a,
+        "diagnostic_sha256_b": diagnostic_sha_b,
+        "diagnostic_a": str(M017_DIAGNOSTIC_A.relative_to(REPO)),
+        "diagnostic_b": str(M017_DIAGNOSTIC_B.relative_to(REPO)),
+        "reconciliation": reconciliation,
+        "analysis": {
+            "by_symbol": analysis.get("by_symbol"),
+            "by_side": analysis.get("by_side"),
+            "by_entry_utc_bucket": analysis.get("by_entry_utc_bucket"),
+            "by_exit_reason": analysis.get("by_exit_reason"),
+            "spread_by_outcome": analysis.get("spread_by_outcome"),
+            "conversion_routes": analysis.get("conversion_routes"),
+            "protection": analysis.get("protection"),
+            "loss_clustering": {
+                key: value
+                for key, value in (
+                    analysis.get("loss_clustering") or {}
+                ).items()
+                if key != "streaks"
+            },
+            "drawdown_episode_count": analysis.get(
+                "drawdown_episode_count"
+            ),
+            "deepest_drawdown_episodes": analysis.get(
+                "deepest_drawdown_episodes"
+            ),
+        },
+        "no_new_strategy_artifacts": no_new_strategy_artifacts,
+        "runs": runs,
+    }
+
+
 def execute(action):
     handlers = {
         "repo_checks": repo_checks,
@@ -676,6 +853,7 @@ def execute(action):
         "first_baseline_cleanup": first_baseline_cleanup,
         "first_baseline_export": first_baseline_export,
         "first_baseline_run_pair": first_baseline_run_pair,
+        "baseline_diagnostic_run_pair": baseline_diagnostic_run_pair,
     }
     try:
         return handlers[action]()
