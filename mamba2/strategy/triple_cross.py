@@ -522,8 +522,3 @@ class StochasticTripleTFStrategy(Strategy):
             stochastic_slowing=self.stochastic_slowing,
         )
 
-    def _registered_lower_lows(self, rates):
-        """Check if last 2 candles registered lower lows."""
-        if len(rates) < 2:
-            return False
-        return (rates.iloc[-1]['low'] < rates.iloc[-2]['low'])

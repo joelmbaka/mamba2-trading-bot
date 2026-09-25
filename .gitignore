@@ -21,3 +21,7 @@ backtest_data/
 # Runtime caches (may contain broker/account-derived state)
 bot_cache.json
 atr_cache.json
+
+# Generated runtime analytics/output
+/backtest/
+/logs/

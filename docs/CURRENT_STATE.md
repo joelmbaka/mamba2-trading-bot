@@ -15,7 +15,7 @@ Last updated: 2026-09-25
 
 - Operations branch: `repo-ops-foundation`
 - Base: accepted main `40536d96c6ac2119fca3c2cfec92dad889e7c878`
-- Purpose: durable docs/agent handoff plus safe ChatGPT ↔ local-machine control.
+- Purpose: durable docs/agent handoff, safe ChatGPT ↔ local-machine control, and removal of proven dead/generated repository clutter.
 
 ## Baseline branch
 
@@ -42,3 +42,7 @@ Last updated: 2026-09-25
 ## Next
 
 Complete repository-operations/local-control setup, then return to `backtest-first-baseline`.
+
+## Code cleanup audit
+
+See `docs/CODE_CLEANUP.md`. This operations branch removes only proven dead scaffolding/generated artifacts plus the stale SciPy dependency; behavioral cleanup candidates remain deferred.
