@@ -112,7 +112,7 @@ def test_diagnostic_broker_preserves_base_broker_account_and_trade_semantics():
     base = _exercise(_make_broker(HistoricalBroker))
 
     diagnostic = _make_broker(DiagnosticHistoricalBroker)
-    diagnostic.attach_atr_manager(_Atr())
+    diagnostic.attach_atr_manager(_Atr(), timeframe="M5")
     diagnostic = _exercise(diagnostic)
 
     assert diagnostic.account_info() == base.account_info()
