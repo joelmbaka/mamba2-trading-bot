@@ -7,6 +7,9 @@ from pathlib import Path
 from typing import Dict, Any
 
 
+_FORBIDDEN_CACHE_KEYS = frozenset({"last_account_info"})
+
+
 class CacheManager:
     """Manages caching of bot data to/from a JSON file."""
 
@@ -19,27 +22,50 @@ class CacheManager:
         self.cache_file = Path(cache_file)
         self.cache = self._load_cache()
 
+    @staticmethod
+    def _sanitize_cache(cache: Dict[str, Any]) -> Dict[str, Any]:
+        """Return cache state with forbidden historical fields removed."""
+        return {
+            key: value
+            for key, value in cache.items()
+            if key not in _FORBIDDEN_CACHE_KEYS
+        }
+
+    def _write_cache(self, cache: Dict[str, Any]) -> None:
+        """Write already-sanitized cache state without logging its contents."""
+        with open(self.cache_file, 'w') as f:
+            json.dump(cache, f, indent=2)
+
     def _load_cache(self) -> Dict[str, Any]:
-        """Load cached data from JSON file.
-        
-        Returns:
-            Dict containing the cached data, or empty dict if no cache exists
+        """Load cache data and immediately scrub forbidden historical state.
+
+        A previously ignored local bot_cache.json may predate the current
+        security policy. If a forbidden key is found, the on-disk file is
+        rewritten during construction so later saves cannot preserve it.
         """
         if not self.cache_file.exists():
             return {}
-        
+
         try:
             with open(self.cache_file, 'r') as f:
-                return json.load(f)
+                loaded = json.load(f)
+
+            if not isinstance(loaded, dict):
+                return {}
+
+            sanitized = self._sanitize_cache(loaded)
+            if sanitized != loaded:
+                self._write_cache(sanitized)
+            return sanitized
         except (json.JSONDecodeError, IOError) as e:
             print(f"Warning: Failed to load cache - {e}")
             return {}
 
     def save_cache(self):
-        """Save current cache to JSON file."""
+        """Save sanitized cache state to JSON file."""
         try:
-            with open(self.cache_file, 'w') as f:
-                json.dump(self.cache, f, indent=2)
+            self.cache = self._sanitize_cache(self.cache)
+            self._write_cache(self.cache)
         except IOError as e:
             print(f"Warning: Failed to save cache - {e}")
 
@@ -56,13 +82,15 @@ class CacheManager:
         return self.cache.get(key, default)
     
     def set(self, key: str, value: Any, save: bool = False):
-        """Set a value in the cache.
-        
-        Args:
-            key: The key to set in the cache
-            value: The value to store
-            save: If True, save the cache to disk immediately
-        """
+        """Set a value unless the key is forbidden from persistent cache."""
+        if key in _FORBIDDEN_CACHE_KEYS:
+            # Defensive cleanup in case callers or tests mutated cache
+            # directly before attempting to set the forbidden key.
+            self.cache.pop(key, None)
+            if save:
+                self.save_cache()
+            raise ValueError(f"Refusing to cache forbidden key: {key}")
+
         self.cache[key] = value
         if save:
             self.save_cache()
