@@ -88,30 +88,39 @@ class PositionManager:
                         self.positions[symbol] = position
                         continue
 
-                    # Initial stop protection is anchored to the current
-                    # closing-side price because that is the price at which
-                    # the position can actually be stopped now.  The target
-                    # must also remain on the profitable side of the actual
-                    # entry fill.  Under a wide spread, using only
-                    # price_current can otherwise place a BUY TP below its Ask
-                    # fill or a SELL TP above its Bid fill.
+                    # Initial stop protection remains anchored to
+                    # the current closing-side price, preserving the accepted
+                    # live/replay behavior and broker-valid stop direction.
+                    #
+                    # The existing target calculation is also preserved unless
+                    # a wide spread would put TP at or beyond the wrong side of
+                    # the actual entry fill. In that defect case only, anchor
+                    # TP to the fill so a take-profit cannot realize a loss
+                    # solely because Bid/Ask spread exceeded the ATR target
+                    # distance.
                     open_price = float(position["price_open"])
                     if position_type == 0:  # Buy position
                         stop_loss = current_price - (
                             atr * config.atr_sl_multiplier
                         )
-                        target_reference = max(current_price, open_price)
-                        take_profit = target_reference + (
+                        take_profit = current_price + (
                             atr * config.atr_tp_multiplier
                         )
+                        if take_profit <= open_price:
+                            take_profit = open_price + (
+                                atr * config.atr_tp_multiplier
+                            )
                     else:  # Sell position
                         stop_loss = current_price + (
                             atr * config.atr_sl_multiplier
                         )
-                        target_reference = min(current_price, open_price)
-                        take_profit = target_reference - (
+                        take_profit = current_price - (
                             atr * config.atr_tp_multiplier
                         )
+                        if take_profit >= open_price:
+                            take_profit = open_price - (
+                                atr * config.atr_tp_multiplier
+                            )
 
                     logger.debug(
                         f"Calculated initial SL/TP for {symbol}: "
