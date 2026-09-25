@@ -52,6 +52,17 @@ class StochasticTripleTFStrategy(Strategy):
             logger.error("No rate_fetcher in market context")
             return
 
+        replay_getter = getattr(
+            rate_fetcher,
+            "get_visible_rates_for_indicator",
+            None,
+        )
+
+        def read_rates(timeframe):
+            if callable(replay_getter):
+                return replay_getter(self.symbol, timeframe)
+            return rate_fetcher.get_rates(self.symbol, timeframe)
+
         # Fetch rates for the three timeframes
         tf_higher = self.stochastic_timeframes['higher']
         tf_trading = self.stochastic_timeframes['trading']
@@ -61,12 +72,12 @@ class StochasticTripleTFStrategy(Strategy):
         # A disabled higher-TF filter must not make M15 data a hidden
         # prerequisite for M5/M1 signal evaluation.
         rates_higher = (
-            rate_fetcher.get_rates(self.symbol, tf_higher)
+            read_rates(tf_higher)
             if self.use_higher_tf
             else None
         )
-        rates_trading = rate_fetcher.get_rates(self.symbol, tf_trading)
-        rates_entry = rate_fetcher.get_rates(self.symbol, tf_entry)
+        rates_trading = read_rates(tf_trading)
+        rates_entry = read_rates(tf_entry)
 
         required_rates = [rates_trading, rates_entry]
         if self.use_higher_tf:
@@ -161,7 +172,7 @@ class StochasticTripleTFStrategy(Strategy):
             # When disabled, signal evaluation must not depend on trend data.
             trend = "disabled"
             if config.ENABLE_TREND_CONDITION:
-                rates_5min = rate_fetcher.get_rates(self.symbol, 'M5')
+                rates_5min = read_rates('M5')
                 trend = calculate_5min_trendline(rates_5min)
                 if trend not in ['uptrend', 'downtrend']:
                     logger.debug(f"Skipping {self.symbol} because trend is {trend}")
@@ -208,7 +219,7 @@ class StochasticTripleTFStrategy(Strategy):
                             return
 
                     # Wait for a green candle to close above 7-period EMA
-                    rates = market['rate_fetcher'].get_rates(self.symbol, 'M1')
+                    rates = read_rates('M1')
                     if len(rates) < 2:  # Need at least 2 candles to check current and previous
                         return
                     
@@ -231,7 +242,7 @@ class StochasticTripleTFStrategy(Strategy):
                     logger.info(f"📈 BUY Signal - {self.symbol}: Trend is {trend} - {higher_tf_log}Trading K={k_trading:.2f} > D={d_trading:.2f}, Entry K={stoch_entry['k'].iloc[-1]:.2f} > D={stoch_entry['d'].iloc[-1]:.2f}")
                     
                     # Place buy order (let position manager handle SL/TP)
-                    rates = market['rate_fetcher'].get_rates(self.symbol, 'M1')
+                    rates = read_rates('M1')
                     # Get current market data from the broker
                     try:
                         # The broker should provide the current price
@@ -345,7 +356,7 @@ class StochasticTripleTFStrategy(Strategy):
                             return
 
                     # Wait for a red candle to close below 7-period EMA
-                    rates = market['rate_fetcher'].get_rates(self.symbol, 'M1')
+                    rates = read_rates('M1')
                     if len(rates) < 2:  # Need at least 2 candles to check current and previous
                         return
                     
@@ -375,7 +386,7 @@ class StochasticTripleTFStrategy(Strategy):
                         f"D={stoch_entry['d'].iloc[-1]:.2f}"
                     )
                     # Place sell order
-                    rates = market['rate_fetcher'].get_rates(self.symbol, 'M1')
+                    rates = read_rates('M1')
                     # Get current market data from the broker
                     try:
                         # The broker should provide the current price
