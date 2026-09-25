@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m019-chunking-wine-20260925-1623",
-  "action": "test_full_wine",
+  "id": "mamba2-m019-chunked-coverage-probe-20260925-1629",
+  "action": "broader_history_coverage_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
