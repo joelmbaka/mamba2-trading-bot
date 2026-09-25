@@ -127,6 +127,59 @@ def _fetch_rates_with_history_sync(
     return retry, True
 
 
+def _fetch_rates_in_chunks(
+    mt5_module: Any,
+    *,
+    symbol: str,
+    mt5_timeframe: Any,
+    timeframe: str,
+    start_utc: pd.Timestamp,
+    end_utc: pd.Timestamp,
+    chunk_days: int,
+    warmup_count: int,
+    sync_wait_seconds: float,
+) -> tuple[pd.DataFrame, bool]:
+    """Fetch a long bar range as deterministic bounded UTC chunks."""
+
+    if chunk_days < 1:
+        raise ValueError("rate_chunk_days must be at least 1")
+
+    frames: list[pd.DataFrame] = []
+    history_sync_retry = False
+    cursor = start_utc
+    while cursor < end_utc:
+        chunk_end = min(
+            cursor + pd.Timedelta(days=chunk_days),
+            end_utc,
+        )
+        rates, retried = _fetch_rates_with_history_sync(
+            mt5_module,
+            symbol=symbol,
+            mt5_timeframe=mt5_timeframe,
+            start_utc=cursor,
+            end_utc=chunk_end,
+            warmup_count=warmup_count,
+            sync_wait_seconds=sync_wait_seconds,
+        )
+        history_sync_retry = history_sync_retry or retried
+        frame = _normalize_rates(
+            rates,
+            timeframe=timeframe,
+            start_utc=cursor,
+            end_utc=chunk_end,
+        )
+        frames.append(frame)
+        cursor = chunk_end
+
+    if not frames:
+        raise HistoricalDataError(f"MT5 returned no {timeframe} bars")
+
+    combined = pd.concat(frames)
+    if combined.index.has_duplicates:
+        combined = combined.loc[~combined.index.duplicated(keep="first")]
+    return canonicalize_bars(combined), history_sync_retry
+
+
 def _normalize_rates(
     rates: Any,
     *,
@@ -355,6 +408,7 @@ def export_mt5_dataset(
     history_sync_wait_seconds: float = 2.0,
     include_tick_ask: bool = False,
     tick_chunk_minutes: int = 1440,
+    rate_chunk_days: int | None = None,
 ) -> Path:
     """Export completed native MT5 bars without invoking any trading API."""
     start = _utc_timestamp(start_utc)
@@ -369,6 +423,8 @@ def export_mt5_dataset(
         raise ValueError("history_sync_wait_seconds cannot be negative")
     if tick_chunk_minutes < 1:
         raise ValueError("tick_chunk_minutes must be at least 1")
+    if rate_chunk_days is not None and rate_chunk_days < 1:
+        raise ValueError("rate_chunk_days must be at least 1")
 
     normalized_timeframes = tuple(dict.fromkeys(timeframes))
     if "M1" not in normalized_timeframes:
@@ -424,21 +480,34 @@ def export_mt5_dataset(
         exported_frames: dict[str, pd.DataFrame] = {}
         for timeframe in normalized_timeframes:
             mt5_timeframe = _timeframe_value(mt5_module, timeframe)
-            rates, history_sync_retry = _fetch_rates_with_history_sync(
-                mt5_module,
-                symbol=symbol,
-                mt5_timeframe=mt5_timeframe,
-                start_utc=start,
-                end_utc=end,
-                warmup_count=history_warmup_count,
-                sync_wait_seconds=history_sync_wait_seconds,
-            )
-            frame = _normalize_rates(
-                rates,
-                timeframe=timeframe,
-                start_utc=start,
-                end_utc=end,
-            )
+            if rate_chunk_days is None:
+                rates, history_sync_retry = _fetch_rates_with_history_sync(
+                    mt5_module,
+                    symbol=symbol,
+                    mt5_timeframe=mt5_timeframe,
+                    start_utc=start,
+                    end_utc=end,
+                    warmup_count=history_warmup_count,
+                    sync_wait_seconds=history_sync_wait_seconds,
+                )
+                frame = _normalize_rates(
+                    rates,
+                    timeframe=timeframe,
+                    start_utc=start,
+                    end_utc=end,
+                )
+            else:
+                frame, history_sync_retry = _fetch_rates_in_chunks(
+                    mt5_module,
+                    symbol=symbol,
+                    mt5_timeframe=mt5_timeframe,
+                    timeframe=timeframe,
+                    start_utc=start,
+                    end_utc=end,
+                    chunk_days=rate_chunk_days,
+                    warmup_count=history_warmup_count,
+                    sync_wait_seconds=history_sync_wait_seconds,
+                )
 
             exported_frames[timeframe] = frame
 
@@ -723,6 +792,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="Export tick-derived M1 Ask OHLC for spread-accurate replay.",
     )
     parser.add_argument("--tick-chunk-minutes", type=int, default=1440)
+    parser.add_argument(
+        "--rate-chunk-days",
+        type=int,
+        default=None,
+        help=(
+            "Fetch bar history in bounded UTC day chunks. "
+            "Default keeps the existing single-range behavior."
+        ),
+    )
     args = parser.parse_args(argv)
 
     from config import mt5 as mt5_config
@@ -750,6 +828,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             history_sync_wait_seconds=args.history_sync_wait_seconds,
             include_tick_ask=args.include_tick_ask,
             tick_chunk_minutes=args.tick_chunk_minutes,
+            rate_chunk_days=args.rate_chunk_days,
         )
         print(manifest)
     finally:
