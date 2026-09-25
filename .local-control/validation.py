@@ -1121,6 +1121,42 @@ def defect_review_diagnostic_run_pair():
 
 
 
+def configure_local_control_runtime():
+    """Persist a long timeout for allowlisted one-shot validation jobs."""
+
+    unit_dir = Path.home() / ".config" / "systemd" / "user"
+    dropin_dir = unit_dir / "chatgpt-mamba2-local-agent.service.d"
+    dropin = dropin_dir / "10-long-running-jobs.conf"
+    dropin_dir.mkdir(parents=True, exist_ok=True)
+    dropin.write_text(
+        "[Service]\nTimeoutStartSec=6h\n",
+        encoding="utf-8",
+    )
+
+    reload_result = _run(["systemctl", "--user", "daemon-reload"])
+    show_result = _run([
+        "systemctl",
+        "--user",
+        "show",
+        "chatgpt-mamba2-local-agent.service",
+        "--property=TimeoutStartUSec",
+        "--value",
+    ])
+    value = show_result["stdout"].strip()
+    ok = (
+        reload_result["exit_code"] == 0
+        and show_result["exit_code"] == 0
+        and value not in ("", "1min 30s", "90s", "90000000")
+    )
+    return {
+        "ok": ok,
+        "dropin": str(dropin),
+        "timeout_start": value,
+        "daemon_reload": reload_result,
+        "show": show_result,
+    }
+
+
 def broader_history_coverage_probe():
     _require_m019_branch()
 
@@ -1668,6 +1704,7 @@ def broader_history_run_pair():
 
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
+    "configure_local_control_runtime": configure_local_control_runtime,
     "bootstrap_wine_test_env": bootstrap_wine_test_env,
     "runtime_discovery": runtime_discovery,
     "runtime_versions": runtime_versions,
