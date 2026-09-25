@@ -101,3 +101,20 @@ requires `backtest-proven-defect-review`, reuses the accepted M016 dataset,
 runs the corrected diagnostic replay twice, requires byte-identical corrected
 baseline and diagnostic artifacts, compares aggregate results to accepted M016,
 and verifies that no initial take-profit remains on the wrong side of its fill.
+
+## Broader-history workflow
+
+M019 uses four fixed actions on `backtest-broader-history`:
+
+- `broader_history_coverage_probe` — read-only MT5 M1/M5/M15 availability
+  plus distributed tick-history samples for the fixed Jun 1–Sep 25 UTC window;
+- `broader_history_cleanup` — removes only the fixed M019 dataset directory;
+- `broader_history_export` — exports the fixed real-data window, validates
+  manifest integrity and one-for-one M1/Ask coverage, and requires the
+  Sep 1–24 overlap to equal the accepted M016 dataset;
+- `broader_history_run_pair` — runs corrected diagnostic replay twice and
+  requires byte-identical baseline/diagnostic artifacts, zero wrong-side
+  initial TPs, and zero negative take-profit exits.
+
+These actions never enable live MT5 integration and never place, modify, or
+close orders.
