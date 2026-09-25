@@ -36,8 +36,16 @@ if ! grep -Fq '"defect_review_diagnostic_run_pair"' "$VALIDATION"; then
   echo "ERROR: installed validation.py does not contain the M018 action."
   exit 1
 fi
+if ! grep -Fq '"broader_history_run_pair"' "$AGENT"; then
+  echo "ERROR: installed agent.py does not contain the M019 actions."
+  exit 1
+fi
+if ! grep -Fq '"broader_history_run_pair"' "$VALIDATION"; then
+  echo "ERROR: installed validation.py does not contain the M019 actions."
+  exit 1
+fi
 
-echo "Installed control files verified for defect_review_diagnostic_run_pair."
+echo "Installed control files verified for M018 and M019 actions."
 
 if ! /usr/bin/python3 -m py_compile "$AGENT" "$VALIDATION"; then
   echo "ERROR: installed local-control Python files do not compile."
@@ -160,3 +168,5 @@ echo "  repo_checks, bootstrap_wine_test_env, runtime_discovery, runtime_version
 echo "  test_core, test_full_native, test_full_wine"
 echo "  first_baseline_cleanup, first_baseline_export, first_baseline_run_pair"
 echo "  baseline_diagnostic_run_pair, defect_review_diagnostic_run_pair"
+echo "  broader_history_coverage_probe, broader_history_cleanup"
+echo "  broader_history_export, broader_history_run_pair"
