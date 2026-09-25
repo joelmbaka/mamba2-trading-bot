@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-control-status-probe-20260925-1512",
-  "action": "status",
+  "id": "mamba2-m018-corrected-diagnostic-pair-20260925-1520",
+  "action": "defect_review_diagnostic_run_pair",
   "args": {},
   "requested_by": "chatgpt"
 }
