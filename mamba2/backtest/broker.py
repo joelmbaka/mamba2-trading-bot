@@ -577,29 +577,41 @@ class HistoricalBroker:
                     quote = candidate[3:6]
         return base, quote
 
-    def _conversion_route(
+    def _conversion_pair(
         self,
-        quote_currency: str,
+        from_currency: str,
+        to_currency: str,
     ) -> tuple[str, str]:
-        quote = quote_currency.upper()
-        account = self.account_currency
+        """Find one historical FX pair for a single conversion leg.
 
-        direct_name = f"{account}{quote}"
-        inverse_name = f"{quote}{account}"
+        Direct means the pair is TO/FROM, so converting FROM into TO divides
+        by the appropriate Ask/Bid. Inverse means the pair is FROM/TO, so
+        conversion multiplies by Bid/Ask.
+        """
+
+        source = from_currency.upper()
+        target = to_currency.upper()
+        if not source or not target or source == target:
+            raise AccountCurrencyConversionError(
+                f"invalid conversion leg {source}->{target}"
+            )
+
+        direct_name = f"{target}{source}"
+        inverse_name = f"{source}{target}"
         if direct_name in self._metadata:
             return direct_name, "direct"
         if inverse_name in self._metadata:
             return inverse_name, "inverse"
 
         for symbol in self._metadata:
-            base, symbol_quote = self._symbol_currencies(symbol)
-            if base == account and symbol_quote == quote:
+            base, quote = self._symbol_currencies(symbol)
+            if base == target and quote == source:
                 return symbol, "direct"
-            if base == quote and symbol_quote == account:
+            if base == source and quote == target:
                 return symbol, "inverse"
 
         raise AccountCurrencyConversionError(
-            f"no historical conversion pair for {quote}->{account}"
+            f"no historical conversion pair for {source}->{target}"
         )
 
     def _conversion_bar(
@@ -627,23 +639,24 @@ class HistoricalBroker:
             )
         return bid_bar, ask_bar
 
-    def _convert_quote_pl(
+    def _convert_currency_leg(
         self,
         amount: float,
         *,
-        quote_currency: str,
+        from_currency: str,
+        to_currency: str,
         phase: str,
         field: str,
     ) -> float:
-        quote = quote_currency.upper()
-        if amount == 0.0 or quote == self.account_currency:
-            return amount
-        if not quote:
-            raise AccountCurrencyConversionError(
-                "position quote currency is missing"
-            )
+        """Convert one FX leg using only same-boundary historical Bid/Ask."""
 
-        symbol, route = self._conversion_route(quote)
+        if amount == 0.0 or from_currency.upper() == to_currency.upper():
+            return amount
+
+        symbol, route = self._conversion_pair(
+            from_currency,
+            to_currency,
+        )
         bid_bar, ask_bar = self._conversion_bar(symbol, phase=phase)
         bid = self._bid_price(bid_bar, field)
         ask = self._ask_price(
@@ -657,18 +670,90 @@ class HistoricalBroker:
                 f"invalid conversion price for {symbol}"
             )
 
-        # Direct pair ACCOUNT/QUOTE, e.g. USDJPY:
-        # positive JPY is sold to buy USD at Ask; a JPY loss is funded by
-        # selling USD at Bid.
         if route == "direct":
             rate = ask if amount > 0 else bid
             return amount / rate
 
-        # Inverse pair QUOTE/ACCOUNT, e.g. JPYUSD:
-        # positive quote currency is sold at Bid; a quote-currency loss must
-        # be bought at Ask.
         rate = bid if amount > 0 else ask
         return amount * rate
+
+    def _conversion_intermediates(
+        self,
+        *,
+        from_currency: str,
+        to_currency: str,
+    ) -> tuple[str, ...]:
+        currencies = set()
+        for symbol in self._metadata:
+            base, quote = self._symbol_currencies(symbol)
+            if base:
+                currencies.add(base)
+            if quote:
+                currencies.add(quote)
+        currencies.discard(from_currency.upper())
+        currencies.discard(to_currency.upper())
+        return tuple(sorted(currencies))
+
+    def _convert_quote_pl(
+        self,
+        amount: float,
+        *,
+        quote_currency: str,
+        phase: str,
+        field: str,
+    ) -> float:
+        quote = quote_currency.upper()
+        account = self.account_currency
+        if amount == 0.0 or quote == account:
+            return amount
+        if not quote:
+            raise AccountCurrencyConversionError(
+                "position quote currency is missing"
+            )
+
+        direct_error = None
+        try:
+            return self._convert_currency_leg(
+                amount,
+                from_currency=quote,
+                to_currency=account,
+                phase=phase,
+                field=field,
+            )
+        except AccountCurrencyConversionError as exc:
+            direct_error = exc
+
+        # Preserve same-boundary conversion when a direct pair has a sparse
+        # M1 gap by using an observed two-leg route on this exact phase.
+        # No prior or future quote is carried forward.
+        for intermediate in self._conversion_intermediates(
+            from_currency=quote,
+            to_currency=account,
+        ):
+            try:
+                converted = self._convert_currency_leg(
+                    amount,
+                    from_currency=quote,
+                    to_currency=intermediate,
+                    phase=phase,
+                    field=field,
+                )
+                return self._convert_currency_leg(
+                    converted,
+                    from_currency=intermediate,
+                    to_currency=account,
+                    phase=phase,
+                    field=field,
+                )
+            except AccountCurrencyConversionError:
+                continue
+
+        current = self.feed.current_time
+        raise AccountCurrencyConversionError(
+            f"no same-boundary historical conversion route for "
+            f"{quote}->{account} during {phase} at {current}; "
+            f"direct failure: {direct_error}"
+        )
 
     def _calculate_pl(
         self,
