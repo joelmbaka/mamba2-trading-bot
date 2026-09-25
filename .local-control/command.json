@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-repo-ops-core-tests-20260925-1143",
-  "action": "test_core",
+  "id": "mamba2-repo-ops-full-native-20260925-1144",
+  "action": "test_full_native",
   "args": {},
   "requested_by": "chatgpt"
 }
