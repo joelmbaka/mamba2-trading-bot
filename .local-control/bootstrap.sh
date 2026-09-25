@@ -59,7 +59,7 @@ set -euo pipefail
 export LOCAL_PROJECT_DIR="$REPO"
 export LOCAL_RESULTS_DIR="$RESULTS"
 export LOCAL_AGENT_POLL_SECONDS="5"
-exec /usr/bin/python3 "$AGENT" "$@"
+exec /usr/bin/python3 "$AGENT" "\$@"
 EOF
 chmod 700 "$RUNNER"
 
