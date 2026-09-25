@@ -209,6 +209,30 @@ class ReplayFeed:
             else None
         )
 
+    def get_static_rates_for_indicator(
+        self,
+        symbol: str,
+        timeframe: str | int,
+    ) -> pd.DataFrame | None:
+        """Return immutable full source history for causal indicator caching.
+
+        This replay-only hook intentionally exposes the source series, including
+        future rows, only to indicator implementations that precompute causal
+        values and then slice them back to the currently visible prefix.
+        Production rate fetchers do not implement this hook.
+
+        Native higher-timeframe history is returned only when it exists.  The
+        derived-M5/M15 fallback remains on the ordinary visible-data path so
+        precomputation cannot alter aggregation semantics.
+        """
+        if symbol not in self._bars:
+            return None
+
+        timeframe_name = _timeframe_name(timeframe)
+        if timeframe_name == "M1":
+            return self._bars[symbol]
+        return self._native_timeframe_bars.get(symbol, {}).get(timeframe_name)
+
     def get_rates(
         self,
         symbol: str,
@@ -220,19 +244,20 @@ class ReplayFeed:
 
         timeframe_name = _timeframe_name(timeframe)
         source = self._bars[symbol]
-        visible_m1 = source.loc[
-            source.index + pd.Timedelta(minutes=1) <= self.current_time
-        ]
+        m1_cutoff = self.current_time - pd.Timedelta(minutes=1)
+        m1_stop = int(source.index.searchsorted(m1_cutoff, side="right"))
+        visible_m1 = source.iloc[:m1_stop]
         if timeframe_name == "M1":
             return visible_m1.copy()
 
         minutes = TIMEFRAME_MINUTES[timeframe_name]
         native = self._native_timeframe_bars.get(symbol, {}).get(timeframe_name)
         if native is not None:
-            return native.loc[
-                native.index + pd.Timedelta(minutes=minutes)
-                <= self.current_time
-            ].copy()
+            native_cutoff = self.current_time - pd.Timedelta(minutes=minutes)
+            native_stop = int(
+                native.index.searchsorted(native_cutoff, side="right")
+            )
+            return native.iloc[:native_stop].copy()
 
         groups = visible_m1.groupby(
             visible_m1.index.floor(f"{minutes}min"),
