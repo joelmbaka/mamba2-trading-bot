@@ -1,12 +1,12 @@
 {
   "version": 1,
   "command_id": "mamba2-m019-common-m1-coverage-20260925-1638",
-  "completed_at": "2026-09-25T13:23:06.395681+00:00",
+  "completed_at": "2026-09-25T13:25:37.902762+00:00",
   "ok": true,
   "action": "broader_history_coverage_probe",
   "data": {
     "ok": true,
-    "from_utc": "2026-06-01T00:00:00Z",
+    "from_utc": "2026-06-23T00:00:00Z",
     "to_utc": "2026-09-25T00:00:00Z",
     "bars_available": true,
     "tick_samples_available": true,
@@ -14,24 +14,23 @@
       "EURJPY": {
         "bars": {
           "M1": {
-            "first": "2026-06-22T05:38:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 99017
+            "rows": 97915
           },
           "M15": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 8065
+            "rows": 6529
           },
           "M5": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 24193
+            "rows": 19585
           }
         },
         "tick_samples": {
-          "2026-06-01T12:00:00Z": 1203,
-          "2026-06-15T12:00:00Z": 76,
+          "2026-06-23T12:00:00Z": 2819,
           "2026-07-15T12:00:00Z": 2394,
           "2026-08-17T12:00:00Z": 3652,
           "2026-09-01T12:00:00Z": 3229,
@@ -41,24 +40,23 @@
       "EURUSD": {
         "bars": {
           "M1": {
-            "first": "2026-06-22T05:33:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 99022
+            "rows": 97915
           },
           "M15": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 8065
+            "rows": 6529
           },
           "M5": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 24193
+            "rows": 19585
           }
         },
         "tick_samples": {
-          "2026-06-01T12:00:00Z": 625,
-          "2026-06-15T12:00:00Z": 114,
+          "2026-06-23T12:00:00Z": 4379,
           "2026-07-15T12:00:00Z": 3884,
           "2026-08-17T12:00:00Z": 3605,
           "2026-09-01T12:00:00Z": 3045,
@@ -68,24 +66,23 @@
       "GBPJPY": {
         "bars": {
           "M1": {
-            "first": "2026-06-22T05:35:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 99017
+            "rows": 97912
           },
           "M15": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 8065
+            "rows": 6529
           },
           "M5": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 24193
+            "rows": 19585
           }
         },
         "tick_samples": {
-          "2026-06-01T12:00:00Z": 3448,
-          "2026-06-15T12:00:00Z": 111,
+          "2026-06-23T12:00:00Z": 7279,
           "2026-07-15T12:00:00Z": 4978,
           "2026-08-17T12:00:00Z": 6162,
           "2026-09-01T12:00:00Z": 6592,
@@ -95,24 +92,23 @@
       "GBPUSD": {
         "bars": {
           "M1": {
-            "first": "2026-06-22T05:30:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 99022
+            "rows": 97912
           },
           "M15": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 8065
+            "rows": 6529
           },
           "M5": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 24193
+            "rows": 19585
           }
         },
         "tick_samples": {
-          "2026-06-01T12:00:00Z": 1005,
-          "2026-06-15T12:00:00Z": 145,
+          "2026-06-23T12:00:00Z": 6196,
           "2026-07-15T12:00:00Z": 4685,
           "2026-08-17T12:00:00Z": 4067,
           "2026-09-01T12:00:00Z": 5027,
@@ -122,24 +118,23 @@
       "USDJPY": {
         "bars": {
           "M1": {
-            "first": "2026-06-22T05:29:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 99022
+            "rows": 97911
           },
           "M15": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 8065
+            "rows": 6529
           },
           "M5": {
-            "first": "2026-06-01T00:00:00Z",
+            "first": "2026-06-23T00:00:00Z",
             "last": "2026-09-25T00:00:00Z",
-            "rows": 24193
+            "rows": 19585
           }
         },
         "tick_samples": {
-          "2026-06-01T12:00:00Z": 446,
-          "2026-06-15T12:00:00Z": 2704,
+          "2026-06-23T12:00:00Z": 5747,
           "2026-07-15T12:00:00Z": 4686,
           "2026-08-17T12:00:00Z": 3808,
           "2026-09-01T12:00:00Z": 3213,
@@ -202,10 +197,10 @@
         "/usr/bin/wine",
         "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
         "-c",
-        "\nimport json\nfrom datetime import datetime, timedelta, timezone\n\nimport MetaTrader5 as mt5\n\nfrom config import mt5 as mt5_config\nfrom mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs\n\nsymbols = [\"EURUSD\", \"EURJPY\", \"GBPUSD\", \"GBPJPY\", \"USDJPY\"]\nstart = datetime.fromisoformat(\"2026-06-01T00:00:00+00:00\")\nend = datetime.fromisoformat(\"2026-09-25T00:00:00+00:00\")\ncheckpoints = [\n    datetime.fromisoformat(value.replace(\"Z\", \"+00:00\"))\n    for value in [\n        \"2026-06-01T12:00:00Z\",\n        \"2026-06-15T12:00:00Z\",\n        \"2026-07-15T12:00:00Z\",\n        \"2026-08-17T12:00:00Z\",\n        \"2026-09-01T12:00:00Z\",\n        \"2026-09-24T12:00:00Z\",\n    ]\n]\ntimeframes = [\n    (\"M1\", mt5.TIMEFRAME_M1, 60),\n    (\"M5\", mt5.TIMEFRAME_M5, 300),\n    (\"M15\", mt5.TIMEFRAME_M15, 900),\n]\n\nif not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):\n    raise RuntimeError(\"MT5 initialize failed for read-only M019 coverage probe\")\n\ntry:\n    output = {}\n    for symbol in symbols:\n        if not mt5.symbol_select(symbol, True):\n            raise RuntimeError(f\"MT5 could not select {symbol}\")\n\n        bars = {}\n        for label, timeframe, seconds in timeframes:\n            cursor = start\n            rows = []\n            while cursor < end:\n                chunk_end = min(cursor + timedelta(days=7), end)\n                rates = mt5.copy_rates_range(\n                    symbol,\n                    timeframe,\n                    cursor,\n                    chunk_end,\n                )\n                if rates is not None and len(rates) > 0:\n                    rows.extend(rates)\n                cursor = chunk_end\n\n            if not rows:\n                bars[label] = {\"rows\": 0, \"first\": None, \"last\": None}\n                continue\n\n            unique = {}\n            for row in rows:\n                unique[int(row[\"time\"])] = row\n            ordered = [unique[key] for key in sorted(unique)]\n            bars[label] = {\n                \"rows\": int(len(ordered)),\n                \"first\": datetime.fromtimestamp(\n                    int(ordered[0][\"time\"]), timezone.utc\n                ).isoformat().replace(\"+00:00\", \"Z\"),\n                \"last\": datetime.fromtimestamp(\n                    int(ordered[-1][\"time\"]), timezone.utc\n                ).isoformat().replace(\"+00:00\", \"Z\"),\n            }\n\n        ticks = {}\n        for checkpoint in checkpoints:\n            sample_end = checkpoint + timedelta(minutes=15)\n            values = mt5.copy_ticks_range(\n                symbol,\n                checkpoint,\n                sample_end,\n                mt5.COPY_TICKS_ALL,\n            )\n            count = int(len(values)) if values is not None else 0\n            ticks[checkpoint.isoformat().replace(\"+00:00\", \"Z\")] = count\n\n        output[symbol] = {\"bars\": bars, \"tick_samples\": ticks}\n\n    print(json.dumps({\n        \"from_utc\": \"2026-06-01T00:00:00Z\",\n        \"to_utc\": \"2026-09-25T00:00:00Z\",\n        \"symbols\": output,\n    }, sort_keys=True))\nfinally:\n    mt5.shutdown()\n"
+        "\nimport json\nfrom datetime import datetime, timedelta, timezone\n\nimport MetaTrader5 as mt5\n\nfrom config import mt5 as mt5_config\nfrom mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs\n\nsymbols = [\"EURUSD\", \"EURJPY\", \"GBPUSD\", \"GBPJPY\", \"USDJPY\"]\nstart = datetime.fromisoformat(\"2026-06-23T00:00:00+00:00\")\nend = datetime.fromisoformat(\"2026-09-25T00:00:00+00:00\")\ncheckpoints = [\n    datetime.fromisoformat(value.replace(\"Z\", \"+00:00\"))\n    for value in [\n        \"2026-06-23T12:00:00Z\",\n        \"2026-07-15T12:00:00Z\",\n        \"2026-08-17T12:00:00Z\",\n        \"2026-09-01T12:00:00Z\",\n        \"2026-09-24T12:00:00Z\",\n    ]\n]\ntimeframes = [\n    (\"M1\", mt5.TIMEFRAME_M1, 60),\n    (\"M5\", mt5.TIMEFRAME_M5, 300),\n    (\"M15\", mt5.TIMEFRAME_M15, 900),\n]\n\nif not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):\n    raise RuntimeError(\"MT5 initialize failed for read-only M019 coverage probe\")\n\ntry:\n    output = {}\n    for symbol in symbols:\n        if not mt5.symbol_select(symbol, True):\n            raise RuntimeError(f\"MT5 could not select {symbol}\")\n\n        bars = {}\n        for label, timeframe, seconds in timeframes:\n            cursor = start\n            rows = []\n            while cursor < end:\n                chunk_end = min(cursor + timedelta(days=7), end)\n                rates = mt5.copy_rates_range(\n                    symbol,\n                    timeframe,\n                    cursor,\n                    chunk_end,\n                )\n                if rates is not None and len(rates) > 0:\n                    rows.extend(rates)\n                cursor = chunk_end\n\n            if not rows:\n                bars[label] = {\"rows\": 0, \"first\": None, \"last\": None}\n                continue\n\n            unique = {}\n            for row in rows:\n                unique[int(row[\"time\"])] = row\n            ordered = [unique[key] for key in sorted(unique)]\n            bars[label] = {\n                \"rows\": int(len(ordered)),\n                \"first\": datetime.fromtimestamp(\n                    int(ordered[0][\"time\"]), timezone.utc\n                ).isoformat().replace(\"+00:00\", \"Z\"),\n                \"last\": datetime.fromtimestamp(\n                    int(ordered[-1][\"time\"]), timezone.utc\n                ).isoformat().replace(\"+00:00\", \"Z\"),\n            }\n\n        ticks = {}\n        for checkpoint in checkpoints:\n            sample_end = checkpoint + timedelta(minutes=15)\n            values = mt5.copy_ticks_range(\n                symbol,\n                checkpoint,\n                sample_end,\n                mt5.COPY_TICKS_ALL,\n            )\n            count = int(len(values)) if values is not None else 0\n            ticks[checkpoint.isoformat().replace(\"+00:00\", \"Z\")] = count\n\n        output[symbol] = {\"bars\": bars, \"tick_samples\": ticks}\n\n    print(json.dumps({\n        \"from_utc\": \"2026-06-23T00:00:00Z\",\n        \"to_utc\": \"2026-09-25T00:00:00Z\",\n        \"symbols\": output,\n    }, sort_keys=True))\nfinally:\n    mt5.shutdown()\n"
       ],
       "exit_code": 0,
-      "stdout": "{\"from_utc\": \"2026-06-01T00:00:00Z\", \"symbols\": {\"EURJPY\": {\"bars\": {\"M1\": {\"first\": \"2026-06-22T05:38:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 99017}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 1203, \"2026-06-15T12:00:00Z\": 76, \"2026-07-15T12:00:00Z\": 2394, \"2026-08-17T12:00:00Z\": 3652, \"2026-09-01T12:00:00Z\": 3229, \"2026-09-24T12:00:00Z\": 6648}}, \"EURUSD\": {\"bars\": {\"M1\": {\"first\": \"2026-06-22T05:33:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 99022}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 625, \"2026-06-15T12:00:00Z\": 114, \"2026-07-15T12:00:00Z\": 3884, \"2026-08-17T12:00:00Z\": 3605, \"2026-09-01T12:00:00Z\": 3045, \"2026-09-24T12:00:00Z\": 5108}}, \"GBPJPY\": {\"bars\": {\"M1\": {\"first\": \"2026-06-22T05:35:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 99017}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 3448, \"2026-06-15T12:00:00Z\": 111, \"2026-07-15T12:00:00Z\": 4978, \"2026-08-17T12:00:00Z\": 6162, \"2026-09-01T12:00:00Z\": 6592, \"2026-09-24T12:00:00Z\": 14614}}, \"GBPUSD\": {\"bars\": {\"M1\": {\"first\": \"2026-06-22T05:30:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 99022}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 1005, \"2026-06-15T12:00:00Z\": 145, \"2026-07-15T12:00:00Z\": 4685, \"2026-08-17T12:00:00Z\": 4067, \"2026-09-01T12:00:00Z\": 5027, \"2026-09-24T12:00:00Z\": 5423}}, \"USDJPY\": {\"bars\": {\"M1\": {\"first\": \"2026-06-22T05:29:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 99022}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 446, \"2026-06-15T12:00:00Z\": 2704, \"2026-07-15T12:00:00Z\": 4686, \"2026-08-17T12:00:00Z\": 3808, \"2026-09-01T12:00:00Z\": 3213, \"2026-09-24T12:00:00Z\": 7967}}}, \"to_utc\": \"2026-09-25T00:00:00Z\"}\n",
+      "stdout": "{\"from_utc\": \"2026-06-23T00:00:00Z\", \"symbols\": {\"EURJPY\": {\"bars\": {\"M1\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 97915}, \"M15\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 6529}, \"M5\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 19585}}, \"tick_samples\": {\"2026-06-23T12:00:00Z\": 2819, \"2026-07-15T12:00:00Z\": 2394, \"2026-08-17T12:00:00Z\": 3652, \"2026-09-01T12:00:00Z\": 3229, \"2026-09-24T12:00:00Z\": 6648}}, \"EURUSD\": {\"bars\": {\"M1\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 97915}, \"M15\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 6529}, \"M5\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 19585}}, \"tick_samples\": {\"2026-06-23T12:00:00Z\": 4379, \"2026-07-15T12:00:00Z\": 3884, \"2026-08-17T12:00:00Z\": 3605, \"2026-09-01T12:00:00Z\": 3045, \"2026-09-24T12:00:00Z\": 5108}}, \"GBPJPY\": {\"bars\": {\"M1\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 97912}, \"M15\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 6529}, \"M5\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 19585}}, \"tick_samples\": {\"2026-06-23T12:00:00Z\": 7279, \"2026-07-15T12:00:00Z\": 4978, \"2026-08-17T12:00:00Z\": 6162, \"2026-09-01T12:00:00Z\": 6592, \"2026-09-24T12:00:00Z\": 14614}}, \"GBPUSD\": {\"bars\": {\"M1\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 97912}, \"M15\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 6529}, \"M5\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 19585}}, \"tick_samples\": {\"2026-06-23T12:00:00Z\": 6196, \"2026-07-15T12:00:00Z\": 4685, \"2026-08-17T12:00:00Z\": 4067, \"2026-09-01T12:00:00Z\": 5027, \"2026-09-24T12:00:00Z\": 5423}}, \"USDJPY\": {\"bars\": {\"M1\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 97911}, \"M15\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 6529}, \"M5\": {\"first\": \"2026-06-23T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 19585}}, \"tick_samples\": {\"2026-06-23T12:00:00Z\": 5747, \"2026-07-15T12:00:00Z\": 4686, \"2026-08-17T12:00:00Z\": 3808, \"2026-09-01T12:00:00Z\": 3213, \"2026-09-24T12:00:00Z\": 7967}}}, \"to_utc\": \"2026-09-25T00:00:00Z\"}\n",
       "stderr": ""
     }
   }
