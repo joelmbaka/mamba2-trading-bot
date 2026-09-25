@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m018-initial-target-wine-20260925-1616",
-  "action": "test_full_wine",
+  "id": "mamba2-m018-spread-source-evidence-20260925-1624",
+  "action": "test_full_native",
   "args": {},
   "requested_by": "chatgpt"
 }
