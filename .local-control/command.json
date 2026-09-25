@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m019-chunking-native-20260925-1617",
-  "action": "test_full_native",
+  "id": "mamba2-m019-sync-chunking-20260925-1618",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
