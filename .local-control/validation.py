@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import subprocess
+import time
 from pathlib import Path
 
 REPO = Path(os.environ["LOCAL_PROJECT_DIR"]).resolve()
@@ -29,6 +30,12 @@ FIRST_BASELINE_SYMBOLS = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
 ACCEPTED_M016_REPORT_SHA256 = (
     "d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a"
 )
+ACCEPTED_M018_BASELINE_SHA256 = (
+    "e33a5400f70494356d12faebbb1e2588bd2075769da5539e9c6584dc88cedcca"
+)
+ACCEPTED_M018_DIAGNOSTIC_SHA256 = (
+    "1497db0918bac89c8d10224745db4a522492ac577e845bfc1731450c39e3dda7"
+)
 M017_DIAGNOSTIC_A = FIRST_BASELINE_DIR / "diagnostic-a.json"
 M017_DIAGNOSTIC_B = FIRST_BASELINE_DIR / "diagnostic-b.json"
 M017_BASELINE_A = FIRST_BASELINE_DIR / "diagnostic-baseline-a.json"
@@ -46,6 +53,10 @@ M019_DIAGNOSTIC_A = M019_DIR / "m019-diagnostic-a.json"
 M019_DIAGNOSTIC_B = M019_DIR / "m019-diagnostic-b.json"
 M019_BASELINE_A = M019_DIR / "m019-baseline-a.json"
 M019_BASELINE_B = M019_DIR / "m019-baseline-b.json"
+M019_REGRESSION_DIAGNOSTIC_A = FIRST_BASELINE_DIR / "m019-regression-diagnostic-a.json"
+M019_REGRESSION_DIAGNOSTIC_B = FIRST_BASELINE_DIR / "m019-regression-diagnostic-b.json"
+M019_REGRESSION_BASELINE_A = FIRST_BASELINE_DIR / "m019-regression-baseline-a.json"
+M019_REGRESSION_BASELINE_B = FIRST_BASELINE_DIR / "m019-regression-baseline-b.json"
 M019_SYMBOLS = list(FIRST_BASELINE_SYMBOLS)
 M019_TICK_CHECKPOINTS = [
     "2026-06-23T12:00:00Z",
@@ -1541,6 +1552,111 @@ def _m019_monthly_trade_stats(trades):
     return output
 
 
+def broader_history_m018_regression_pair():
+    """Prove M019 replay infrastructure preserves accepted M018 bytes."""
+
+    _require_m019_branch()
+    if not FIRST_BASELINE_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M016 dataset manifest is missing",
+        }
+
+    outputs = (
+        M019_REGRESSION_DIAGNOSTIC_A,
+        M019_REGRESSION_DIAGNOSTIC_B,
+        M019_REGRESSION_BASELINE_A,
+        M019_REGRESSION_BASELINE_B,
+    )
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    runs = []
+    elapsed = []
+    for diagnostic_output, baseline_output in (
+        (M019_REGRESSION_DIAGNOSTIC_A, M019_REGRESSION_BASELINE_A),
+        (M019_REGRESSION_DIAGNOSTIC_B, M019_REGRESSION_BASELINE_B),
+    ):
+        started = time.monotonic()
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.diagnostics",
+                "--manifest",
+                str(FIRST_BASELINE_MANIFEST.relative_to(REPO)),
+                "--output",
+                str(diagnostic_output.relative_to(REPO)),
+                "--baseline-output",
+                str(baseline_output.relative_to(REPO)),
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        elapsed.append(time.monotonic() - started)
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M019 M018-regression replay failed",
+                "elapsed_seconds": elapsed,
+                "runs": runs,
+            }
+
+    if any(not output.is_file() for output in outputs):
+        return {
+            "ok": False,
+            "reason": "M019 regression output missing",
+            "elapsed_seconds": elapsed,
+            "runs": runs,
+        }
+
+    baseline_sha_a = _sha256(M019_REGRESSION_BASELINE_A)
+    baseline_sha_b = _sha256(M019_REGRESSION_BASELINE_B)
+    diagnostic_sha_a = _sha256(M019_REGRESSION_DIAGNOSTIC_A)
+    diagnostic_sha_b = _sha256(M019_REGRESSION_DIAGNOSTIC_B)
+
+    baseline_identical = (
+        M019_REGRESSION_BASELINE_A.read_bytes()
+        == M019_REGRESSION_BASELINE_B.read_bytes()
+    )
+    diagnostic_identical = (
+        M019_REGRESSION_DIAGNOSTIC_A.read_bytes()
+        == M019_REGRESSION_DIAGNOSTIC_B.read_bytes()
+    )
+    baseline_preserved = (
+        baseline_sha_a == ACCEPTED_M018_BASELINE_SHA256
+        and baseline_sha_b == ACCEPTED_M018_BASELINE_SHA256
+    )
+    diagnostic_preserved = (
+        diagnostic_sha_a == ACCEPTED_M018_DIAGNOSTIC_SHA256
+        and diagnostic_sha_b == ACCEPTED_M018_DIAGNOSTIC_SHA256
+    )
+
+    return {
+        "ok": bool(
+            baseline_identical
+            and diagnostic_identical
+            and baseline_preserved
+            and diagnostic_preserved
+        ),
+        "baseline_reports_identical": baseline_identical,
+        "baseline_preserved": baseline_preserved,
+        "baseline_sha256_a": baseline_sha_a,
+        "baseline_sha256_b": baseline_sha_b,
+        "accepted_m018_baseline_sha256": ACCEPTED_M018_BASELINE_SHA256,
+        "diagnostics_identical": diagnostic_identical,
+        "diagnostic_preserved": diagnostic_preserved,
+        "diagnostic_sha256_a": diagnostic_sha_a,
+        "diagnostic_sha256_b": diagnostic_sha_b,
+        "accepted_m018_diagnostic_sha256": ACCEPTED_M018_DIAGNOSTIC_SHA256,
+        "elapsed_seconds": elapsed,
+        "total_elapsed_seconds": sum(elapsed),
+        "runs": runs,
+    }
+
+
 def broader_history_run_pair():
     _require_m019_branch()
     if not M019_MANIFEST.is_file():
@@ -1719,6 +1835,7 @@ ACTION_HANDLERS = {
     "broader_history_coverage_probe": broader_history_coverage_probe,
     "broader_history_cleanup": broader_history_cleanup,
     "broader_history_export": broader_history_export,
+    "broader_history_m018_regression_pair": broader_history_m018_regression_pair,
     "broader_history_run_pair": broader_history_run_pair,
 }
 
