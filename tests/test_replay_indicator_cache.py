@@ -90,13 +90,13 @@ def test_replay_cached_indicators_match_visible_only_legacy_path_exactly():
         visible_m1 = feed.get_rates("EURUSD", "M1")
         expected_m1 = m1.loc[
             m1.index + pd.Timedelta(minutes=1) <= now
-        ]
+        ].rename_axis("time")
         pd.testing.assert_frame_equal(visible_m1, expected_m1)
 
         visible_m5 = feed.get_rates("EURUSD", "M5")
         expected_m5 = m5.loc[
             m5.index + pd.Timedelta(minutes=5) <= now
-        ]
+        ].rename_axis("time")
         pd.testing.assert_frame_equal(visible_m5, expected_m5)
 
         cached_m1 = get_stochastic(
