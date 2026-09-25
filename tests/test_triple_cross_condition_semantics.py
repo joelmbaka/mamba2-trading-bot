@@ -448,3 +448,57 @@ async def test_reporting_disabled_preserves_order_without_artifacts(
     )
 
     broker.order_send.assert_called_once()
+
+
+
+@pytest.mark.asyncio
+async def test_strategy_passes_explicit_stochastic_parameters(monkeypatch):
+    from mamba2.crew import market_analyst, plotter
+    from mamba2.indicators import moving_average
+    from mamba2.strategy import triple_cross
+
+    cfg = strategy_config(trend=False, rsi=False, higher=False)
+    cfg.stochastic_k_period = 21
+    cfg.stochastic_d_period = 7
+    cfg.stochastic_slowing = 7
+    monkeypatch.setattr(triple_cross, "config", cfg)
+
+    values = stochastic_values(signal="buy")
+    calls = []
+
+    def fake_stochastic(symbol, timeframe, rate_fetcher, **kwargs):
+        calls.append((timeframe, kwargs.copy()))
+        k, d = values[timeframe]
+        return {
+            "k": pd.Series(k),
+            "d": pd.Series(d),
+            "closes": pd.Series([1.0, 1.0]),
+        }
+
+    monkeypatch.setattr(triple_cross, "get_stochastic", fake_stochastic)
+    monkeypatch.setattr(
+        moving_average,
+        "get_moving_average",
+        lambda *args, **kwargs: 1.1002,
+    )
+    monkeypatch.setattr(plotter, "plot_rates", Mock(return_value="not-written"))
+    monkeypatch.setattr(market_analyst, "get_metrics", Mock(return_value=None))
+    monkeypatch.setattr(triple_cross, "count_candle_pattern", lambda *args: 0)
+
+    broker = Broker()
+    strategy = triple_cross.StochasticTripleTFStrategy("EURUSD")
+    await strategy.evaluate(
+        {
+            "broker": broker,
+            "rate_fetcher": RateFetcher(bullish=True),
+            "position_manager": None,
+            "reporting_enabled": False,
+        }
+    )
+
+    broker.order_send.assert_called_once()
+    assert {timeframe for timeframe, _kwargs in calls} == {"M5", "M1"}
+    for _timeframe, kwargs in calls:
+        assert kwargs["k_period"] == 21
+        assert kwargs["d_period"] == 7
+        assert kwargs["slowing"] == 7

@@ -88,7 +88,12 @@ class Config:
             "entry": "M1",
         }
     )
-    stochastic_k_period: int = 14
+    # These values match the production stochastic calculation that has been
+    # in use since the LTS strategy revision. Keep them explicit so config and
+    # runtime behavior cannot silently diverge.
+    stochastic_k_period: int = 21
+    stochastic_d_period: int = 7
+    stochastic_slowing: int = 7
 
     timeframes: dict = field(
         default_factory=lambda: {
@@ -133,6 +138,8 @@ cache_ttl = config.cache_ttl
 atr_update_interval = config.atr_update_interval
 stochastic_timeframes = config.stochastic_timeframes
 stochastic_k_period = config.stochastic_k_period
+stochastic_d_period = config.stochastic_d_period
+stochastic_slowing = config.stochastic_slowing
 rates_fetcher = config.rates_fetcher
 analytics_config = config.analytics_config
 ENABLE_TREND_CONDITION = config.ENABLE_TREND_CONDITION

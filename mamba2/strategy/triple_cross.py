@@ -32,6 +32,15 @@ class StochasticTripleTFStrategy(Strategy):
         self.symbol = symbol
         self.stochastic_timeframes = config.stochastic_timeframes
         self.use_higher_tf = config.use_higher_tf  # New configuration option
+        self.stochastic_k_period = int(
+            getattr(config, "stochastic_k_period", 21)
+        )
+        self.stochastic_d_period = int(
+            getattr(config, "stochastic_d_period", 7)
+        )
+        self.stochastic_slowing = int(
+            getattr(config, "stochastic_slowing", 7)
+        )
         
     async def evaluate(self, market):
         """Evaluate market conditions using triple timeframe stochastic."""
@@ -71,6 +80,9 @@ class StochasticTripleTFStrategy(Strategy):
             get_stochastic(
                 symbol=self.symbol,
                 timeframe=tf_higher,
+                k_period=self.stochastic_k_period,
+                d_period=self.stochastic_d_period,
+                slowing=self.stochastic_slowing,
                 rate_fetcher=rate_fetcher,
             )
             if self.use_higher_tf
@@ -79,11 +91,17 @@ class StochasticTripleTFStrategy(Strategy):
         stoch_trading = get_stochastic(
             symbol=self.symbol,
             timeframe=tf_trading,
+            k_period=self.stochastic_k_period,
+            d_period=self.stochastic_d_period,
+            slowing=self.stochastic_slowing,
             rate_fetcher=rate_fetcher,
         )
         stoch_entry = get_stochastic(
             symbol=self.symbol,
             timeframe=tf_entry,
+            k_period=self.stochastic_k_period,
+            d_period=self.stochastic_d_period,
+            slowing=self.stochastic_slowing,
             rate_fetcher=rate_fetcher,
             lookback_period=10,
         )
@@ -499,6 +517,9 @@ class StochasticTripleTFStrategy(Strategy):
             order_type=order_type,
             trend=trend,
             include_higher_tf=self.use_higher_tf,
+            stochastic_k_period=self.stochastic_k_period,
+            stochastic_d_period=self.stochastic_d_period,
+            stochastic_slowing=self.stochastic_slowing,
         )
 
     def _registered_lower_lows(self, rates):

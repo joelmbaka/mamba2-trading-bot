@@ -52,7 +52,10 @@ def get_metrics(position_ticket: str, symbol: str, rate_fetcher,
                 tf_higher: str, tf_trading: str, tf_entry: str, 
                 lookback_period_higher: int, lookback_period_trading: int, lookback_period_entry: int, 
                 order_type: str = "", trend: str = None,
-                include_higher_tf: bool = True) -> str:
+                include_higher_tf: bool = True,
+                stochastic_k_period: int = 21,
+                stochastic_d_period: int = 7,
+                stochastic_slowing: int = 7) -> str:
     """
     Calculate and save market metrics across multiple timeframes to a centralized CSV
     
@@ -88,14 +91,33 @@ def get_metrics(position_ticket: str, symbol: str, rate_fetcher,
             get_stochastic(
                 symbol,
                 tf_higher,
+                k_period=stochastic_k_period,
+                d_period=stochastic_d_period,
+                slowing=stochastic_slowing,
                 lookback_period=lookback_period_higher,
                 rate_fetcher=rate_fetcher,
             )
             if include_higher_tf
             else None
         )
-        stoch_trading = get_stochastic(symbol, tf_trading, lookback_period=lookback_period_trading, rate_fetcher=rate_fetcher)
-        stoch_entry = get_stochastic(symbol, tf_entry, lookback_period=lookback_period_entry, rate_fetcher=rate_fetcher)
+        stoch_trading = get_stochastic(
+            symbol,
+            tf_trading,
+            k_period=stochastic_k_period,
+            d_period=stochastic_d_period,
+            slowing=stochastic_slowing,
+            lookback_period=lookback_period_trading,
+            rate_fetcher=rate_fetcher,
+        )
+        stoch_entry = get_stochastic(
+            symbol,
+            tf_entry,
+            k_period=stochastic_k_period,
+            d_period=stochastic_d_period,
+            slowing=stochastic_slowing,
+            lookback_period=lookback_period_entry,
+            rate_fetcher=rate_fetcher,
+        )
         
         # Get RSI for 5-minute timeframe
         rsi_5m = RSI.get_rsi(symbol, 'M5', rate_fetcher=rate_fetcher)

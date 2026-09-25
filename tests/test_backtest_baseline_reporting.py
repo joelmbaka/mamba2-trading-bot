@@ -114,7 +114,9 @@ def test_baseline_report_uses_shared_equity_curve_and_trade_ledger(monkeypatch):
                 "trading": "M5",
                 "entry": "M1",
             },
-            stochastic_k_period=14,
+            stochastic_k_period=21,
+            stochastic_d_period=7,
+            stochastic_slowing=7,
             atr_period=14,
             atr_timeframe="M5",
             atr_sl_multiplier=1.0,
@@ -238,7 +240,9 @@ def test_drawdown_peak_includes_starting_equity(monkeypatch):
             ENABLE_RSI_CONDITION=False,
             use_higher_tf=False,
             stochastic_timeframes={"higher": "M15", "trading": "M5", "entry": "M1"},
-            stochastic_k_period=14,
+            stochastic_k_period=21,
+            stochastic_d_period=7,
+            stochastic_slowing=7,
             atr_period=14,
             atr_timeframe="M5",
             atr_sl_multiplier=1.0,
@@ -302,7 +306,7 @@ def test_terminal_summary_is_stable(monkeypatch):
 
 
 
-def test_config_snapshot_distinguishes_configured_and_effective_stochastic_period(
+def test_config_snapshot_records_authoritative_stochastic_parameters(
     monkeypatch,
 ):
     import mamba2.backtest.baseline as baseline_module
@@ -321,7 +325,9 @@ def test_config_snapshot_distinguishes_configured_and_effective_stochastic_perio
                 "trading": "M5",
                 "entry": "M1",
             },
-            stochastic_k_period=14,
+            stochastic_k_period=21,
+            stochastic_d_period=7,
+            stochastic_slowing=7,
             atr_period=14,
             atr_timeframe="M5",
             atr_sl_multiplier=1.0,
@@ -331,8 +337,7 @@ def test_config_snapshot_distinguishes_configured_and_effective_stochastic_perio
 
     snapshot = baseline_module._config_snapshot()
 
-    assert snapshot["configured_stochastic_k_period"] == 14
-    assert snapshot["effective_stochastic_parameters"] == {
+    assert snapshot["stochastic_parameters"] == {
         "k_period": 21,
         "d_period": 7,
         "slowing": 7,

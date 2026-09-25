@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import inspect
 import json
 import math
 from pathlib import Path
@@ -14,7 +13,6 @@ import pandas as pd
 from config import config
 from mamba2.crew.atr_manager import ATRManager
 from mamba2.crew.position_manager import PositionManager
-from mamba2.indicators.stochastic import get_stochastic
 from mamba2.strategy.triple_cross import StochasticTripleTFStrategy
 
 from .broker import ExecutionCostModel, HistoricalBroker
@@ -72,15 +70,6 @@ def _validate_baseline_dataset(
             )
 
 
-def _effective_stochastic_parameters() -> dict[str, int]:
-    signature = inspect.signature(get_stochastic)
-    return {
-        "k_period": int(signature.parameters["k_period"].default),
-        "d_period": int(signature.parameters["d_period"].default),
-        "slowing": int(signature.parameters["slowing"].default),
-    }
-
-
 def _config_snapshot() -> dict[str, Any]:
     return {
         "symbols": list(config.symbols),
@@ -89,8 +78,11 @@ def _config_snapshot() -> dict[str, Any]:
         "rsi_filter_enabled": bool(config.ENABLE_RSI_CONDITION),
         "higher_tf_filter_enabled": bool(config.use_higher_tf),
         "stochastic_timeframes": dict(config.stochastic_timeframes),
-        "configured_stochastic_k_period": int(config.stochastic_k_period),
-        "effective_stochastic_parameters": _effective_stochastic_parameters(),
+        "stochastic_parameters": {
+            "k_period": int(config.stochastic_k_period),
+            "d_period": int(config.stochastic_d_period),
+            "slowing": int(config.stochastic_slowing),
+        },
         "atr_period": int(config.atr_period),
         "atr_timeframe": str(config.atr_timeframe),
         "atr_sl_multiplier": float(config.atr_sl_multiplier),
