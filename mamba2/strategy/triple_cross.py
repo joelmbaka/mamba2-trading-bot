@@ -274,52 +274,19 @@ class StochasticTripleTFStrategy(Strategy):
                             logger.error(f"Order failed with code {resp.get('retcode')}: {resp}")
                         break
                     
-                    # Count patterns in the last 10 candles of 1-minute data
-                    lookback = 10
-                    doji_count_1m = count_candle_pattern(rates, is_doji, lookback)
-                    hammer_count_1m = count_candle_pattern(rates, is_hammer, lookback)
-                    shooting_star_count_1m = count_candle_pattern(rates, is_shooting_star, lookback)
-
-                    # Plot charts for each timeframe in a position-specific directory
-                    from mamba2.crew.plotter import plot_rates
-                    output_dir = os.path.join(os.getcwd(), "backtest")
-                    # Use order ID as position ticket if available, otherwise use timestamp
-                    position_ticket = resp.get('order') or int(time.time())
-              #      logger.info(f"Using position_ticket: {position_ticket}")
-               #     logger.info(f"Output directory: {output_dir}")
-                    
-                    # Plot each timeframe in the same position directory
-                    plot_path1 = (
-                        plot_rates(
-                            rates_higher,
-                            tf_higher,
-                            self.symbol,
-                            output_dir,
-                            position_ticket,
+                    if market.get("reporting_enabled", True):
+                        self._record_entry_artifacts(
+                            response=resp,
+                            order_type="buy",
+                            trend=trend,
+                            rates_higher=rates_higher,
+                            rates_trading=rates_trading,
+                            rates_entry=rates_entry,
+                            tf_higher=tf_higher,
+                            tf_trading=tf_trading,
+                            tf_entry=tf_entry,
+                            rate_fetcher=market['rate_fetcher'],
                         )
-                        if self.use_higher_tf
-                        else None
-                    )
-                    plot_path2 = plot_rates(rates_trading, tf_trading, self.symbol, output_dir, position_ticket)
-                    plot_path3 = plot_rates(rates_entry, tf_entry, self.symbol, output_dir, position_ticket)
-#                   logger.info(f"Saved plots to: {plot_path1}, {plot_path2}, {plot_path3}")
-                    
-                    # Save stochastics metrics
-                    from mamba2.crew.market_analyst import get_metrics
-                    csv_path = get_metrics(
-                        position_ticket,
-                        self.symbol,
-                        market['rate_fetcher'],
-                        tf_higher,
-                        tf_trading,
-                        tf_entry,
-                        10,
-                        10,
-                        10,
-                        order_type='buy',
-                        trend=trend,
-                        include_higher_tf=self.use_higher_tf,
-                    )
             if sell_trend_allowed:
                 # Only look for sell signals
                 overbought_level = 80
@@ -451,52 +418,88 @@ class StochasticTripleTFStrategy(Strategy):
                             logger.error(f"Order failed with code {resp.get('retcode')}: {resp}")
                         break
                     
-                    # Count patterns in the last 10 candles of 1-minute data
-                    lookback = 10
-                    doji_count_1m = count_candle_pattern(rates, is_doji, lookback)
-                    hammer_count_1m = count_candle_pattern(rates, is_hammer, lookback)
-                    shooting_star_count_1m = count_candle_pattern(rates, is_shooting_star, lookback)
-
-                    # Plot charts for each timeframe in a position-specific directory
-                    from mamba2.crew.plotter import plot_rates
-                    output_dir = os.path.join(os.getcwd(), "backtest")
-                    # Use order ID as position ticket if available, otherwise use timestamp
-                    position_ticket = resp.get('order') or int(time.time())
-                    
-                    # Plot each timeframe in the same position directory
-                    plot_path1 = (
-                        plot_rates(
-                            rates_higher,
-                            tf_higher,
-                            self.symbol,
-                            output_dir,
-                            position_ticket,
+                    if market.get("reporting_enabled", True):
+                        self._record_entry_artifacts(
+                            response=resp,
+                            order_type="sell",
+                            trend=trend,
+                            rates_higher=rates_higher,
+                            rates_trading=rates_trading,
+                            rates_entry=rates_entry,
+                            tf_higher=tf_higher,
+                            tf_trading=tf_trading,
+                            tf_entry=tf_entry,
+                            rate_fetcher=market['rate_fetcher'],
                         )
-                        if self.use_higher_tf
-                        else None
-                    )
-                    plot_path2 = plot_rates(rates_trading, tf_trading, self.symbol, output_dir, position_ticket)
-                    plot_path3 = plot_rates(rates_entry, tf_entry, self.symbol, output_dir, position_ticket)
-                    
-                    # Save stochastics metrics
-                    from mamba2.crew.market_analyst import get_metrics
-                    csv_path = get_metrics(
-                        position_ticket,
-                        self.symbol,
-                        market['rate_fetcher'],
-                        tf_higher,
-                        tf_trading,
-                        tf_entry,
-                        10,
-                        10,
-                        10,
-                        order_type='sell',
-                        trend=trend,
-                        include_higher_tf=self.use_higher_tf,
-                    )
         else:
             logger.debug(f"Skipping {self.symbol} - invalid stochastic values on one or more timeframes")
 
+
+    def _record_entry_artifacts(
+        self,
+        *,
+        response,
+        order_type,
+        trend,
+        rates_higher,
+        rates_trading,
+        rates_entry,
+        tf_higher,
+        tf_trading,
+        tf_entry,
+        rate_fetcher,
+    ):
+        """Persist live analytics after a signal without affecting execution."""
+
+        lookback = 10
+        count_candle_pattern(rates_entry, is_doji, lookback)
+        count_candle_pattern(rates_entry, is_hammer, lookback)
+        count_candle_pattern(rates_entry, is_shooting_star, lookback)
+
+        from mamba2.crew.plotter import plot_rates
+
+        output_dir = os.path.join(os.getcwd(), "backtest")
+        position_ticket = response.get('order') or int(time.time())
+
+        if self.use_higher_tf:
+            plot_rates(
+                rates_higher,
+                tf_higher,
+                self.symbol,
+                output_dir,
+                position_ticket,
+            )
+        plot_rates(
+            rates_trading,
+            tf_trading,
+            self.symbol,
+            output_dir,
+            position_ticket,
+        )
+        plot_rates(
+            rates_entry,
+            tf_entry,
+            self.symbol,
+            output_dir,
+            position_ticket,
+        )
+
+        from mamba2.crew.market_analyst import get_metrics
+
+        get_metrics(
+            position_ticket,
+            self.symbol,
+            rate_fetcher,
+            tf_higher,
+            tf_trading,
+            tf_entry,
+            10,
+            10,
+            10,
+            order_type=order_type,
+            trend=trend,
+            include_higher_tf=self.use_higher_tf,
+        )
 
     def _registered_lower_lows(self, rates):
         """Check if last 2 candles registered lower lows."""

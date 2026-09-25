@@ -390,3 +390,61 @@ async def test_higher_tf_on_still_requires_m15_stochastic(monkeypatch):
     assert "M15" in calls
     metrics.assert_called_once()
     assert metrics.call_args.kwargs["include_higher_tf"] is True
+
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("signal", ["buy", "sell"])
+async def test_reporting_disabled_preserves_order_without_artifacts(
+    monkeypatch,
+    signal,
+):
+    from mamba2.crew import market_analyst, plotter
+    from mamba2.indicators import moving_average
+    from mamba2.strategy import triple_cross
+
+    monkeypatch.setattr(
+        triple_cross,
+        "config",
+        strategy_config(trend=False, rsi=False, higher=False),
+    )
+    values = stochastic_values(signal=signal)
+
+    def fake_stochastic(symbol, timeframe, rate_fetcher, **kwargs):
+        k, d = values[timeframe]
+        return {
+            "k": pd.Series(k),
+            "d": pd.Series(d),
+            "closes": pd.Series([1.0, 1.0]),
+        }
+
+    monkeypatch.setattr(triple_cross, "get_stochastic", fake_stochastic)
+    monkeypatch.setattr(
+        moving_average,
+        "get_moving_average",
+        lambda *args, **kwargs: 1.1002 if signal == "buy" else 1.1003,
+    )
+    monkeypatch.setattr(
+        plotter,
+        "plot_rates",
+        Mock(side_effect=AssertionError("plotting must be disabled")),
+    )
+    monkeypatch.setattr(
+        market_analyst,
+        "get_metrics",
+        Mock(side_effect=AssertionError("metrics must be disabled")),
+    )
+    monkeypatch.setattr(triple_cross, "count_candle_pattern", lambda *args: 0)
+
+    broker = Broker()
+    strategy = triple_cross.StochasticTripleTFStrategy("EURUSD")
+    await strategy.evaluate(
+        {
+            "broker": broker,
+            "rate_fetcher": RateFetcher(bullish=signal == "buy"),
+            "position_manager": None,
+            "reporting_enabled": False,
+        }
+    )
+
+    broker.order_send.assert_called_once()

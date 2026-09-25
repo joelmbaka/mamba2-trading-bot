@@ -156,6 +156,7 @@ class PortfolioBacktestResult:
         default_factory=dict
     )
     closed_trade_count_by_symbol: dict[str, int] = field(default_factory=dict)
+    account_snapshots: list[dict[str, Any]] = field(default_factory=list)
     final_account: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -190,6 +191,7 @@ class PortfolioBacktestRunner:
         position_manager: Any | None = None,
         atr_manager: Any | None = None,
         rate_fetcher: Any | None = None,
+        strategy_reporting_enabled: bool = True,
     ):
         self.feed = feed
         self.broker = broker
@@ -211,12 +213,14 @@ class PortfolioBacktestRunner:
             else getattr(position_manager, "atr_manager", None)
         )
         self.rate_fetcher = rate_fetcher or feed
+        self.strategy_reporting_enabled = bool(strategy_reporting_enabled)
         self.strategy_broker = BacktestBrokerAdapter(broker)
 
     def market_context(self) -> dict[str, Any]:
         context = {
             "broker": self.strategy_broker,
             "rate_fetcher": self.rate_fetcher,
+            "reporting_enabled": self.strategy_reporting_enabled,
         }
         if self.position_manager is not None:
             context["position_manager"] = self.position_manager
@@ -302,6 +306,18 @@ class PortfolioBacktestRunner:
 
             if self.position_manager is not None:
                 await self.position_manager.update_once()
+
+            account = self.broker.account_info()
+            result.account_snapshots.append(
+                {
+                    "timestamp": timestamp,
+                    "balance": float(account["balance"]),
+                    "realized_profit": float(account["realized_profit"]),
+                    "unrealized_profit": float(account["unrealized_profit"]),
+                    "equity": float(account["equity"]),
+                    "commission_paid": float(account.get("commission_paid", 0.0)),
+                }
+            )
 
             result.evaluations += 1
             result.timestamps.append(timestamp)
