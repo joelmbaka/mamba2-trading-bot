@@ -28,6 +28,7 @@ VALIDATION_ACTIONS = {
     "first_baseline_run_pair",
     "first_baseline_export",
     "first_baseline_cleanup",
+    "baseline_diagnostic_run_pair",
 }
 
 
