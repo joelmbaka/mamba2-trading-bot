@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-first-baseline-final-checks-20260925-1153",
-  "action": "repo_checks",
+  "id": "mamba2-first-baseline-cleanup-20260925-1212",
+  "action": "first_baseline_cleanup",
   "args": {},
   "requested_by": "chatgpt"
 }
