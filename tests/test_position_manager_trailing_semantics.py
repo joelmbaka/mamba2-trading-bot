@@ -57,21 +57,37 @@ def configure(monkeypatch):
     )
 
 
-def position(*, side, current, sl, tp):
+def position(*, side, current, sl, tp, open_price=None):
     return {
         "ticket": 1,
         "symbol": "EURUSD",
         "type": side,
+        "price_open": current if open_price is None else open_price,
         "price_current": current,
         "sl": sl,
         "tp": tp,
     }
 
 
-async def run_once(monkeypatch, *, side, current, sl, tp, atr):
+async def run_once(
+    monkeypatch,
+    *,
+    side,
+    current,
+    sl,
+    tp,
+    atr,
+    open_price=None,
+):
     configure(monkeypatch)
     broker = FakeBroker(
-        position(side=side, current=current, sl=sl, tp=tp)
+        position(
+            side=side,
+            current=current,
+            sl=sl,
+            tp=tp,
+            open_price=open_price,
+        )
     )
     manager = PositionManager(
         broker,
@@ -200,6 +216,53 @@ async def test_initial_atr_protection_is_installed(
     assert len(broker.modify_calls) == 1
     assert broker.position["sl"] == pytest.approx(expected_sl)
     assert broker.position["tp"] == pytest.approx(expected_tp)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    (
+        "side",
+        "open_price",
+        "current",
+        "expected_sl",
+        "expected_tp",
+    ),
+    [
+        # BUY fills at Ask while its immediately executable closing side is
+        # Bid.  A spread wider than the target ATR distance must not put TP
+        # below the entry fill.
+        (0, 1.1200, 1.1000, 1.0950, 1.1300),
+        # SELL fills at Bid while its immediately executable closing side is
+        # Ask.  A wide spread must not put TP above the entry fill.
+        (1, 1.1000, 1.1200, 1.1250, 1.0900),
+    ],
+)
+async def test_initial_atr_target_never_crosses_entry_fill_under_wide_spread(
+    monkeypatch,
+    side,
+    open_price,
+    current,
+    expected_sl,
+    expected_tp,
+):
+    broker, _manager = await run_once(
+        monkeypatch,
+        side=side,
+        open_price=open_price,
+        current=current,
+        sl=0.0,
+        tp=0.0,
+        atr=0.0050,
+    )
+
+    assert len(broker.modify_calls) == 1
+    assert broker.position["sl"] == pytest.approx(expected_sl)
+    assert broker.position["tp"] == pytest.approx(expected_tp)
+
+    if side == 0:
+        assert broker.position["tp"] > open_price
+    else:
+        assert broker.position["tp"] < open_price
 
 
 @pytest.mark.asyncio
