@@ -153,9 +153,13 @@ class ReplayFeed:
         return self.current_time  # type: ignore[return-value]
 
     def current_bar(self, symbol: str) -> pd.Series | None:
-        """Return the latest completed M1 source bar visible to strategy code."""
-        visible = self.get_rates(symbol, "M1")
-        return None if visible.empty else visible.iloc[-1]
+        """Return the latest completed M1 source bar without copying history."""
+        if symbol not in self._bars or self.current_time is None:
+            return None
+        source = self._bars[symbol]
+        cutoff = self.current_time - pd.Timedelta(minutes=1)
+        stop = int(source.index.searchsorted(cutoff, side="right"))
+        return None if stop == 0 else source.iloc[stop - 1]
 
     def current_ask_bar(self, symbol: str) -> pd.Series | None:
         """Return Ask OHLC matching the latest completed visible M1 bar."""
@@ -208,6 +212,41 @@ class ReplayFeed:
             if self.current_time in source.index
             else None
         )
+
+    def get_visible_rates_for_indicator(
+        self,
+        symbol: str,
+        timeframe: str | int,
+    ) -> pd.DataFrame:
+        """Return a causal replay-only read view without deep-copying history.
+
+        This hook is intentionally separate from get_rates. Production
+        callers retain the existing copy-returning API. Replay indicators and
+        strategy reads may use this hook only as immutable input.
+        """
+        if symbol not in self._bars or self.current_time is None:
+            return _empty_rates()
+
+        timeframe_name = _timeframe_name(timeframe)
+        if timeframe_name == "M1":
+            source = self._bars[symbol]
+            cutoff = self.current_time - pd.Timedelta(minutes=1)
+            stop = int(source.index.searchsorted(cutoff, side="right"))
+            return source.iloc[:stop]
+
+        minutes = TIMEFRAME_MINUTES[timeframe_name]
+        native = self._native_timeframe_bars.get(symbol, {}).get(
+            timeframe_name
+        )
+        if native is not None:
+            cutoff = self.current_time - pd.Timedelta(minutes=minutes)
+            stop = int(native.index.searchsorted(cutoff, side="right"))
+            return native.iloc[:stop]
+
+        # Preserve the accepted derived-timeframe aggregation path when no
+        # broker-native timeframe exists.
+        return self.get_rates(symbol, timeframe_name)
+
 
     def get_static_rates_for_indicator(
         self,
