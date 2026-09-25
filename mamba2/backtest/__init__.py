@@ -21,7 +21,13 @@ from .mt5_dataset import (
     export_mt5_dataset,
     load_mt5_dataset,
 )
-from .runner import BacktestBrokerAdapter, BacktestResult, BacktestRunner
+from .runner import (
+    BacktestBrokerAdapter,
+    BacktestResult,
+    BacktestRunner,
+    PortfolioBacktestResult,
+    PortfolioBacktestRunner,
+)
 
 __all__ = [
     "HistoricalBroker",
@@ -32,6 +38,8 @@ __all__ = [
     "BacktestBrokerAdapter",
     "BacktestResult",
     "BacktestRunner",
+    "PortfolioBacktestResult",
+    "PortfolioBacktestRunner",
     "HistoricalDataError",
     "PRICE_BAR_COLUMNS",
     "REQUIRED_BAR_COLUMNS",
