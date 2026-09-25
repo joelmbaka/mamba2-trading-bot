@@ -79,13 +79,28 @@ class BacktestRunner:
         return context
 
     async def _strategy_is_blocked_by_open_position(self) -> bool:
-        """Mirror DayTrader's one-open-position-per-symbol guard when possible."""
+        """Mirror live one-position semantics, including queued replay fills.
+
+        MT5 market orders are normally accepted/executed synchronously from the
+        strategy's perspective. HistoricalBroker may need to queue an accepted
+        order until the next symbol execution bar exists. While that synthetic
+        queue is pending, treating the symbol as free would allow duplicate
+        submissions that cannot occur in the live path.
+        """
         if self.position_manager is None:
             return False
+
         symbol = getattr(self.strategy, "symbol", None)
         if not symbol:
             return False
-        return bool(await self.broker.positions_get(symbol=symbol))
+
+        if await self.broker.positions_get(symbol=symbol):
+            return True
+
+        return any(
+            order.get("request", {}).get("symbol") == symbol
+            for order in self.broker.pending_orders
+        )
 
     async def run_async(self, *, max_steps: int | None = None) -> BacktestResult:
         result = BacktestResult()

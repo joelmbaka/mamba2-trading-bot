@@ -222,3 +222,83 @@ async def test_position_manager_waits_cleanly_when_atr_is_unavailable(monkeypatc
     assert position["sl"] == 0.0
     assert position["tp"] == 0.0
     assert position_manager.get_position("EURUSD") is not None
+
+
+def sparse_symbol_bars():
+    eur_times = pd.to_datetime(
+        [
+            "2025-01-02T10:00:00Z",
+            "2025-01-02T10:03:00Z",
+        ],
+        utc=True,
+    )
+    clock_times = pd.date_range(
+        "2025-01-02 10:00",
+        periods=4,
+        freq="min",
+        tz="UTC",
+    )
+
+    def frame(times, base):
+        opens = [base + index * 0.0001 for index in range(len(times))]
+        return pd.DataFrame(
+            {
+                "time": times,
+                "open": opens,
+                "high": [value + 0.0002 for value in opens],
+                "low": [value - 0.0002 for value in opens],
+                "close": [value + 0.0001 for value in opens],
+                "tick_volume": [10] * len(times),
+                "spread": [10] * len(times),
+                "real_volume": [0] * len(times),
+            }
+        )
+
+    return {
+        "EURUSD": frame(eur_times, 1.1000),
+        "GBPUSD": frame(clock_times, 1.2500),
+    }
+
+
+def test_pending_replay_order_blocks_duplicate_submission_until_fill(monkeypatch):
+    configure_lifecycle(monkeypatch)
+    strategy = RepeatingStrategy()
+    feed = ReplayFeed(sparse_symbol_bars())
+    broker = HistoricalBroker(feed)
+    position_manager = PositionManager(
+        broker,
+        atr_manager=None,
+        rates_fetcher=feed,
+    )
+    runner = BacktestRunner(
+        feed,
+        broker,
+        strategy,
+        position_manager=position_manager,
+    )
+
+    # 10:01: strategy submits EURUSD, but EURUSD has no 10:01 execution bar,
+    # so the accepted order remains queued.
+    first = runner.run(max_steps=1)
+    assert len(first.accepted_orders) == 1
+    assert broker.positions_total() == 0
+    assert len(broker.pending_orders) == 1
+    assert strategy.calls == 1
+
+    # 10:02: another symbol advances the global replay clock. EURUSD is still
+    # missing an execution bar, so the queued order must itself block another
+    # strategy submission.
+    second = runner.run(max_steps=1)
+    assert len(second.accepted_orders) == 1
+    assert broker.positions_total() == 0
+    assert len(broker.pending_orders) == 1
+    assert strategy.calls == 1
+
+    # 10:03: EURUSD finally has an execution bar. broker.advance() fills the
+    # original queued order before the strategy guard, and the open position
+    # continues to block a duplicate submission.
+    third = runner.run(max_steps=1)
+    assert len(third.accepted_orders) == 1
+    assert broker.positions_total() == 1
+    assert len(broker.pending_orders) == 0
+    assert strategy.calls == 1
