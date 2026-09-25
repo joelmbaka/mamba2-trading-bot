@@ -1,18 +1,27 @@
 {
   "version": 1,
-  "command_id": "mamba2-m019-final-repo-checks-20260925-2045",
-  "completed_at": "2026-09-25T17:47:36.256289+00:00",
+  "command_id": "mamba2-m020-switch-20260925-2049",
+  "completed_at": "2026-09-25T17:49:38.862113+00:00",
   "ok": true,
-  "action": "repo_checks",
+  "action": "switch_branch",
   "data": {
-    "ok": true,
-    "clean": true,
-    "branch": "backtest-broader-history",
-    "divergence": "0\t0",
-    "bot_cache_tracked": false,
-    "icon_tracked": true,
-    "icon_changed": false,
+    "target_branch": "backtest-controlled-experiments",
+    "before_branch": "backtest-broader-history",
+    "after_branch": "backtest-controlled-experiments",
+    "before_sha": "927d90c656b6846603d338987bf67e6928499966",
+    "after_sha": "dbc131b3752b1402d178ecf8400e816e21eef4f8",
+    "reason": null,
     "commands": [
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "backtest-broader-history\n",
+        "stderr": ""
+      },
       {
         "command": [
           "git",
@@ -26,11 +35,12 @@
       {
         "command": [
           "git",
-          "branch",
-          "--show-current"
+          "check-ref-format",
+          "--branch",
+          "backtest-controlled-experiments"
         ],
         "exit_code": 0,
-        "stdout": "backtest-broader-history\n",
+        "stdout": "backtest-controlled-experiments\n",
         "stderr": ""
       },
       {
@@ -47,66 +57,23 @@
       {
         "command": [
           "git",
-          "diff",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "/home/joel/.local/bin/uv",
-          "lock",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": "Resolved 58 packages in 0.73ms\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "bot_cache.json"
-        ],
-        "exit_code": 1,
-        "stdout": "",
-        "stderr": "error: pathspec 'bot_cache.json' did not match any file(s) known to git\nDid you forget to 'git add'?\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "icon.png"
-        ],
-        "exit_code": 0,
-        "stdout": "icon.png\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--short",
-          "--",
-          "icon.png"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
           "fetch",
           "origin",
-          "backtest-broader-history:refs/remotes/origin/backtest-broader-history"
+          "backtest-controlled-experiments:refs/remotes/origin/backtest-controlled-experiments"
         ],
         "exit_code": 0,
         "stdout": "",
+        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * [new branch]      backtest-controlled-experiments -> origin/backtest-controlled-experiments\n"
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/backtest-controlled-experiments"
+        ],
+        "exit_code": 0,
+        "stdout": "dbc131b3752b1402d178ecf8400e816e21eef4f8\n",
         "stderr": ""
       },
       {
@@ -114,22 +81,54 @@
           "git",
           "rev-parse",
           "--verify",
-          "refs/remotes/origin/backtest-broader-history"
+          "refs/heads/backtest-controlled-experiments"
+        ],
+        "exit_code": 128,
+        "stdout": "",
+        "stderr": "fatal: Needed a single revision\n"
+      },
+      {
+        "command": [
+          "git",
+          "switch",
+          "--track",
+          "-c",
+          "backtest-controlled-experiments",
+          "origin/backtest-controlled-experiments"
         ],
         "exit_code": 0,
-        "stdout": "927d90c656b6846603d338987bf67e6928499966\n",
+        "stdout": "branch 'backtest-controlled-experiments' set up to track 'origin/backtest-controlled-experiments'.\n",
+        "stderr": "Switched to a new branch 'backtest-controlled-experiments'\n"
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "backtest-controlled-experiments\n",
         "stderr": ""
       },
       {
         "command": [
           "git",
-          "rev-list",
-          "--left-right",
-          "--count",
-          "HEAD...origin/backtest-broader-history"
+          "rev-parse",
+          "HEAD"
         ],
         "exit_code": 0,
-        "stdout": "0\t0\n",
+        "stdout": "dbc131b3752b1402d178ecf8400e816e21eef4f8\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
         "stderr": ""
       }
     ]
