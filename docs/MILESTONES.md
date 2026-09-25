@@ -19,16 +19,15 @@ Each accepted milestone records the exact implementation SHA. Future milestones 
 | 013 | Trailing semantics | `4cd40f4af9d2f4e6a6e7d1fc570171bf8a493e32` | Monotonic existing stops |
 | 014 | Runtime cache sanitization | `40536d96c6ac2119fca3c2cfec92dad889e7c878` | Stale account metadata removed safely |
 | 015 | Repository operations foundation | `32da1d846960cbc2b196da1c2f8c8a8561a5c322` | Durable docs/local-control + dead/generated repository cleanup |
-| 016 | First real five-symbol baseline | **PENDING** | Sep 1–24, 2026, current strategy unchanged |
+| 016 | First real five-symbol baseline | `4d8a15937f461c0e39d434be6639bfde83698d7f` | Deterministic Sep 1–24 baseline; real-data replay blockers corrected |
 
 ## Current acceptance evidence
 
-Milestone 015 closed with:
+Milestone 016 closed with:
 
-- implementation SHA: `32da1d846960cbc2b196da1c2f8c8a8561a5c322`;
-- local-control core tests: 73 passed;
-- full native: 164 passed, 2 skipped;
-- full Wine: 164 passed, 2 skipped;
+- implementation SHA: `4d8a15937f461c0e39d434be6639bfde83698d7f`;
+- full native: **169 passed, 2 skipped**;
+- full Wine: **169 passed, 2 skipped**;
 - Wine Python 3.10.11 AMD64;
 - Wine NumPy 2.2.1;
 - Wine MetaTrader5 5.0.6180;
@@ -36,7 +35,17 @@ Milestone 015 closed with:
 - repository checks PASS;
 - clean worktree/divergence 0/0;
 - `bot_cache.json` untracked;
-- `icon.png` unchanged.
+- `icon.png` unchanged;
+- deterministic report pair byte-identical;
+- report SHA-256: `d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`;
+- 25,916 replay boundaries;
+- 1,393 accepted orders / 1,393 closed trades / 0 remaining positions;
+- starting balance USD 10,000.00;
+- ending realized balance/equity USD 9,731.45700985454;
+- net realized P/L USD -268.54299014546086;
+- maximum shared-account equity drawdown USD 400.156643608565 / 3.9953123082355586%.
+
+See `docs/milestones/016-first-real-baseline.md` for the complete record.
 
 ## Closeout format for future milestones
 
