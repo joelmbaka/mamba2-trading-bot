@@ -1,90 +1,23 @@
 {
   "version": 1,
-  "command_id": "mamba2-m020-sync-control-harness-20260925-2056",
-  "completed_at": "2026-09-25T18:13:04.169328+00:00",
+  "command_id": "mamba2-m020-control-harness-native-20260925-2114",
+  "completed_at": "2026-09-25T18:14:01.379800+00:00",
   "ok": true,
-  "action": "sync",
+  "action": "test_full_native",
   "data": {
-    "branch": "backtest-controlled-experiments",
-    "before_sha": "94a6d2d7ac737d56cc928d0d92ce21a57815af43",
-    "after_sha": "94a6d2d7ac737d56cc928d0d92ce21a57815af43",
-    "reason": null,
-    "commands": [
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "94a6d2d7ac737d56cc928d0d92ce21a57815af43\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n   94c031a..927d90c  main       -> origin/main\n"
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "backtest-controlled-experiments\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin",
-          "backtest-controlled-experiments:refs/remotes/origin/backtest-controlled-experiments"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "--verify",
-          "refs/remotes/origin/backtest-controlled-experiments"
-        ],
-        "exit_code": 0,
-        "stdout": "94a6d2d7ac737d56cc928d0d92ce21a57815af43\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-list",
-          "--left-right",
-          "--count",
-          "HEAD...refs/remotes/origin/backtest-controlled-experiments"
-        ],
-        "exit_code": 0,
-        "stdout": "0\t0\n",
-        "stderr": ""
-      }
-    ]
+    "ok": true,
+    "run": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest"
+      ],
+      "exit_code": 0,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 181 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  2%]\ntests/test_backtest_account_currency.py ............                     [  8%]\ntests/test_backtest_baseline_reporting.py ....                           [ 11%]\ntests/test_backtest_diagnostics.py ....                                  [ 13%]\ntests/test_backtest_execution.py .........                               [ 18%]\ntests/test_backtest_execution_costs.py ............                      [ 24%]\ntests/test_backtest_experiments.py ..                                    [ 25%]\ntests/test_backtest_foundation.py ..........                             [ 31%]\ntests/test_backtest_native_runtime.py ....                               [ 33%]\ntests/test_backtest_portfolio_runner.py ........                         [ 38%]\ntests/test_backtest_spread_execution.py ........                         [ 42%]\ntests/test_backtest_strategy_integration.py ..                           [ 43%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 46%]\ntests/test_cache_manager_security.py .........                           [ 51%]\ntests/test_config_security.py ...                                        [ 53%]\ntests/test_detect_trend.py ...                                           [ 54%]\ntests/test_mt5__broker.py ......                                         [ 58%]\ntests/test_mt5_dataset.py ............                                   [ 64%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 76%]\n.                                                                        [ 77%]\ntests/test_rates.py .......                                              [ 81%]\ntests/test_replay_indicator_cache.py ..                                  [ 82%]\ntests/test_stochastic_indicator.py ....                                  [ 84%]\ntests/test_trend_line.py ..                                              [ 85%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================== 181 passed, 2 skipped in 3.79s ========================\n",
+      "stderr": ""
+    }
   }
 }
