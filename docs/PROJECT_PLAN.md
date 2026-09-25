@@ -23,28 +23,29 @@ Make historical results trustworthy enough to guide strategy development without
 
 Exact SHAs are in `MILESTONES.md`.
 
-## Current operations milestone
+## Repository operations foundation
 
-Build durable agent handoff and safe local-control before long-running baseline work.
+### 15 — Repository operations foundation — COMPLETE
+Durable docs/agent handoff, safe GitHub-mailbox local control, and proven dead/generated repository cleanup.
 
 ## Next analytical sequence
 
-### 15 — First real baseline
+### 16 — First real baseline
 Run Sep 1–24, 2026 across all five production symbols, unchanged strategy.
 
-### 16 — Baseline diagnosis
+### 17 — Baseline diagnosis
 Inspect trade-by-trade evidence: symbol, side, session, spread, ATR/trailing, conversion, and loss clustering. Do not optimize yet.
 
-### 17 — Proven-defect corrections
+### 18 — Proven-defect corrections
 Fix only issues demonstrated by evidence, rerun the exact same dataset, compare before/after.
 
-### 18 — Broader-history validation
+### 19 — Broader-history validation
 Expand to several months and multiple market regimes.
 
-### 19 — Controlled experiments
+### 20 — Controlled experiments
 One strategy/filter change at a time with preserved baseline and separate validation periods.
 
-### 20 — Paper/live validation
+### 21 — Paper/live validation
 Compare replay assumptions against forward behavior before increasing live risk.
 
 ## Principles

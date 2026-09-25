@@ -18,18 +18,23 @@ Each accepted milestone records the exact implementation SHA. Future milestones 
 | 012 | Baseline reporting | `f903e34aff17a8efe974482750aa9134c8f67af3` | Deterministic report + explicit stochastic 21/7/7 |
 | 013 | Trailing semantics | `4cd40f4af9d2f4e6a6e7d1fc570171bf8a493e32` | Monotonic existing stops |
 | 014 | Runtime cache sanitization | `40536d96c6ac2119fca3c2cfec92dad889e7c878` | Stale account metadata removed safely |
-| 015 | First real five-symbol baseline | **PENDING** | Sep 1–24, 2026, current strategy unchanged |
+| 015 | Repository operations foundation | `32da1d846960cbc2b196da1c2f8c8a8561a5c322` | Durable docs/local-control + dead/generated repository cleanup |
+| 016 | First real five-symbol baseline | **PENDING** | Sep 1–24, 2026, current strategy unchanged |
 
 ## Current acceptance evidence
 
-Milestone 014 closed with:
+Milestone 015 closed with:
 
-- native: 165 passed, 2 skipped;
-- Wine: 165 passed, 2 skipped;
-- Wine Python 3.10.11 x64;
-- NumPy 2.2.1;
-- MetaTrader5 5.0.6180;
-- clean worktree;
+- implementation SHA: `32da1d846960cbc2b196da1c2f8c8a8561a5c322`;
+- local-control core tests: 73 passed;
+- full native: 164 passed, 2 skipped;
+- full Wine: 164 passed, 2 skipped;
+- Wine Python 3.10.11 AMD64;
+- Wine NumPy 2.2.1;
+- Wine MetaTrader5 5.0.6180;
+- Wine pytest 9.1.1;
+- repository checks PASS;
+- clean worktree/divergence 0/0;
 - `bot_cache.json` untracked;
 - `icon.png` unchanged.
 

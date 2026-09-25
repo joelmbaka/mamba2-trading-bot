@@ -56,6 +56,8 @@ Never auto-stash, reset, force-switch, delete work, rewrite history, or force-pu
 - `sync`
 - `switch_branch`
 - `repo_checks`
+- `bootstrap_wine_test_env`
+- `runtime_discovery`
 - `runtime_versions`
 - `test_core`
 - `test_full_native`
@@ -66,3 +68,14 @@ Baseline-specific workflows can be added later as fixed actions.
 ## Trading safety
 
 The local agent must never place/modify/close MT5 orders, set `MAMBA_RUN_MT5_INTEGRATION=1`, or publish credentials/account metadata.
+
+## Environment isolation
+
+Local-control keeps native and Wine test environments separate:
+
+- native control environment: `.venv-native-control`
+- Wine validation environment: `.venv-wine`
+
+The Wine environment is rebuilt only through the fixed `bootstrap_wine_test_env` action from the accepted pinned runtime constraints.
+
+This prevents native `uv` operations from overwriting the Wine validation environment.
