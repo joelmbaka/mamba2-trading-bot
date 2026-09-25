@@ -1,56 +1,8 @@
 {
   "version": 1,
-  "command_id": "mamba2-runtime-discovery-20260925-1128",
-  "completed_at": "2026-09-25T08:44:59.093942+00:00",
-  "ok": true,
-  "action": "runtime_discovery",
-  "data": {
-    "ok": true,
-    "native": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-c",
-        "import json,platform,numpy,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'pytest':pytest.__version__}))"
-      ],
-      "exit_code": 0,
-      "stdout": "{\"python\": \"3.10.19\", \"machine\": \"x86_64\", \"numpy\": \"2.2.6\", \"pytest\": \"8.4.0\"}\n",
-      "stderr": "Using CPython 3.10.19\nRemoved virtual environment at: .venv\nCreating virtual environment at: .venv\nInstalled 29 packages in 33ms\n"
-    },
-    "wine_candidates": [
-      {
-        "label": "base",
-        "python": "C:\\Python310\\python.exe",
-        "probe": {
-          "command": [
-            "/usr/bin/wine",
-            "C:\\Python310\\python.exe",
-            "-c",
-            "import json,platform,numpy,MetaTrader5 as mt5,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'metatrader5':mt5.__version__,'pytest':pytest.__version__}))"
-          ],
-          "exit_code": 1,
-          "stdout": "",
-          "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'numpy'\n"
-        }
-      },
-      {
-        "label": ".venv",
-        "python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv\\Scripts\\python.exe",
-        "probe": {
-          "command": [
-            "/usr/bin/wine",
-            "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv\\Scripts\\python.exe",
-            "-c",
-            "import json,platform,numpy,MetaTrader5 as mt5,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'metatrader5':mt5.__version__,'pytest':pytest.__version__}))"
-          ],
-          "exit_code": 0,
-          "stdout": "{\"python\": \"3.10.11\", \"machine\": \"AMD64\", \"numpy\": \"2.2.1\", \"metatrader5\": \"5.0.6180\", \"pytest\": \"9.1.1\"}\n",
-          "stderr": ""
-        }
-      }
-    ],
-    "selected_wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv\\Scripts\\python.exe"
-  }
+  "command_id": "mamba2-runtime-versions-20260925-1129",
+  "completed_at": "2026-09-25T08:45:34.532283+00:00",
+  "ok": false,
+  "action": "runtime_versions",
+  "error": "RuntimeError: no discovered Wine Python has pytest + NumPy + MetaTrader5"
 }
