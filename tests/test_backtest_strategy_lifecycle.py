@@ -135,9 +135,11 @@ def test_runner_sets_initial_atr_stop_and_target_on_same_fill_boundary(monkeypat
 
     position = broker.position_get_ticket(1)
     assert position is not None
-    assert position["price_open"] == pytest.approx(1.1010)
-    assert position["sl"] == pytest.approx(position["price_open"] - atr)
-    assert position["tp"] == pytest.approx(position["price_open"] + 2 * atr)
+    assert position["price_open"] == pytest.approx(1.1011)
+    assert position["price_current"] == pytest.approx(1.1010)
+    assert position["profit"] == pytest.approx(-1.0)
+    assert position["sl"] == pytest.approx(position["price_current"] - atr)
+    assert position["tp"] == pytest.approx(position["price_current"] + 2 * atr)
 
 
 def test_runner_mirrors_live_one_open_position_per_symbol_guard(monkeypatch):

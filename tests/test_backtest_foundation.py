@@ -89,7 +89,7 @@ def test_order_fills_on_next_m1_open_not_signal_candle():
     position = broker.position_get_ticket(1)
     assert position is not None
     assert position["time"] == int(pd.Timestamp("2025-01-02 10:01", tz="UTC").timestamp())
-    assert position["price_open"] == 101
+    assert position["price_open"] == pytest.approx(101.00001)
 
 
 def test_copy_rates_from_pos_returns_visible_bars_and_respects_slices():
@@ -139,7 +139,7 @@ def test_pending_order_waits_for_a_real_symbol_candle():
     position = broker.position_get_ticket(1)
     assert position is not None
     assert position["time"] == int(pd.Timestamp("2025-01-02 10:03", tz="UTC").timestamp())
-    assert position["price_open"] == 103
+    assert position["price_open"] == pytest.approx(103.00001)
 
 
 def replay_snapshot():

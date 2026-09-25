@@ -3,6 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import Mock
 import pandas as pd
+import pytest
 
 from mamba2.backtest import BacktestRunner, HistoricalBroker, ReplayFeed
 
@@ -109,7 +110,7 @@ def test_forced_buy_is_accepted_but_fills_on_next_bar(monkeypatch):
     assert settlement_positions[-1] == 0
     assert broker.positions_total() == 1
     position = broker.position_get_ticket(1)
-    assert position["price_open"] == 102
+    assert position["price_open"] == pytest.approx(102.00001)
     assert position["time"] == int(pd.Timestamp("2025-01-02 10:02", tz="UTC").timestamp())
     timeframe_minutes = {"M1": 1, "M5": 5, "M15": 15}
     assert all(

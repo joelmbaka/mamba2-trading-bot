@@ -8,7 +8,7 @@ import pytest
 from mamba2.backtest import HistoricalBroker, ReplayFeed, SymbolExecutionMetadata
 
 
-def make_broker(opens, highs, lows, closes):
+def make_broker(opens, highs, lows, closes, *, spread=0):
     times = pd.date_range("2025-01-02 10:00", periods=len(opens), freq="min", tz="UTC")
     frame = pd.DataFrame(
         {
@@ -18,7 +18,7 @@ def make_broker(opens, highs, lows, closes):
             "low": lows,
             "close": closes,
             "tick_volume": [10] * len(opens),
-            "spread": [1] * len(opens),
+            "spread": [spread] * len(opens),
             "real_volume": [100] * len(opens),
         }
     )
