@@ -1,27 +1,15 @@
 {
   "version": 1,
-  "command_id": "mamba2-m020-switch-20260925-2049",
-  "completed_at": "2026-09-25T17:49:38.862113+00:00",
+  "command_id": "mamba2-m020-sync-control-harness-20260925-2056",
+  "completed_at": "2026-09-25T18:13:04.169328+00:00",
   "ok": true,
-  "action": "switch_branch",
+  "action": "sync",
   "data": {
-    "target_branch": "backtest-controlled-experiments",
-    "before_branch": "backtest-broader-history",
-    "after_branch": "backtest-controlled-experiments",
-    "before_sha": "927d90c656b6846603d338987bf67e6928499966",
-    "after_sha": "dbc131b3752b1402d178ecf8400e816e21eef4f8",
+    "branch": "backtest-controlled-experiments",
+    "before_sha": "94a6d2d7ac737d56cc928d0d92ce21a57815af43",
+    "after_sha": "94a6d2d7ac737d56cc928d0d92ce21a57815af43",
     "reason": null,
     "commands": [
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "backtest-broader-history\n",
-        "stderr": ""
-      },
       {
         "command": [
           "git",
@@ -29,19 +17,18 @@
           "HEAD"
         ],
         "exit_code": 0,
-        "stdout": "927d90c656b6846603d338987bf67e6928499966\n",
+        "stdout": "94a6d2d7ac737d56cc928d0d92ce21a57815af43\n",
         "stderr": ""
       },
       {
         "command": [
           "git",
-          "check-ref-format",
-          "--branch",
-          "backtest-controlled-experiments"
+          "fetch",
+          "origin"
         ],
         "exit_code": 0,
-        "stdout": "backtest-controlled-experiments\n",
-        "stderr": ""
+        "stdout": "",
+        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n   94c031a..927d90c  main       -> origin/main\n"
       },
       {
         "command": [
@@ -52,6 +39,16 @@
         ],
         "exit_code": 0,
         "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "backtest-controlled-experiments\n",
         "stderr": ""
       },
       {
@@ -63,7 +60,7 @@
         ],
         "exit_code": 0,
         "stdout": "",
-        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * [new branch]      backtest-controlled-experiments -> origin/backtest-controlled-experiments\n"
+        "stderr": ""
       },
       {
         "command": [
@@ -73,62 +70,19 @@
           "refs/remotes/origin/backtest-controlled-experiments"
         ],
         "exit_code": 0,
-        "stdout": "dbc131b3752b1402d178ecf8400e816e21eef4f8\n",
+        "stdout": "94a6d2d7ac737d56cc928d0d92ce21a57815af43\n",
         "stderr": ""
       },
       {
         "command": [
           "git",
-          "rev-parse",
-          "--verify",
-          "refs/heads/backtest-controlled-experiments"
-        ],
-        "exit_code": 128,
-        "stdout": "",
-        "stderr": "fatal: Needed a single revision\n"
-      },
-      {
-        "command": [
-          "git",
-          "switch",
-          "--track",
-          "-c",
-          "backtest-controlled-experiments",
-          "origin/backtest-controlled-experiments"
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...refs/remotes/origin/backtest-controlled-experiments"
         ],
         "exit_code": 0,
-        "stdout": "branch 'backtest-controlled-experiments' set up to track 'origin/backtest-controlled-experiments'.\n",
-        "stderr": "Switched to a new branch 'backtest-controlled-experiments'\n"
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "backtest-controlled-experiments\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "dbc131b3752b1402d178ecf8400e816e21eef4f8\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
+        "stdout": "0\t0\n",
         "stderr": ""
       }
     ]
