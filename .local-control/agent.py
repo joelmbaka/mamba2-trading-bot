@@ -398,6 +398,22 @@ def save_last_id(command_id):
 
 def process_current_command_once():
     fetch_control()
+    sync_payload = git_sync(fetch=False)
+    sync_data = sync_payload.get("data", {})
+    if sync_payload.get("ok") and sync_data.get("before_sha") != sync_data.get("after_sha"):
+        print(
+            f"auto-sync {sync_data.get('branch')}: "
+            f"{sync_data.get('before_sha','')[:12]} -> "
+            f"{sync_data.get('after_sha','')[:12]}",
+            flush=True,
+        )
+    elif not sync_payload.get("ok"):
+        print(
+            f"auto-sync refused: {sync_data.get('reason')}",
+            file=sys.stderr,
+            flush=True,
+        )
+
     command = read_command()
     command_id = str(command.get("id", "")).strip()
     if not command_id:
