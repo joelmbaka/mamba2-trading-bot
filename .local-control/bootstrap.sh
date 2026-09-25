@@ -28,6 +28,17 @@ git show origin/local-control:.local-control/agent.py > "$AGENT"
 git show origin/local-control:.local-control/validation.py > "$VALIDATION"
 chmod 700 "$AGENT" "$VALIDATION"
 
+if ! grep -Fq '"defect_review_diagnostic_run_pair"' "$AGENT"; then
+  echo "ERROR: installed agent.py does not contain the M018 action."
+  exit 1
+fi
+if ! grep -Fq '"defect_review_diagnostic_run_pair"' "$VALIDATION"; then
+  echo "ERROR: installed validation.py does not contain the M018 action."
+  exit 1
+fi
+
+echo "Installed control files verified for defect_review_diagnostic_run_pair."
+
 if [[ ! -d "$RESULTS/.git" && ! -f "$RESULTS/.git" ]]; then
   rm -rf "$RESULTS"
   git worktree add --detach "$RESULTS" origin/local-control-results
@@ -83,3 +94,4 @@ echo "  status, sync, switch_branch"
 echo "  repo_checks, bootstrap_wine_test_env, runtime_discovery, runtime_versions"
 echo "  test_core, test_full_native, test_full_wine"
 echo "  first_baseline_cleanup, first_baseline_export, first_baseline_run_pair"
+echo "  baseline_diagnostic_run_pair, defect_review_diagnostic_run_pair"
