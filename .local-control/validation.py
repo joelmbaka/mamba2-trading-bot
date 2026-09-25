@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -18,6 +20,12 @@ CORE_TESTS = [
 ]
 
 MAX_OUTPUT_CHARS = 80_000
+
+FIRST_BASELINE_DIR = REPO / "backtest_data" / "first-baseline-20260901-20260925"
+FIRST_BASELINE_MANIFEST = FIRST_BASELINE_DIR / "manifest.json"
+FIRST_BASELINE_REPORT_A = FIRST_BASELINE_DIR / "report-a.json"
+FIRST_BASELINE_REPORT_B = FIRST_BASELINE_DIR / "report-b.json"
+FIRST_BASELINE_SYMBOLS = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
 
 
 def _safe_env(wine=False):
@@ -414,6 +422,248 @@ def test_full_wine():
     return {"ok": result["exit_code"] == 0, "run": result}
 
 
+
+def _require_first_baseline_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "backtest-first-baseline":
+        raise RuntimeError(
+            "first-baseline action requires branch backtest-first-baseline"
+        )
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("first-baseline action refuses a dirty worktree")
+
+
+def _ensure_baseline_path(path):
+    root = (REPO / "backtest_data").resolve()
+    resolved = Path(path).resolve()
+    try:
+        resolved.relative_to(root)
+    except ValueError as exc:
+        raise RuntimeError("refusing path outside backtest_data") from exc
+    return resolved
+
+
+def first_baseline_cleanup():
+    _require_first_baseline_branch()
+    target = _ensure_baseline_path(FIRST_BASELINE_DIR)
+    existed = target.exists()
+    if existed:
+        shutil.rmtree(target)
+    return {
+        "ok": not target.exists(),
+        "path": str(target.relative_to(REPO)),
+        "existed": existed,
+    }
+
+
+def first_baseline_export():
+    _require_first_baseline_branch()
+    output_dir = _ensure_baseline_path(FIRST_BASELINE_DIR)
+    if output_dir.exists():
+        return {
+            "ok": False,
+            "reason": (
+                "baseline dataset directory already exists; "
+                "run first_baseline_cleanup explicitly before re-export"
+            ),
+            "path": str(output_dir.relative_to(REPO)),
+        }
+
+    wine_python, discovery = _select_wine_python()
+    wine = _wine()
+
+    command = [
+        wine,
+        wine_python,
+        "-m",
+        "mamba2.backtest.mt5_dataset",
+        "--symbols",
+        *FIRST_BASELINE_SYMBOLS,
+        "--timeframes",
+        "M1",
+        "M5",
+        "M15",
+        "--from-utc",
+        "2026-09-01T00:00:00Z",
+        "--to-utc",
+        "2026-09-25T00:00:00Z",
+        "--output-dir",
+        str(FIRST_BASELINE_DIR.relative_to(REPO)),
+        "--include-tick-ask",
+        "--tick-chunk-minutes",
+        "1440",
+    ]
+    export = _run(command, env=_safe_env(wine=True))
+    if export["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "read-only MT5 historical export failed",
+            "export": export,
+            "discovery": discovery,
+        }
+
+    if not FIRST_BASELINE_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "export completed without manifest.json",
+            "export": export,
+            "discovery": discovery,
+        }
+
+    inspect_code = (
+        "import json;"
+        "from pathlib import Path;"
+        "from mamba2.backtest.mt5_dataset import load_mt5_dataset;"
+        f"p=Path({str(FIRST_BASELINE_MANIFEST)!r});"
+        "d=load_mt5_dataset(p);"
+        "print(json.dumps({"
+        "'account_currency':d.account_currency,"
+        "'symbols':sorted(d.m1_bars),"
+        "'m1_rows':{s:len(d.m1_bars[s]) for s in sorted(d.m1_bars)},"
+        "'ask_rows':{s:len(d.ask_m1_bars[s]) for s in sorted(d.ask_m1_bars)},"
+        "'native_rows':{s:{tf:len(df) for tf,df in sorted(d.native_timeframe_bars[s].items())} "
+        "for s in sorted(d.native_timeframe_bars)},"
+        "'requested_range':d.manifest.get('requested_range'),"
+        "'schema_version':d.manifest.get('schema_version')"
+        "},sort_keys=True))"
+    )
+    inspect = _run(
+        _native_command("-c", inspect_code),
+        env=_safe_env(),
+    )
+    if inspect["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "exported dataset failed native load/integrity check",
+            "export": export,
+            "inspect": inspect,
+        }
+
+    try:
+        summary = json.loads(inspect["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError) as exc:
+        raise RuntimeError("unable to parse dataset inspection summary") from exc
+
+    expected = set(FIRST_BASELINE_SYMBOLS)
+    symbols_ok = set(summary.get("symbols", [])) == expected
+    ask_ok = all(
+        summary.get("ask_rows", {}).get(symbol)
+        == summary.get("m1_rows", {}).get(symbol)
+        and summary.get("m1_rows", {}).get(symbol, 0) > 0
+        for symbol in FIRST_BASELINE_SYMBOLS
+    )
+    native_ok = all(
+        summary.get("native_rows", {}).get(symbol, {}).get("M5", 0) > 0
+        and summary.get("native_rows", {}).get(symbol, {}).get("M15", 0) > 0
+        for symbol in FIRST_BASELINE_SYMBOLS
+    )
+
+    return {
+        "ok": bool(symbols_ok and ask_ok and native_ok),
+        "manifest": str(FIRST_BASELINE_MANIFEST.relative_to(REPO)),
+        "dataset": summary,
+        "export": export,
+        "inspect": inspect,
+        "wine_python": wine_python,
+    }
+
+
+def _sha256(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _artifact_snapshot():
+    root = REPO / "backtest"
+    if not root.exists():
+        return []
+    return sorted(
+        str(path.relative_to(REPO))
+        for path in root.rglob("*")
+        if path.is_file()
+    )
+
+
+def first_baseline_run_pair():
+    _require_first_baseline_branch()
+    if not FIRST_BASELINE_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "first baseline manifest is missing; export dataset first",
+        }
+
+    for report in (FIRST_BASELINE_REPORT_A, FIRST_BASELINE_REPORT_B):
+        if report.exists():
+            report.unlink()
+
+    artifacts_before = _artifact_snapshot()
+    runs = []
+    for output in (FIRST_BASELINE_REPORT_A, FIRST_BASELINE_REPORT_B):
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.baseline",
+                "--manifest",
+                str(FIRST_BASELINE_MANIFEST.relative_to(REPO)),
+                "--output",
+                str(output.relative_to(REPO)),
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "baseline execution failed",
+                "runs": runs,
+            }
+
+    if not FIRST_BASELINE_REPORT_A.is_file() or not FIRST_BASELINE_REPORT_B.is_file():
+        return {
+            "ok": False,
+            "reason": "baseline report file missing after successful command",
+            "runs": runs,
+        }
+
+    bytes_a = FIRST_BASELINE_REPORT_A.read_bytes()
+    bytes_b = FIRST_BASELINE_REPORT_B.read_bytes()
+    sha_a = _sha256(FIRST_BASELINE_REPORT_A)
+    sha_b = _sha256(FIRST_BASELINE_REPORT_B)
+    identical = bytes_a == bytes_b and sha_a == sha_b
+
+    report = json.loads(bytes_a.decode("utf-8"))
+    artifacts_after = _artifact_snapshot()
+    no_new_artifacts = artifacts_after == artifacts_before
+
+    aggregate = report.get("aggregate", {})
+    return {
+        "ok": bool(identical and no_new_artifacts),
+        "reports_identical": identical,
+        "sha256_a": sha_a,
+        "sha256_b": sha_b,
+        "report_a": str(FIRST_BASELINE_REPORT_A.relative_to(REPO)),
+        "report_b": str(FIRST_BASELINE_REPORT_B.relative_to(REPO)),
+        "dataset": report.get("dataset"),
+        "configuration": report.get("configuration"),
+        "cost_assumptions": report.get("cost_assumptions"),
+        "aggregate": aggregate,
+        "per_symbol": report.get("per_symbol"),
+        "remaining_positions": report.get("remaining_positions"),
+        "equity_curve_rows": len(report.get("equity_curve", [])),
+        "no_new_strategy_artifacts": no_new_artifacts,
+        "artifact_snapshot_before": artifacts_before,
+        "artifact_snapshot_after": artifacts_after,
+        "runs": runs,
+    }
+
+
 def execute(action):
     handlers = {
         "repo_checks": repo_checks,
@@ -423,6 +673,9 @@ def execute(action):
         "test_core": test_core,
         "test_full_native": test_full_native,
         "test_full_wine": test_full_wine,
+        "first_baseline_cleanup": first_baseline_cleanup,
+        "first_baseline_export": first_baseline_export,
+        "first_baseline_run_pair": first_baseline_run_pair,
     }
     try:
         return handlers[action]()
