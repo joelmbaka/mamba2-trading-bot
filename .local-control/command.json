@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m019-native-current-head-20260925-2012",
-  "action": "test_full_native",
+  "id": "mamba2-m019-wine-current-head-20260925-2014",
+  "action": "test_full_wine",
   "args": {},
   "requested_by": "chatgpt"
 }
