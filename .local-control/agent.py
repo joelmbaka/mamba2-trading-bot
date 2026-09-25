@@ -17,24 +17,7 @@ STATE_DIR = Path.home() / ".local/state/chatgpt-mamba2-local-agent"
 STATE_FILE = STATE_DIR / "last-command-id"
 MAX_RESULT_CHARS = 100_000
 
-VALIDATION_ACTIONS = {
-    "repo_checks",
-    "bootstrap_wine_test_env",
-    "runtime_discovery",
-    "runtime_versions",
-    "test_core",
-    "test_full_native",
-    "test_full_wine",
-    "first_baseline_run_pair",
-    "first_baseline_export",
-    "first_baseline_cleanup",
-    "baseline_diagnostic_run_pair",
-    "defect_review_diagnostic_run_pair",
-    "broader_history_coverage_probe",
-    "broader_history_cleanup",
-    "broader_history_export",
-    "broader_history_run_pair",
-}
+VALIDATION_ACTIONS = frozenset(validation.ACTION_HANDLERS)
 
 
 def run(cmd, cwd=REPO, check=True):
@@ -355,7 +338,12 @@ def _bound(value):
 
 
 def publish_result(command, payload):
-    run(["git", "fetch", "origin", "local-control-results"], cwd=RESULTS)
+    run([
+        "git",
+        "fetch",
+        "origin",
+        "local-control-results:refs/remotes/origin/local-control-results",
+    ], cwd=RESULTS)
     run(["git", "reset", "--hard", "origin/local-control-results"], cwd=RESULTS)
 
     out_dir = RESULTS / ".local-control"
