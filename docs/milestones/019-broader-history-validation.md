@@ -26,9 +26,11 @@ Chosen UTC interval:
 
 `2026-06-23T00:00:00Z` through `2026-09-25T00:00:00Z`
 
+The original June 1 candidate was rejected by the read-only pre-export coverage probe. All five symbols had M5/M15 history and distributed tick samples back to June 1, but retained M1 history began only around June 22 05:29–05:33 UTC. June 23 00:00 UTC is the first clean full-day boundary after common M1 availability.
+
 This includes:
 
-- June 2026;
+- June 23–30, 2026;
 - July 2026;
 - August 2026;
 - Sep 1 through the end of Sep 24 UTC.
@@ -39,7 +41,7 @@ dataset.
 
 Planned subperiod comparison:
 
-- 2026-06;
+- 2026-06-23 through 2026-06-30;
 - 2026-07;
 - 2026-08;
 - 2026-09 through Sep 24.
@@ -123,7 +125,7 @@ Record:
 - account-currency conversion routes;
 - loss clustering;
 - deepest drawdown episodes;
-- June/July/August/Sep subperiod results.
+- late-June/July/August/Sep subperiod results.
 
 These observations are evidence for M020 experiment design only. M019 does not
 enable, disable, rank, or tune any strategy component.
