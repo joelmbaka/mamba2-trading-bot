@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m020-sync-control-harness-20260925-2056",
-  "action": "sync",
+  "id": "mamba2-m020-control-harness-native-20260925-2114",
+  "action": "test_full_native",
   "args": {},
   "requested_by": "chatgpt"
 }
