@@ -65,7 +65,16 @@ class ATRManager:
         for symbol in config.symbols:
             timeframe_str = config.atr_timeframe
             try:
-                rates = self.rate_fetcher.get_rates(symbol, timeframe_str)
+                replay_getter = getattr(
+                    self.rate_fetcher,
+                    "get_visible_rates_for_indicator",
+                    None,
+                )
+                rates = (
+                    replay_getter(symbol, timeframe_str)
+                    if callable(replay_getter)
+                    else self.rate_fetcher.get_rates(symbol, timeframe_str)
+                )
                 if rates is None or rates.empty:
                     continue
 
