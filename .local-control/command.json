@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m019-postpair-sentinel-20260925",
-  "action": "status",
+  "id": "mamba2-m019-native-current-head-20260925-2012",
+  "action": "test_full_native",
   "args": {},
   "requested_by": "chatgpt"
 }
