@@ -4,102 +4,188 @@ Last updated: 2026-09-25
 
 ## Latest accepted implementation milestone
 
-**016 — First real five-symbol baseline**
+**017 — Baseline diagnosis**
 
 Accepted implementation SHA:
 
-`4d8a15937f461c0e39d434be6639bfde83698d7f`
+`e653ba87df2ff1e8afbad5704f9a8d81428d7b27`
 
 Validation:
 
-- full native suite: **169 passed, 2 skipped**
-- full Wine suite: **169 passed, 2 skipped**
+- full native suite: **173 passed, 2 skipped**
+- full Wine suite: **173 passed, 2 skipped**
 - Wine Python: **3.10.11 AMD64**
 - Wine NumPy: **2.2.1**
 - Wine MetaTrader5: **5.0.6180**
 - Wine pytest: **9.1.1**
-- repository checks: PASS
-- worktree: clean
-- divergence: 0/0
-- `bot_cache.json`: untracked
-- `icon.png`: tracked and unchanged
+- M017 diagnostic pair: PASS
+- repository checks: required at closeout
 
-Determinism gate:
+Diagnostic determinism:
 
-- report A and report B: byte-for-byte identical
-- SHA-256: `d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`
+- diagnostic A and B: byte-for-byte identical
+- diagnostic SHA-256:
+  `edf01f4a1f936d386e618faa65fb9a7afb65fff6ae7ae9b4373c35692ced987a`
+
+Non-interference:
+
+- accepted M016 report SHA-256 remained:
+  `d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`
+- both M017 diagnostic replays regenerated exactly that baseline report
+- accepted orders / closed trades: **1,393 / 1,393**
+- remaining positions: **0**
+- ending realized balance/equity: **USD 9,731.45700985454**
+- net realized P/L: **USD -268.54299014546086**
 - no new strategy-reporting artifacts
 
-## Accepted first real baseline
+## Accepted baseline window
 
 Historical window:
 
 `2026-09-01T00:00:00Z` through `2026-09-25T00:00:00Z`
 
+This covers Sep 1 through the end of Sep 24 UTC.
+
+Symbols:
+
+- EURUSD
+- EURJPY
+- GBPUSD
+- GBPJPY
+- USDJPY
+
 Dataset:
 
-- account currency: USD
-- EURUSD M1/Ask rows: 25,916 / 25,916
-- EURJPY M1/Ask rows: 25,916 / 25,916
-- GBPUSD M1/Ask rows: 25,915 / 25,915
-- GBPJPY M1/Ask rows: 25,914 / 25,914
-- USDJPY M1/Ask rows: 25,913 / 25,913
-- native M5 rows: 5,184 per symbol
-- native M15 rows: 1,728 per symbol
-- tick-derived Ask required and verified
-- manifest/integrity load: PASS
-
-Aggregate result:
-
-- replay boundaries: 25,916
-- accepted orders: 1,393
-- closed trades: 1,393
-- remaining positions: 0
-- starting balance: USD 10,000.00
-- ending realized balance: USD 9,731.45700985454
-- ending unrealized P/L: USD 0.00
-- ending equity: USD 9,731.45700985454
-- gross realized P/L: USD -268.54299014544677
-- commission: USD 0.00
-- net realized P/L: USD -268.54299014546086
-- wins / losses / flats: 579 / 813 / 1
-- non-flat win rate: 41.5948275862069%
-- largest closed gain: USD 35.041524659453856
-- largest closed loss: USD -26.566478053355354
-- maximum shared-account equity drawdown: USD 400.156643608565
-- maximum shared-account equity drawdown: 3.9953123082355586%
+- M1
+- native M5
+- native M15
+- tick-derived Ask M1
+- account currency USD
+- verified manifest/integrity
 
 Cost label:
 
 `SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO`
 
-These results are not described as fully net of actual broker costs because actual commission, slippage, and swap are not proven.
+Actual commission, slippage, and swap remain unproven/unmodeled and must not be
+invented.
 
-## M016 defects proven and corrected
+## M017 accepted diagnosis
 
-The first real run exposed two replay defects that prevented the authorized baseline from completing.
+The accepted 24-day baseline result is not explained by one uniform low hit
+rate.
 
-### Replay scalability
+### Symbol
 
-Repeated full-history stochastic and ATR calculations made the real 24-day portfolio replay impractically slow.
+- EURUSD: 271 trades, 123 wins / 148 losses, USD +14.79285714287349
+- EURJPY: 283 trades, 126 wins / 157 losses, USD +9.06763705593736
+- GBPUSD: 265 trades, 111 wins / 153 losses / 1 flat, USD +1.2928571428561284
+- GBPJPY: 283 trades, 105 wins / 178 losses, USD -133.3473684763957
+- USDJPY: 291 trades, 114 wins / 177 losses, USD -160.34897301071814
 
-The accepted correction:
+### Side
 
-- keeps production indicator arithmetic unchanged;
-- activates causal full-history caching only through a ReplayFeed-specific static-history hook;
-- slices cached values back to the currently visible causal prefix;
-- uses prefix-efficient ReplayFeed history slicing;
-- leaves production rate fetchers on the existing calculation path.
+BUY and SELL non-flat win rates are almost identical:
 
-Exact parity tests prove cached replay outputs equal the legacy visible-only path.
+- BUY: 41.72%, USD -330.9923055212326
+- SELL: 41.48%, USD +62.44931537578547
 
-### Sparse same-boundary FX conversion
+Therefore the side difference is a payoff/path issue in this window, not merely
+a hit-rate difference.
 
-The verified MT5 export has three EURJPY M1 timestamps on 2026-09-14 for which USDJPY has no same-minute M1 bar; GBPJPY overlaps one of those gaps.
+### UTC entry buckets
 
-The accepted correction does **not** carry forward an older quote or use a future/current/web rate. Direct same-boundary conversion remains preferred. When that direct conversion pair has no bar on the required replay phase, the broker may use a deterministic two-leg route made entirely from available same-boundary historical Bid/Ask prices, for example JPY→EUR→USD.
+Materially negative buckets:
 
-Tests cover execution-time fallback, completed-bar fallback, direct-route preference, and the existing no-future-price rule.
+- 00:00–03:59 UTC: USD -169.2694062737969
+- 12:00–15:59 UTC: USD -133.82873588314456
+
+Positive bucket:
+
+- 16:00–19:59 UTC: USD +73.59878495540866
+
+Do not convert these observations directly into time filters: symbol mix,
+spread, and volatility are confounded.
+
+### Exit/protection
+
+- stop-loss exits: 1,339
+  - 528 profitable
+  - 810 losing
+  - 1 flat
+- take-profit exits: 54
+  - 51 profitable
+  - 3 losing
+
+All 1,393 trades received initial protection.
+
+- trades with successful trailing: 619
+- successful trailing modifications: 1,093
+- modifications associated with eventual wins: 1,019
+- modifications associated with eventual losses: 73
+- modifications associated with flat: 1
+
+The 3 negative-P/L take-profit exits are an M018 investigation target, not yet
+a proven defect.
+
+### Spread
+
+Entry spread:
+
+- wins: mean 3.538860103626943 points, median 2
+- losses: mean 7.174661746617466 points, median 2
+
+The difference is concentrated in the tails.
+
+Observed entry-spread maxima:
+
+- EURJPY 300 points
+- GBPJPY 229
+- USDJPY 113
+- GBPUSD 56
+- EURUSD 18
+
+Extreme spread cases must be inspected before any spread filter is considered.
+
+### Conversion
+
+Realized exits used:
+
+- JPY→USD through direct USDJPY: 857 trades, USD -284.6287044311765
+- USD→USD, no conversion: 536 trades, USD +16.085714285729626
+
+No realized exit required the M016 two-leg sparse-conversion fallback.
+Therefore the realized negative JPY result is not attributable to that fallback
+itself.
+
+### Loss clustering
+
+- distinct loss streaks: 287
+- maximum consecutive losses: 17
+- maximum streak:
+  `2026-09-18T22:10:00Z` to `2026-09-21T04:14:00Z`
+- streak P/L: USD -83.84457684161302
+
+The interval spans a weekend boundary and is not continuous market exposure.
+
+### Drawdowns
+
+Deepest:
+
+- peak: USD 10,015.653664513784 at `2026-09-01T03:24:00Z`
+- trough: USD 9,615.497020905219 at `2026-09-04T16:43:00Z`
+- drawdown: USD 400.156643608565 / 3.9953123082355586%
+- recovered: `2026-09-10T19:35:00Z`
+
+Later sustained episode:
+
+- peak: USD 10,039.652256508334 at `2026-09-10T20:02:00Z`
+- trough: USD 9,727.210391770168 at `2026-09-24T20:18:00Z`
+- drawdown: USD 312.44186473816626 / 3.112078553673229%
+- not recovered by end of data
+
+See `docs/milestones/017-baseline-diagnosis.md` for the complete accepted
+record.
 
 ## Durable handoff
 
@@ -123,7 +209,9 @@ Installed workstation service:
 
 `chatgpt-mamba2-local-agent.service`
 
-Validated capabilities include repository checks, runtime discovery, native/Wine tests, read-only baseline export, baseline cleanup, and paired deterministic baseline execution.
+Validated actions include repository checks, runtime discovery, native/Wine
+tests, read-only baseline export, baseline cleanup, paired baseline execution,
+and paired M017 diagnostic execution.
 
 No arbitrary shell action is exposed.
 
@@ -143,14 +231,12 @@ No arbitrary shell action is exposed.
 - Existing SELL stops only move downward.
 - End-of-data does not force-liquidate.
 - Historical spread uses tick-derived Ask where available.
-- Unknown real commission/slippage must not be invented.
 
 ## Next milestone
 
-**017 — Baseline diagnosis**
+**018 — Proven-defect review and corrections**
 
-Branch:
+Start from the accepted M017 trade-level evidence.
 
-`backtest-baseline-diagnosis`
-
-Use the accepted M016 dataset and strategy unchanged. Build deterministic trade-level evidence and diagnose the result before any optimization.
+Investigate documented anomalies first. Change replay/implementation behavior
+only when a defect is proven. Do not optimize strategy parameters during M018.
