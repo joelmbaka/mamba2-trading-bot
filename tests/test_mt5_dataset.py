@@ -340,3 +340,55 @@ def test_loader_rejects_tampered_tick_ask_sidecar(tmp_path):
 
     with pytest.raises(DatasetIntegrityError, match="checksum mismatch"):
         load_mt5_dataset(manifest_path)
+
+
+class RangeLimitedFakeMT5(FakeMT5):
+    def __init__(self):
+        super().__init__()
+        self.range_requests = []
+
+    def copy_rates_range(self, symbol, timeframe, date_from, date_to):
+        self.range_requests.append((timeframe, date_from, date_to))
+        if (date_to - date_from) > pd.Timedelta(days=7):
+            return []
+        return super().copy_rates_range(symbol, timeframe, date_from, date_to)
+
+
+def test_opt_in_rate_chunking_avoids_large_range_limit_without_changing_rows(tmp_path):
+    mt5 = RangeLimitedFakeMT5()
+    manifest_path = export_mt5_dataset(
+        mt5,
+        symbols=["EURUSD"],
+        timeframes=["M1", "M5", "M15"],
+        start_utc="2025-01-02T10:00:00Z",
+        end_utc="2025-01-02T10:15:00Z",
+        output_dir=tmp_path,
+        exported_at_utc="2025-01-03T00:00:00Z",
+        history_sync_wait_seconds=0,
+        rate_chunk_days=7,
+    )
+
+    loaded = load_mt5_dataset(manifest_path)
+    assert len(loaded.m1_bars["EURUSD"]) == 15
+    assert len(loaded.native_timeframe_bars["EURUSD"]["M5"]) == 3
+    assert len(loaded.native_timeframe_bars["EURUSD"]["M15"]) == 1
+    assert mt5.range_requests
+    assert all(
+        (date_to - date_from) <= pd.Timedelta(days=7)
+        for _, date_from, date_to in mt5.range_requests
+    )
+
+
+def test_rate_chunk_days_validation_is_opt_in_and_positive(tmp_path):
+    with pytest.raises(ValueError, match="rate_chunk_days must be at least 1"):
+        export_mt5_dataset(
+            FakeMT5(),
+            symbols=["EURUSD"],
+            timeframes=["M1"],
+            start_utc="2025-01-02T10:00:00Z",
+            end_utc="2025-01-02T10:15:00Z",
+            output_dir=tmp_path,
+            exported_at_utc="2025-01-03T00:00:00Z",
+            history_sync_wait_seconds=0,
+            rate_chunk_days=0,
+        )
