@@ -10,6 +10,7 @@ This branch is a GitHub-mailbox control plane for the physical Mamba2 checkout.
 ## Safety model
 
 - A systemd timer invokes a fresh one-shot worker every 15 seconds.
+- Before each invocation, the permanent runner refreshes and compiles the latest control code from `local-control` and atomically installs it.
 - It may automatically fast-forward only the branch already checked out locally.
 - Automatic sync refuses dirty trees, detached HEAD, missing remotes, and divergence.
 - Branch switching is explicit only.
@@ -55,7 +56,7 @@ git fetch origin local-control local-control-results
 bash <(git show origin/local-control:.local-control/bootstrap.sh)
 ```
 
-Re-run the same bootstrap command to update the installed control agent.
+Bootstrap is install-once. The installed timer runner refreshes and compiles the latest allowlisted `agent.py` and `validation.py` from `local-control` before every poll, so future milestone actions do not require another bootstrap.
 
 Worker and timer:
 
@@ -66,7 +67,8 @@ chatgpt-mamba2-local-agent.timer
 
 The service is a one-shot allowlisted worker. The timer is the persistent
 polling mechanism, which avoids stale long-running process state and prevents
-overlapping command execution.
+overlapping command execution. The validation module is the canonical action
+allowlist; the worker derives its allowed validation actions from that module.
 
 Installed files live under:
 
@@ -112,7 +114,7 @@ and verifies that no initial take-profit remains on the wrong side of its fill.
 M019 uses four fixed actions on `backtest-broader-history`:
 
 - `broader_history_coverage_probe` — read-only MT5 M1/M5/M15 availability
-  plus distributed tick-history samples for the fixed Jun 1–Sep 25 UTC window;
+  plus distributed tick-history samples for the fixed Jun 23–Sep 25 UTC window;
 - `broader_history_cleanup` — removes only the fixed M019 dataset directory;
 - `broader_history_export` — exports the fixed real-data window, validates
   manifest integrity and one-for-one M1/Ask coverage, and requires the
