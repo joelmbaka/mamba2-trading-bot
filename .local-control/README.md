@@ -37,6 +37,7 @@ test_full_wine
 first_baseline_cleanup
 first_baseline_export
 first_baseline_run_pair
+baseline_diagnostic_run_pair
 ```
 
 `switch_branch` requires:
@@ -83,3 +84,11 @@ These are fixed milestone-016 actions, not arbitrary commands.
 - `first_baseline_run_pair` runs the accepted baseline twice, verifies byte-identical reports/SHA-256, and publishes only compact report metrics.
 
 The exporter clears credential environment variables and uses the already-authenticated terminal session. These actions never enable the live MT5 integration marker and never place/modify/close orders.
+
+## Baseline-diagnosis workflow
+
+`baseline_diagnostic_run_pair` is the fixed milestone-017 action. It requires
+`backtest-baseline-diagnosis`, reuses the accepted M016 dataset, runs the
+trade-level diagnostic replay twice, proves that the ordinary baseline report
+still has the accepted M016 SHA-256, and requires both diagnostic JSON artifacts
+to be byte-identical before publishing compact analysis evidence.
