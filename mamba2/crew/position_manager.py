@@ -88,25 +88,36 @@ class PositionManager:
                         self.positions[symbol] = position
                         continue
 
+                    # Initial stop protection is anchored to the current
+                    # closing-side price because that is the price at which
+                    # the position can actually be stopped now.  The target
+                    # must also remain on the profitable side of the actual
+                    # entry fill.  Under a wide spread, using only
+                    # price_current can otherwise place a BUY TP below its Ask
+                    # fill or a SELL TP above its Bid fill.
+                    open_price = float(position["price_open"])
                     if position_type == 0:  # Buy position
                         stop_loss = current_price - (
                             atr * config.atr_sl_multiplier
                         )
-                        take_profit = current_price + (
+                        target_reference = max(current_price, open_price)
+                        take_profit = target_reference + (
                             atr * config.atr_tp_multiplier
                         )
                     else:  # Sell position
                         stop_loss = current_price + (
                             atr * config.atr_sl_multiplier
                         )
-                        take_profit = current_price - (
+                        target_reference = min(current_price, open_price)
+                        take_profit = target_reference - (
                             atr * config.atr_tp_multiplier
                         )
 
                     logger.debug(
                         f"Calculated initial SL/TP for {symbol}: "
-                        f"Current={current_price:.5f}, ATR={atr:.5f}, "
-                        f"SL={stop_loss:.5f}, TP={take_profit:.5f}"
+                        f"Open={open_price:.5f}, Current={current_price:.5f}, "
+                        f"ATR={atr:.5f}, SL={stop_loss:.5f}, "
+                        f"TP={take_profit:.5f}"
                     )
                     success = await self._update_position_sl(
                         position,
