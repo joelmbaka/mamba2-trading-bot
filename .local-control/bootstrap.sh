@@ -111,7 +111,7 @@ CURRENT_COMMAND_ID="$(
 )"
 ONCE_LOG="$(mktemp)"
 set +e
-"$RUNNER" --once 2>&1 | tee "$ONCE_LOG"
+"$RUNNER" --force-once 2>&1 | tee "$ONCE_LOG"
 ONCE_STATUS=${PIPESTATUS[0]}
 set -e
 echo "One-shot command exit status: $ONCE_STATUS"
