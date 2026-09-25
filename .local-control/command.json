@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-repo-ops-full-wine-20260925-1145",
-  "action": "test_full_wine",
+  "id": "mamba2-repo-ops-final-checks-20260925-1146",
+  "action": "repo_checks",
   "args": {},
   "requested_by": "chatgpt"
 }
