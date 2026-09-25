@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m020-control-harness-wine-20260925-2116",
-  "action": "test_full_wine",
+  "id": "mamba2-m020-control-pair-20260925-2118",
+  "action": "controlled_experiment_control_pair",
   "args": {},
   "requested_by": "chatgpt"
 }
