@@ -1,23 +1,12 @@
 {
   "version": 1,
-  "command_id": "mamba2-m016-diagnose-conversion-coverage-20260925-1255",
-  "completed_at": "2026-09-25T09:53:30.569422+00:00",
-  "ok": false,
-  "action": "test_full_native",
+  "command_id": "mamba2-m016-reexport-cleanup-20260925-1258",
+  "completed_at": "2026-09-25T09:54:09.999132+00:00",
+  "ok": true,
+  "action": "first_baseline_cleanup",
   "data": {
-    "ok": false,
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest"
-      ],
-      "exit_code": 1,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 167 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  2%]\ntests/test_backtest_account_currency.py .........                        [  7%]\ntests/test_backtest_baseline_reporting.py ....                           [ 10%]\ntests/test_backtest_execution.py .........                               [ 15%]\ntests/test_backtest_execution_costs.py ............                      [ 22%]\ntests/test_backtest_foundation.py ........                               [ 27%]\ntests/test_backtest_native_runtime.py ....                               [ 29%]\ntests/test_backtest_portfolio_runner.py ........                         [ 34%]\ntests/test_backtest_spread_execution.py ........                         [ 39%]\ntests/test_backtest_strategy_integration.py ..                           [ 40%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 43%]\ntests/test_cache_manager_security.py .........                           [ 49%]\ntests/test_config_security.py ...                                        [ 50%]\ntests/test_detect_trend.py ...                                           [ 52%]\ntests/test_local_m016_dataset_diagnostic.py F                            [ 53%]\ntests/test_mt5__broker.py ......                                         [ 56%]\ntests/test_mt5_dataset.py ..........                                     [ 62%]\ntests/test_position_manager_trailing_semantics.py .....................  [ 75%]\ntests/test_rates.py .......                                              [ 79%]\ntests/test_replay_indicator_cache.py ..                                  [ 80%]\ntests/test_stochastic_indicator.py ....                                  [ 83%]\ntests/test_trend_line.py ..                                              [ 84%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n=================================== FAILURES ===================================\n_____________________ test_report_m016_conversion_coverage _____________________\n\n    def test_report_m016_conversion_coverage():\n        manifest = Path(\n            \"backtest_data/first-baseline-20260901-20260925/manifest.json\"\n        )\n        if not manifest.exists():\n            pytest.skip(\"M016 local dataset is not present\")\n    \n        dataset = load_mt5_dataset(manifest)\n        indexes = {\n            symbol: set(frame.index)\n            for symbol, frame in dataset.m1_bars.items()\n        }\n        usdjpy = indexes[\"USDJPY\"]\n        detail = {\n            \"rows\": {\n                symbol: len(indexes[symbol])\n                for symbol in sorted(indexes)\n            },\n            \"eurjpy_without_usdjpy\": [\n                str(ts) for ts in sorted(indexes[\"EURJPY\"] - usdjpy)\n            ],\n            \"gbpjpy_without_usdjpy\": [\n                str(ts) for ts in sorted(indexes[\"GBPJPY\"] - usdjpy)\n            ],\n            \"usdjpy_without_eurjpy\": [\n                str(ts) for ts in sorted(usdjpy - indexes[\"EURJPY\"])\n            ],\n            \"usdjpy_without_gbpjpy\": [\n                str(ts) for ts in sorted(usdjpy - indexes[\"GBPJPY\"])\n            ],\n        }\n>       pytest.fail(json.dumps(detail, sort_keys=True))\nE       Failed: {\"eurjpy_without_usdjpy\": [\"2026-09-14 00:00:00+00:00\", \"2026-09-14 00:01:00+00:00\", \"2026-09-14 00:07:00+00:00\"], \"gbpjpy_without_usdjpy\": [\"2026-09-14 00:07:00+00:00\"], \"rows\": {\"EURJPY\": 25916, \"EURUSD\": 25916, \"GBPJPY\": 25914, \"GBPUSD\": 25915, \"USDJPY\": 25913}, \"usdjpy_without_eurjpy\": [], \"usdjpy_without_gbpjpy\": []}\n\ntests/test_local_m016_dataset_diagnostic.py:42: Failed\n=========================== short test summary info ============================\nFAILED tests/test_local_m016_dataset_diagnostic.py::test_report_m016_conversion_coverage\n=================== 1 failed, 166 passed, 2 skipped in 3.37s ===================\n",
-      "stderr": ""
-    }
+    "ok": true,
+    "path": "backtest_data/first-baseline-20260901-20260925",
+    "existed": true
   }
 }
