@@ -30,6 +30,10 @@ VALIDATION_ACTIONS = {
     "first_baseline_cleanup",
     "baseline_diagnostic_run_pair",
     "defect_review_diagnostic_run_pair",
+    "broader_history_coverage_probe",
+    "broader_history_cleanup",
+    "broader_history_export",
+    "broader_history_run_pair",
 }
 
 
