@@ -98,6 +98,51 @@ After export:
 - require the overlapping M1/M5/M15/Ask frames to be identical before broader
   replay evidence is trusted.
 
+## Accepted dataset evidence
+
+The final immutable dataset export completed successfully for:
+
+`2026-06-23T00:00:00Z` through `2026-09-25T00:00:00Z`
+
+Dataset:
+
+`backtest_data/broader-history-20260623-20260925/manifest.json`
+
+Manifest schema version: **2**
+
+Account currency: **USD**
+
+Rows by symbol:
+
+| Symbol | M1 | Ask M1 | M5 | M15 |
+|---|---:|---:|---:|---:|
+| EURUSD | 97,914 | 97,914 | 19,584 | 6,528 |
+| EURJPY | 97,914 | 97,914 | 19,584 | 6,528 |
+| GBPUSD | 97,911 | 97,911 | 19,584 | 6,528 |
+| GBPJPY | 97,911 | 97,911 | 19,584 | 6,528 |
+| USDJPY | 97,910 | 97,910 | 19,584 | 6,528 |
+
+For every symbol:
+
+- Ask M1 row count equals Bid-side M1 row count;
+- native M5 and M15 coverage is present across the accepted window;
+- manifest/checksum loading passed;
+- the Sep 1–24 overlap against the accepted M016 dataset is identical for
+  M1, M5, M15, and tick-derived Ask M1.
+
+The overlap check is especially important: extending the historical window did
+not alter the previously accepted Sep 1–24 market data.
+
+The exporter infrastructure needed one opt-in correction for this broader
+window: bar history can be fetched in deterministic seven-day UTC chunks via
+`rate_chunk_days`. Existing exporter behavior remains unchanged when that
+option is absent.
+
+Validation of that infrastructure at the implementation branch:
+
+- full native suite: **177 passed, 2 skipped**;
+- full Wine suite: **177 passed, 2 skipped**.
+
 ## Replay acceptance
 
 Run the unchanged corrected strategy twice over the exact broader dataset.
