@@ -86,11 +86,54 @@ systemctl --user enable chatgpt-mamba2-local-agent.service
 echo
 echo "=== PROCESS CURRENT QUEUED COMMAND ONCE ==="
 systemctl --user stop chatgpt-mamba2-local-agent.service || true
+CURRENT_COMMAND_ID="$(
+  git show origin/local-control:.local-control/command.json |
+    /usr/bin/python3 -c 'import json,sys; print(json.load(sys.stdin).get("id",""))'
+)"
+ONCE_LOG="$(mktemp)"
 set +e
-"$RUNNER" --once
-ONCE_STATUS=$?
+"$RUNNER" --once 2>&1 | tee "$ONCE_LOG"
+ONCE_STATUS=${PIPESTATUS[0]}
 set -e
 echo "One-shot command exit status: $ONCE_STATUS"
+
+git -C "$RESULTS" fetch origin local-control-results
+git -C "$RESULTS" reset --hard origin/local-control-results
+PUBLISHED_COMMAND_ID="$(
+  /usr/bin/python3 -c 'import json,sys; from pathlib import Path; p=Path(sys.argv[1]); print(json.loads(p.read_text()).get("command_id","") if p.is_file() else "")'     "$RESULTS/.local-control/result.json"
+)"
+
+if [[ "$PUBLISHED_COMMAND_ID" != "$CURRENT_COMMAND_ID" ]]; then
+  echo "WARNING: one-shot did not publish the current command; publishing bootstrap fallback."
+  CURRENT_COMMAND_ID="$CURRENT_COMMAND_ID"   ONCE_STATUS="$ONCE_STATUS"   ONCE_LOG="$ONCE_LOG"   RESULT_PATH="$RESULTS/.local-control/result.json"   /usr/bin/python3 - <<'PY'
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+log_path = Path(os.environ["ONCE_LOG"])
+log = log_path.read_text(encoding="utf-8", errors="replace") if log_path.is_file() else ""
+payload = {
+    "version": 1,
+    "command_id": os.environ["CURRENT_COMMAND_ID"],
+    "completed_at": datetime.now(timezone.utc).isoformat(),
+    "ok": False,
+    "action": "bootstrap_one_shot_fallback",
+    "error": "one-shot command finished without publishing a matching result",
+    "one_shot_exit_status": int(os.environ["ONCE_STATUS"]),
+    "one_shot_log_tail": log[-12000:],
+}
+path = Path(os.environ["RESULT_PATH"])
+path.parent.mkdir(parents=True, exist_ok=True)
+path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+PY
+  git -C "$RESULTS" add .local-control/result.json
+  git -C "$RESULTS" -c user.name="ChatGPT Mamba2 Bootstrap"     -c user.email="mamba2-bootstrap@localhost"     commit -m "local-agent: bootstrap fallback $CURRENT_COMMAND_ID"
+  git -C "$RESULTS" push origin HEAD:local-control-results
+else
+  echo "One-shot result publication verification: PASS ($CURRENT_COMMAND_ID)"
+fi
+rm -f "$ONCE_LOG"
 
 systemctl --user restart chatgpt-mamba2-local-agent.service
 
