@@ -28,6 +28,7 @@ status
 sync
 switch_branch
 repo_checks
+bootstrap_wine_test_env
 runtime_discovery
 runtime_versions
 test_core
@@ -65,3 +66,6 @@ Installed files live under:
 ```
 
 The application checkout is never converted into a control worktree. Results use a separate isolated worktree.
+
+
+`bootstrap_wine_test_env` is a fixed recovery action. It creates only `.venv-wine` from the pinned Wine Python/constraints and never initializes MT5 or reads account state.
