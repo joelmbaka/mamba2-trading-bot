@@ -1,17 +1,135 @@
 {
   "version": 1,
-  "command_id": "mamba2-local-control-bootstrap-status-20260925",
-  "completed_at": "2026-09-25T08:31:31.771053+00:00",
+  "command_id": "mamba2-switch-repo-ops-foundation-20260925-1122",
+  "completed_at": "2026-09-25T08:38:17.074189+00:00",
   "ok": true,
-  "action": "status",
+  "action": "switch_branch",
   "data": {
-    "hostname": "joel-OptiPlex-7080",
-    "repo": "/home/joel/Dev/mamba2-trading-bot",
-    "branch": "backtest-first-baseline",
-    "head": "40536d96c6ac2119fca3c2cfec92dad889e7c878",
-    "clean": true,
-    "changed_paths": [],
-    "divergence": "0\t0",
-    "time": "2026-09-25T08:31:27.898044+00:00"
+    "target_branch": "repo-ops-foundation",
+    "before_branch": "backtest-first-baseline",
+    "after_branch": "repo-ops-foundation",
+    "before_sha": "40536d96c6ac2119fca3c2cfec92dad889e7c878",
+    "after_sha": "71c3f5a249bfcbea2352b0d061e3a7904510a9e9",
+    "reason": null,
+    "commands": [
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "backtest-first-baseline\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "40536d96c6ac2119fca3c2cfec92dad889e7c878\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "check-ref-format",
+          "--branch",
+          "repo-ops-foundation"
+        ],
+        "exit_code": 0,
+        "stdout": "repo-ops-foundation\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/repo-ops-foundation"
+        ],
+        "exit_code": 0,
+        "stdout": "71c3f5a249bfcbea2352b0d061e3a7904510a9e9\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/heads/repo-ops-foundation"
+        ],
+        "exit_code": 128,
+        "stdout": "",
+        "stderr": "fatal: Needed a single revision\n"
+      },
+      {
+        "command": [
+          "git",
+          "switch",
+          "--track",
+          "-c",
+          "repo-ops-foundation",
+          "origin/repo-ops-foundation"
+        ],
+        "exit_code": 0,
+        "stdout": "branch 'repo-ops-foundation' set up to track 'origin/repo-ops-foundation'.\n",
+        "stderr": "Switched to a new branch 'repo-ops-foundation'\n"
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "repo-ops-foundation\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "71c3f5a249bfcbea2352b0d061e3a7904510a9e9\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ]
   }
 }
