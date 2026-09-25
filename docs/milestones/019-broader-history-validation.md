@@ -24,7 +24,7 @@ configuration.
 
 Chosen UTC interval:
 
-`2026-06-01T00:00:00Z` through `2026-09-25T00:00:00Z`
+`2026-06-23T00:00:00Z` through `2026-09-25T00:00:00Z`
 
 This includes:
 
@@ -84,7 +84,7 @@ integrity.
 
 Planned immutable dataset directory:
 
-`backtest_data/broader-history-20260601-20260925`
+`backtest_data/broader-history-20260623-20260925`
 
 After export:
 
