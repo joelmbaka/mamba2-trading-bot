@@ -1,138 +1,95 @@
 # Next Authorized Task
 
-## Milestone 016 — First real five-symbol baseline
+## Milestone 017 — Baseline diagnosis
 
-Repository operations/local-control are accepted.
+Milestone 016 is accepted.
 
-Before executing the baseline:
+Accepted implementation SHA:
 
-1. fast-forward `main` to the accepted repository-operations closeout;
-2. fast-forward existing `backtest-first-baseline` from main;
-3. verify clean worktree/divergence 0/0;
-4. do not change strategy or replay semantics.
+`4d8a15937f461c0e39d434be6639bfde83698d7f`
 
-## Historical window
+Accepted baseline report SHA-256:
 
-Run the current production strategy unchanged:
+`d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`
 
-- From: `2026-09-01T00:00:00Z`
-- To: `2026-09-25T00:00:00Z`
+Branch:
 
-This covers Sep 1 through the end of Sep 24 UTC and avoids partial Sep 25 data.
+`backtest-baseline-diagnosis`
 
-## Symbols
+## Objective
 
+Explain the accepted M016 result using deterministic trade-level evidence before changing the strategy.
+
+Do **not** optimize.
+
+Do **not** change strategy parameters, signal conditions, ATR/trailing semantics, spread semantics, execution costs, conversion timing, position size, or end-of-data behavior.
+
+## Source baseline
+
+Reuse the verified M016 dataset:
+
+- `2026-09-01T00:00:00Z` through `2026-09-25T00:00:00Z`
 - EURUSD
 - EURJPY
 - GBPUSD
 - GBPJPY
 - USDJPY
-
-## Dataset
-
-Require:
-
 - M1
 - native M5
 - native M15
 - tick-derived Ask M1
-- verified manifest/checksums
 
-Historical MT5 access is read-only.
+The accepted baseline totals must remain reproducible.
 
-## Shared runtime
+## First task — deterministic diagnostic evidence
 
-Exactly one:
+Add a deterministic diagnostic artifact or reporting path that exposes enough evidence to explain every closed trade without changing replay decisions or fills.
 
-- ReplayFeed
-- HistoricalBroker/shared account
-- ATRManager
-- PositionManager
-- PortfolioBacktestRunner
+At minimum capture, where applicable:
 
-Five production `StochasticTripleTFStrategy` instances in configured symbol order.
+- stable order/position identity;
+- symbol;
+- side;
+- entry UTC timestamp and price;
+- exit UTC timestamp and price;
+- exit reason;
+- gross and net realized P/L;
+- entry/exit historical Bid/Ask spread;
+- ATR/protection state relevant to the trade;
+- trailing-stop modifications relevant to the trade;
+- account-currency conversion route used when conversion is required;
+- UTC session bucket or sufficient timestamps to derive it.
 
-## Strategy configuration
+Prefer deriving analysis fields after replay from immutable event/ledger data rather than injecting behavior into the strategy.
 
-Do not optimize.
+## Non-interference gate
 
-Keep:
+Diagnostic instrumentation must not alter the accepted baseline.
 
-- position size: 0.1
-- stochastic: 21 / 7 / 7
-- trend filter: off
-- RSI filter: off
-- higher-TF filter: off
-- EMA: 7
-- ATR: period 14, M5
-- ATR SL multiplier: 1.0
-- ATR TP multiplier: 2.0
-- monotonic trailing-stop semantics
+Require:
 
-## Costs
+1. the same verified dataset and strategy configuration;
+2. aggregate totals reconcile exactly to M016;
+3. accepted orders and closed trades remain 1,393 / 1,393;
+4. ending realized balance remains `9731.45700985454`;
+5. no remaining positions;
+6. baseline report remains deterministic;
+7. where the existing report format is unchanged, preserve its accepted SHA-256; if a deliberately separate diagnostic artifact is added, keep the accepted baseline report itself unchanged.
 
-Use historical tick-derived Bid/Ask spread.
+## Diagnosis required
 
-Explicit assumptions:
+After deterministic evidence exists, report descriptive findings for:
 
-- commission = 0
-- configured slippage = 0
+- symbol;
+- BUY vs SELL;
+- UTC session/time-of-day;
+- exit reason;
+- spread;
+- ATR/protection/trailing behavior;
+- account-currency conversion route;
+- loss clustering and consecutive-loss behavior;
+- drawdown episodes.
 
-Report label:
+Do not rank symbols and do not change the strategy during M017.
 
-`SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO`
-
-Do not describe results as fully net of actual broker costs.
-
-## End of data
-
-No forced liquidation.
-
-Report realized balance, unrealized P/L, equity, and remaining positions separately.
-
-## Determinism gate
-
-Run the exact baseline twice.
-
-Require report A and report B to be byte-for-byte identical with the same SHA-256.
-
-If determinism fails, stop and fix the replay/reporting defect before interpreting performance.
-
-## Output required
-
-Report:
-
-- replay boundaries;
-- accepted orders total/per symbol;
-- closed trades total/per symbol;
-- remaining positions;
-- starting balance;
-- ending realized balance;
-- ending unrealized P/L;
-- ending equity;
-- gross realized P/L;
-- commission;
-- net realized P/L;
-- wins/losses/flats;
-- non-flat win rate;
-- largest closed gain/loss;
-- maximum shared-account equity drawdown absolute/percent;
-- per-symbol orders/trades/wins/losses/net realized P/L.
-
-Do not rank symbols.
-
-## Prohibited during milestone 016
-
-Do not:
-
-- change thresholds;
-- tune parameters;
-- disable a losing symbol;
-- enable filters;
-- change position size;
-- change ATR;
-- change trailing;
-- change spread/accounting/cost semantics;
-- force-close end-of-data positions.
-
-This milestone measures the current strategy as it exists.
+The goal is to identify evidence-backed hypotheses for later defect review or controlled experiments, not to improve the backtest result yet.
