@@ -1,9 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m019-switch-20260925-1603",
-  "action": "switch_branch",
-  "args": {
-    "branch": "backtest-broader-history"
-  },
+  "id": "mamba2-m019-sync-setup-20260925-1618",
+  "action": "sync",
+  "args": {},
   "requested_by": "chatgpt"
 }
