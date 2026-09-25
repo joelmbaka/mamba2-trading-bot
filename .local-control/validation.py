@@ -76,6 +76,10 @@ M020_CONTROL_BASELINE_A = M019_DIR / "m020-control-baseline-a.json"
 M020_CONTROL_BASELINE_B = M019_DIR / "m020-control-baseline-b.json"
 M020_CONTROL_DIAGNOSTIC_A = M019_DIR / "m020-control-diagnostic-a.json"
 M020_CONTROL_DIAGNOSTIC_B = M019_DIR / "m020-control-diagnostic-b.json"
+M020_TREATMENT_BASELINE_A = M019_DIR / "m020-a-treatment-baseline-a.json"
+M020_TREATMENT_BASELINE_B = M019_DIR / "m020-a-treatment-baseline-b.json"
+M020_TREATMENT_DIAGNOSTIC_A = M019_DIR / "m020-a-treatment-diagnostic-a.json"
+M020_TREATMENT_DIAGNOSTIC_B = M019_DIR / "m020-a-treatment-diagnostic-b.json"
 
 
 def _safe_env(wine=False):
@@ -1981,6 +1985,306 @@ def controlled_experiment_control_pair():
     }
 
 
+
+
+def _m020_selected_delta(treatment, control, keys):
+    return {
+        key: (
+            float(treatment.get(key, 0.0))
+            - float(control.get(key, 0.0))
+        )
+        for key in keys
+    }
+
+
+def _m020_group_effect(treatment, control):
+    names = sorted(set(control) | set(treatment))
+    output = {}
+    for name in names:
+        control_row = control.get(name, {})
+        treatment_row = treatment.get(name, {})
+        output[name] = {
+            "control": control_row,
+            "treatment": treatment_row,
+            "delta": _m020_selected_delta(
+                treatment_row,
+                control_row,
+                (
+                    "closed_trades",
+                    "wins",
+                    "losses",
+                    "flats",
+                    "net_realized_pl",
+                ),
+            ),
+        }
+    return output
+
+
+def controlled_experiment_m020a_pair():
+    """Run the single authorized M020-A treatment twice and compare control."""
+
+    _require_m020_branch()
+    if not M019_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M019 dataset manifest is missing",
+        }
+
+    control_outputs = (
+        M020_CONTROL_BASELINE_A,
+        M020_CONTROL_DIAGNOSTIC_A,
+    )
+    if any(not path.is_file() for path in control_outputs):
+        return {
+            "ok": False,
+            "reason": "accepted M020 control artifacts are missing; run control pair",
+        }
+    if (
+        _sha256(M020_CONTROL_BASELINE_A) != ACCEPTED_M019_BASELINE_SHA256
+        or _sha256(M020_CONTROL_DIAGNOSTIC_A)
+        != ACCEPTED_M019_DIAGNOSTIC_SHA256
+    ):
+        return {
+            "ok": False,
+            "reason": "local M020 control artifacts do not match accepted M019",
+        }
+
+    outputs = (
+        M020_TREATMENT_BASELINE_A,
+        M020_TREATMENT_BASELINE_B,
+        M020_TREATMENT_DIAGNOSTIC_A,
+        M020_TREATMENT_DIAGNOSTIC_B,
+    )
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    artifacts_before = _artifact_snapshot()
+    runs = []
+    for baseline_output, diagnostic_output in (
+        (M020_TREATMENT_BASELINE_A, M020_TREATMENT_DIAGNOSTIC_A),
+        (M020_TREATMENT_BASELINE_B, M020_TREATMENT_DIAGNOSTIC_B),
+    ):
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.experiments",
+                "--arm",
+                "m020-a",
+                "--manifest",
+                str(M019_MANIFEST.relative_to(REPO)),
+                "--baseline-output",
+                str(baseline_output.relative_to(REPO)),
+                "--diagnostic-output",
+                str(diagnostic_output.relative_to(REPO)),
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M020-A treatment replay failed",
+                "runs": runs,
+            }
+
+    if any(not output.is_file() for output in outputs):
+        return {
+            "ok": False,
+            "reason": "M020-A output missing after successful replay",
+            "runs": runs,
+        }
+
+    baseline_identical = (
+        M020_TREATMENT_BASELINE_A.read_bytes()
+        == M020_TREATMENT_BASELINE_B.read_bytes()
+    )
+    diagnostic_identical = (
+        M020_TREATMENT_DIAGNOSTIC_A.read_bytes()
+        == M020_TREATMENT_DIAGNOSTIC_B.read_bytes()
+    )
+    baseline_sha_a = _sha256(M020_TREATMENT_BASELINE_A)
+    baseline_sha_b = _sha256(M020_TREATMENT_BASELINE_B)
+    diagnostic_sha_a = _sha256(M020_TREATMENT_DIAGNOSTIC_A)
+    diagnostic_sha_b = _sha256(M020_TREATMENT_DIAGNOSTIC_B)
+
+    control_baseline = json.loads(
+        M020_CONTROL_BASELINE_A.read_text(encoding="utf-8")
+    )
+    control_diagnostic = json.loads(
+        M020_CONTROL_DIAGNOSTIC_A.read_text(encoding="utf-8")
+    )
+    treatment_baseline = json.loads(
+        M020_TREATMENT_BASELINE_A.read_text(encoding="utf-8")
+    )
+    treatment_diagnostic = json.loads(
+        M020_TREATMENT_DIAGNOSTIC_A.read_text(encoding="utf-8")
+    )
+
+    treatment_trades = treatment_diagnostic.get("trades", [])
+    blocked_entries = [
+        {
+            "ticket": int(trade["position_ticket"]),
+            "symbol": trade["symbol"],
+            "entry_time_utc": trade["entry_time_utc"],
+        }
+        for trade in treatment_trades
+        if trade.get("entry_utc_bucket") == "00:00-03:59 UTC"
+    ]
+
+    target_direction_violations = []
+    negative_take_profit = []
+    for trade in treatment_trades:
+        protection = trade.get("initial_protection") or {}
+        target = protection.get("applied_tp")
+        entry = trade.get("entry_price")
+        side = trade.get("side")
+        if target is not None and entry is not None:
+            crossed = (
+                side == "BUY" and float(target) <= float(entry)
+            ) or (
+                side == "SELL" and float(target) >= float(entry)
+            )
+            if crossed:
+                target_direction_violations.append(
+                    int(trade["position_ticket"])
+                )
+        if (
+            trade.get("exit_reason") == "take_profit"
+            and float(trade.get("net_realized_pl", 0.0)) < 0
+        ):
+            negative_take_profit.append(
+                int(trade["position_ticket"])
+            )
+
+    artifacts_after = _artifact_snapshot()
+    no_new_strategy_artifacts = artifacts_before == artifacts_after
+
+    control_aggregate = control_baseline.get("aggregate", {})
+    treatment_aggregate = treatment_baseline.get("aggregate", {})
+    control_analysis = control_diagnostic.get("analysis", {})
+    treatment_analysis = treatment_diagnostic.get("analysis", {})
+    control_months = _m019_monthly_trade_stats(
+        control_diagnostic.get("trades", [])
+    )
+    treatment_months = _m019_monthly_trade_stats(treatment_trades)
+
+    try:
+        payload_a = json.loads(runs[0]["stdout"].strip().splitlines()[-1])
+        payload_b = json.loads(runs[1]["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError):
+        payload_a = {}
+        payload_b = {}
+
+    return {
+        "ok": bool(
+            baseline_identical
+            and diagnostic_identical
+            and not blocked_entries
+            and not target_direction_violations
+            and not negative_take_profit
+            and no_new_strategy_artifacts
+        ),
+        "experiment_id": "M020-A",
+        "treatment": {
+            "blocked_utc_start": "00:00:00",
+            "blocked_utc_end_exclusive": "04:00:00",
+            "behavior": "suppress new-entry strategy evaluation only",
+        },
+        "baseline_reports_identical": baseline_identical,
+        "baseline_sha256_a": baseline_sha_a,
+        "baseline_sha256_b": baseline_sha_b,
+        "diagnostics_identical": diagnostic_identical,
+        "diagnostic_sha256_a": diagnostic_sha_a,
+        "diagnostic_sha256_b": diagnostic_sha_b,
+        "blocked_entry_count": len(blocked_entries),
+        "blocked_entries": blocked_entries,
+        "blocked_evaluation_boundaries_a": payload_a.get(
+            "blocked_evaluation_boundaries"
+        ),
+        "blocked_evaluation_boundaries_b": payload_b.get(
+            "blocked_evaluation_boundaries"
+        ),
+        "target_direction_violation_count": len(
+            target_direction_violations
+        ),
+        "negative_take_profit_count": len(negative_take_profit),
+        "no_new_strategy_artifacts": no_new_strategy_artifacts,
+        "control": {
+            "baseline_sha256": ACCEPTED_M019_BASELINE_SHA256,
+            "diagnostic_sha256": ACCEPTED_M019_DIAGNOSTIC_SHA256,
+            "aggregate": control_aggregate,
+        },
+        "treatment_result": {
+            "aggregate": treatment_aggregate,
+            "per_symbol": treatment_baseline.get("per_symbol"),
+            "by_entry_month": treatment_months,
+            "analysis": {
+                "by_symbol": treatment_analysis.get("by_symbol"),
+                "by_side": treatment_analysis.get("by_side"),
+                "by_entry_utc_bucket": treatment_analysis.get(
+                    "by_entry_utc_bucket"
+                ),
+                "by_exit_reason": treatment_analysis.get("by_exit_reason"),
+                "spread_by_outcome": treatment_analysis.get(
+                    "spread_by_outcome"
+                ),
+                "conversion_routes": treatment_analysis.get(
+                    "conversion_routes"
+                ),
+                "protection": treatment_analysis.get("protection"),
+                "loss_clustering": {
+                    key: value
+                    for key, value in (
+                        treatment_analysis.get("loss_clustering") or {}
+                    ).items()
+                    if key != "streaks"
+                },
+                "drawdown_episode_count": treatment_analysis.get(
+                    "drawdown_episode_count"
+                ),
+                "deepest_drawdown_episodes": treatment_analysis.get(
+                    "deepest_drawdown_episodes"
+                ),
+            },
+        },
+        "effect": {
+            "aggregate_delta": _m020_selected_delta(
+                treatment_aggregate,
+                control_aggregate,
+                (
+                    "accepted_orders",
+                    "closed_trades",
+                    "winning_closed_trades",
+                    "losing_closed_trades",
+                    "flat_closed_trades",
+                    "net_realized_pl",
+                    "ending_realized_balance",
+                    "ending_equity",
+                    "maximum_equity_drawdown",
+                    "maximum_equity_drawdown_pct",
+                ),
+            ),
+            "per_symbol": _m020_group_effect(
+                treatment_baseline.get("per_symbol") or {},
+                control_baseline.get("per_symbol") or {},
+            ),
+            "by_entry_month": _m020_group_effect(
+                treatment_months,
+                control_months,
+            ),
+            "by_side": _m020_group_effect(
+                treatment_analysis.get("by_side") or {},
+                control_analysis.get("by_side") or {},
+            ),
+        },
+        "runs": runs,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -2001,6 +2305,7 @@ ACTION_HANDLERS = {
     "broader_history_m018_regression_pair": broader_history_m018_regression_pair,
     "broader_history_run_pair": broader_history_run_pair,
     "controlled_experiment_control_pair": controlled_experiment_control_pair,
+    "controlled_experiment_m020a_pair": controlled_experiment_m020a_pair,
 }
 
 
