@@ -42,6 +42,17 @@ Tick-derived Ask M1 is preferred; bar-spread Ask is fallback.
 
 P/L is converted from quote currency using historical replay prices from available conversion pairs only. No current/web FX rates.
 
+Conversion must use the required replay phase/boundary:
+
+- direct or inverse same-boundary pair is preferred;
+- when that pair exists in the dataset but has no bar on the required boundary, a deterministic two-leg route may be used only if both legs have historical Bid/Ask data on that same required boundary;
+- no previous-bar carry-forward;
+- no future-bar lookup;
+- no current/web FX rate;
+- no invented conversion price.
+
+For a two-leg route, Bid/Ask is applied independently on each currency-conversion leg according to the sign/direction of the amount being converted.
+
 ## Costs
 
 Explicit model supports commission-per-lot-per-side and adverse slippage points. Defaults are zero because actual broker rules are not yet proven. Swap is not modeled.
@@ -71,6 +82,12 @@ Existing near-target protected positions are monotonic:
 - BUY candidate SL must be strictly above current SL.
 - SELL candidate SL must be strictly below current SL.
 - Rejected SL changes do not move TP independently.
+
+## Replay-only performance
+
+Replay implementations may precompute/cache causal indicator values only when tests prove the value returned at every replay boundary is exactly equal to the legacy calculation on the visible historical prefix.
+
+Such caching must not expose future values to strategy decisions and must not change the production/live rate-fetcher path.
 
 ## Known limitations
 
