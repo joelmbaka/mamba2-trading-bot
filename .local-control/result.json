@@ -1,23 +1,17 @@
 {
   "version": 1,
-  "command_id": "mamba2-m017-diagnostics-native-20260925-1354",
-  "completed_at": "2026-09-25T10:39:32.239984+00:00",
+  "command_id": "mamba2-m017-status-probe-20260925-1400",
+  "completed_at": "2026-09-25T10:39:53.557634+00:00",
   "ok": true,
-  "action": "test_full_native",
+  "action": "status",
   "data": {
-    "ok": true,
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest"
-      ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 173 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  2%]\ntests/test_backtest_account_currency.py ............                     [  9%]\ntests/test_backtest_baseline_reporting.py ....                           [ 11%]\ntests/test_backtest_diagnostics.py ....                                  [ 13%]\ntests/test_backtest_execution.py .........                               [ 19%]\ntests/test_backtest_execution_costs.py ............                      [ 26%]\ntests/test_backtest_foundation.py ........                               [ 30%]\ntests/test_backtest_native_runtime.py ....                               [ 32%]\ntests/test_backtest_portfolio_runner.py ........                         [ 37%]\ntests/test_backtest_spread_execution.py ........                         [ 42%]\ntests/test_backtest_strategy_integration.py ..                           [ 43%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 46%]\ntests/test_cache_manager_security.py .........                           [ 51%]\ntests/test_config_security.py ...                                        [ 53%]\ntests/test_detect_trend.py ...                                           [ 54%]\ntests/test_mt5__broker.py ......                                         [ 58%]\ntests/test_mt5_dataset.py ..........                                     [ 64%]\ntests/test_position_manager_trailing_semantics.py .....................  [ 76%]\ntests/test_rates.py .......                                              [ 80%]\ntests/test_replay_indicator_cache.py ..                                  [ 81%]\ntests/test_stochastic_indicator.py ....                                  [ 83%]\ntests/test_trend_line.py ..                                              [ 84%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================== 173 passed, 2 skipped in 2.81s ========================\n",
-      "stderr": ""
-    }
+    "hostname": "joel-OptiPlex-7080",
+    "repo": "/home/joel/Dev/mamba2-trading-bot",
+    "branch": "backtest-baseline-diagnosis",
+    "head": "e653ba87df2ff1e8afbad5704f9a8d81428d7b27",
+    "clean": true,
+    "changed_paths": [],
+    "divergence": "0\t0",
+    "time": "2026-09-25T10:39:49.704932+00:00"
   }
 }
