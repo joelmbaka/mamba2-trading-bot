@@ -1,18 +1,19 @@
 """Deterministic baseline reporting over the portfolio replay result."""
 
-from dataclasses import replace
 from types import SimpleNamespace
 
 import pandas as pd
 import pytest
 
 from mamba2.backtest import (
-    COST_ASSUMPTION_LABEL,
     ClosedTrade,
     HistoricalBroker,
     PortfolioBacktestResult,
     ReplayFeed,
     SymbolExecutionMetadata,
+)
+from mamba2.backtest.baseline import (
+    COST_ASSUMPTION_LABEL,
     build_baseline_report,
     format_baseline_summary,
 )
@@ -65,6 +66,12 @@ def dataset(symbols):
             "requested_range": {
                 "from_utc": "2025-01-02T10:00:00Z",
                 "to_utc": "2025-01-02T10:03:00Z",
+            },
+            "symbols": {
+                symbol: {
+                    "ask_m1": {"source": "copy_ticks_range"}
+                }
+                for symbol in symbols
             },
         },
     )
@@ -292,3 +299,41 @@ def test_terminal_summary_is_stable(monkeypatch):
         "boundaries=20 orders=2 closed=1 open=1 "
         "balance=10010.00 equity=10005.50 max_dd=25.00 (0.25%)"
     )
+
+
+
+def test_config_snapshot_distinguishes_configured_and_effective_stochastic_period(
+    monkeypatch,
+):
+    import mamba2.backtest.baseline as baseline_module
+
+    monkeypatch.setattr(
+        baseline_module,
+        "config",
+        SimpleNamespace(
+            symbols=["EURUSD"],
+            position_size=0.1,
+            ENABLE_TREND_CONDITION=False,
+            ENABLE_RSI_CONDITION=False,
+            use_higher_tf=False,
+            stochastic_timeframes={
+                "higher": "M15",
+                "trading": "M5",
+                "entry": "M1",
+            },
+            stochastic_k_period=14,
+            atr_period=14,
+            atr_timeframe="M5",
+            atr_sl_multiplier=1.0,
+            atr_tp_multiplier=2.0,
+        ),
+    )
+
+    snapshot = baseline_module._config_snapshot()
+
+    assert snapshot["configured_stochastic_k_period"] == 14
+    assert snapshot["effective_stochastic_parameters"] == {
+        "k_period": 21,
+        "d_period": 7,
+        "slowing": 7,
+    }

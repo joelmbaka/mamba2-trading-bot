@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
+import math
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -12,6 +14,7 @@ import pandas as pd
 from config import config
 from mamba2.crew.atr_manager import ATRManager
 from mamba2.crew.position_manager import PositionManager
+from mamba2.indicators.stochastic import get_stochastic
 from mamba2.strategy.triple_cross import StochasticTripleTFStrategy
 
 from .broker import ExecutionCostModel, HistoricalBroker
@@ -55,10 +58,27 @@ def _validate_baseline_dataset(
             raise DatasetIntegrityError(
                 f"baseline dataset is missing tick-derived Ask M1 for {symbol}"
             )
+        ask_manifest = dataset.manifest.get("symbols", {}).get(
+            symbol,
+            {},
+        ).get("ask_m1", {})
+        if ask_manifest.get("source") != "copy_ticks_range":
+            raise DatasetIntegrityError(
+                f"baseline Ask M1 is not tick-derived for {symbol}"
+            )
         if not ask.index.equals(dataset.m1_bars[symbol].index):
             raise DatasetIntegrityError(
                 f"baseline dataset has incomplete Ask M1 coverage for {symbol}"
             )
+
+
+def _effective_stochastic_parameters() -> dict[str, int]:
+    signature = inspect.signature(get_stochastic)
+    return {
+        "k_period": int(signature.parameters["k_period"].default),
+        "d_period": int(signature.parameters["d_period"].default),
+        "slowing": int(signature.parameters["slowing"].default),
+    }
 
 
 def _config_snapshot() -> dict[str, Any]:
@@ -69,7 +89,8 @@ def _config_snapshot() -> dict[str, Any]:
         "rsi_filter_enabled": bool(config.ENABLE_RSI_CONDITION),
         "higher_tf_filter_enabled": bool(config.use_higher_tf),
         "stochastic_timeframes": dict(config.stochastic_timeframes),
-        "stochastic_k_period": int(config.stochastic_k_period),
+        "configured_stochastic_k_period": int(config.stochastic_k_period),
+        "effective_stochastic_parameters": _effective_stochastic_parameters(),
         "atr_period": int(config.atr_period),
         "atr_timeframe": str(config.atr_timeframe),
         "atr_sl_multiplier": float(config.atr_sl_multiplier),
@@ -191,6 +212,7 @@ def build_baseline_report(
     net_realized = float(final["balance"]) - float(starting_balance)
 
     report = {
+        "report_schema_version": 1,
         "dataset": {
             "schema_version": dataset.manifest.get("schema_version"),
             "source": dataset.manifest.get("source"),
@@ -249,8 +271,11 @@ def run_baseline(
 ) -> dict[str, Any]:
     """Run the production strategy portfolio with explicit zero execution costs."""
 
-    if starting_balance <= 0:
-        raise ValueError("starting_balance must be positive")
+    starting_balance = float(starting_balance)
+    if not math.isfinite(starting_balance) or starting_balance <= 0:
+        raise ValueError("starting_balance must be finite and positive")
+    if max_steps is not None and max_steps < 1:
+        raise ValueError("max_steps must be at least 1 when provided")
 
     dataset = load_mt5_dataset(manifest_path)
     symbols = tuple(config.symbols)
