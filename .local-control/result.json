@@ -1,10 +1,17 @@
 {
   "version": 1,
-  "command_id": null,
-  "completed_at": null,
-  "ok": null,
-  "action": null,
+  "command_id": "mamba2-local-control-bootstrap-status-20260925",
+  "completed_at": "2026-09-25T08:31:31.771053+00:00",
+  "ok": true,
+  "action": "status",
   "data": {
-    "state": "awaiting workstation bootstrap"
+    "hostname": "joel-OptiPlex-7080",
+    "repo": "/home/joel/Dev/mamba2-trading-bot",
+    "branch": "backtest-first-baseline",
+    "head": "40536d96c6ac2119fca3c2cfec92dad889e7c878",
+    "clean": true,
+    "changed_paths": [],
+    "divergence": "0\t0",
+    "time": "2026-09-25T08:31:27.898044+00:00"
   }
 }
