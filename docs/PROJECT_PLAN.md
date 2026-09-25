@@ -2,7 +2,8 @@
 
 ## Goal
 
-Make historical results trustworthy enough to guide strategy development without simulator defects distorting conclusions.
+Make historical results trustworthy enough to guide strategy development
+without simulator defects distorting conclusions.
 
 ## Completed foundation
 
@@ -21,29 +22,47 @@ Make historical results trustworthy enough to guide strategy development without
 13. monotonic trailing-stop semantics;
 14. runtime cache sanitization;
 15. repository operations foundation;
-16. first real five-symbol baseline.
+16. first real five-symbol baseline;
+17. deterministic baseline diagnosis;
+18. proven wrong-side initial-TP defect correction.
 
 Exact SHAs are in `MILESTONES.md`.
 
 ## Current analytical sequence
 
 ### 16 — First real baseline — COMPLETE
-Sep 1–24, 2026 across all five production symbols, unchanged strategy. The exact baseline reproduced twice byte-for-byte and is recorded in `docs/milestones/016-first-real-baseline.md`.
 
-### 17 — Baseline diagnosis — NEXT
-Inspect deterministic trade-by-trade evidence: symbol, side, session, spread, ATR/trailing, conversion, and loss clustering. Do not optimize yet.
+Sep 1–24, 2026 across all five production symbols, unchanged strategy. The
+accepted report is recorded in
+`docs/milestones/016-first-real-baseline.md`.
 
-### 18 — Proven-defect corrections
-Fix only issues demonstrated by evidence, rerun the exact same dataset, compare before/after.
+### 17 — Baseline diagnosis — COMPLETE
 
-### 19 — Broader-history validation
-Expand to several months and multiple market regimes.
+Trade-level deterministic evidence identified spread tails, side/session
+asymmetry, drawdown structure, and three negative-P/L take-profit exits without
+changing strategy behavior.
+
+### 18 — Proven-defect corrections — COMPLETE
+
+The three anomalous take-profit exits proved a real initial-target placement
+defect under sufficiently wide spreads. The narrow correction prevents an
+initial TP from crossing to the loss side of the actual fill while preserving
+normal current-price TP, SL, and trailing semantics.
+
+### 19 — Broader-history validation — NEXT
+
+Expand the corrected deterministic replay to several months and multiple
+market regimes. Preserve strategy and execution semantics.
 
 ### 20 — Controlled experiments
-One strategy/filter change at a time with preserved baseline and separate validation periods.
+
+One strategy/filter change at a time with preserved baseline and separate
+validation periods.
 
 ### 21 — Paper/live validation
-Compare replay assumptions against forward behavior before increasing live risk.
+
+Compare replay assumptions against forward behavior before increasing live
+risk.
 
 ## Principles
 
@@ -52,3 +71,4 @@ Compare replay assumptions against forward behavior before increasing live risk.
 - Reproducible acceptance record after every milestone.
 - Never invent unavailable broker costs.
 - Never silently change production behavior.
+- Broader validation before optimization.
