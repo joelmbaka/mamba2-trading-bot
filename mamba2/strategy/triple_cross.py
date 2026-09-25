@@ -100,19 +100,25 @@ class StochasticTripleTFStrategy(Strategy):
         
         if all(conditions):
             
-            # Get the 15-minute trend
-            rates_5min = rate_fetcher.get_rates(self.symbol, 'M5')
-            trend = calculate_5min_trendline(rates_5min)
-           # logger.info(f"{self.symbol} -  {trend}")
-            
-            # Validate trend
-            if trend not in ['uptrend', 'downtrend']:
-                logger.debug(f"Skipping {self.symbol} because trend is {trend}")
-                logger.info(f"{self.symbol} - Trend is {trend}")
-                return
-            
-            # Execute trades based on trend direction
-            if config.ENABLE_TREND_CONDITION and trend == 'uptrend':
+            # Trend is an optional filter, not a master trading switch.
+            # When disabled, signal evaluation must not depend on trend data.
+            trend = "disabled"
+            if config.ENABLE_TREND_CONDITION:
+                rates_5min = rate_fetcher.get_rates(self.symbol, 'M5')
+                trend = calculate_5min_trendline(rates_5min)
+                if trend not in ['uptrend', 'downtrend']:
+                    logger.debug(f"Skipping {self.symbol} because trend is {trend}")
+                    logger.info(f"{self.symbol} - Trend is {trend}")
+                    return
+
+            buy_trend_allowed = (
+                not config.ENABLE_TREND_CONDITION or trend == 'uptrend'
+            )
+            sell_trend_allowed = (
+                not config.ENABLE_TREND_CONDITION or trend == 'downtrend'
+            )
+
+            if buy_trend_allowed:
                 # Only look for buy signals
                 oversold_level = 20
                 buy_conditions = [
@@ -254,7 +260,7 @@ class StochasticTripleTFStrategy(Strategy):
                     csv_path = get_metrics(position_ticket, self.symbol, market['rate_fetcher'], 
                                          tf_higher, tf_trading, tf_entry, 10, 10, 10, 
                                          order_type='buy', trend=trend)
-            elif config.ENABLE_TREND_CONDITION and trend == 'downtrend':
+            if sell_trend_allowed:
                 # Only look for sell signals
                 overbought_level = 80
                 sell_conditions = [
@@ -268,21 +274,30 @@ class StochasticTripleTFStrategy(Strategy):
                     sell_conditions.append(k_higher < d_higher)
                 
                 if all(sell_conditions):
-                    # Calculate RSI for the entry timeframe
-                    rsi = get_rsi(symbol=self.symbol, timeframe=tf_trading, rate_fetcher=rate_fetcher)
-                    if rsi is None:
-                        logger.warning(f"Could not calculate RSI for {self.symbol} on {tf_trading}")
-                        return
-                    try:
-                        # If it's a pandas Series, get the last value by index
-                        current_rsi = rsi.iloc[-1]
-                    except AttributeError:
-                        # If it doesn't have iloc, assume it's a scalar
-                        current_rsi = rsi
+                    # Apply the RSI filter only when explicitly enabled.
+                    if config.ENABLE_RSI_CONDITION:
+                        rsi = get_rsi(
+                            symbol=self.symbol,
+                            timeframe=tf_trading,
+                            rate_fetcher=rate_fetcher,
+                        )
+                        if rsi is None:
+                            logger.warning(
+                                f"Could not calculate RSI for {self.symbol} "
+                                f"on {tf_trading}"
+                            )
+                            return
+                        try:
+                            current_rsi = rsi.iloc[-1]
+                        except AttributeError:
+                            current_rsi = rsi
 
-                    if current_rsi >= 50:
-                        logger.debug(f"{self.symbol} - Sell signal skipped because RSI ({current_rsi:.2f}) is not below 50")
-                        return
+                        if current_rsi >= 50:
+                            logger.debug(
+                                f"{self.symbol} - Sell signal skipped because "
+                                f"RSI ({current_rsi:.2f}) is not below 50"
+                            )
+                            return
 
                     # Wait for a red candle to close below 7-period EMA
                     rates = market['rate_fetcher'].get_rates(self.symbol, 'M1')
