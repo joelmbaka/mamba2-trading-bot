@@ -1,95 +1,163 @@
 # Next Authorized Task
 
-## Milestone 017 — Baseline diagnosis
+## Milestone 018 — Proven-defect review and corrections
 
-Milestone 016 is accepted.
+Milestone 017 is accepted.
 
-Accepted implementation SHA:
+Accepted M017 implementation SHA:
 
-`4d8a15937f461c0e39d434be6639bfde83698d7f`
+`e653ba87df2ff1e8afbad5704f9a8d81428d7b27`
 
 Accepted baseline report SHA-256:
 
 `d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`
 
-Branch:
+Accepted diagnostic SHA-256:
 
-`backtest-baseline-diagnosis`
+`edf01f4a1f936d386e618faa65fb9a7afb65fff6ae7ae9b4373c35692ced987a`
+
+Proposed branch:
+
+`backtest-proven-defect-review`
 
 ## Objective
 
-Explain the accepted M016 result using deterministic trade-level evidence before changing the strategy.
+Use M017 trade-level evidence to prove or disprove implementation/replay defects.
 
-Do **not** optimize.
+Do **not** optimize the strategy.
 
-Do **not** change strategy parameters, signal conditions, ATR/trailing semantics, spread semantics, execution costs, conversion timing, position size, or end-of-data behavior.
+A code/semantic change is authorized only after deterministic evidence proves
+that current behavior is incorrect relative to the documented backtest
+semantics or intended production behavior.
 
-## Source baseline
+If an observation is economically poor but semantically correct, leave it
+unchanged for later controlled experiments.
 
-Reuse the verified M016 dataset:
+## Source evidence
 
-- `2026-09-01T00:00:00Z` through `2026-09-25T00:00:00Z`
-- EURUSD
-- EURJPY
-- GBPUSD
-- GBPJPY
-- USDJPY
-- M1
-- native M5
-- native M15
-- tick-derived Ask M1
+Reuse exactly:
 
-The accepted baseline totals must remain reproducible.
+- accepted M016 dataset:
+  `2026-09-01T00:00:00Z` through `2026-09-25T00:00:00Z`
+- accepted M016 ordinary baseline report
+- accepted M017 deterministic diagnostic artifact
+- current strategy/configuration unchanged
 
-## First task — deterministic diagnostic evidence
+## First investigation — negative take-profit exits
 
-Add a deterministic diagnostic artifact or reporting path that exposes enough evidence to explain every closed trade without changing replay decisions or fills.
+M017 observed:
 
-At minimum capture, where applicable:
+- 54 take-profit exits
+- 51 positive
+- 3 negative
 
-- stable order/position identity;
-- symbol;
-- side;
-- entry UTC timestamp and price;
-- exit UTC timestamp and price;
-- exit reason;
-- gross and net realized P/L;
-- entry/exit historical Bid/Ask spread;
-- ATR/protection state relevant to the trade;
-- trailing-stop modifications relevant to the trade;
-- account-currency conversion route used when conversion is required;
-- UTC session bucket or sufficient timestamps to derive it.
+For each of the 3 negative-P/L take-profit trades, reconstruct:
 
-Prefer deriving analysis fields after replay from immutable event/ledger data rather than injecting behavior into the strategy.
-
-## Non-interference gate
-
-Diagnostic instrumentation must not alter the accepted baseline.
-
-Require:
-
-1. the same verified dataset and strategy configuration;
-2. aggregate totals reconcile exactly to M016;
-3. accepted orders and closed trades remain 1,393 / 1,393;
-4. ending realized balance remains `9731.45700985454`;
-5. no remaining positions;
-6. baseline report remains deterministic;
-7. where the existing report format is unchanged, preserve its accepted SHA-256; if a deliberately separate diagnostic artifact is added, keep the accepted baseline report itself unchanged.
-
-## Diagnosis required
-
-After deterministic evidence exists, report descriptive findings for:
-
-- symbol;
-- BUY vs SELL;
-- UTC session/time-of-day;
-- exit reason;
-- spread;
-- ATR/protection/trailing behavior;
+- order ID / position ticket;
+- symbol / side;
+- entry timestamp and fill;
+- initial ATR;
+- initial SL/TP;
+- every successful protection/trailing modification;
+- exit timestamp;
+- final TP;
+- Bid/Ask bar used for exit;
+- gross quote P/L;
 - account-currency conversion route;
-- loss clustering and consecutive-loss behavior;
-- drawdown episodes.
+- final realized P/L.
 
-Do not rank symbols and do not change the strategy during M017.
+Determine whether negative take-profit P/L is:
 
-The goal is to identify evidence-backed hypotheses for later defect review or controlled experiments, not to improve the backtest result yet.
+1. a legitimate consequence of a moved TP / spread / path under current
+   semantics; or
+2. a replay/position-management defect.
+
+Do not change code until that determination is proven by a regression test.
+
+## Second investigation — extreme spread tails
+
+Inspect the largest observed entry spreads, especially:
+
+- EURJPY 300 points
+- GBPJPY 229 points
+- USDJPY 113 points
+- GBPUSD 56 points
+- EURUSD 18 points
+
+For each extreme case establish whether:
+
+- tick-derived Ask and Bid timestamps align;
+- the exported spread is genuinely present in historical data;
+- the entry used the documented next-M1 execution rule;
+- no stale/future quote was used;
+- point-size/digits interpretation is correct.
+
+Do not add a spread filter during M018.
+
+## Third investigation — payoff asymmetry
+
+M017 observed nearly identical non-flat win rates:
+
+- BUY 41.72%
+- SELL 41.48%
+
+but:
+
+- BUY net P/L: USD -330.9923055212326
+- SELL net P/L: USD +62.44931537578547
+
+Describe the difference in average winning/losing trade magnitude, exit path,
+symbol mix, and trailing behavior.
+
+This is a defect investigation only. If execution is semantically correct,
+defer any directional strategy change to M020 controlled experiments.
+
+## Session and clustering checks
+
+Use evidence to explain, without optimizing:
+
+- 00:00–03:59 UTC losses;
+- 12:00–15:59 UTC losses;
+- maximum 17-loss streak;
+- early recovered ~4.0% drawdown;
+- later unrecovered ~3.11% drawdown.
+
+Control for symbol mix and spread before attributing results to time-of-day.
+
+## Acceptance rules
+
+If no implementation defect is proven:
+
+- make no strategy/replay semantic change;
+- document that M018 found no proven defect in the inspected anomaly;
+- preserve M016 baseline exactly.
+
+If a defect is proven:
+
+1. add a focused failing regression test;
+2. make the narrowest correction;
+3. keep strategy parameters unchanged;
+4. run full native and Wine suites;
+5. rerun the exact M016 dataset twice;
+6. require deterministic reports;
+7. compare corrected result to the accepted M016 baseline;
+8. document the semantic reason for the difference.
+
+## Prohibited during M018
+
+Do not:
+
+- tune stochastic thresholds/periods;
+- enable trend/RSI/higher-TF filters;
+- disable symbols;
+- introduce session filters;
+- introduce spread filters;
+- change position size;
+- tune ATR multipliers;
+- optimize trailing;
+- invent commission/slippage/swap;
+- enable real MT5 trading;
+- place/modify/close real orders.
+
+M018 separates proven simulator/implementation defects from strategy-quality
+observations. Controlled strategy experiments remain M020 work.
