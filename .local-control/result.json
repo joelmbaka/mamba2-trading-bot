@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "command_id": "mamba2-runtime-versions-20260925-1136",
-  "completed_at": "2026-09-25T09:01:39.653960+00:00",
+  "command_id": "mamba2-runtime-versions-20260925-1142",
+  "completed_at": "2026-09-25T09:01:58.412312+00:00",
   "ok": true,
   "action": "runtime_versions",
   "data": {
@@ -44,7 +44,7 @@
         ],
         "exit_code": 0,
         "stdout": "{\"python\": \"3.10.19\", \"machine\": \"x86_64\", \"numpy\": \"2.2.6\", \"pytest\": \"8.4.0\"}\n",
-        "stderr": "Using CPython 3.10.19\nCreating virtual environment at: .venv-native-control\nInstalled 29 packages in 15ms\n"
+        "stderr": ""
       },
       "wine_candidates": [
         {
