@@ -1,7 +1,9 @@
 {
   "version": 1,
-  "id": "mamba2-m019-final-repo-checks-20260925-2045",
-  "action": "repo_checks",
-  "args": {},
+  "id": "mamba2-m020-switch-20260925-2049",
+  "action": "switch_branch",
+  "args": {
+    "branch": "backtest-controlled-experiments"
+  },
   "requested_by": "chatgpt"
 }
