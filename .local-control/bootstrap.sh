@@ -80,5 +80,5 @@ journalctl --user -u chatgpt-mamba2-local-agent.service -n 30 --no-pager || true
 echo
 echo "Installed. Allowed actions:"
 echo "  status, sync, switch_branch"
-echo "  repo_checks, runtime_discovery, runtime_versions"
+echo "  repo_checks, bootstrap_wine_test_env, runtime_discovery, runtime_versions"
 echo "  test_core, test_full_native, test_full_wine"
