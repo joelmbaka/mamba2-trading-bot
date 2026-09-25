@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m017-status-probe-20260925-1400",
-  "action": "status",
+  "id": "mamba2-m017-diagnostics-wine-20260925-1403",
+  "action": "test_full_wine",
   "args": {},
   "requested_by": "chatgpt"
 }
