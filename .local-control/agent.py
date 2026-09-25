@@ -19,6 +19,7 @@ MAX_RESULT_CHARS = 100_000
 
 VALIDATION_ACTIONS = {
     "repo_checks",
+    "runtime_discovery",
     "runtime_versions",
     "test_core",
     "test_full_native",
