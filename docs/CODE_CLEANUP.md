@@ -28,6 +28,7 @@ Both were empty and unreferenced.
 - `mamba2/trader/client.py`
 - `tests/test_trader.py`
 - entire `examples/` directory
+- `mamba2/broker/README.md`
 
 Evidence:
 
@@ -36,6 +37,7 @@ Evidence:
 - `TraderClient` was used only by its own scaffold test and `examples/simple_strategy.py`.
 - the MT5-column diagnostic had no repository caller.
 - examples were not part of the production/backtest path; one required undeclared `yfinance`, and the MT5 demo printed account metadata contrary to the current security contract.
+- the broker-local README duplicated the root documentation, referenced a nonexistent test path, and contained account-info-printing examples that conflict with the current security contract.
 
 ### Dead private code
 
