@@ -57,14 +57,20 @@ Do not invent unavailable broker costs.
 
 ## Historical scope
 
-Expand beyond the accepted Sep 1–24 window to **several months** of real MT5
-history across all five production symbols.
+The exact M019 validation interval is now fixed as:
 
-The chosen interval must include more than one market regime rather than merely
-extending the existing window by a few days.
+`2026-06-01T00:00:00Z` through `2026-09-25T00:00:00Z`
 
-Before export, document the exact UTC boundaries and verify that required M1,
-native M5, native M15, and tick-derived Ask coverage exists for each symbol.
+It covers June, July, August, and Sep 1–24 across all five production symbols.
+Use those calendar subperiods for descriptive stability comparisons; do not
+select or discard periods based on profitability.
+
+Before export, verify required M1, native M5, native M15, and tick-derived Ask
+coverage exists for each symbol.
+
+The immutable broader dataset must also prove that its Sep 1–24 overlapping
+M1/M5/M15/Ask data is identical to the accepted M016 dataset before replay
+evidence is trusted.
 
 Use only read-only historical MT5 access.
 
