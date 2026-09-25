@@ -1,28 +1,17 @@
 {
   "version": 1,
-  "command_id": "mamba2-repo-ops-final-checks-20260925-1146",
-  "completed_at": "2026-09-25T09:04:48.298954+00:00",
+  "command_id": "mamba2-switch-first-baseline-20260925-1151",
+  "completed_at": "2026-09-25T09:07:31.515510+00:00",
   "ok": true,
-  "action": "repo_checks",
+  "action": "switch_branch",
   "data": {
-    "ok": true,
-    "clean": true,
-    "branch": "repo-ops-foundation",
-    "divergence": "0\t0",
-    "bot_cache_tracked": false,
-    "icon_tracked": true,
-    "icon_changed": false,
+    "target_branch": "backtest-first-baseline",
+    "before_branch": "repo-ops-foundation",
+    "after_branch": "backtest-first-baseline",
+    "before_sha": "af1abb120848ab1c5accb528bf67551f6a882ef5",
+    "after_sha": "af1abb120848ab1c5accb528bf67551f6a882ef5",
+    "reason": null,
     "commands": [
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "32da1d846960cbc2b196da1c2f8c8a8561a5c322\n",
-        "stderr": ""
-      },
       {
         "command": [
           "git",
@@ -31,6 +20,27 @@
         ],
         "exit_code": 0,
         "stdout": "repo-ops-foundation\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "af1abb120848ab1c5accb528bf67551f6a882ef5\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "check-ref-format",
+          "--branch",
+          "backtest-first-baseline"
+        ],
+        "exit_code": 0,
+        "stdout": "backtest-first-baseline\n",
         "stderr": ""
       },
       {
@@ -47,52 +57,8 @@
       {
         "command": [
           "git",
-          "diff",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "/home/joel/.local/bin/uv",
-          "lock",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": "Resolved 58 packages in 0.48ms\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "bot_cache.json"
-        ],
-        "exit_code": 1,
-        "stdout": "",
-        "stderr": "error: pathspec 'bot_cache.json' did not match any file(s) known to git\nDid you forget to 'git add'?\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "icon.png"
-        ],
-        "exit_code": 0,
-        "stdout": "icon.png\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--short",
-          "--",
-          "icon.png"
+          "fetch",
+          "origin"
         ],
         "exit_code": 0,
         "stdout": "",
@@ -103,10 +69,21 @@
           "git",
           "rev-parse",
           "--verify",
-          "refs/remotes/origin/repo-ops-foundation"
+          "refs/remotes/origin/backtest-first-baseline"
         ],
         "exit_code": 0,
-        "stdout": "32da1d846960cbc2b196da1c2f8c8a8561a5c322\n",
+        "stdout": "af1abb120848ab1c5accb528bf67551f6a882ef5\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/heads/backtest-first-baseline"
+        ],
+        "exit_code": 0,
+        "stdout": "40536d96c6ac2119fca3c2cfec92dad889e7c878\n",
         "stderr": ""
       },
       {
@@ -115,10 +92,63 @@
           "rev-list",
           "--left-right",
           "--count",
-          "HEAD...origin/repo-ops-foundation"
+          "refs/heads/backtest-first-baseline...refs/remotes/origin/backtest-first-baseline"
         ],
         "exit_code": 0,
-        "stdout": "0\t0\n",
+        "stdout": "0\t4\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "switch",
+          "backtest-first-baseline"
+        ],
+        "exit_code": 0,
+        "stdout": "Your branch is behind 'origin/backtest-first-baseline' by 4 commits, and can be fast-forwarded.\n  (use \"git pull\" to update your local branch)\n",
+        "stderr": "Switched to branch 'backtest-first-baseline'\n"
+      },
+      {
+        "command": [
+          "git",
+          "pull",
+          "--ff-only",
+          "origin",
+          "backtest-first-baseline"
+        ],
+        "exit_code": 0,
+        "stdout": "Updating 40536d9..af1abb1\nFast-forward\n .gitignore                                         |    4 +\n AGENTS.md                                          |   46 +\n README.md                                          |  169 +-\n backtest/market_metrics.csv                        |    1 -\n docs/BACKTEST_SEMANTICS.md                         |   81 +\n docs/CODE_CLEANUP.md                               |   71 +\n docs/CURRENT_STATE.md                              |  109 +\n docs/MILESTONES.md                                 |   51 +\n docs/NEXT_TASK.md                                  |  138 +\n docs/PROJECT_PLAN.md                               |   57 +\n docs/README.md                                     |   14 +\n docs/WORKFLOW.md                                   |   81 +\n .../015-repository-operations-foundation.md        |  122 +\n docs/milestones/016-first-real-baseline.md         |   26 +\n examples/mt5_broker_demo.py                        |   74 -\n examples/plot_eurusd_trend.py                      |   75 -\n examples/simple_strategy.py                        |   15 -\n logs/mamba2.log                                    | 8767 --------------------\n mamba2/broker/README.md                            |  102 -\n mamba2/crew/test_mt5_columns.py                    |   71 -\n mamba2/indicators/MACD.py                          |   79 -\n mamba2/indicators/detect_divergences.py            |    0\n mamba2/indicators/support_resistance.py            |   66 -\n mamba2/strategy/mq5_version.mq5                    |    0\n mamba2/strategy/triple_cross.py                    |    5 -\n mamba2/trader/client.py                            |   24 -\n pyproject.toml                                     |    1 -\n tests/test_trader.py                               |   16 -\n uv.lock                                            |   59 -\n 29 files changed, 842 insertions(+), 9482 deletions(-)\n create mode 100644 AGENTS.md\n delete mode 100644 backtest/market_metrics.csv\n create mode 100644 docs/BACKTEST_SEMANTICS.md\n create mode 100644 docs/CODE_CLEANUP.md\n create mode 100644 docs/CURRENT_STATE.md\n create mode 100644 docs/MILESTONES.md\n create mode 100644 docs/NEXT_TASK.md\n create mode 100644 docs/PROJECT_PLAN.md\n create mode 100644 docs/README.md\n create mode 100644 docs/WORKFLOW.md\n create mode 100644 docs/milestones/015-repository-operations-foundation.md\n create mode 100644 docs/milestones/016-first-real-baseline.md\n delete mode 100644 examples/mt5_broker_demo.py\n delete mode 100644 examples/plot_eurusd_trend.py\n delete mode 100644 examples/simple_strategy.py\n delete mode 100644 logs/mamba2.log\n delete mode 100644 mamba2/broker/README.md\n delete mode 100644 mamba2/crew/test_mt5_columns.py\n delete mode 100644 mamba2/indicators/MACD.py\n delete mode 100644 mamba2/indicators/detect_divergences.py\n delete mode 100644 mamba2/indicators/support_resistance.py\n delete mode 100644 mamba2/strategy/mq5_version.mq5\n delete mode 100644 mamba2/trader/client.py\n delete mode 100644 tests/test_trader.py\n",
+        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * branch            backtest-first-baseline -> FETCH_HEAD\n"
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "backtest-first-baseline\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "af1abb120848ab1c5accb528bf67551f6a882ef5\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
         "stderr": ""
       }
     ]
