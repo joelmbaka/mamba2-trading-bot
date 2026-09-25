@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-first-baseline-run-pair-20260925-1217",
-  "action": "first_baseline_run_pair",
+  "id": "mamba2-m016-cache-full-native-20260925-1238",
+  "action": "test_full_native",
   "args": {},
   "requested_by": "chatgpt"
 }
