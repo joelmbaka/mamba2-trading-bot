@@ -1,8 +1,21 @@
 {
   "version": 1,
-  "command_id": "mamba2-runtime-versions-20260925-1124",
-  "completed_at": "2026-09-25T08:39:09.600665+00:00",
+  "command_id": "mamba2-repo-ops-full-wine-20260925-1126",
+  "completed_at": "2026-09-25T08:40:29.838594+00:00",
   "ok": false,
-  "action": "runtime_versions",
-  "error": "RuntimeError: accepted native environment is missing: /home/joel/Dev/mamba2-trading-bot/.venv-linux-backtest/bin/python"
+  "action": "test_full_wine",
+  "data": {
+    "ok": false,
+    "run": {
+      "command": [
+        "/usr/bin/wine",
+        "C:\\Python310\\python.exe",
+        "-m",
+        "pytest"
+      ],
+      "exit_code": 1,
+      "stdout": "",
+      "stderr": "C:\\Python310\\python.exe: No module named pytest\n"
+    }
+  }
 }
