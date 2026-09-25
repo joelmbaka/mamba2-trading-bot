@@ -39,6 +39,12 @@ fi
 
 echo "Installed control files verified for defect_review_diagnostic_run_pair."
 
+if ! /usr/bin/python3 -m py_compile "$AGENT" "$VALIDATION"; then
+  echo "ERROR: installed local-control Python files do not compile."
+  exit 1
+fi
+echo "Installed control files compile successfully."
+
 if [[ ! -d "$RESULTS/.git" && ! -f "$RESULTS/.git" ]]; then
   rm -rf "$RESULTS"
   git worktree add --detach "$RESULTS" origin/local-control-results
@@ -78,7 +84,7 @@ systemctl --user daemon-reload
 systemctl --user enable chatgpt-mamba2-local-agent.service
 systemctl --user restart chatgpt-mamba2-local-agent.service
 
-sleep 2
+sleep 3
 
 echo
 echo "=== MAMBA2 LOCAL AGENT ==="
@@ -87,6 +93,12 @@ systemctl --user --no-pager --full status chatgpt-mamba2-local-agent.service || 
 echo
 echo "=== RECENT LOGS ==="
 journalctl --user -u chatgpt-mamba2-local-agent.service -n 30 --no-pager || true
+
+if ! systemctl --user is-active --quiet chatgpt-mamba2-local-agent.service; then
+  echo "ERROR: chatgpt-mamba2-local-agent.service is not active after restart."
+  exit 1
+fi
+echo "Service active verification: PASS"
 
 echo
 echo "Installed. Allowed actions:"
