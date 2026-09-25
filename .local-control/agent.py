@@ -25,6 +25,9 @@ VALIDATION_ACTIONS = {
     "test_core",
     "test_full_native",
     "test_full_wine",
+    "first_baseline_run_pair",
+    "first_baseline_export",
+    "first_baseline_cleanup",
 }
 
 
