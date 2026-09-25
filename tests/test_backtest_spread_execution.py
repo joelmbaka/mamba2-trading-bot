@@ -223,3 +223,107 @@ def test_sell_target_requires_ask_low_and_sell_stop_gap_uses_ask_open():
     assert gap_sell.positions_total() == 0
     assert gap_sell.closed_trades[0].exit_reason == "stop_loss"
     assert gap_sell.closed_trades[0].close_price == pytest.approx(1.1009)
+
+
+
+def test_tick_derived_ask_sidecar_overrides_zero_bar_spread():
+    times = pd.date_range(
+        "2025-01-02 10:00",
+        periods=3,
+        freq="min",
+        tz="UTC",
+    )
+    bid = pd.DataFrame(
+        {
+            "time": times,
+            "open": [1.1000, 1.1010, 1.1020],
+            "high": [1.1004, 1.1014, 1.1024],
+            "low": [1.0998, 1.1008, 1.1018],
+            "close": [1.1002, 1.1012, 1.1022],
+            "tick_volume": [10, 10, 10],
+            "spread": [0, 0, 0],
+            "real_volume": [0, 0, 0],
+        }
+    )
+    ask = pd.DataFrame(
+        {
+            "time": times,
+            "open": [1.10012, 1.10115, 1.10218],
+            "high": [1.10052, 1.10158, 1.10259],
+            "low": [1.09992, 1.10095, 1.10198],
+            "close": [1.10032, 1.10137, 1.10241],
+        }
+    )
+    feed = ReplayFeed(bid, ask_m1_bars={"EURUSD": ask})
+    broker = HistoricalBroker(
+        feed,
+        symbol_metadata={
+            "EURUSD": SymbolExecutionMetadata(
+                point_size=POINT,
+                digits=5,
+                contract_size=100_000.0,
+                quote_currency="USD",
+            )
+        },
+    )
+
+    broker.advance()
+    broker.order_send({"symbol": "EURUSD", "type": 0, "volume": 1.0})
+    broker.settle_pending_orders()
+
+    position = broker.position_get_ticket(1)
+    assert position["price_open"] == pytest.approx(1.10115)
+    assert position["price_current"] == pytest.approx(1.1010)
+    assert position["profit"] == pytest.approx(-15.0)
+
+    broker.advance()
+    position = broker.position_get_ticket(1)
+    assert position["price_current"] == pytest.approx(1.1012)
+
+
+def test_tick_derived_ask_range_controls_sell_exit_with_zero_bar_spread():
+    times = pd.date_range(
+        "2025-01-02 10:00",
+        periods=2,
+        freq="min",
+        tz="UTC",
+    )
+    bid = pd.DataFrame(
+        {
+            "time": times,
+            "open": [1.1000, 1.1000],
+            "high": [1.1004, 1.1006],
+            "low": [1.0998, 1.0995],
+            "close": [1.1002, 1.1001],
+            "tick_volume": [10, 10],
+            "spread": [0, 0],
+            "real_volume": [0, 0],
+        }
+    )
+    ask = pd.DataFrame(
+        {
+            "time": times,
+            "open": [1.10012, 1.10018],
+            "high": [1.10055, 1.10085],
+            "low": [1.09992, 1.09970],
+            "close": [1.10032, 1.10030],
+        }
+    )
+    feed = ReplayFeed(bid, ask_m1_bars={"EURUSD": ask})
+    broker = HistoricalBroker(feed)
+
+    broker.advance()
+    broker.order_send(
+        {
+            "symbol": "EURUSD",
+            "type": 1,
+            "volume": 1.0,
+            "sl": 1.1008,
+        }
+    )
+    broker.settle_pending_orders()
+    broker.advance()
+
+    assert broker.positions_total() == 0
+    assert broker.closed_trades[0].exit_reason == "stop_loss"
+    assert broker.closed_trades[0].close_price == pytest.approx(1.1008)

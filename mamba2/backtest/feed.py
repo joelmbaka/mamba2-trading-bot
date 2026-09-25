@@ -16,7 +16,11 @@ from collections.abc import Mapping
 
 import pandas as pd
 
-from .data import REQUIRED_BAR_COLUMNS, canonicalize_bars
+from .data import (
+    REQUIRED_BAR_COLUMNS,
+    canonicalize_bars,
+    canonicalize_price_bars,
+)
 
 
 TIMEFRAME_MINUTES = {"M1": 1, "M5": 5, "M15": 15}
@@ -59,6 +63,7 @@ class ReplayFeed:
         native_timeframe_bars: Mapping[
             str, Mapping[str | int, pd.DataFrame]
         ] | None = None,
+        ask_m1_bars: Mapping[str, pd.DataFrame] | None = None,
     ):
         if isinstance(bars, Mapping):
             self._bars = {
@@ -70,6 +75,20 @@ class ReplayFeed:
 
         if not self._bars or any(frame.empty for frame in self._bars.values()):
             raise ValueError("at least one non-empty symbol history is required")
+
+        self._ask_m1_bars: dict[str, pd.DataFrame] = {}
+        for ask_symbol, frame in (ask_m1_bars or {}).items():
+            if ask_symbol not in self._bars:
+                raise ValueError(
+                    f"Ask M1 history has no Bid M1 source for symbol: {ask_symbol}"
+                )
+            ask = canonicalize_price_bars(frame)
+            if not ask.index.isin(self._bars[ask_symbol].index).all():
+                raise ValueError(
+                    f"Ask M1 history contains timestamps absent from Bid M1: "
+                    f"{ask_symbol}"
+                )
+            self._ask_m1_bars[ask_symbol] = ask
 
         self._native_timeframe_bars: dict[
             str, dict[str, pd.DataFrame]
@@ -137,6 +156,39 @@ class ReplayFeed:
         """Return the latest completed M1 source bar visible to strategy code."""
         visible = self.get_rates(symbol, "M1")
         return None if visible.empty else visible.iloc[-1]
+
+    def current_ask_bar(self, symbol: str) -> pd.Series | None:
+        """Return Ask OHLC matching the latest completed visible M1 bar."""
+        bid = self.current_bar(symbol)
+        if bid is None:
+            return None
+        source = self._ask_m1_bars.get(symbol)
+        if source is None or bid.name not in source.index:
+            return None
+        return source.loc[bid.name]
+
+    def completed_ask_bar(self, symbol: str) -> pd.Series | None:
+        """Return Ask OHLC for the M1 bar completing at current_time."""
+        if self.current_time is None:
+            return None
+        source = self._ask_m1_bars.get(symbol)
+        if source is None:
+            return None
+        opening = self.current_time - pd.Timedelta(minutes=1)
+        return source.loc[opening] if opening in source.index else None
+
+    def execution_ask_bar(self, symbol: str) -> pd.Series | None:
+        """Return Ask OHLC for the M1 execution bar at current_time."""
+        if self.current_time is None:
+            return None
+        source = self._ask_m1_bars.get(symbol)
+        if source is None:
+            return None
+        return (
+            source.loc[self.current_time]
+            if self.current_time in source.index
+            else None
+        )
 
     def completed_bar(self, symbol: str) -> pd.Series | None:
         """Return the M1 bar whose range became known at current_time."""

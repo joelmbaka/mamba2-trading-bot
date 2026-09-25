@@ -1,7 +1,13 @@
 """Deterministic, offline historical replay primitives."""
 
 from .broker import ClosedTrade, HistoricalBroker, SymbolExecutionMetadata
-from .data import REQUIRED_BAR_COLUMNS, HistoricalDataError, canonicalize_bars
+from .data import (
+    PRICE_BAR_COLUMNS,
+    REQUIRED_BAR_COLUMNS,
+    HistoricalDataError,
+    canonicalize_bars,
+    canonicalize_price_bars,
+)
 from .feed import ReplayFeed
 from .mt5_dataset import (
     DatasetIntegrityError,
@@ -19,9 +25,11 @@ __all__ = [
     "BacktestResult",
     "BacktestRunner",
     "HistoricalDataError",
+    "PRICE_BAR_COLUMNS",
     "REQUIRED_BAR_COLUMNS",
     "ReplayFeed",
     "canonicalize_bars",
+    "canonicalize_price_bars",
     "DatasetIntegrityError",
     "LoadedHistoricalDataset",
     "export_mt5_dataset",

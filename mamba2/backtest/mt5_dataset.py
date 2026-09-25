@@ -23,10 +23,17 @@ from typing import Any, Mapping, Sequence
 import pandas as pd
 
 from .broker import SymbolExecutionMetadata
-from .data import REQUIRED_BAR_COLUMNS, HistoricalDataError, canonicalize_bars
+from .data import (
+    PRICE_BAR_COLUMNS,
+    REQUIRED_BAR_COLUMNS,
+    HistoricalDataError,
+    canonicalize_bars,
+    canonicalize_price_bars,
+)
 
 
-DATASET_SCHEMA_VERSION = 1
+DATASET_SCHEMA_VERSION = 2
+SUPPORTED_DATASET_SCHEMA_VERSIONS = {1, 2}
 TIMEFRAME_MINUTES = {"M1": 1, "M5": 5, "M15": 15}
 
 
@@ -40,6 +47,7 @@ class LoadedHistoricalDataset:
 
     m1_bars: Mapping[str, pd.DataFrame]
     native_timeframe_bars: Mapping[str, Mapping[str, pd.DataFrame]]
+    ask_m1_bars: Mapping[str, pd.DataFrame]
     symbol_metadata: Mapping[str, SymbolExecutionMetadata]
     manifest: Mapping[str, Any]
 
@@ -156,6 +164,169 @@ def _normalize_rates(
     return canonical
 
 
+def _normalize_tick_ask_bars(
+    ticks: Any,
+    *,
+    start_utc: pd.Timestamp,
+    end_utc: pd.Timestamp,
+    m1_index: pd.DatetimeIndex,
+) -> tuple[pd.DataFrame, dict[str, int | float | None]]:
+    """Aggregate historical ticks into exact per-minute Ask OHLC."""
+
+    if ticks is None:
+        raise HistoricalDataError("MT5 returned no tick history object")
+
+    frame = pd.DataFrame(ticks)
+    if frame.empty:
+        raise HistoricalDataError("MT5 returned no ticks for Ask reconstruction")
+    if "ask" not in frame.columns:
+        raise HistoricalDataError("MT5 ticks are missing ask")
+
+    if "time_msc" in frame.columns:
+        frame["_time"] = pd.to_datetime(frame["time_msc"], unit="ms", utc=True)
+    elif "time" in frame.columns:
+        frame["_time"] = pd.to_datetime(frame["time"], unit="s", utc=True)
+    else:
+        raise HistoricalDataError("MT5 ticks are missing time/time_msc")
+
+    frame["ask"] = pd.to_numeric(frame["ask"], errors="coerce")
+    if "bid" in frame.columns:
+        frame["bid"] = pd.to_numeric(frame["bid"], errors="coerce")
+
+    frame = frame.loc[
+        (frame["_time"] >= start_utc)
+        & (frame["_time"] < end_utc)
+        & frame["ask"].notna()
+        & (frame["ask"] > 0)
+    ].copy()
+    if frame.empty:
+        raise HistoricalDataError("no valid Ask ticks in requested UTC range")
+
+    frame["_minute"] = frame["_time"].dt.floor("min")
+    grouped = frame.groupby("_minute", sort=True)["ask"]
+    ask = pd.DataFrame(
+        {
+            "open": grouped.first(),
+            "high": grouped.max(),
+            "low": grouped.min(),
+            "close": grouped.last(),
+        }
+    )
+    ask.index.name = "time"
+    ask = ask.loc[ask.index.isin(m1_index)]
+    if ask.empty:
+        raise HistoricalDataError("tick Ask history does not overlap exported M1 bars")
+    ask = canonicalize_price_bars(ask)
+
+    quality: dict[str, int | float | None] = {
+        "valid_ticks": int(len(frame)),
+        "covered_m1_rows": int(len(ask)),
+        "missing_m1_rows": int(len(m1_index.difference(ask.index))),
+        "spread_points_min": None,
+        "spread_points_max": None,
+        "zero_spread_ticks": 0,
+    }
+    if "bid" in frame.columns:
+        spread = frame.loc[
+            frame["bid"].notna() & (frame["bid"] > 0),
+            "ask",
+        ] - frame.loc[
+            frame["bid"].notna() & (frame["bid"] > 0),
+            "bid",
+        ]
+        point = None
+        if not spread.empty:
+            # Raw price spread is recorded here; integer-point quality is
+            # filled by the caller because symbol point size lives in metadata.
+            quality["_spread_price_min"] = float(spread.min())
+            quality["_spread_price_max"] = float(spread.max())
+            quality["_spread_price_zero_count"] = int((spread == 0).sum())
+    return ask, quality
+
+
+def _write_price_csv(frame: pd.DataFrame, path: Path) -> None:
+    output = frame.reset_index()
+    output["time"] = (
+        output["time"].astype("int64") // 1_000_000_000
+    ).astype("int64")
+    output.to_csv(
+        path,
+        index=False,
+        columns=["time", *PRICE_BAR_COLUMNS],
+        float_format="%.12g",
+        lineterminator="\n",
+    )
+
+
+def _fetch_tick_chunks(
+    mt5_module: Any,
+    *,
+    symbol: str,
+    start_utc: pd.Timestamp,
+    end_utc: pd.Timestamp,
+    flags: Any,
+    chunk_minutes: int,
+    warmup_count: int,
+    sync_wait_seconds: float,
+) -> tuple[pd.DataFrame, bool]:
+    """Fetch read-only ticks in bounded chunks with one sync retry if needed."""
+
+    if chunk_minutes < 1:
+        raise ValueError("tick_chunk_minutes must be at least 1")
+
+    chunks: list[pd.DataFrame] = []
+    history_sync_retry = False
+    cursor = start_utc
+    warmed = False
+
+    while cursor < end_utc:
+        chunk_end = min(
+            cursor + pd.Timedelta(minutes=chunk_minutes),
+            end_utc,
+        )
+        ticks = mt5_module.copy_ticks_range(
+            symbol,
+            cursor.to_pydatetime(),
+            chunk_end.to_pydatetime(),
+            flags,
+        )
+        if (ticks is None or len(ticks) == 0) and not warmed:
+            mt5_module.copy_ticks_from(
+                symbol,
+                cursor.to_pydatetime(),
+                warmup_count,
+                flags,
+            )
+            warmed = True
+            history_sync_retry = True
+            if sync_wait_seconds > 0:
+                time.sleep(sync_wait_seconds)
+            ticks = mt5_module.copy_ticks_range(
+                symbol,
+                cursor.to_pydatetime(),
+                chunk_end.to_pydatetime(),
+                flags,
+            )
+
+        if ticks is not None and len(ticks) > 0:
+            chunks.append(pd.DataFrame(ticks))
+
+        cursor = chunk_end
+
+    if not chunks:
+        raise HistoricalDataError("MT5 returned no tick history")
+
+    combined = pd.concat(chunks, ignore_index=True)
+    dedupe_columns = [
+        column
+        for column in ("time_msc", "time", "bid", "ask", "last", "volume", "flags")
+        if column in combined.columns
+    ]
+    if dedupe_columns:
+        combined = combined.drop_duplicates(subset=dedupe_columns, keep="first")
+    return combined, history_sync_retry
+
+
 def _write_csv(frame: pd.DataFrame, path: Path) -> None:
     output = frame.reset_index()
     output["time"] = (output["time"].astype("int64") // 1_000_000_000).astype("int64")
@@ -181,6 +352,8 @@ def export_mt5_dataset(
     exported_at_utc: str | datetime | pd.Timestamp | None = None,
     history_warmup_count: int = 5000,
     history_sync_wait_seconds: float = 2.0,
+    include_tick_ask: bool = False,
+    tick_chunk_minutes: int = 1440,
 ) -> Path:
     """Export completed native MT5 bars without invoking any trading API."""
     start = _utc_timestamp(start_utc)
@@ -193,6 +366,8 @@ def export_mt5_dataset(
         raise ValueError("history_warmup_count must be at least 1")
     if history_sync_wait_seconds < 0:
         raise ValueError("history_sync_wait_seconds cannot be negative")
+    if tick_chunk_minutes < 1:
+        raise ValueError("tick_chunk_minutes must be at least 1")
 
     normalized_timeframes = tuple(dict.fromkeys(timeframes))
     if "M1" not in normalized_timeframes:
@@ -245,6 +420,7 @@ def export_mt5_dataset(
             "files": {},
         }
 
+        exported_frames: dict[str, pd.DataFrame] = {}
         for timeframe in normalized_timeframes:
             mt5_timeframe = _timeframe_value(mt5_module, timeframe)
             rates, history_sync_retry = _fetch_rates_with_history_sync(
@@ -263,6 +439,8 @@ def export_mt5_dataset(
                 end_utc=end,
             )
 
+            exported_frames[timeframe] = frame
+
             filename = f"{symbol}_{timeframe}.csv"
             path = output / filename
             _write_csv(frame, path)
@@ -279,6 +457,67 @@ def export_mt5_dataset(
                 "history_sync_retry": history_sync_retry,
             }
 
+        if include_tick_ask:
+            if not hasattr(mt5_module, "copy_ticks_range"):
+                raise RuntimeError(
+                    "MT5 module does not expose copy_ticks_range required "
+                    "for tick-derived Ask history"
+                )
+            if not hasattr(mt5_module, "copy_ticks_from"):
+                raise RuntimeError(
+                    "MT5 module does not expose copy_ticks_from required "
+                    "for tick-history synchronization"
+                )
+            if not hasattr(mt5_module, "COPY_TICKS_ALL"):
+                raise RuntimeError(
+                    "MT5 module does not expose COPY_TICKS_ALL"
+                )
+
+            ticks, tick_sync_retry = _fetch_tick_chunks(
+                mt5_module,
+                symbol=symbol,
+                start_utc=start,
+                end_utc=end,
+                flags=mt5_module.COPY_TICKS_ALL,
+                chunk_minutes=tick_chunk_minutes,
+                warmup_count=history_warmup_count,
+                sync_wait_seconds=history_sync_wait_seconds,
+            )
+            ask_frame, tick_quality = _normalize_tick_ask_bars(
+                ticks,
+                start_utc=start,
+                end_utc=end,
+                m1_index=exported_frames["M1"].index,
+            )
+
+            point = float(info.point)
+            spread_min_price = tick_quality.pop("_spread_price_min", None)
+            spread_max_price = tick_quality.pop("_spread_price_max", None)
+            zero_count = tick_quality.pop("_spread_price_zero_count", 0)
+            if spread_min_price is not None and point > 0:
+                tick_quality["spread_points_min"] = int(
+                    round(float(spread_min_price) / point)
+                )
+                tick_quality["spread_points_max"] = int(
+                    round(float(spread_max_price) / point)
+                )
+                tick_quality["zero_spread_ticks"] = int(zero_count)
+
+            ask_filename = f"{symbol}_M1_ask.csv"
+            ask_path = output / ask_filename
+            _write_price_csv(ask_frame, ask_path)
+            symbol_entry["ask_m1"] = {
+                "path": ask_filename,
+                "sha256": _sha256(ask_path),
+                "rows": int(len(ask_frame)),
+                "first_bar_open_utc": _iso_utc(ask_frame.index[0]),
+                "last_bar_open_utc": _iso_utc(ask_frame.index[-1]),
+                "source": "copy_ticks_range",
+                "flags": "COPY_TICKS_ALL",
+                "history_sync_retry": tick_sync_retry,
+                **tick_quality,
+            }
+
         manifest["symbols"][symbol] = symbol_entry
 
     manifest_path = output / "manifest.json"
@@ -293,7 +532,7 @@ def load_mt5_dataset(manifest_path: str | Path) -> LoadedHistoricalDataset:
     """Load a dataset only after checksum, schema, and row metadata validation."""
     manifest_file = Path(manifest_path)
     manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
-    if manifest.get("schema_version") != DATASET_SCHEMA_VERSION:
+    if manifest.get("schema_version") not in SUPPORTED_DATASET_SCHEMA_VERSIONS:
         raise DatasetIntegrityError("unsupported dataset schema version")
     if manifest.get("source") != "MetaTrader5":
         raise DatasetIntegrityError("unsupported dataset source")
@@ -303,6 +542,7 @@ def load_mt5_dataset(manifest_path: str | Path) -> LoadedHistoricalDataset:
     root = manifest_file.parent
     m1_bars: dict[str, pd.DataFrame] = {}
     native: dict[str, dict[str, pd.DataFrame]] = {}
+    ask_m1: dict[str, pd.DataFrame] = {}
     metadata: dict[str, SymbolExecutionMetadata] = {}
 
     for symbol, symbol_entry in manifest.get("symbols", {}).items():
@@ -355,12 +595,58 @@ def load_mt5_dataset(manifest_path: str | Path) -> LoadedHistoricalDataset:
         if native_symbol:
             native[symbol] = native_symbol
 
+        ask_entry = symbol_entry.get("ask_m1")
+        if ask_entry is not None:
+            ask_path = root / ask_entry["path"]
+            if not ask_path.is_file():
+                raise DatasetIntegrityError(
+                    f"missing dataset file: {ask_path.name}"
+                )
+            if _sha256(ask_path) != ask_entry["sha256"]:
+                raise DatasetIntegrityError(
+                    f"checksum mismatch: {ask_path.name}"
+                )
+            ask_frame = pd.read_csv(ask_path)
+            if "time" not in ask_frame.columns:
+                raise DatasetIntegrityError(
+                    f"missing time column: {ask_path.name}"
+                )
+            ask_frame["time"] = pd.to_datetime(
+                ask_frame["time"],
+                unit="s",
+                utc=True,
+            )
+            try:
+                canonical_ask = canonicalize_price_bars(ask_frame)
+            except HistoricalDataError as exc:
+                raise DatasetIntegrityError(str(exc)) from exc
+            if len(canonical_ask) != int(ask_entry["rows"]):
+                raise DatasetIntegrityError(
+                    f"row-count mismatch: {ask_path.name}"
+                )
+            if _iso_utc(canonical_ask.index[0]) != ask_entry["first_bar_open_utc"]:
+                raise DatasetIntegrityError(
+                    f"first timestamp mismatch: {ask_path.name}"
+                )
+            if _iso_utc(canonical_ask.index[-1]) != ask_entry["last_bar_open_utc"]:
+                raise DatasetIntegrityError(
+                    f"last timestamp mismatch: {ask_path.name}"
+                )
+            if symbol in m1_bars and not canonical_ask.index.isin(
+                m1_bars[symbol].index
+            ).all():
+                raise DatasetIntegrityError(
+                    f"Ask M1 timestamps are not a subset of Bid M1: {symbol}"
+                )
+            ask_m1[symbol] = canonical_ask
+
     if not m1_bars:
         raise DatasetIntegrityError("dataset contains no M1 histories")
 
     return LoadedHistoricalDataset(
         m1_bars=m1_bars,
         native_timeframe_bars=native,
+        ask_m1_bars=ask_m1,
         symbol_metadata=metadata,
         manifest=manifest,
     )
@@ -424,6 +710,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output-dir", default="backtest_data/mt5")
     parser.add_argument("--history-warmup-count", type=int, default=5000)
     parser.add_argument("--history-sync-wait-seconds", type=float, default=2.0)
+    parser.add_argument(
+        "--include-tick-ask",
+        action="store_true",
+        help="Export tick-derived M1 Ask OHLC for spread-accurate replay.",
+    )
+    parser.add_argument("--tick-chunk-minutes", type=int, default=1440)
     args = parser.parse_args(argv)
 
     from config import mt5 as mt5_config
@@ -449,6 +741,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             output_dir=args.output_dir,
             history_warmup_count=args.history_warmup_count,
             history_sync_wait_seconds=args.history_sync_wait_seconds,
+            include_tick_ask=args.include_tick_ask,
+            tick_chunk_minutes=args.tick_chunk_minutes,
         )
         print(manifest)
     finally:

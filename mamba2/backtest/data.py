@@ -8,11 +8,10 @@ import numpy as np
 import pandas as pd
 
 
+PRICE_BAR_COLUMNS = ("open", "high", "low", "close")
+
 REQUIRED_BAR_COLUMNS = (
-    "open",
-    "high",
-    "low",
-    "close",
+    *PRICE_BAR_COLUMNS,
     "tick_volume",
     "spread",
     "real_volume",
@@ -69,6 +68,51 @@ def canonicalize_bars(
         raise HistoricalDataError("OHLC values violate high/low bounds")
     if (result[["tick_volume", "spread", "real_volume"]] < 0).any().any():
         raise HistoricalDataError("volume and spread values cannot be negative")
+
+    result.index = pd.DatetimeIndex(timestamps, name="time")
+    return result
+
+
+
+def canonicalize_price_bars(
+    bars: pd.DataFrame | Iterable[Mapping],
+    *,
+    timestamp_column: str = "time",
+) -> pd.DataFrame:
+    """Validate a price-only OHLC series indexed by UTC bar-open time."""
+
+    frame = bars.copy() if isinstance(bars, pd.DataFrame) else pd.DataFrame(list(bars))
+    if timestamp_column in frame.columns:
+        timestamps = pd.to_datetime(frame.pop(timestamp_column), utc=True, errors="coerce")
+    elif isinstance(frame.index, pd.DatetimeIndex):
+        timestamps = pd.to_datetime(frame.index, utc=True, errors="coerce")
+    else:
+        raise HistoricalDataError(f"missing timestamp column: {timestamp_column}")
+
+    missing = [column for column in PRICE_BAR_COLUMNS if column not in frame.columns]
+    if missing:
+        raise HistoricalDataError(f"missing required price columns: {missing}")
+    if timestamps.isna().any():
+        raise HistoricalDataError("timestamps must be valid")
+    if timestamps.duplicated().any():
+        raise HistoricalDataError("duplicate timestamps are not allowed")
+    if not timestamps.is_monotonic_increasing:
+        raise HistoricalDataError("timestamps must be strictly chronological")
+
+    result = frame.loc[:, PRICE_BAR_COLUMNS].copy()
+    for column in PRICE_BAR_COLUMNS:
+        result[column] = pd.to_numeric(result[column], errors="coerce")
+    if result.loc[:, PRICE_BAR_COLUMNS].isna().any().any():
+        raise HistoricalDataError("price values must be numeric and non-null")
+
+    prices = result.loc[:, PRICE_BAR_COLUMNS].to_numpy(dtype=float)
+    if not np.isfinite(prices).all():
+        raise HistoricalDataError("OHLC values must be finite")
+    if ((result["high"] < result[["open", "close"]].max(axis=1)).any() or
+            (result["low"] > result[["open", "close"]].min(axis=1)).any()):
+        raise HistoricalDataError("OHLC values violate high/low bounds")
+    if (result.loc[:, PRICE_BAR_COLUMNS] <= 0).any().any():
+        raise HistoricalDataError("price values must be positive")
 
     result.index = pd.DatetimeIndex(timestamps, name="time")
     return result

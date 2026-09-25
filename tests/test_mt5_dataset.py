@@ -17,6 +17,7 @@ class FakeMT5:
     TIMEFRAME_M1 = 1
     TIMEFRAME_M5 = 5
     TIMEFRAME_M15 = 15
+    COPY_TICKS_ALL = 0
 
     def __init__(self):
         self._bars = {
@@ -24,6 +25,7 @@ class FakeMT5:
             5: self._make_bars("2025-01-02 10:00", 4, "5min", 1.2000),
             15: self._make_bars("2025-01-02 10:00", 2, "15min", 1.3000),
         }
+        self._ticks = self._make_ticks()
 
     @staticmethod
     def _make_bars(start, count, freq, base):
@@ -43,6 +45,31 @@ class FakeMT5:
                     "real_volume": 0,
                 }
             )
+        return rows
+
+    def _make_ticks(self):
+        rows = []
+        for minute in range(15):
+            base = pd.Timestamp("2025-01-02 10:00", tz="UTC") + pd.Timedelta(
+                minutes=minute
+            )
+            bid_open = 1.1000 + minute * 0.001
+            for offset_ms, bid, ask in (
+                (100, bid_open, bid_open + 0.00012),
+                (59000, bid_open + 0.0002, bid_open + 0.00035),
+            ):
+                timestamp = base + pd.Timedelta(milliseconds=offset_ms)
+                rows.append(
+                    {
+                        "time": int(timestamp.timestamp()),
+                        "time_msc": int(timestamp.timestamp() * 1000),
+                        "bid": bid,
+                        "ask": ask,
+                        "last": 0.0,
+                        "volume": 0,
+                        "flags": 0,
+                    }
+                )
         return rows
 
     def account_info(self):
@@ -71,6 +98,20 @@ class FakeMT5:
         assert date_from.tzinfo is not None
         assert date_to.tzinfo is not None
         return self._bars[timeframe]
+
+    def copy_ticks_range(self, symbol, date_from, date_to, flags):
+        assert symbol == "EURUSD"
+        assert flags == self.COPY_TICKS_ALL
+        return [
+            row
+            for row in self._ticks
+            if date_from.timestamp() <= row["time_msc"] / 1000 <= date_to.timestamp()
+        ]
+
+    def copy_ticks_from(self, symbol, date_from, count, flags):
+        assert symbol == "EURUSD"
+        assert flags == self.COPY_TICKS_ALL
+        return self._ticks[:count]
 
 
 def export_fixture(tmp_path):
@@ -243,3 +284,57 @@ def test_exporter_skips_history_warmup_when_range_is_already_available(tmp_path)
         entry["history_sync_retry"] is False
         for entry in manifest["symbols"]["EURUSD"]["files"].values()
     )
+
+
+
+def test_tick_ask_export_roundtrip_provides_real_ask_m1_sidecar(tmp_path):
+    manifest_path = export_mt5_dataset(
+        FakeMT5(),
+        symbols=["EURUSD"],
+        timeframes=["M1", "M5", "M15"],
+        start_utc="2025-01-02T10:00:00Z",
+        end_utc="2025-01-02T10:15:00Z",
+        output_dir=tmp_path,
+        exported_at_utc="2025-01-03T00:00:00Z",
+        history_sync_wait_seconds=0,
+        include_tick_ask=True,
+        tick_chunk_minutes=5,
+    )
+    dataset = load_mt5_dataset(manifest_path)
+
+    assert dataset.manifest["schema_version"] == 2
+    ask = dataset.ask_m1_bars["EURUSD"]
+    assert len(ask) == 15
+    assert ask.iloc[0]["open"] == pytest.approx(1.10012)
+    assert ask.iloc[0]["close"] == pytest.approx(1.10035)
+
+    entry = dataset.manifest["symbols"]["EURUSD"]["ask_m1"]
+    assert entry["rows"] == 15
+    assert entry["covered_m1_rows"] == 15
+    assert entry["missing_m1_rows"] == 0
+    assert entry["spread_points_min"] == 12
+    assert entry["spread_points_max"] == 15
+    assert entry["zero_spread_ticks"] == 0
+    assert len(entry["sha256"]) == 64
+
+
+def test_loader_rejects_tampered_tick_ask_sidecar(tmp_path):
+    manifest_path = export_mt5_dataset(
+        FakeMT5(),
+        symbols=["EURUSD"],
+        timeframes=["M1"],
+        start_utc="2025-01-02T10:00:00Z",
+        end_utc="2025-01-02T10:15:00Z",
+        output_dir=tmp_path,
+        exported_at_utc="2025-01-03T00:00:00Z",
+        history_sync_wait_seconds=0,
+        include_tick_ask=True,
+    )
+    ask_path = tmp_path / "EURUSD_M1_ask.csv"
+    ask_path.write_text(
+        ask_path.read_text(encoding="utf-8") + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(DatasetIntegrityError, match="checksum mismatch"):
+        load_mt5_dataset(manifest_path)

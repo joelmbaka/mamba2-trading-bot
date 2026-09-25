@@ -47,8 +47,9 @@ class HistoricalBroker:
     P/L remains ``price_delta * direction * lots * contract_size`` for
     USD-quoted symbols.
 
-    The bar spread is applied uniformly to that bar's Bid OHLC to synthesize
-    Ask OHLC. Commission and slippage are intentionally not modeled here.
+    When tick-derived Ask M1 OHLC is available it is preferred. Otherwise the
+    bar spread is applied uniformly to Bid OHLC as a deterministic fallback.
+    Commission and slippage are intentionally not modeled here.
 
     If a candle touches both SL and TP, the stop is assumed to have occurred
     first. An adverse gap fills at the next-bar open; a target gap is capped at
@@ -103,7 +104,8 @@ class HistoricalBroker:
         if bar is None:
             return None
         bid = self._bid_price(bar, "close")
-        ask = self._ask_price(symbol, bar, "close")
+        ask_bar = self.feed.current_ask_bar(symbol)
+        ask = self._ask_price(symbol, bar, "close", ask_bar=ask_bar)
         return {"bid": bid, "ask": ask, "last": bid}
 
     def get_rates(self, symbol: str, timeframe: str | int):
@@ -199,7 +201,12 @@ class HistoricalBroker:
             bar = self.feed.current_bar(position["symbol"])
             if bar is None:
                 return False
-            price = self._closing_price(position, bar, "close")
+            price = self._closing_price(
+                position,
+                bar,
+                "close",
+                ask_bar=self.feed.current_ask_bar(position["symbol"]),
+            )
         self._close_position(position, float(price), reason)
         return True
 
@@ -224,7 +231,12 @@ class HistoricalBroker:
             symbol = request["symbol"]
             side = request.get("type", 0)
             bid_open = self._bid_price(bar, "open")
-            ask_open = self._ask_price(symbol, bar, "open")
+            ask_open = self._ask_price(
+                symbol,
+                bar,
+                "open",
+                ask_bar=self.feed.execution_ask_bar(symbol),
+            )
             fill_price = ask_open if side == 0 else bid_open
             current_price = bid_open if side == 0 else ask_open
             position = {
@@ -250,7 +262,12 @@ class HistoricalBroker:
             bar = self.feed.completed_bar(position["symbol"])
             if bar is None:
                 continue
-            current = self._closing_price(position, bar, "close")
+            current = self._closing_price(
+                position,
+                bar,
+                "close",
+                ask_bar=self.feed.completed_ask_bar(position["symbol"]),
+            )
             position["price_current"] = current
             position["profit"] = self._calculate_pl(position, current)
 
@@ -259,13 +276,25 @@ class HistoricalBroker:
             bar = self.feed.completed_bar(position["symbol"])
             if bar is None:
                 continue
-            reason = self._exit_reason(position, bar)
+            ask_bar = self.feed.completed_ask_bar(position["symbol"])
+            reason = self._exit_reason(position, bar, ask_bar=ask_bar)
             if reason is None:
                 continue
-            price = self._exit_price(position, bar, reason)
+            price = self._exit_price(
+                position,
+                bar,
+                reason,
+                ask_bar=ask_bar,
+            )
             self._close_position(position, price, reason)
 
-    def _exit_reason(self, position: dict[str, Any], bar) -> str | None:
+    def _exit_reason(
+        self,
+        position: dict[str, Any],
+        bar,
+        *,
+        ask_bar=None,
+    ) -> str | None:
         symbol = position["symbol"]
         sl, tp = position["sl"], position["tp"]
         if position["type"] == 0:
@@ -274,8 +303,8 @@ class HistoricalBroker:
             stop_hit = sl > 0 and low <= sl
             target_hit = tp > 0 and high >= tp
         else:
-            low = self._ask_price(symbol, bar, "low")
-            high = self._ask_price(symbol, bar, "high")
+            low = self._ask_price(symbol, bar, "low", ask_bar=ask_bar)
+            high = self._ask_price(symbol, bar, "high", ask_bar=ask_bar)
             stop_hit = sl > 0 and high >= sl
             target_hit = tp > 0 and low <= tp
         if stop_hit:
@@ -284,8 +313,20 @@ class HistoricalBroker:
             return "take_profit"
         return None
 
-    def _exit_price(self, position: dict[str, Any], bar, reason: str) -> float:
-        opening = self._closing_price(position, bar, "open")
+    def _exit_price(
+        self,
+        position: dict[str, Any],
+        bar,
+        reason: str,
+        *,
+        ask_bar=None,
+    ) -> float:
+        opening = self._closing_price(
+            position,
+            bar,
+            "open",
+            ask_bar=ask_bar,
+        )
         level = position["sl"] if reason == "stop_loss" else position["tp"]
         if position["type"] == 0:
             adverse_gap = reason == "stop_loss" and opening <= level
@@ -325,8 +366,17 @@ class HistoricalBroker:
     def _bid_price(bar, field: str) -> float:
         return float(bar[field])
 
-    def _ask_price(self, symbol: str, bar, field: str) -> float:
+    def _ask_price(
+        self,
+        symbol: str,
+        bar,
+        field: str,
+        *,
+        ask_bar=None,
+    ) -> float:
         metadata = self._metadata[symbol]
+        if ask_bar is not None:
+            return round(float(ask_bar[field]), metadata.digits)
         spread = float(bar["spread"]) * metadata.point_size
         return round(float(bar[field]) + spread, metadata.digits)
 
@@ -335,10 +385,17 @@ class HistoricalBroker:
         position: dict[str, Any],
         bar,
         field: str,
+        *,
+        ask_bar=None,
     ) -> float:
         if position["type"] == 0:
             return self._bid_price(bar, field)
-        return self._ask_price(position["symbol"], bar, field)
+        return self._ask_price(
+            position["symbol"],
+            bar,
+            field,
+            ask_bar=ask_bar,
+        )
 
     def _calculate_pl(self, position: dict[str, Any], price: float) -> float:
         metadata = self._metadata[position["symbol"]]
