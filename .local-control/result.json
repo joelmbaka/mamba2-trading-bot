@@ -1,27 +1,15 @@
 {
   "version": 1,
-  "command_id": "mamba2-m019-switch-20260925-1603",
-  "completed_at": "2026-09-25T12:47:29.586249+00:00",
+  "command_id": "mamba2-m019-sync-setup-20260925-1618",
+  "completed_at": "2026-09-25T12:50:11.361824+00:00",
   "ok": true,
-  "action": "switch_branch",
+  "action": "sync",
   "data": {
-    "target_branch": "backtest-broader-history",
-    "before_branch": "backtest-broader-history",
-    "after_branch": "backtest-broader-history",
+    "branch": "backtest-broader-history",
     "before_sha": "94c031a852751973e3f7541cfbb7ebf636844223",
-    "after_sha": "94c031a852751973e3f7541cfbb7ebf636844223",
+    "after_sha": "9402676258cd445d613feeb65589bd513eb04e7b",
     "reason": null,
     "commands": [
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "backtest-broader-history\n",
-        "stderr": ""
-      },
       {
         "command": [
           "git",
@@ -30,28 +18,6 @@
         ],
         "exit_code": 0,
         "stdout": "94c031a852751973e3f7541cfbb7ebf636844223\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "check-ref-format",
-          "--branch",
-          "backtest-broader-history"
-        ],
-        "exit_code": 0,
-        "stdout": "backtest-broader-history\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
         "stderr": ""
       },
       {
@@ -62,28 +28,7 @@
         ],
         "exit_code": 0,
         "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "--verify",
-          "refs/remotes/origin/backtest-broader-history"
-        ],
-        "exit_code": 0,
-        "stdout": "94c031a852751973e3f7541cfbb7ebf636844223\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "94c031a852751973e3f7541cfbb7ebf636844223\n",
-        "stderr": ""
+        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n   94c031a..9402676  backtest-broader-history -> origin/backtest-broader-history\n"
       },
       {
         "command": [
@@ -114,7 +59,7 @@
           "refs/remotes/origin/backtest-broader-history"
         ],
         "exit_code": 0,
-        "stdout": "94c031a852751973e3f7541cfbb7ebf636844223\n",
+        "stdout": "9402676258cd445d613feeb65589bd513eb04e7b\n",
         "stderr": ""
       },
       {
@@ -126,7 +71,40 @@
           "HEAD...refs/remotes/origin/backtest-broader-history"
         ],
         "exit_code": 0,
-        "stdout": "0\t0\n",
+        "stdout": "0\t2\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "pull",
+          "--ff-only",
+          "origin",
+          "backtest-broader-history"
+        ],
+        "exit_code": 0,
+        "stdout": "Updating 94c031a..9402676\nFast-forward\n docs/NEXT_TASK.md                                 |  18 ++-\n docs/milestones/019-broader-history-validation.md | 134 ++++++++++++++++++++++\n 2 files changed, 146 insertions(+), 6 deletions(-)\n create mode 100644 docs/milestones/019-broader-history-validation.md\n",
+        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * branch            backtest-broader-history -> FETCH_HEAD\n"
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "9402676258cd445d613feeb65589bd513eb04e7b\n",
         "stderr": ""
       }
     ]
