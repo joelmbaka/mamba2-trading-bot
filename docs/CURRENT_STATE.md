@@ -4,41 +4,77 @@ Last updated: 2026-09-25
 
 ## Latest accepted implementation milestone
 
-**017 — Baseline diagnosis**
+**018 — Proven-defect review and correction**
 
 Accepted implementation SHA:
 
-`e653ba87df2ff1e8afbad5704f9a8d81428d7b27`
+`fb03bc197d60d5d7b5b218a86288811f72ec4f60`
 
-Validation:
+Base M017 closeout SHA:
 
-- full native suite: **173 passed, 2 skipped**
-- full Wine suite: **173 passed, 2 skipped**
+`8a8886acad74e9dcff0ee2d2d2ee596eee95f7f0`
+
+## M018 validation
+
+Implementation validation:
+
+- full native suite: **175 passed, 2 skipped**
+- full Wine suite: **175 passed, 2 skipped**
 - Wine Python: **3.10.11 AMD64**
 - Wine NumPy: **2.2.1**
 - Wine MetaTrader5: **5.0.6180**
 - Wine pytest: **9.1.1**
-- M017 diagnostic pair: PASS
-- repository checks: required at closeout
+- pre-accept repository checks: PASS
 
-Diagnostic determinism:
+Corrected real-data acceptance command:
 
-- diagnostic A and B: byte-for-byte identical
-- diagnostic SHA-256:
-  `edf01f4a1f936d386e618faa65fb9a7afb65fff6ae7ae9b4373c35692ced987a`
+`mamba2-m018-corrected-diagnostic-pair-20260925-1520`
 
-Non-interference:
+Corrected baseline A/B:
 
-- accepted M016 report SHA-256 remained:
-  `d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`
-- both M017 diagnostic replays regenerated exactly that baseline report
-- accepted orders / closed trades: **1,393 / 1,393**
-- remaining positions: **0**
-- ending realized balance/equity: **USD 9,731.45700985454**
-- net realized P/L: **USD -268.54299014546086**
-- no new strategy-reporting artifacts
+- byte-for-byte identical
+- SHA-256:
+  `e33a5400f70494356d12faebbb1e2588bd2075769da5539e9c6584dc88cedcca`
 
-## Accepted baseline window
+Corrected diagnostic A/B:
+
+- byte-for-byte identical
+- SHA-256:
+  `1497db0918bac89c8d10224745db4a522492ac577e845bfc1731450c39e3dda7`
+
+Semantic gates:
+
+- wrong-side initial TP violations: **0**
+- negative-P/L take-profit exits: **0**
+- remaining open positions: **0**
+- new strategy-reporting artifacts: **0**
+
+## Proven defect and accepted semantic correction
+
+M017 exposed three negative-P/L take-profit exits. M018 reconstructed all three
+and proved that large spreads could cause an initial ATR take-profit target to
+land on the loss side of the actual fill.
+
+The defect came from deriving initial TP only from `price_current`.
+
+Accepted correction:
+
+- initial SL remains current-price-based;
+- ordinary initial TP remains current-price-based;
+- BUY TP is re-anchored to `price_open + 2 × ATR` only if the ordinary TP
+  would be at or below the BUY fill;
+- SELL TP is re-anchored to `price_open - 2 × ATR` only if the ordinary TP
+  would be at or above the SELL fill;
+- trailing semantics are unchanged;
+- ATR settings are unchanged;
+- strategy parameters are unchanged.
+
+This correction applies to the shared production/historical position-management
+path, but M018 performed no real MT5 order action.
+
+See `docs/milestones/018-proven-defect-review.md` for the complete record.
+
+## Corrected accepted baseline window
 
 Historical window:
 
@@ -70,122 +106,42 @@ Cost label:
 Actual commission, slippage, and swap remain unproven/unmodeled and must not be
 invented.
 
-## M017 accepted diagnosis
+Corrected aggregate:
 
-The accepted 24-day baseline result is not explained by one uniform low hit
-rate.
+- accepted orders / closed trades: **1,389 / 1,389**
+- wins / losses / flats: **580 / 808 / 1**
+- non-flat win rate: **41.78674351585015%**
+- ending realized balance/equity: **USD 9,785.824347114009**
+- net realized P/L: **USD -214.17565288599144**
+- maximum equity drawdown:
+  **USD 400.156643608565 / 3.9953123082355586%**
 
-### Symbol
+Accepted M016 comparison reference:
 
-- EURUSD: 271 trades, 123 wins / 148 losses, USD +14.79285714287349
-- EURJPY: 283 trades, 126 wins / 157 losses, USD +9.06763705593736
-- GBPUSD: 265 trades, 111 wins / 153 losses / 1 flat, USD +1.2928571428561284
-- GBPJPY: 283 trades, 105 wins / 178 losses, USD -133.3473684763957
-- USDJPY: 291 trades, 114 wins / 177 losses, USD -160.34897301071814
+- report SHA-256:
+  `d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`
+- net realized P/L: **USD -268.54299014546086**
 
-### Side
+M018 changed net P/L by **+USD 54.36733725946942** as an observed consequence
+of correcting invalid initial targets. This is not treated as strategy
+optimization or evidence of future profitability.
 
-BUY and SELL non-flat win rates are almost identical:
+## Remaining descriptive evidence
 
-- BUY: 41.72%, USD -330.9923055212326
-- SELL: 41.48%, USD +62.44931537578547
+Extreme historical spread tails were verified against the exported Bid/Ask
+data and adjacent minutes. M018 found no evidence that replay invented them, so
+no spread filter was added.
 
-Therefore the side difference is a payoff/path issue in this window, not merely
-a hit-rate difference.
+After correction, side payoff asymmetry remains:
 
-### UTC entry buckets
+- BUY: 673 trades, USD -307.2632966290044
+- SELL: 716 trades, USD +93.08764374302802
 
-Materially negative buckets:
+UTC performance also remains uneven, including negative 00:00–03:59 and
+12:00–15:59 buckets.
 
-- 00:00–03:59 UTC: USD -169.2694062737969
-- 12:00–15:59 UTC: USD -133.82873588314456
-
-Positive bucket:
-
-- 16:00–19:59 UTC: USD +73.59878495540866
-
-Do not convert these observations directly into time filters: symbol mix,
-spread, and volatility are confounded.
-
-### Exit/protection
-
-- stop-loss exits: 1,339
-  - 528 profitable
-  - 810 losing
-  - 1 flat
-- take-profit exits: 54
-  - 51 profitable
-  - 3 losing
-
-All 1,393 trades received initial protection.
-
-- trades with successful trailing: 619
-- successful trailing modifications: 1,093
-- modifications associated with eventual wins: 1,019
-- modifications associated with eventual losses: 73
-- modifications associated with flat: 1
-
-The 3 negative-P/L take-profit exits are an M018 investigation target, not yet
-a proven defect.
-
-### Spread
-
-Entry spread:
-
-- wins: mean 3.538860103626943 points, median 2
-- losses: mean 7.174661746617466 points, median 2
-
-The difference is concentrated in the tails.
-
-Observed entry-spread maxima:
-
-- EURJPY 300 points
-- GBPJPY 229
-- USDJPY 113
-- GBPUSD 56
-- EURUSD 18
-
-Extreme spread cases must be inspected before any spread filter is considered.
-
-### Conversion
-
-Realized exits used:
-
-- JPY→USD through direct USDJPY: 857 trades, USD -284.6287044311765
-- USD→USD, no conversion: 536 trades, USD +16.085714285729626
-
-No realized exit required the M016 two-leg sparse-conversion fallback.
-Therefore the realized negative JPY result is not attributable to that fallback
-itself.
-
-### Loss clustering
-
-- distinct loss streaks: 287
-- maximum consecutive losses: 17
-- maximum streak:
-  `2026-09-18T22:10:00Z` to `2026-09-21T04:14:00Z`
-- streak P/L: USD -83.84457684161302
-
-The interval spans a weekend boundary and is not continuous market exposure.
-
-### Drawdowns
-
-Deepest:
-
-- peak: USD 10,015.653664513784 at `2026-09-01T03:24:00Z`
-- trough: USD 9,615.497020905219 at `2026-09-04T16:43:00Z`
-- drawdown: USD 400.156643608565 / 3.9953123082355586%
-- recovered: `2026-09-10T19:35:00Z`
-
-Later sustained episode:
-
-- peak: USD 10,039.652256508334 at `2026-09-10T20:02:00Z`
-- trough: USD 9,727.210391770168 at `2026-09-24T20:18:00Z`
-- drawdown: USD 312.44186473816626 / 3.112078553673229%
-- not recovered by end of data
-
-See `docs/milestones/017-baseline-diagnosis.md` for the complete accepted
-record.
+These remain hypotheses for broader-history validation and later controlled
+experiments. They are not additional proven implementation defects.
 
 ## Durable handoff
 
@@ -209,9 +165,9 @@ Installed workstation service:
 
 `chatgpt-mamba2-local-agent.service`
 
-Validated actions include repository checks, runtime discovery, native/Wine
-tests, read-only baseline export, baseline cleanup, paired baseline execution,
-and paired M017 diagnostic execution.
+Allowed workflows include repository checks, native/Wine validation, read-only
+historical export, paired baseline execution, paired diagnostic execution, and
+the fixed M018 corrected diagnostic acceptance pair.
 
 No arbitrary shell action is exposed.
 
@@ -234,9 +190,9 @@ No arbitrary shell action is exposed.
 
 ## Next milestone
 
-**018 — Proven-defect review and corrections**
+**019 — Broader-history validation**
 
-Start from the accepted M017 trade-level evidence.
+Expand the corrected deterministic replay to several months and multiple market
+regimes before any strategy/filter optimization.
 
-Investigate documented anomalies first. Change replay/implementation behavior
-only when a defect is proven. Do not optimize strategy parameters during M018.
+M019 must preserve M018 execution semantics and current strategy parameters.
