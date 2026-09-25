@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import json
 import os
 import shutil
 import subprocess
@@ -7,7 +6,6 @@ from pathlib import Path
 
 REPO = Path(os.environ["LOCAL_PROJECT_DIR"]).resolve()
 WINEPREFIX = Path.home() / ".mamba2-mt5"
-NATIVE_PYTHON = REPO / ".venv-linux-backtest" / "bin" / "python"
 WINE_PYTHON = r"C:\Python310\python.exe"
 
 CORE_TESTS = [
@@ -61,11 +59,17 @@ def _run(cmd, *, env=None):
     }
 
 
-def _require_native_python():
-    if not NATIVE_PYTHON.is_file():
-        raise RuntimeError(
-            f"accepted native environment is missing: {NATIVE_PYTHON}"
-        )
+def _uv():
+    value = shutil.which("uv") or str(Path.home() / ".local/bin/uv")
+    if not Path(value).is_file():
+        raise RuntimeError("uv is not available")
+    return value
+
+
+def _native_command(*args):
+    # Use the repository lock + .python-version rather than assuming a
+    # workstation-specific virtualenv path exists.
+    return [_uv(), "run", "--locked", "python", *args]
 
 
 def _wine():
@@ -85,10 +89,7 @@ def repo_checks():
     ):
         commands.append(_run(cmd))
 
-    uv = shutil.which("uv") or str(Path.home() / ".local/bin/uv")
-    if not Path(uv).is_file():
-        raise RuntimeError("uv is not available")
-    commands.append(_run([uv, "lock", "--check"]))
+    commands.append(_run([_uv(), "lock", "--check"]))
 
     bot_cache = _run(["git", "ls-files", "--error-unmatch", "bot_cache.json"])
     icon_tracked = _run(["git", "ls-files", "--error-unmatch", "icon.png"])
@@ -129,30 +130,34 @@ def repo_checks():
 
 
 def runtime_versions():
-    _require_native_python()
     wine = _wine()
 
-    native = _run([
-        str(NATIVE_PYTHON),
-        "-c",
-        (
-            "import json,platform,numpy;"
-            "print(json.dumps({'python':platform.python_version(),"
-            "'machine':platform.machine(),'numpy':numpy.__version__}))"
+    native = _run(
+        _native_command(
+            "-c",
+            (
+                "import json,platform,numpy;"
+                "print(json.dumps({'python':platform.python_version(),"
+                "'machine':platform.machine(),'numpy':numpy.__version__}))"
+            ),
         ),
-    ], env=_safe_env())
+        env=_safe_env(),
+    )
 
-    wine_result = _run([
-        wine,
-        WINE_PYTHON,
-        "-c",
-        (
-            "import json,platform,numpy,MetaTrader5 as mt5;"
-            "print(json.dumps({'python':platform.python_version(),"
-            "'machine':platform.machine(),'numpy':numpy.__version__,"
-            "'metatrader5':mt5.__version__}))"
-        ),
-    ], env=_safe_env(wine=True))
+    wine_result = _run(
+        [
+            wine,
+            WINE_PYTHON,
+            "-c",
+            (
+                "import json,platform,numpy,MetaTrader5 as mt5;"
+                "print(json.dumps({'python':platform.python_version(),"
+                "'machine':platform.machine(),'numpy':numpy.__version__,"
+                "'metatrader5':mt5.__version__}))"
+            ),
+        ],
+        env=_safe_env(wine=True),
+    )
 
     return {
         "ok": native["exit_code"] == 0 and wine_result["exit_code"] == 0,
@@ -162,11 +167,10 @@ def runtime_versions():
 
 
 def _pytest_native(paths=None):
-    _require_native_python()
-    cmd = [str(NATIVE_PYTHON), "-m", "pytest"]
+    args = ["-m", "pytest"]
     if paths:
-        cmd.extend(paths)
-    return _run(cmd, env=_safe_env())
+        args.extend(paths)
+    return _run(_native_command(*args), env=_safe_env())
 
 
 def _pytest_wine():
