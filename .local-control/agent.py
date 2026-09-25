@@ -369,6 +369,34 @@ def save_last_id(command_id):
     STATE_FILE.write_text(command_id + "\n", encoding="utf-8")
 
 
+def process_current_command_once():
+    fetch_control()
+    command = read_command()
+    command_id = str(command.get("id", "")).strip()
+    if not command_id:
+        raise RuntimeError("current command has no id")
+    if command_id == load_last_id():
+        print(f"already processed {command_id}", flush=True)
+        return 0
+
+    try:
+        payload = execute(command)
+    except Exception as exc:
+        payload = {
+            "ok": False,
+            "action": command.get("action"),
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+
+    publish_result(command, payload)
+    save_last_id(command_id)
+    print(
+        f"processed once {command_id}: {payload.get('ok')}",
+        flush=True,
+    )
+    return 0 if payload.get("ok") else 2
+
+
 def main():
     print(f"mamba2-local-agent starting repo={REPO} poll={POLL_SECONDS}s", flush=True)
     previous_sync = None
@@ -421,4 +449,6 @@ def main():
 
 
 if __name__ == "__main__":
+    if "--once" in sys.argv:
+        raise SystemExit(process_current_command_once())
     main()
