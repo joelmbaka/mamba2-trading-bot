@@ -154,3 +154,47 @@ def replay_snapshot():
 
 def test_replay_is_deterministic_across_repeated_runs():
     assert replay_snapshot() == replay_snapshot()
+
+
+
+def test_replay_read_view_matches_public_visible_rates_exactly():
+    m1 = canonicalize_bars(fixture_bars(20))
+    m5 = m1.resample("5min").agg(
+        {
+            "open": "first",
+            "high": "max",
+            "low": "min",
+            "close": "last",
+            "tick_volume": "sum",
+            "spread": "last",
+            "real_volume": "sum",
+        }
+    )
+    feed = ReplayFeed(
+        {"EURUSD": m1},
+        native_timeframe_bars={"EURUSD": {"M5": m5}},
+    )
+
+    for _ in range(20):
+        feed.advance()
+        for timeframe in ("M1", "M5"):
+            public = feed.get_rates("EURUSD", timeframe)
+            replay_view = feed.get_visible_rates_for_indicator(
+                "EURUSD",
+                timeframe,
+            )
+            pd.testing.assert_frame_equal(replay_view, public)
+
+
+def test_current_bar_uses_direct_visible_lookup_not_full_history_copy(monkeypatch):
+    feed = ReplayFeed(fixture_bars(8))
+    for _ in range(5):
+        feed.advance()
+
+    expected = feed.get_rates("EURUSD", "M1").iloc[-1].copy()
+
+    def fail_get_rates(*args, **kwargs):
+        raise AssertionError("current_bar must not materialize visible history")
+
+    monkeypatch.setattr(feed, "get_rates", fail_get_rates)
+    pd.testing.assert_series_equal(feed.current_bar("EURUSD"), expected)
