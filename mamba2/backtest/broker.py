@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from typing import Any, Mapping
 
 from .feed import ReplayFeed
@@ -24,6 +25,29 @@ class AccountCurrencyConversionError(ValueError):
 
 
 @dataclass(frozen=True)
+class ExecutionCostModel:
+    """Explicit deterministic transaction costs for one replay symbol.
+
+    Commission is denominated in account currency and charged independently
+    on entry and exit. Slippage is an adverse point offset applied to broker-
+    derived execution prices; zero remains the default because historical
+    OHLC/ticks cannot reconstruct actual fill slippage.
+    """
+
+    commission_per_lot_per_side: float = 0.0
+    slippage_points: float = 0.0
+
+    def __post_init__(self) -> None:
+        for name, value in (
+            ("commission_per_lot_per_side", self.commission_per_lot_per_side),
+            ("slippage_points", self.slippage_points),
+        ):
+            numeric = float(value)
+            if not math.isfinite(numeric) or numeric < 0:
+                raise ValueError(f"{name} must be finite and non-negative")
+
+
+@dataclass(frozen=True)
 class ClosedTrade:
     """Immutable record of one completed position."""
 
@@ -39,6 +63,8 @@ class ClosedTrade:
     realized_pl: float
     exit_reason: str
     contract_size: float
+    gross_realized_pl: float = 0.0
+    commission: float = 0.0
 
 
 class HistoricalBroker:
@@ -55,7 +81,9 @@ class HistoricalBroker:
 
     When tick-derived Ask M1 OHLC is available it is preferred. Otherwise the
     bar spread is applied uniformly to Bid OHLC as a deterministic fallback.
-    Commission and slippage are intentionally not modeled here.
+    Optional execution costs are explicit: commission is account-currency
+    per-lot per-side, while slippage is a deterministic adverse point offset.
+    Both default to zero rather than inventing broker-specific costs.
 
     If a candle touches both SL and TP, the stop is assumed to have occurred
     first. An adverse gap fills at the next-bar open; a target gap is capped at
@@ -69,17 +97,24 @@ class HistoricalBroker:
         balance: float = 10_000.0,
         symbol_metadata: Mapping[str, SymbolExecutionMetadata] | None = None,
         account_currency: str = "USD",
+        execution_costs: Mapping[str, ExecutionCostModel] | None = None,
     ):
         self.feed = feed
         self.connected = False
         self._balance = float(balance)
         self._realized_pl = 0.0
+        self._commission_paid = 0.0
         self.account_currency = str(account_currency).upper()
         if not self.account_currency:
             raise ValueError("account_currency must be non-empty")
         defaults = symbol_metadata or {}
         self._metadata = {
             symbol: defaults.get(symbol, SymbolExecutionMetadata())
+            for symbol in feed.symbols
+        }
+        configured_costs = execution_costs or {}
+        self._execution_costs = {
+            symbol: configured_costs.get(symbol, ExecutionCostModel())
             for symbol in feed.symbols
         }
         self._positions: list[dict[str, Any]] = []
@@ -142,6 +177,7 @@ class HistoricalBroker:
             "profit": unrealized,
             "equity": self._balance + unrealized,
             "currency": self.account_currency,
+            "commission_paid": self._commission_paid,
             "margin": 0.0,
             "free_margin": self._balance,
         }
@@ -207,6 +243,8 @@ class HistoricalBroker:
             return False
         if reason not in {"manual", "stop_loss", "take_profit"}:
             raise ValueError(f"unsupported exit reason: {reason}")
+
+        explicit_price = price is not None
         if price is None:
             bar = self.feed.current_bar(position["symbol"])
             if bar is None:
@@ -216,6 +254,13 @@ class HistoricalBroker:
                 bar,
                 "close",
                 ask_bar=self.feed.current_ask_bar(position["symbol"]),
+            )
+        if not explicit_price:
+            price = self._apply_adverse_slippage(
+                position["symbol"],
+                float(price),
+                side=position["type"],
+                is_entry=False,
             )
         self._close_position(
             position,
@@ -253,20 +298,29 @@ class HistoricalBroker:
                 "open",
                 ask_bar=self.feed.execution_ask_bar(symbol),
             )
-            fill_price = ask_open if side == 0 else bid_open
+            market_fill = ask_open if side == 0 else bid_open
+            fill_price = self._apply_adverse_slippage(
+                symbol,
+                market_fill,
+                side=side,
+                is_entry=True,
+            )
             current_price = bid_open if side == 0 else ask_open
+            volume = float(request.get("volume", 1.0))
+            entry_commission = self._commission_for(symbol, volume)
             position = {
                 "ticket": self._next_position_ticket,
                 "order_id": order["order_id"],
                 "time": int(current.timestamp()),
                 "symbol": symbol,
                 "type": side,
-                "volume": float(request.get("volume", 1.0)),
+                "volume": volume,
                 "price_open": fill_price,
                 "sl": float(request.get("sl", 0.0)),
                 "tp": float(request.get("tp", 0.0)),
                 "price_current": current_price,
                 "profit": 0.0,
+                "entry_commission": entry_commission,
             }
             position["profit"] = self._calculate_pl(
                 position,
@@ -274,6 +328,7 @@ class HistoricalBroker:
                 conversion_phase="execution",
                 conversion_field="open",
             )
+            self._charge_commission(entry_commission)
             self._next_position_ticket += 1
             self._positions.append(position)
         self._pending = remaining
@@ -364,7 +419,13 @@ class HistoricalBroker:
             adverse_gap = reason == "stop_loss" and opening <= level
         else:
             adverse_gap = reason == "stop_loss" and opening >= level
-        return opening if adverse_gap else float(level)
+        market_price = opening if adverse_gap else float(level)
+        return self._apply_adverse_slippage(
+            position["symbol"],
+            market_price,
+            side=position["type"],
+            is_entry=False,
+        )
 
     def _close_position(
         self,
@@ -375,7 +436,7 @@ class HistoricalBroker:
         conversion_phase: str,
         conversion_field: str,
     ) -> None:
-        realized = self._calculate_pl(
+        gross_realized = self._calculate_pl(
             position,
             price,
             conversion_phase=conversion_phase,
@@ -384,8 +445,21 @@ class HistoricalBroker:
         close_time = self.feed.current_time
         if close_time is None:
             raise RuntimeError("cannot close a position before replay starts")
-        self._realized_pl += realized
-        self._balance += realized
+
+        exit_commission = self._commission_for(
+            position["symbol"],
+            position["volume"],
+        )
+        entry_commission = float(position.get("entry_commission", 0.0))
+        total_commission = entry_commission + exit_commission
+        net_trade_pl = gross_realized - total_commission
+
+        # Entry commission was already charged at fill, so only gross P/L and
+        # the exit-side commission move balance here.
+        self._realized_pl += gross_realized - exit_commission
+        self._balance += gross_realized - exit_commission
+        self._commission_paid += exit_commission
+
         self._positions.remove(position)
         self._closed_trades.append(
             ClosedTrade(
@@ -398,11 +472,46 @@ class HistoricalBroker:
                 open_price=position["price_open"],
                 close_time=int(close_time.timestamp()),
                 close_price=price,
-                realized_pl=realized,
+                realized_pl=net_trade_pl,
                 exit_reason=reason,
                 contract_size=self._metadata[position["symbol"]].contract_size,
+                gross_realized_pl=gross_realized,
+                commission=total_commission,
             )
         )
+
+    def _commission_for(self, symbol: str, volume: float) -> float:
+        model = self._execution_costs[symbol]
+        return float(model.commission_per_lot_per_side) * float(volume)
+
+    def _charge_commission(self, amount: float) -> None:
+        if amount == 0:
+            return
+        self._commission_paid += amount
+        self._realized_pl -= amount
+        self._balance -= amount
+
+    def _apply_adverse_slippage(
+        self,
+        symbol: str,
+        price: float,
+        *,
+        side: int,
+        is_entry: bool,
+    ) -> float:
+        model = self._execution_costs[symbol]
+        points = float(model.slippage_points)
+        if points == 0:
+            return float(price)
+
+        metadata = self._metadata[symbol]
+        offset = points * metadata.point_size
+
+        # BUY entry and SELL exit pay upward slippage. SELL entry and BUY exit
+        # pay downward slippage. This always worsens the realized fill.
+        upward = (is_entry and side == 0) or (not is_entry and side == 1)
+        slipped = float(price) + offset if upward else float(price) - offset
+        return round(slipped, metadata.digits)
 
     def _unrealized_pl(self) -> float:
         return sum(position["profit"] for position in self._positions)

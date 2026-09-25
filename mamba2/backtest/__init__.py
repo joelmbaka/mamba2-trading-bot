@@ -3,6 +3,7 @@
 from .broker import (
     AccountCurrencyConversionError,
     ClosedTrade,
+    ExecutionCostModel,
     HistoricalBroker,
     SymbolExecutionMetadata,
 )
@@ -26,6 +27,7 @@ __all__ = [
     "HistoricalBroker",
     "AccountCurrencyConversionError",
     "ClosedTrade",
+    "ExecutionCostModel",
     "SymbolExecutionMetadata",
     "BacktestBrokerAdapter",
     "BacktestResult",
