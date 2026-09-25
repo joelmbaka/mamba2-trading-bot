@@ -1,155 +1,121 @@
 # Next Authorized Task
 
-## Milestone 019 — Broader-history validation
+## Milestone 020 — Controlled experiments
 
-Milestone 018 is accepted.
+Milestone 019 is accepted.
 
-Accepted M018 implementation SHA:
+Accepted M019 implementation SHA:
 
-`fb03bc197d60d5d7b5b218a86288811f72ec4f60`
+`94a74211175d0f1db7e4c00cb3ab1f8ca1f286bb`
 
-Accepted corrected baseline SHA-256:
+Accepted broader baseline SHA-256:
 
-`e33a5400f70494356d12faebbb1e2588bd2075769da5539e9c6584dc88cedcca`
+`114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`
 
-Accepted corrected diagnostic SHA-256:
+Accepted broader diagnostic SHA-256:
 
-`1497db0918bac89c8d10224745db4a522492ac577e845bfc1731450c39e3dda7`
+`84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`
 
-Proposed branch:
+Branch:
 
-`backtest-broader-history`
+`backtest-controlled-experiments`
 
 ## Objective
 
-Validate the corrected deterministic replay over a substantially broader
-historical sample before any controlled strategy optimization.
+Build a controlled experiment workflow and test exactly one explicitly stated
+strategy/filter hypothesis at a time against the accepted M019 strategy.
 
-M019 is a **validation** milestone. It must determine whether the descriptive
-patterns seen in Sep 1–24 persist, weaken, reverse, or vary across different
-market regimes.
+M020 is not a parameter search and is not permission to stack filters.
 
-Do not tune the strategy in response to M019 results.
+## Control
 
-## Preserve exactly
+The control is the accepted M019 strategy unchanged:
 
-Keep the accepted M018 semantics and production configuration:
-
-- symbols:
-  EURUSD, EURJPY, GBPUSD, GBPJPY, USDJPY;
-- position size: 0.1;
-- stochastic: 21 / 7 / 7;
-- trend filter: off;
-- RSI filter: off;
-- higher-TF filter: off;
-- EMA: 7;
-- ATR: 14 on M5;
-- SL: 1 × ATR;
-- TP: 2 × ATR;
+- five production symbols;
+- position size 0.1;
+- stochastic 21 / 7 / 7;
+- trend filter off;
+- RSI filter off;
+- higher-TF filter off;
+- EMA 7;
+- ATR 14 on M5;
+- SL 1 × ATR;
+- TP 2 × ATR;
 - M018 wrong-side initial-TP guard;
-- monotonic trailing-stop semantics;
+- current monotonic trailing semantics;
 - no forced end-of-data liquidation;
-- tick-derived historical Ask where available;
-- account-currency historical conversion semantics;
-- explicit commission/slippage assumptions unchanged.
+- tick-derived historical Ask;
+- account-currency conversion semantics;
+- current explicit cost assumptions.
 
-Do not invent unavailable broker costs.
+Control replay must reproduce the accepted M019 artifacts before a treatment is
+interpreted.
 
-## Historical scope
+## First authorized hypothesis — M020-A
 
-The exact M019 validation interval is now fixed as:
+**Hypothesis:** new entries opened during `00:00–03:59 UTC` are a persistently
+harmful exposure worth testing as a single session filter.
 
-`2026-06-23T00:00:00Z` through `2026-09-25T00:00:00Z`
+Why this is justified for experiment, not yet for adoption:
 
-The initial June 1 candidate was rejected by the pre-export coverage probe:
-all five symbols had M5/M15 history and tick samples back to June 1, but common
-M1 history began only around June 22 05:29–05:33 UTC. June 23 00:00 UTC is the
-first clean full-day boundary after common M1 availability.
+- M018 Sep-only evidence already showed this UTC bucket negative;
+- M019 broader evidence shows 842 entries and
+  **USD -839.9216322911675** net P/L in the bucket;
+- its mean entry spread was **19.899049881235154 points**, materially above the
+  other fixed UTC buckets;
+- the observation may still be confounded by symbol mix, spread tails, and
+  market regime.
 
-The accepted M019 window therefore covers late June, July, August, and Sep
-1–24 across all five production symbols. Use those calendar subperiods for
-descriptive stability comparisons; do not select or discard periods based on
-profitability.
+## Treatment
 
-Before export, verify required M1, native M5, native M15, and tick-derived Ask
-coverage exists for each symbol.
+Change exactly one thing:
 
-The immutable broader dataset must also prove that its Sep 1–24 overlapping
-M1/M5/M15/Ask data is identical to the accepted M016 dataset before replay
-evidence is trusted.
-
-Use only read-only historical MT5 access.
-
-## Required validation sequence
-
-1. verify branch/worktree safety and accepted M018 starting SHA;
-2. define the exact broader UTC window;
-3. export or assemble a versioned immutable dataset with manifest/integrity
-   checks;
-4. verify row coverage by symbol/timeframe;
-5. run the unchanged corrected strategy twice;
-6. require byte-identical deterministic reports;
-7. run deterministic diagnostics on the broader dataset;
-8. summarize aggregate and per-symbol results;
-9. compare periods/regimes without changing strategy behavior;
-10. run full native and Wine suites;
-11. record exact implementation/evidence SHAs and limitations.
-
-## Required analysis
-
-At minimum compare:
-
-- aggregate P/L and drawdown;
-- per-symbol trade count, hit rate, and P/L;
-- BUY versus SELL payoff;
-- spread distribution and tail behavior;
-- UTC entry buckets;
-- stop-loss versus take-profit exits;
-- initial protection and trailing activity;
-- account-currency conversion routes;
-- loss clustering;
-- drawdown episodes;
-- subperiod/regime stability.
-
-The goal is not to select a winning filter. The goal is to discover which M017
-and M018 observations are stable enough to justify later controlled
-experiments.
-
-## Regression requirements
-
-M019 must retain focused M018 protection tests proving:
-
-- no BUY initial TP is at/below its fill;
-- no SELL initial TP is at/above its fill;
-- ordinary current-price TP semantics are preserved when the target is already
-  valid.
-
-Any broader-history infrastructure added must remain deterministic and must not
-change production strategy semantics.
-
-## Prohibited during M019
+- reject **new entry signals** whose replay decision/fill entry time falls in
+  `00:00:00 <= UTC time < 04:00:00`.
 
 Do not:
 
-- tune stochastic settings;
-- enable trend/RSI/higher-TF filters;
-- disable or rank symbols;
-- add session filters;
-- add spread filters;
-- change position size;
-- change ATR period or multipliers;
-- optimize trailing;
-- choose settings based on broader-history performance;
-- invent commission/slippage/swap;
-- enable real MT5 trading;
-- place, modify, or close real orders.
+- close an already-open position because the clock enters the blocked session;
+- add a spread threshold;
+- remove a symbol;
+- disable BUY or SELL;
+- alter ATR, SL, TP, trailing, position size, stochastic, EMA, RSI, or trend
+  behavior;
+- change replay/execution semantics;
+- alter historical conversion or cost assumptions.
 
-If M019 uncovers another genuine implementation defect, stop optimization work,
-prove it with deterministic evidence, and treat the correction as a separately
-documented defect before continuing.
+## Experiment framework requirements
 
-## Exit condition
+Before interpreting treatment results:
 
-M019 is complete only when the broader real-data replay is reproducible,
-diagnosed, and documented well enough to define M020 controlled experiments
-without using the Sep 1–24 window as the sole evidence base.
+1. define a deterministic control/treatment runner;
+2. use the same immutable M019 dataset for both arms;
+3. require repeated A/B determinism for control and treatment;
+4. require the control to reproduce the accepted M019 baseline/diagnostic
+   hashes;
+5. record one experiment definition and one treatment change;
+6. compare aggregate P/L, drawdown, trade count, win/loss payoff, per-symbol
+   behavior, side behavior, and calendar subperiod stability;
+7. report the treatment effect separately for late June, July, August, and
+   Sep 1–24;
+8. report whether an apparent gain is concentrated in one symbol or one
+   subperiod;
+9. document rejected or inconclusive experiments as well as promising ones.
+
+Do not accept a treatment merely because aggregate P/L improves.
+
+## Overfitting guard
+
+M019 has already exposed the overall broader result, so no slice of this same
+dataset should be described as a pristine unseen holdout.
+
+Use temporal slices as stability checks only. Do not tune a treatment on one
+slice and then silently reuse the same slice as independent validation.
+
+A later milestone must use genuinely later data/paper-forward evidence before a
+strategy change is promoted toward live risk.
+
+## Safety
+
+Historical MT5 access remains read-only. Never enable real trading or place,
+modify, or close a real MT5 order during M020.

@@ -24,53 +24,47 @@ should append a dated record here or add a dedicated file under
 | 016 | First real five-symbol baseline | `4d8a15937f461c0e39d434be6639bfde83698d7f` | Deterministic Sep 1–24 baseline; real-data replay blockers corrected |
 | 017 | Baseline diagnosis | `e653ba87df2ff1e8afbad5704f9a8d81428d7b27` | Deterministic trade evidence; M016 report preserved byte-for-byte |
 | 018 | Proven-defect review and correction | `fb03bc197d60d5d7b5b218a86288811f72ec4f60` | Wrong-side initial ATR TP defect proven and narrowly corrected |
+| 019 | Broader-history validation | `94a74211175d0f1db7e4c00cb3ab1f8ca1f286bb` | Jun 23–Sep 24 deterministic broader replay; M018 and whole-window semantic parity preserved |
 
 ## Current acceptance evidence
 
-Milestone 018 closed with:
+Milestone 019 closed with:
 
 - implementation SHA:
-  `fb03bc197d60d5d7b5b218a86288811f72ec4f60`;
-- full native: **175 passed, 2 skipped**;
-- full Wine: **175 passed, 2 skipped**;
-- Wine Python 3.10.11 AMD64;
-- Wine NumPy 2.2.1;
-- Wine MetaTrader5 5.0.6180;
-- Wine pytest 9.1.1;
-- corrected baseline pair byte-identical;
-- corrected baseline SHA-256:
+  `94a74211175d0f1db7e4c00cb3ab1f8ca1f286bb`;
+- full native: **179 passed, 2 skipped**;
+- full Wine: **179 passed, 2 skipped**;
+- accepted M018 baseline preserved exactly:
   `e33a5400f70494356d12faebbb1e2588bd2075769da5539e9c6584dc88cedcca`;
-- corrected diagnostic pair byte-identical;
-- corrected diagnostic SHA-256:
+- accepted M018 diagnostic preserved exactly:
   `1497db0918bac89c8d10224745db4a522492ac577e845bfc1731450c39e3dda7`;
+- final broader baseline pair byte-identical:
+  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
+- final broader diagnostic pair byte-identical:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
+- final optimized broader hashes equal the earlier pre-optimization broader
+  hashes;
 - wrong-side initial TP violations: **0**;
 - negative-P/L take-profit exits: **0**;
-- 1,389 accepted orders / 1,389 closed trades;
-- 0 remaining positions;
-- ending realized balance/equity: **USD 9,785.824347114009**;
-- net realized P/L: **USD -214.17565288599144**;
+- no new strategy-reporting artifacts;
+- accepted orders / closed trades: **4,922 / 4,922**;
+- net realized P/L: **USD -1,716.607632002333**;
+- ending realized balance/equity: **USD 8,283.392367997667**;
 - maximum equity drawdown:
-  **USD 400.156643608565 / 3.9953123082355586%**;
-- no new strategy-reporting artifacts.
+  **USD 1,929.6969567926317 / 19.214803229083717%**.
 
-The accepted M016 comparison report remains:
+The broader evidence does not support carrying the Sep-only profitable-SELL
+observation into M020 as a side filter. Both BUY and SELL are negative over the
+broader interval.
 
-`d73a86c8af9063a5831f38131bc9e9a7fdc956971cb0b65971cf1709b6509f6a`
+The strongest persistent descriptive candidate is the 00:00–03:59 UTC entry
+bucket, which is negative in both the short accepted window and the broader
+sample and has unusually wide spread exposure. M020 may test that as one
+controlled entry filter, but must not treat the M019 observation itself as
+causal proof.
 
-The corrected M018 result differs by **+USD 54.36733725946942** net P/L and
-four fewer accepted/closed trades. This is documented as the consequence of a
-semantic defect correction, not a strategy optimization result.
-
-The proven defect was limited to initial TP placement under sufficiently wide
-spread: a current-price-derived target could cross to the loss side of the
-actual fill. Normal targets remain current-price-based; only an invalid crossed
-target is re-anchored from `price_open`. Initial SL and trailing semantics are
-unchanged.
-
-Extreme spread tails were verified in the accepted historical data and no
-spread/session/symbol filter was added.
-
-See `docs/milestones/018-proven-defect-review.md` for the complete record.
+See `docs/milestones/019-broader-history-validation.md` for the complete
+record.
 
 ## Closeout format for future milestones
 

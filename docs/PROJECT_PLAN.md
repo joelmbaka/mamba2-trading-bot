@@ -24,7 +24,8 @@ without simulator defects distorting conclusions.
 15. repository operations foundation;
 16. first real five-symbol baseline;
 17. deterministic baseline diagnosis;
-18. proven wrong-side initial-TP defect correction.
+18. proven wrong-side initial-TP defect correction;
+19. broader-history validation with replay-performance parity.
 
 Exact SHAs are in `MILESTONES.md`.
 
@@ -44,31 +45,45 @@ changing strategy behavior.
 
 ### 18 — Proven-defect corrections — COMPLETE
 
-The three anomalous take-profit exits proved a real initial-target placement
-defect under sufficiently wide spreads. The narrow correction prevents an
-initial TP from crossing to the loss side of the actual fill while preserving
-normal current-price TP, SL, and trailing semantics.
+The anomalous take-profit exits proved a real initial-target placement defect
+under sufficiently wide spreads. The narrow correction prevents an initial TP
+from crossing to the loss side of the actual fill while preserving normal
+current-price TP, SL, and trailing semantics.
 
-### 19 — Broader-history validation — NEXT
+### 19 — Broader-history validation — COMPLETE
 
-Expand the corrected deterministic replay to several months and multiple
-market regimes. Preserve strategy and execution semantics.
+The corrected strategy was replayed from June 23 through Sep 24 across all five
+symbols. The final optimized implementation reproduced both the accepted M018
+Sep artifacts and the earlier whole-window broader artifacts exactly.
 
-### 20 — Controlled experiments
+The broader result was negative across late June, July, August, and Sep 1–24.
+Four of five symbols were negative. Both BUY and SELL were negative, so the
+short-window profitable-SELL observation did not persist. The 00:00–03:59 UTC
+entry bucket remained the strongest persistent descriptive weakness and also
+carried unusually wide spread exposure.
 
-One strategy/filter change at a time with preserved baseline and separate
-validation periods.
+No strategy filter was adopted in M019.
+
+### 20 — Controlled experiments — NEXT
+
+Build a deterministic control/treatment framework and test one strategy/filter
+change at a time.
+
+The first authorized experiment is M020-A: block new entries during
+00:00–03:59 UTC only. Do not combine this with a spread, symbol, side, ATR,
+trailing, stochastic, or position-size change.
 
 ### 21 — Paper/live validation
 
-Compare replay assumptions against forward behavior before increasing live
-risk.
+Compare replay assumptions against genuinely later forward behavior before
+increasing live risk.
 
 ## Principles
 
 - Correctness before profitability.
-- One semantic change per milestone.
+- One deliberate treatment per controlled experiment.
 - Reproducible acceptance record after every milestone.
 - Never invent unavailable broker costs.
 - Never silently change production behavior.
 - Broader validation before optimization.
+- Same-dataset temporal slices are stability checks, not pristine holdouts.
