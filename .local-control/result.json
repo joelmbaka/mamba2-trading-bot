@@ -1,17 +1,23 @@
 {
   "version": 1,
-  "command_id": "mamba2-m019-postpair-sentinel-20260925",
-  "completed_at": "2026-09-25T16:58:00.861345+00:00",
+  "command_id": "mamba2-m019-native-current-head-20260925-2012",
+  "completed_at": "2026-09-25T17:14:02.135478+00:00",
   "ok": true,
-  "action": "status",
+  "action": "test_full_native",
   "data": {
-    "hostname": "joel-OptiPlex-7080",
-    "repo": "/home/joel/Dev/mamba2-trading-bot",
-    "branch": "backtest-broader-history",
-    "head": "94a74211175d0f1db7e4c00cb3ab1f8ca1f286bb",
-    "clean": true,
-    "changed_paths": [],
-    "divergence": "0\t0",
-    "time": "2026-09-25T16:57:56.759991+00:00"
+    "ok": true,
+    "run": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest"
+      ],
+      "exit_code": 0,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 179 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  2%]\ntests/test_backtest_account_currency.py ............                     [  8%]\ntests/test_backtest_baseline_reporting.py ....                           [ 11%]\ntests/test_backtest_diagnostics.py ....                                  [ 13%]\ntests/test_backtest_execution.py .........                               [ 18%]\ntests/test_backtest_execution_costs.py ............                      [ 25%]\ntests/test_backtest_foundation.py ..........                             [ 30%]\ntests/test_backtest_native_runtime.py ....                               [ 32%]\ntests/test_backtest_portfolio_runner.py ........                         [ 37%]\ntests/test_backtest_spread_execution.py ........                         [ 41%]\ntests/test_backtest_strategy_integration.py ..                           [ 43%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 45%]\ntests/test_cache_manager_security.py .........                           [ 50%]\ntests/test_config_security.py ...                                        [ 52%]\ntests/test_detect_trend.py ...                                           [ 54%]\ntests/test_mt5__broker.py ......                                         [ 57%]\ntests/test_mt5_dataset.py ............                                   [ 64%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 76%]\n.                                                                        [ 77%]\ntests/test_rates.py .......                                              [ 81%]\ntests/test_replay_indicator_cache.py ..                                  [ 82%]\ntests/test_stochastic_indicator.py ....                                  [ 84%]\ntests/test_trend_line.py ..                                              [ 85%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================== 179 passed, 2 skipped in 3.24s ========================\n",
+      "stderr": ""
+    }
   }
 }
