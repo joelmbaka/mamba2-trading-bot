@@ -38,9 +38,9 @@ M018_DIAGNOSTIC_B = FIRST_BASELINE_DIR / "m018-diagnostic-b.json"
 M018_BASELINE_A = FIRST_BASELINE_DIR / "m018-baseline-a.json"
 M018_BASELINE_B = FIRST_BASELINE_DIR / "m018-baseline-b.json"
 
-M019_FROM_UTC = "2026-06-01T00:00:00Z"
+M019_FROM_UTC = "2026-06-23T00:00:00Z"
 M019_TO_UTC = "2026-09-25T00:00:00Z"
-M019_DIR = REPO / "backtest_data" / "broader-history-20260601-20260925"
+M019_DIR = REPO / "backtest_data" / "broader-history-20260623-20260925"
 M019_MANIFEST = M019_DIR / "manifest.json"
 M019_DIAGNOSTIC_A = M019_DIR / "m019-diagnostic-a.json"
 M019_DIAGNOSTIC_B = M019_DIR / "m019-diagnostic-b.json"
@@ -48,8 +48,7 @@ M019_BASELINE_A = M019_DIR / "m019-baseline-a.json"
 M019_BASELINE_B = M019_DIR / "m019-baseline-b.json"
 M019_SYMBOLS = list(FIRST_BASELINE_SYMBOLS)
 M019_TICK_CHECKPOINTS = [
-    "2026-06-01T12:00:00Z",
-    "2026-06-15T12:00:00Z",
+    "2026-06-23T12:00:00Z",
     "2026-07-15T12:00:00Z",
     "2026-08-17T12:00:00Z",
     "2026-09-01T12:00:00Z",
@@ -1137,13 +1136,12 @@ from config import mt5 as mt5_config
 from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
 
 symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
-start = datetime.fromisoformat("2026-06-01T00:00:00+00:00")
+start = datetime.fromisoformat("2026-06-23T00:00:00+00:00")
 end = datetime.fromisoformat("2026-09-25T00:00:00+00:00")
 checkpoints = [
     datetime.fromisoformat(value.replace("Z", "+00:00"))
     for value in [
-        "2026-06-01T12:00:00Z",
-        "2026-06-15T12:00:00Z",
+        "2026-06-23T12:00:00Z",
         "2026-07-15T12:00:00Z",
         "2026-08-17T12:00:00Z",
         "2026-09-01T12:00:00Z",
@@ -1214,7 +1212,7 @@ try:
         output[symbol] = {"bars": bars, "tick_samples": ticks}
 
     print(json.dumps({
-        "from_utc": "2026-06-01T00:00:00Z",
+        "from_utc": "2026-06-23T00:00:00Z",
         "to_utc": "2026-09-25T00:00:00Z",
         "symbols": output,
     }, sort_keys=True))
@@ -1240,10 +1238,22 @@ finally:
         raise RuntimeError("unable to parse M019 coverage probe") from exc
 
     symbol_data = payload.get("symbols", {})
+    expected_first = M019_FROM_UTC
+    minimum_last = {
+        "M1": "2026-09-24T23:59:00Z",
+        "M5": "2026-09-24T23:55:00Z",
+        "M15": "2026-09-24T23:45:00Z",
+    }
     bars_ok = all(
         symbol_data.get(symbol, {}).get("bars", {}).get(timeframe, {}).get(
             "rows", 0
         ) > 0
+        and symbol_data.get(symbol, {}).get("bars", {}).get(
+            timeframe, {}
+        ).get("first") == expected_first
+        and symbol_data.get(symbol, {}).get("bars", {}).get(
+            timeframe, {}
+        ).get("last", "") >= minimum_last[timeframe]
         for symbol in M019_SYMBOLS
         for timeframe in ("M1", "M5", "M15")
     )
@@ -1349,7 +1359,7 @@ import pandas as pd
 
 from mamba2.backtest.mt5_dataset import load_mt5_dataset
 
-broader = load_mt5_dataset(Path("backtest_data/broader-history-20260601-20260925/manifest.json"))
+broader = load_mt5_dataset(Path("backtest_data/broader-history-20260623-20260925/manifest.json"))
 accepted = load_mt5_dataset(Path("backtest_data/first-baseline-20260901-20260925/manifest.json"))
 symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
 start = pd.Timestamp("2026-09-01T00:00:00Z")
