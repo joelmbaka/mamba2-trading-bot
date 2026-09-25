@@ -120,6 +120,25 @@ def repo_checks():
     branch = commands[1]["stdout"].strip()
     divergence = None
     if branch:
+        refresh = _run([
+            "git",
+            "fetch",
+            "origin",
+            f"{branch}:refs/remotes/origin/{branch}",
+        ])
+        commands.append(refresh)
+        if refresh["exit_code"] != 0:
+            return {
+                "ok": False,
+                "clean": clean,
+                "branch": branch,
+                "divergence": None,
+                "bot_cache_tracked": bot_cache["exit_code"] == 0,
+                "icon_tracked": icon_tracked["exit_code"] == 0,
+                "icon_changed": bool(icon_status["stdout"].strip()),
+                "reason": "failed to refresh current remote branch",
+                "commands": commands,
+            }
         remote = _run(["git", "rev-parse", "--verify", f"refs/remotes/origin/{branch}"])
         commands.append(remote)
         if remote["exit_code"] == 0:
