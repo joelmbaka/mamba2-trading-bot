@@ -38,6 +38,24 @@ M018_DIAGNOSTIC_B = FIRST_BASELINE_DIR / "m018-diagnostic-b.json"
 M018_BASELINE_A = FIRST_BASELINE_DIR / "m018-baseline-a.json"
 M018_BASELINE_B = FIRST_BASELINE_DIR / "m018-baseline-b.json"
 
+M019_FROM_UTC = "2026-06-01T00:00:00Z"
+M019_TO_UTC = "2026-09-25T00:00:00Z"
+M019_DIR = REPO / "backtest_data" / "broader-history-20260601-20260925"
+M019_MANIFEST = M019_DIR / "manifest.json"
+M019_DIAGNOSTIC_A = M019_DIR / "m019-diagnostic-a.json"
+M019_DIAGNOSTIC_B = M019_DIR / "m019-diagnostic-b.json"
+M019_BASELINE_A = M019_DIR / "m019-baseline-a.json"
+M019_BASELINE_B = M019_DIR / "m019-baseline-b.json"
+M019_SYMBOLS = list(FIRST_BASELINE_SYMBOLS)
+M019_TICK_CHECKPOINTS = [
+    "2026-06-01T12:00:00Z",
+    "2026-06-15T12:00:00Z",
+    "2026-07-15T12:00:00Z",
+    "2026-08-17T12:00:00Z",
+    "2026-09-01T12:00:00Z",
+    "2026-09-24T12:00:00Z",
+]
+
 
 def _safe_env(wine=False):
     env = os.environ.copy()
@@ -117,6 +135,7 @@ def repo_checks():
     icon_status = _run(["git", "status", "--short", "--", "icon.png"])
     commands.extend([bot_cache, icon_tracked, icon_status])
 
+    clean = commands[2]["stdout"].strip() == ""
     branch = commands[1]["stdout"].strip()
     divergence = None
     if branch:
@@ -148,7 +167,6 @@ def repo_checks():
             commands.append(divergence_cmd)
             divergence = divergence_cmd["stdout"].strip()
 
-    clean = commands[2]["stdout"].strip() == ""
     ok = (
         all(item["exit_code"] == 0 for item in commands[:5])
         and clean
@@ -491,6 +509,44 @@ def _require_m018_branch():
     status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
     if status["exit_code"] != 0 or status["stdout"].strip():
         raise RuntimeError("M018 diagnostic action refuses a dirty worktree")
+
+
+def _require_m019_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "backtest-broader-history":
+        raise RuntimeError(
+            "M019 action requires branch backtest-broader-history"
+        )
+
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("M019 action refuses a dirty worktree")
+
+    refresh = _run([
+        "git",
+        "fetch",
+        "origin",
+        "backtest-broader-history:refs/remotes/origin/backtest-broader-history",
+    ])
+    if refresh["exit_code"] != 0:
+        raise RuntimeError("M019 action could not refresh remote branch")
+
+    head = _run(["git", "rev-parse", "HEAD"])
+    remote = _run([
+        "git",
+        "rev-parse",
+        "--verify",
+        "refs/remotes/origin/backtest-broader-history",
+    ])
+    if (
+        head["exit_code"] != 0
+        or remote["exit_code"] != 0
+        or head["stdout"].strip() != remote["stdout"].strip()
+    ):
+        raise RuntimeError(
+            "M019 action requires local HEAD to match origin/backtest-broader-history"
+        )
 
 
 def _ensure_baseline_path(path):
@@ -1065,6 +1121,521 @@ def defect_review_diagnostic_run_pair():
     }
 
 
+
+def broader_history_coverage_probe():
+    _require_m019_branch()
+
+    wine_python, discovery = _select_wine_python()
+    wine = _wine()
+    code = r'''
+import json
+from datetime import datetime, timedelta, timezone
+
+import MetaTrader5 as mt5
+
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+start = datetime.fromisoformat("2026-06-01T00:00:00+00:00")
+end = datetime.fromisoformat("2026-09-25T00:00:00+00:00")
+checkpoints = [
+    datetime.fromisoformat(value.replace("Z", "+00:00"))
+    for value in [
+        "2026-06-01T12:00:00Z",
+        "2026-06-15T12:00:00Z",
+        "2026-07-15T12:00:00Z",
+        "2026-08-17T12:00:00Z",
+        "2026-09-01T12:00:00Z",
+        "2026-09-24T12:00:00Z",
+    ]
+]
+timeframes = [
+    ("M1", mt5.TIMEFRAME_M1, 60),
+    ("M5", mt5.TIMEFRAME_M5, 300),
+    ("M15", mt5.TIMEFRAME_M15, 900),
+]
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed for read-only M019 coverage probe")
+
+try:
+    output = {}
+    for symbol in symbols:
+        if not mt5.symbol_select(symbol, True):
+            raise RuntimeError(f"MT5 could not select {symbol}")
+
+        bars = {}
+        for label, timeframe, seconds in timeframes:
+            rates = mt5.copy_rates_range(symbol, timeframe, start, end)
+            if rates is None or len(rates) == 0:
+                bars[label] = {"rows": 0, "first": None, "last": None}
+                continue
+            bars[label] = {
+                "rows": int(len(rates)),
+                "first": datetime.fromtimestamp(
+                    int(rates[0]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z"),
+                "last": datetime.fromtimestamp(
+                    int(rates[-1]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z"),
+            }
+
+        ticks = {}
+        for checkpoint in checkpoints:
+            sample_end = checkpoint + timedelta(minutes=15)
+            values = mt5.copy_ticks_range(
+                symbol,
+                checkpoint,
+                sample_end,
+                mt5.COPY_TICKS_ALL,
+            )
+            count = int(len(values)) if values is not None else 0
+            ticks[checkpoint.isoformat().replace("+00:00", "Z")] = count
+
+        output[symbol] = {"bars": bars, "tick_samples": ticks}
+
+    print(json.dumps({
+        "from_utc": "2026-06-01T00:00:00Z",
+        "to_utc": "2026-09-25T00:00:00Z",
+        "symbols": output,
+    }, sort_keys=True))
+finally:
+    mt5.shutdown()
+'''
+    result = _run(
+        [wine, wine_python, "-c", code],
+        env=_safe_env(wine=True),
+    )
+    if result["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "read-only M019 coverage probe failed",
+            "run": result,
+            "wine_python": wine_python,
+            "discovery": discovery,
+        }
+
+    try:
+        payload = json.loads(result["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError) as exc:
+        raise RuntimeError("unable to parse M019 coverage probe") from exc
+
+    symbol_data = payload.get("symbols", {})
+    bars_ok = all(
+        symbol_data.get(symbol, {}).get("bars", {}).get(timeframe, {}).get(
+            "rows", 0
+        ) > 0
+        for symbol in M019_SYMBOLS
+        for timeframe in ("M1", "M5", "M15")
+    )
+    ticks_ok = all(
+        symbol_data.get(symbol, {}).get("tick_samples", {}).get(checkpoint, 0)
+        > 0
+        for symbol in M019_SYMBOLS
+        for checkpoint in M019_TICK_CHECKPOINTS
+    )
+    return {
+        "ok": bool(bars_ok and ticks_ok),
+        "from_utc": M019_FROM_UTC,
+        "to_utc": M019_TO_UTC,
+        "bars_available": bars_ok,
+        "tick_samples_available": ticks_ok,
+        "coverage": symbol_data,
+        "wine_python": wine_python,
+        "discovery": discovery,
+        "run": result,
+    }
+
+
+def broader_history_cleanup():
+    _require_m019_branch()
+    target = _ensure_baseline_path(M019_DIR)
+    existed = target.exists()
+    if existed:
+        shutil.rmtree(target)
+    return {
+        "ok": not target.exists(),
+        "path": str(target.relative_to(REPO)),
+        "existed": existed,
+    }
+
+
+def broader_history_export():
+    _require_m019_branch()
+    output_dir = _ensure_baseline_path(M019_DIR)
+    if output_dir.exists():
+        return {
+            "ok": False,
+            "reason": (
+                "M019 dataset directory already exists; "
+                "run broader_history_cleanup explicitly before re-export"
+            ),
+            "path": str(output_dir.relative_to(REPO)),
+        }
+
+    if not FIRST_BASELINE_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M016 dataset is required for overlap verification",
+        }
+
+    wine_python, discovery = _select_wine_python()
+    wine = _wine()
+    export = _run(
+        [
+            wine,
+            wine_python,
+            "-m",
+            "mamba2.backtest.mt5_dataset",
+            "--symbols",
+            *M019_SYMBOLS,
+            "--timeframes",
+            "M1",
+            "M5",
+            "M15",
+            "--from-utc",
+            M019_FROM_UTC,
+            "--to-utc",
+            M019_TO_UTC,
+            "--output-dir",
+            str(M019_DIR.relative_to(REPO)),
+            "--include-tick-ask",
+            "--tick-chunk-minutes",
+            "1440",
+        ],
+        env=_safe_env(wine=True),
+    )
+    if export["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "read-only M019 historical export failed",
+            "export": export,
+            "wine_python": wine_python,
+            "discovery": discovery,
+        }
+
+    if not M019_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "M019 export completed without manifest.json",
+            "export": export,
+        }
+
+    inspect_code = r'''
+import json
+from pathlib import Path
+import pandas as pd
+
+from mamba2.backtest.mt5_dataset import load_mt5_dataset
+
+broader = load_mt5_dataset(Path("backtest_data/broader-history-20260601-20260925/manifest.json"))
+accepted = load_mt5_dataset(Path("backtest_data/first-baseline-20260901-20260925/manifest.json"))
+symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+start = pd.Timestamp("2026-09-01T00:00:00Z")
+end = pd.Timestamp("2026-09-25T00:00:00Z")
+
+overlap = {}
+for symbol in symbols:
+    symbol_checks = {}
+    frames = [
+        ("M1", broader.m1_bars[symbol], accepted.m1_bars[symbol]),
+        ("M5", broader.native_timeframe_bars[symbol]["M5"], accepted.native_timeframe_bars[symbol]["M5"]),
+        ("M15", broader.native_timeframe_bars[symbol]["M15"], accepted.native_timeframe_bars[symbol]["M15"]),
+        ("ASK_M1", broader.ask_m1_bars[symbol], accepted.ask_m1_bars[symbol]),
+    ]
+    for label, wide, old in frames:
+        sliced = wide.loc[(wide.index >= start) & (wide.index < end)]
+        symbol_checks[label] = bool(sliced.equals(old))
+    overlap[symbol] = symbol_checks
+
+summary = {
+    "account_currency": broader.account_currency,
+    "symbols": sorted(broader.m1_bars),
+    "m1_rows": {s: len(broader.m1_bars[s]) for s in sorted(broader.m1_bars)},
+    "ask_rows": {s: len(broader.ask_m1_bars[s]) for s in sorted(broader.ask_m1_bars)},
+    "native_rows": {
+        s: {tf: len(df) for tf, df in sorted(broader.native_timeframe_bars[s].items())}
+        for s in sorted(broader.native_timeframe_bars)
+    },
+    "requested_range": broader.manifest.get("requested_range"),
+    "schema_version": broader.manifest.get("schema_version"),
+    "overlap_with_m016": overlap,
+}
+print(json.dumps(summary, sort_keys=True))
+'''
+    inspect = _run(
+        _native_command("-c", inspect_code),
+        env=_safe_env(),
+    )
+    if inspect["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M019 dataset failed integrity/overlap inspection",
+            "export": export,
+            "inspect": inspect,
+        }
+
+    try:
+        summary = json.loads(inspect["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError) as exc:
+        raise RuntimeError("unable to parse M019 dataset inspection") from exc
+
+    expected = set(M019_SYMBOLS)
+    symbols_ok = set(summary.get("symbols", [])) == expected
+    range_ok = summary.get("requested_range") == {
+        "from_utc": M019_FROM_UTC,
+        "to_utc": M019_TO_UTC,
+    }
+    ask_ok = all(
+        summary.get("m1_rows", {}).get(symbol, 0) > 0
+        and summary.get("ask_rows", {}).get(symbol)
+        == summary.get("m1_rows", {}).get(symbol)
+        for symbol in M019_SYMBOLS
+    )
+    native_ok = all(
+        summary.get("native_rows", {}).get(symbol, {}).get("M5", 0) > 0
+        and summary.get("native_rows", {}).get(symbol, {}).get("M15", 0) > 0
+        for symbol in M019_SYMBOLS
+    )
+    overlap_ok = all(
+        summary.get("overlap_with_m016", {}).get(symbol, {}).get(label)
+        is True
+        for symbol in M019_SYMBOLS
+        for label in ("M1", "M5", "M15", "ASK_M1")
+    )
+
+    return {
+        "ok": bool(
+            symbols_ok and range_ok and ask_ok and native_ok and overlap_ok
+        ),
+        "manifest": str(M019_MANIFEST.relative_to(REPO)),
+        "dataset": summary,
+        "overlap_with_m016_identical": overlap_ok,
+        "export": export,
+        "inspect": inspect,
+        "wine_python": wine_python,
+        "discovery": discovery,
+    }
+
+
+def _m019_monthly_trade_stats(trades):
+    grouped = {}
+    for trade in trades:
+        month = str(trade.get("entry_time_utc", ""))[:7]
+        if not month:
+            month = "unknown"
+        grouped.setdefault(month, []).append(trade)
+
+    output = {}
+    for month in sorted(grouped):
+        rows = grouped[month]
+        spreads = [
+            float(row["entry_spread"]["spread_points"])
+            for row in rows
+            if row.get("entry_spread")
+            and row["entry_spread"].get("spread_points") is not None
+        ]
+        spreads_sorted = sorted(spreads)
+        count = len(spreads_sorted)
+        if count == 0:
+            spread_summary = {
+                "count": 0,
+                "mean": None,
+                "median": None,
+                "maximum": None,
+            }
+        else:
+            middle = count // 2
+            median = (
+                spreads_sorted[middle]
+                if count % 2
+                else (
+                    spreads_sorted[middle - 1]
+                    + spreads_sorted[middle]
+                ) / 2.0
+            )
+            spread_summary = {
+                "count": count,
+                "mean": sum(spreads_sorted) / count,
+                "median": median,
+                "maximum": max(spreads_sorted),
+            }
+
+        output[month] = {
+            "closed_trades": len(rows),
+            "wins": sum(row.get("outcome") == "win" for row in rows),
+            "losses": sum(row.get("outcome") == "loss" for row in rows),
+            "flats": sum(row.get("outcome") == "flat" for row in rows),
+            "net_realized_pl": sum(
+                float(row.get("net_realized_pl", 0.0)) for row in rows
+            ),
+            "entry_spread_points": spread_summary,
+        }
+    return output
+
+
+def broader_history_run_pair():
+    _require_m019_branch()
+    if not M019_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "M019 dataset manifest is missing; export first",
+        }
+
+    outputs = (
+        M019_DIAGNOSTIC_A,
+        M019_DIAGNOSTIC_B,
+        M019_BASELINE_A,
+        M019_BASELINE_B,
+    )
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    artifacts_before = _artifact_snapshot()
+    runs = []
+    for diagnostic_output, baseline_output in (
+        (M019_DIAGNOSTIC_A, M019_BASELINE_A),
+        (M019_DIAGNOSTIC_B, M019_BASELINE_B),
+    ):
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.diagnostics",
+                "--manifest",
+                str(M019_MANIFEST.relative_to(REPO)),
+                "--output",
+                str(diagnostic_output.relative_to(REPO)),
+                "--baseline-output",
+                str(baseline_output.relative_to(REPO)),
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M019 broader diagnostic replay failed",
+                "runs": runs,
+            }
+
+    if any(not output.is_file() for output in outputs):
+        return {
+            "ok": False,
+            "reason": "M019 replay output missing after successful command",
+            "runs": runs,
+        }
+
+    baseline_bytes_a = M019_BASELINE_A.read_bytes()
+    baseline_bytes_b = M019_BASELINE_B.read_bytes()
+    diagnostic_bytes_a = M019_DIAGNOSTIC_A.read_bytes()
+    diagnostic_bytes_b = M019_DIAGNOSTIC_B.read_bytes()
+
+    baseline_sha_a = _sha256(M019_BASELINE_A)
+    baseline_sha_b = _sha256(M019_BASELINE_B)
+    diagnostic_sha_a = _sha256(M019_DIAGNOSTIC_A)
+    diagnostic_sha_b = _sha256(M019_DIAGNOSTIC_B)
+
+    baseline_identical = (
+        baseline_bytes_a == baseline_bytes_b
+        and baseline_sha_a == baseline_sha_b
+    )
+    diagnostic_identical = (
+        diagnostic_bytes_a == diagnostic_bytes_b
+        and diagnostic_sha_a == diagnostic_sha_b
+    )
+
+    baseline = json.loads(baseline_bytes_a.decode("utf-8"))
+    diagnostic = json.loads(diagnostic_bytes_a.decode("utf-8"))
+    trades = diagnostic.get("trades", [])
+
+    target_direction_violations = []
+    negative_take_profit = []
+    for trade in trades:
+        protection = trade.get("initial_protection") or {}
+        target = protection.get("applied_tp")
+        entry = trade.get("entry_price")
+        side = trade.get("side")
+        if target is not None and entry is not None:
+            crossed = (
+                side == "BUY" and float(target) <= float(entry)
+            ) or (
+                side == "SELL" and float(target) >= float(entry)
+            )
+            if crossed:
+                target_direction_violations.append(
+                    int(trade["position_ticket"])
+                )
+        if (
+            trade.get("exit_reason") == "take_profit"
+            and float(trade.get("net_realized_pl", 0.0)) < 0
+        ):
+            negative_take_profit.append(
+                {
+                    "ticket": int(trade["position_ticket"]),
+                    "symbol": trade["symbol"],
+                    "side": side,
+                    "net_realized_pl": float(trade["net_realized_pl"]),
+                }
+            )
+
+    analysis = diagnostic.get("analysis", {})
+    artifacts_after = _artifact_snapshot()
+    no_new_strategy_artifacts = artifacts_after == artifacts_before
+
+    return {
+        "ok": bool(
+            baseline_identical
+            and diagnostic_identical
+            and not target_direction_violations
+            and not negative_take_profit
+            and no_new_strategy_artifacts
+        ),
+        "baseline_reports_identical": baseline_identical,
+        "baseline_sha256_a": baseline_sha_a,
+        "baseline_sha256_b": baseline_sha_b,
+        "diagnostics_identical": diagnostic_identical,
+        "diagnostic_sha256_a": diagnostic_sha_a,
+        "diagnostic_sha256_b": diagnostic_sha_b,
+        "aggregate": baseline.get("aggregate"),
+        "per_symbol": baseline.get("per_symbol"),
+        "by_entry_month": _m019_monthly_trade_stats(trades),
+        "analysis": {
+            "by_symbol": analysis.get("by_symbol"),
+            "by_side": analysis.get("by_side"),
+            "by_entry_utc_bucket": analysis.get("by_entry_utc_bucket"),
+            "by_exit_reason": analysis.get("by_exit_reason"),
+            "spread_by_outcome": analysis.get("spread_by_outcome"),
+            "conversion_routes": analysis.get("conversion_routes"),
+            "protection": analysis.get("protection"),
+            "loss_clustering": {
+                key: value
+                for key, value in (
+                    analysis.get("loss_clustering") or {}
+                ).items()
+                if key != "streaks"
+            },
+            "drawdown_episode_count": analysis.get(
+                "drawdown_episode_count"
+            ),
+            "deepest_drawdown_episodes": analysis.get(
+                "deepest_drawdown_episodes"
+            ),
+        },
+        "target_direction_violation_count": len(
+            target_direction_violations
+        ),
+        "target_direction_violation_tickets": target_direction_violations,
+        "negative_take_profit_count": len(negative_take_profit),
+        "negative_take_profit_trades": negative_take_profit,
+        "no_new_strategy_artifacts": no_new_strategy_artifacts,
+        "runs": runs,
+    }
+
+
 def execute(action):
     handlers = {
         "repo_checks": repo_checks,
@@ -1079,6 +1650,10 @@ def execute(action):
         "first_baseline_run_pair": first_baseline_run_pair,
         "baseline_diagnostic_run_pair": baseline_diagnostic_run_pair,
         "defect_review_diagnostic_run_pair": defect_review_diagnostic_run_pair,
+        "broader_history_coverage_probe": broader_history_coverage_probe,
+        "broader_history_cleanup": broader_history_cleanup,
+        "broader_history_export": broader_history_export,
+        "broader_history_run_pair": broader_history_run_pair,
     }
     try:
         return handlers[action]()
