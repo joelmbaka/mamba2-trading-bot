@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m018-preaccept-checks-20260925-1650",
-  "action": "repo_checks",
+  "id": "mamba2-m018-corrected-diagnostic-pair-20260925-1456",
+  "action": "defect_review_diagnostic_run_pair",
   "args": {},
   "requested_by": "chatgpt"
 }
