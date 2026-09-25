@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "command_id": "mamba2-m018-corrected-diagnostic-pair-20260925-1456",
-  "completed_at": "2026-09-25T11:55:35.856508+00:00",
+  "command_id": "mamba2-m018-corrected-diagnostic-pair-20260925-1458",
+  "completed_at": "2026-09-25T11:56:20.141142+00:00",
   "ok": false,
   "action": "defect_review_diagnostic_run_pair",
   "error": "ValueError: unsupported action: 'defect_review_diagnostic_run_pair'"
