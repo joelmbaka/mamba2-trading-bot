@@ -39,6 +39,7 @@ first_baseline_cleanup
 first_baseline_export
 first_baseline_run_pair
 baseline_diagnostic_run_pair
+controlled_experiment_control_pair
 ```
 
 `switch_branch` requires:
@@ -125,3 +126,15 @@ M019 uses four fixed actions on `backtest-broader-history`:
 
 These actions never enable live MT5 integration and never place, modify, or
 close orders.
+
+
+## Controlled-experiment workflow
+
+M020 begins with the fixed `controlled_experiment_control_pair` action on
+`backtest-controlled-experiments`. It runs the control-only experiment harness
+twice against the immutable M019 dataset and requires both baseline and
+diagnostic outputs to be byte-identical to the accepted M019 hashes before any
+treatment result is interpreted.
+
+The action is historical/read-only, strips MT5 credential/integration
+environment variables, and never enables real trading.
