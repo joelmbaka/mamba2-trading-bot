@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "command_id": "mamba2-repo-ops-core-tests-20260925-1143",
-  "completed_at": "2026-09-25T09:02:26.951417+00:00",
+  "command_id": "mamba2-repo-ops-full-native-20260925-1144",
+  "completed_at": "2026-09-25T09:03:04.972991+00:00",
   "ok": true,
-  "action": "test_core",
+  "action": "test_full_native",
   "data": {
     "ok": true,
     "run": {
@@ -13,16 +13,10 @@
         "--locked",
         "python",
         "-m",
-        "pytest",
-        "tests/test_backtest_baseline_reporting.py",
-        "tests/test_backtest_portfolio_runner.py",
-        "tests/test_backtest_strategy_lifecycle.py",
-        "tests/test_position_manager_trailing_semantics.py",
-        "tests/test_cache_manager_security.py",
-        "tests/test_triple_cross_condition_semantics.py"
+        "pytest"
       ],
       "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 73 items\n\ntests/test_backtest_baseline_reporting.py ....                           [  5%]\ntests/test_backtest_portfolio_runner.py ........                         [ 16%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 23%]\ntests/test_position_manager_trailing_semantics.py .....................  [ 52%]\ntests/test_cache_manager_security.py .........                           [ 64%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 98%]\n.                                                                        [100%]\n\n============================== 73 passed in 1.95s ==============================\n",
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 164 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  2%]\ntests/test_backtest_account_currency.py .........                        [  7%]\ntests/test_backtest_baseline_reporting.py ....                           [ 10%]\ntests/test_backtest_execution.py .........                               [ 15%]\ntests/test_backtest_execution_costs.py ............                      [ 23%]\ntests/test_backtest_foundation.py ........                               [ 28%]\ntests/test_backtest_native_runtime.py ....                               [ 30%]\ntests/test_backtest_portfolio_runner.py ........                         [ 35%]\ntests/test_backtest_spread_execution.py ........                         [ 40%]\ntests/test_backtest_strategy_integration.py ..                           [ 41%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 44%]\ntests/test_cache_manager_security.py .........                           [ 50%]\ntests/test_config_security.py ...                                        [ 51%]\ntests/test_detect_trend.py ...                                           [ 53%]\ntests/test_mt5__broker.py ......                                         [ 57%]\ntests/test_mt5_dataset.py ..........                                     [ 63%]\ntests/test_position_manager_trailing_semantics.py .....................  [ 76%]\ntests/test_rates.py .......                                              [ 80%]\ntests/test_stochastic_indicator.py ....                                  [ 82%]\ntests/test_trend_line.py ..                                              [ 84%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================== 164 passed, 2 skipped in 2.63s ========================\n",
       "stderr": ""
     }
   }
