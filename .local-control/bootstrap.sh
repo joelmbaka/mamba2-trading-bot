@@ -65,10 +65,30 @@ fi
 cat > "$RUNNER" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-export LOCAL_PROJECT_DIR="$REPO"
+
+REPO="$REPO"
+AGENT="$AGENT"
+VALIDATION="$VALIDATION"
+
+git -C "\$REPO" fetch origin \\
+  local-control:refs/remotes/origin/local-control
+
+AGENT_TMP="\${AGENT}.tmp"
+VALIDATION_TMP="\${VALIDATION}.tmp"
+trap 'rm -f "\$AGENT_TMP" "\$VALIDATION_TMP"' EXIT
+
+git -C "\$REPO" show origin/local-control:.local-control/agent.py > "\$AGENT_TMP"
+git -C "\$REPO" show origin/local-control:.local-control/validation.py > "\$VALIDATION_TMP"
+/usr/bin/python3 -m py_compile "\$AGENT_TMP" "\$VALIDATION_TMP"
+chmod 700 "\$AGENT_TMP" "\$VALIDATION_TMP"
+mv "\$AGENT_TMP" "\$AGENT"
+mv "\$VALIDATION_TMP" "\$VALIDATION"
+trap - EXIT
+
+export LOCAL_PROJECT_DIR="\$REPO"
 export LOCAL_RESULTS_DIR="$RESULTS"
 export LOCAL_AGENT_POLL_SECONDS="5"
-exec /usr/bin/python3 "$AGENT" "\$@"
+exec /usr/bin/python3 "\$AGENT" "\$@"
 EOF
 chmod 700 "$RUNNER"
 
