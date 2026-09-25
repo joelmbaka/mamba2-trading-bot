@@ -59,11 +59,17 @@ Do not invent unavailable broker costs.
 
 The exact M019 validation interval is now fixed as:
 
-`2026-06-01T00:00:00Z` through `2026-09-25T00:00:00Z`
+`2026-06-23T00:00:00Z` through `2026-09-25T00:00:00Z`
 
-It covers June, July, August, and Sep 1–24 across all five production symbols.
-Use those calendar subperiods for descriptive stability comparisons; do not
-select or discard periods based on profitability.
+The initial June 1 candidate was rejected by the pre-export coverage probe:
+all five symbols had M5/M15 history and tick samples back to June 1, but common
+M1 history began only around June 22 05:29–05:33 UTC. June 23 00:00 UTC is the
+first clean full-day boundary after common M1 availability.
+
+The accepted M019 window therefore covers late June, July, August, and Sep
+1–24 across all five production symbols. Use those calendar subperiods for
+descriptive stability comparisons; do not select or discard periods based on
+profitability.
 
 Before export, verify required M1, native M5, native M15, and tick-derived Ask
 coverage exists for each symbol.
