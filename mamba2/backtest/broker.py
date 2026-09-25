@@ -15,7 +15,7 @@ class SymbolExecutionMetadata:
     point_size: float = 0.00001
     digits: int = 5
     contract_size: float = 100_000.0
-    quote_currency: str = "USD"
+    quote_currency: str = ""
     base_currency: str = ""
 
 
@@ -569,11 +569,13 @@ class HistoricalBroker:
         conversion_phase: str,
         conversion_field: str,
     ) -> float:
-        metadata = self._metadata[position["symbol"]]
+        _base_currency, quote_currency = self._symbol_currencies(
+            position["symbol"]
+        )
         quote_pl = self._calculate_quote_pl(position, price)
         return self._convert_quote_pl(
             quote_pl,
-            quote_currency=metadata.quote_currency,
+            quote_currency=quote_currency,
             phase=conversion_phase,
             field=conversion_field,
         )

@@ -294,3 +294,83 @@ def test_inverse_conversion_pair_uses_bid_for_profit_and_ask_for_loss():
     loss.settle_pending_orders()
     loss.advance()
     assert loss.position_get_ticket(1)["profit"] == pytest.approx(-670.0)
+
+
+
+def test_usdjpy_self_conversion_uses_same_boundary_bid_ask():
+    usdjpy = make_frame(
+        "USDJPY",
+        opens=[150.0, 150.0, 151.0],
+        closes=[150.0, 151.0, 151.0],
+        point_size=0.001,
+    )
+    times = usdjpy["time"]
+    ask = pd.DataFrame(
+        {
+            "time": times,
+            "open": [150.1, 150.1, 151.1],
+            "high": [150.2, 151.2, 151.2],
+            "low": [150.0, 150.0, 151.0],
+            "close": [150.1, 151.1, 151.1],
+        }
+    )
+    feed = ReplayFeed(
+        {"USDJPY": usdjpy},
+        ask_m1_bars={"USDJPY": ask},
+    )
+    broker = HistoricalBroker(
+        feed,
+        symbol_metadata={"USDJPY": metadata()["USDJPY"]},
+        account_currency="USD",
+    )
+
+    broker.advance()
+    broker.order_send({"symbol": "USDJPY", "type": 0, "volume": 1.0})
+    broker.settle_pending_orders()
+    broker.advance()
+
+    # Entry Ask is 150.1 and completed Bid close is 151.0, so raw P/L is
+    # +90,000 JPY. Positive JPY converts to USD at the same-boundary Ask.
+    expected = 90_000.0 / 151.1
+    assert broker.position_get_ticket(1)["profit"] == pytest.approx(expected)
+
+
+def test_six_letter_fx_symbol_infers_quote_currency_when_metadata_omits_it():
+    eurjpy = make_frame(
+        "EURJPY",
+        opens=[160.0, 160.0, 161.0],
+        closes=[160.0, 161.0, 161.0],
+        point_size=0.001,
+    )
+    usdjpy = make_frame(
+        "USDJPY",
+        opens=[150.0, 150.0, 150.0],
+        closes=[150.0, 150.0, 150.0],
+        point_size=0.001,
+    )
+    feed = ReplayFeed({"EURJPY": eurjpy, "USDJPY": usdjpy})
+    broker = HistoricalBroker(
+        feed,
+        symbol_metadata={
+            "EURJPY": SymbolExecutionMetadata(
+                point_size=0.001,
+                digits=3,
+                contract_size=100_000.0,
+            ),
+            "USDJPY": SymbolExecutionMetadata(
+                point_size=0.001,
+                digits=3,
+                contract_size=100_000.0,
+            ),
+        },
+        account_currency="USD",
+    )
+
+    broker.advance()
+    broker.order_send({"symbol": "EURJPY", "type": 0, "volume": 1.0})
+    broker.settle_pending_orders()
+    broker.advance()
+
+    assert broker.position_get_ticket(1)["profit"] == pytest.approx(
+        100_000.0 / 150.0
+    )
