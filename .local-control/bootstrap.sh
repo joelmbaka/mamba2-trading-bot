@@ -17,6 +17,7 @@ VALIDATION="$BASE/validation.py"
 RUNNER="$BASE/run.sh"
 UNIT_DIR="$HOME/.config/systemd/user"
 UNIT="$UNIT_DIR/chatgpt-mamba2-local-agent.service"
+TIMER="$UNIT_DIR/chatgpt-mamba2-local-agent.timer"
 
 mkdir -p "$BASE" "$UNIT_DIR" "$HOME/.local/state/chatgpt-mamba2-local-agent"
 
@@ -73,27 +74,37 @@ chmod 700 "$RUNNER"
 
 cat > "$UNIT" <<EOF
 [Unit]
-Description=ChatGPT Mamba2 Local Development Agent
+Description=ChatGPT Mamba2 Local Development Agent One-Shot Worker
 After=network-online.target
 Wants=network-online.target
 
 [Service]
-Type=simple
+Type=oneshot
 WorkingDirectory=$REPO
-ExecStart=$RUNNER
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=default.target
+ExecStart=$RUNNER --once
 EOF
 
+cat > "$TIMER" <<EOF
+[Unit]
+Description=Poll ChatGPT Mamba2 GitHub mailbox
+
+[Timer]
+OnBootSec=10s
+OnUnitActiveSec=15s
+AccuracySec=1s
+Unit=chatgpt-mamba2-local-agent.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+systemctl --user stop chatgpt-mamba2-local-agent.service || true
+systemctl --user disable chatgpt-mamba2-local-agent.service >/dev/null 2>&1 || true
+systemctl --user stop chatgpt-mamba2-local-agent.timer >/dev/null 2>&1 || true
 systemctl --user daemon-reload
-systemctl --user enable chatgpt-mamba2-local-agent.service
 
 echo
 echo "=== PROCESS CURRENT QUEUED COMMAND ONCE ==="
-systemctl --user stop chatgpt-mamba2-local-agent.service || true
 CURRENT_COMMAND_ID="$(
   git show origin/local-control:.local-control/command.json |
     /usr/bin/python3 -c 'import json,sys; print(json.load(sys.stdin).get("id",""))'
@@ -143,23 +154,23 @@ else
 fi
 rm -f "$ONCE_LOG"
 
-systemctl --user restart chatgpt-mamba2-local-agent.service
+systemctl --user enable --now chatgpt-mamba2-local-agent.timer
 
-sleep 3
-
-echo
-echo "=== MAMBA2 LOCAL AGENT ==="
-systemctl --user --no-pager --full status chatgpt-mamba2-local-agent.service || true
+sleep 2
 
 echo
-echo "=== RECENT LOGS ==="
+echo "=== MAMBA2 LOCAL AGENT TIMER ==="
+systemctl --user --no-pager --full status chatgpt-mamba2-local-agent.timer || true
+
+echo
+echo "=== RECENT WORKER LOGS ==="
 journalctl --user -u chatgpt-mamba2-local-agent.service -n 30 --no-pager || true
 
-if ! systemctl --user is-active --quiet chatgpt-mamba2-local-agent.service; then
-  echo "ERROR: chatgpt-mamba2-local-agent.service is not active after restart."
+if ! systemctl --user is-active --quiet chatgpt-mamba2-local-agent.timer; then
+  echo "ERROR: chatgpt-mamba2-local-agent.timer is not active."
   exit 1
 fi
-echo "Service active verification: PASS"
+echo "Timer active verification: PASS"
 
 echo
 echo "Installed. Allowed actions:"
