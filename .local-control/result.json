@@ -1,106 +1,23 @@
 {
   "version": 1,
-  "command_id": "mamba2-m016-reexport-20260925-1259",
-  "completed_at": "2026-09-25T09:55:46.690380+00:00",
+  "command_id": "mamba2-m016-multileg-full-native-20260925-1305",
+  "completed_at": "2026-09-25T09:58:38.197032+00:00",
   "ok": true,
-  "action": "first_baseline_export",
+  "action": "test_full_native",
   "data": {
     "ok": true,
-    "manifest": "backtest_data/first-baseline-20260901-20260925/manifest.json",
-    "dataset": {
-      "account_currency": "USD",
-      "ask_rows": {
-        "EURJPY": 25916,
-        "EURUSD": 25916,
-        "GBPJPY": 25914,
-        "GBPUSD": 25915,
-        "USDJPY": 25913
-      },
-      "m1_rows": {
-        "EURJPY": 25916,
-        "EURUSD": 25916,
-        "GBPJPY": 25914,
-        "GBPUSD": 25915,
-        "USDJPY": 25913
-      },
-      "native_rows": {
-        "EURJPY": {
-          "M15": 1728,
-          "M5": 5184
-        },
-        "EURUSD": {
-          "M15": 1728,
-          "M5": 5184
-        },
-        "GBPJPY": {
-          "M15": 1728,
-          "M5": 5184
-        },
-        "GBPUSD": {
-          "M15": 1728,
-          "M5": 5184
-        },
-        "USDJPY": {
-          "M15": 1728,
-          "M5": 5184
-        }
-      },
-      "requested_range": {
-        "from_utc": "2026-09-01T00:00:00Z",
-        "to_utc": "2026-09-25T00:00:00Z"
-      },
-      "schema_version": 2,
-      "symbols": [
-        "EURJPY",
-        "EURUSD",
-        "GBPJPY",
-        "GBPUSD",
-        "USDJPY"
-      ]
-    },
-    "export": {
-      "command": [
-        "/usr/bin/wine",
-        "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
-        "-m",
-        "mamba2.backtest.mt5_dataset",
-        "--symbols",
-        "EURUSD",
-        "EURJPY",
-        "GBPUSD",
-        "GBPJPY",
-        "USDJPY",
-        "--timeframes",
-        "M1",
-        "M5",
-        "M15",
-        "--from-utc",
-        "2026-09-01T00:00:00Z",
-        "--to-utc",
-        "2026-09-25T00:00:00Z",
-        "--output-dir",
-        "backtest_data/first-baseline-20260901-20260925",
-        "--include-tick-ask",
-        "--tick-chunk-minutes",
-        "1440"
-      ],
-      "exit_code": 0,
-      "stdout": "backtest_data\\first-baseline-20260901-20260925\\manifest.json\n",
-      "stderr": "C:\\Python310\\lib\\runpy.py:126: RuntimeWarning: 'mamba2.backtest.mt5_dataset' found in sys.modules after import of package 'mamba2.backtest', but prior to execution of 'mamba2.backtest.mt5_dataset'; this may result in unpredictable behaviour\n  warn(RuntimeWarning(msg))\n"
-    },
-    "inspect": {
+    "run": {
       "command": [
         "/home/joel/.local/bin/uv",
         "run",
         "--locked",
         "python",
-        "-c",
-        "import json;from pathlib import Path;from mamba2.backtest.mt5_dataset import load_mt5_dataset;p=Path('/home/joel/Dev/mamba2-trading-bot/backtest_data/first-baseline-20260901-20260925/manifest.json');d=load_mt5_dataset(p);print(json.dumps({'account_currency':d.account_currency,'symbols':sorted(d.m1_bars),'m1_rows':{s:len(d.m1_bars[s]) for s in sorted(d.m1_bars)},'ask_rows':{s:len(d.ask_m1_bars[s]) for s in sorted(d.ask_m1_bars)},'native_rows':{s:{tf:len(df) for tf,df in sorted(d.native_timeframe_bars[s].items())} for s in sorted(d.native_timeframe_bars)},'requested_range':d.manifest.get('requested_range'),'schema_version':d.manifest.get('schema_version')},sort_keys=True))"
+        "-m",
+        "pytest"
       ],
       "exit_code": 0,
-      "stdout": "{\"account_currency\": \"USD\", \"ask_rows\": {\"EURJPY\": 25916, \"EURUSD\": 25916, \"GBPJPY\": 25914, \"GBPUSD\": 25915, \"USDJPY\": 25913}, \"m1_rows\": {\"EURJPY\": 25916, \"EURUSD\": 25916, \"GBPJPY\": 25914, \"GBPUSD\": 25915, \"USDJPY\": 25913}, \"native_rows\": {\"EURJPY\": {\"M15\": 1728, \"M5\": 5184}, \"EURUSD\": {\"M15\": 1728, \"M5\": 5184}, \"GBPJPY\": {\"M15\": 1728, \"M5\": 5184}, \"GBPUSD\": {\"M15\": 1728, \"M5\": 5184}, \"USDJPY\": {\"M15\": 1728, \"M5\": 5184}}, \"requested_range\": {\"from_utc\": \"2026-09-01T00:00:00Z\", \"to_utc\": \"2026-09-25T00:00:00Z\"}, \"schema_version\": 2, \"symbols\": [\"EURJPY\", \"EURUSD\", \"GBPJPY\", \"GBPUSD\", \"USDJPY\"]}\n",
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 169 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  2%]\ntests/test_backtest_account_currency.py ............                     [  9%]\ntests/test_backtest_baseline_reporting.py ....                           [ 11%]\ntests/test_backtest_execution.py .........                               [ 17%]\ntests/test_backtest_execution_costs.py ............                      [ 24%]\ntests/test_backtest_foundation.py ........                               [ 28%]\ntests/test_backtest_native_runtime.py ....                               [ 31%]\ntests/test_backtest_portfolio_runner.py ........                         [ 36%]\ntests/test_backtest_spread_execution.py ........                         [ 40%]\ntests/test_backtest_strategy_integration.py ..                           [ 42%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 44%]\ntests/test_cache_manager_security.py .........                           [ 50%]\ntests/test_config_security.py ...                                        [ 52%]\ntests/test_detect_trend.py ...                                           [ 53%]\ntests/test_mt5__broker.py ......                                         [ 57%]\ntests/test_mt5_dataset.py ..........                                     [ 63%]\ntests/test_position_manager_trailing_semantics.py .....................  [ 75%]\ntests/test_rates.py .......                                              [ 79%]\ntests/test_replay_indicator_cache.py ..                                  [ 81%]\ntests/test_stochastic_indicator.py ....                                  [ 83%]\ntests/test_trend_line.py ..                                              [ 84%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================== 169 passed, 2 skipped in 2.91s ========================\n",
       "stderr": ""
-    },
-    "wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe"
+    }
   }
 }
