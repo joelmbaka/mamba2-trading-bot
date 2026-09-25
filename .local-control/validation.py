@@ -1167,17 +1167,35 @@ try:
 
         bars = {}
         for label, timeframe, seconds in timeframes:
-            rates = mt5.copy_rates_range(symbol, timeframe, start, end)
-            if rates is None or len(rates) == 0:
+            cursor = start
+            rows = []
+            while cursor < end:
+                chunk_end = min(cursor + timedelta(days=7), end)
+                rates = mt5.copy_rates_range(
+                    symbol,
+                    timeframe,
+                    cursor,
+                    chunk_end,
+                )
+                if rates is not None and len(rates) > 0:
+                    rows.extend(rates)
+                cursor = chunk_end
+
+            if not rows:
                 bars[label] = {"rows": 0, "first": None, "last": None}
                 continue
+
+            unique = {}
+            for row in rows:
+                unique[int(row["time"])] = row
+            ordered = [unique[key] for key in sorted(unique)]
             bars[label] = {
-                "rows": int(len(rates)),
+                "rows": int(len(ordered)),
                 "first": datetime.fromtimestamp(
-                    int(rates[0]["time"]), timezone.utc
+                    int(ordered[0]["time"]), timezone.utc
                 ).isoformat().replace("+00:00", "Z"),
                 "last": datetime.fromtimestamp(
-                    int(rates[-1]["time"]), timezone.utc
+                    int(ordered[-1]["time"]), timezone.utc
                 ).isoformat().replace("+00:00", "Z"),
             }
 
@@ -1303,6 +1321,8 @@ def broader_history_export():
             "--include-tick-ask",
             "--tick-chunk-minutes",
             "1440",
+            "--rate-chunk-days",
+            "7",
         ],
         env=_safe_env(wine=True),
     )
