@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "command_id": null,
+  "completed_at": null,
+  "ok": null,
+  "action": null,
+  "data": {
+    "state": "awaiting workstation bootstrap"
+  }
+}
