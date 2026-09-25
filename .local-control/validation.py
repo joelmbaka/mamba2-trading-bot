@@ -129,7 +129,111 @@ def repo_checks():
     }
 
 
+def _wine_windows_path(host_path):
+    winepath = shutil.which("winepath")
+    if not winepath:
+        return None
+    proc = subprocess.run(
+        [winepath, "-w", str(host_path)],
+        cwd=str(REPO),
+        text=True,
+        capture_output=True,
+        env=_safe_env(wine=True),
+        check=False,
+    )
+    if proc.returncode != 0:
+        return None
+    value = proc.stdout.strip()
+    return value or None
+
+
+def _wine_python_candidates():
+    candidates = [("base", WINE_PYTHON)]
+
+    # Previous validation work may use a repo-local Wine virtualenv. Discover
+    # only top-level venv/wine-named directories; do not scan arbitrary user
+    # data or file contents.
+    for child in sorted(REPO.iterdir(), key=lambda item: item.name):
+        if not child.is_dir():
+            continue
+        name = child.name.lower()
+        if "venv" not in name and "wine" not in name:
+            continue
+        executable = child / "Scripts" / "python.exe"
+        if not executable.is_file():
+            continue
+        windows_path = _wine_windows_path(executable)
+        if windows_path:
+            candidates.append((child.name, windows_path))
+
+    seen = set()
+    unique = []
+    for label, path in candidates:
+        if path in seen:
+            continue
+        seen.add(path)
+        unique.append((label, path))
+    return unique
+
+
+def _probe_wine_python(path):
+    return _run(
+        [
+            _wine(),
+            path,
+            "-c",
+            (
+                "import json,platform,numpy,MetaTrader5 as mt5,pytest;"
+                "print(json.dumps({'python':platform.python_version(),"
+                "'machine':platform.machine(),'numpy':numpy.__version__,"
+                "'metatrader5':mt5.__version__,'pytest':pytest.__version__}))"
+            ),
+        ],
+        env=_safe_env(wine=True),
+    )
+
+
+def runtime_discovery():
+    probes = []
+    selected = None
+    for label, path in _wine_python_candidates():
+        probe = _probe_wine_python(path)
+        probes.append({"label": label, "python": path, "probe": probe})
+        if selected is None and probe["exit_code"] == 0:
+            selected = path
+
+    native = _run(
+        _native_command(
+            "-c",
+            (
+                "import json,platform,numpy,pytest;"
+                "print(json.dumps({'python':platform.python_version(),"
+                "'machine':platform.machine(),'numpy':numpy.__version__,"
+                "'pytest':pytest.__version__}))"
+            ),
+        ),
+        env=_safe_env(),
+    )
+    return {
+        "ok": native["exit_code"] == 0 and selected is not None,
+        "native": native,
+        "wine_candidates": probes,
+        "selected_wine_python": selected,
+    }
+
+
+def _select_wine_python():
+    discovery = runtime_discovery()
+    selected = discovery.get("selected_wine_python")
+    if not selected:
+        raise RuntimeError(
+            "no discovered Wine Python has pytest + NumPy + MetaTrader5"
+        )
+    return selected, discovery
+
+
 def runtime_versions():
+    wine_python, discovery = _select_wine_python()
     wine = _wine()
 
     native = _run(
@@ -147,7 +251,7 @@ def runtime_versions():
     wine_result = _run(
         [
             wine,
-            WINE_PYTHON,
+            wine_python,
             "-c",
             (
                 "import json,platform,numpy,MetaTrader5 as mt5;"
@@ -163,6 +267,8 @@ def runtime_versions():
         "ok": native["exit_code"] == 0 and wine_result["exit_code"] == 0,
         "native": native,
         "wine": wine_result,
+        "wine_python": wine_python,
+        "discovery": discovery,
     }
 
 
@@ -174,11 +280,15 @@ def _pytest_native(paths=None):
 
 
 def _pytest_wine():
+    wine_python, discovery = _select_wine_python()
     wine = _wine()
-    return _run(
-        [wine, WINE_PYTHON, "-m", "pytest"],
+    result = _run(
+        [wine, wine_python, "-m", "pytest"],
         env=_safe_env(wine=True),
     )
+    result["wine_python"] = wine_python
+    result["discovery"] = discovery
+    return result
 
 
 def test_core():
@@ -199,6 +309,7 @@ def test_full_wine():
 def execute(action):
     handlers = {
         "repo_checks": repo_checks,
+        "runtime_discovery": runtime_discovery,
         "runtime_versions": runtime_versions,
         "test_core": test_core,
         "test_full_native": test_full_native,
