@@ -1,112 +1,212 @@
 {
   "version": 1,
-  "command_id": "mamba2-m019-sync-setup-20260925-1618",
-  "completed_at": "2026-09-25T12:50:11.361824+00:00",
-  "ok": true,
-  "action": "sync",
+  "command_id": "mamba2-m019-coverage-probe-20260925-1606",
+  "completed_at": "2026-09-25T13:09:11.044823+00:00",
+  "ok": false,
+  "action": "broader_history_coverage_probe",
   "data": {
-    "branch": "backtest-broader-history",
-    "before_sha": "94c031a852751973e3f7541cfbb7ebf636844223",
-    "after_sha": "9402676258cd445d613feeb65589bd513eb04e7b",
-    "reason": null,
-    "commands": [
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "94c031a852751973e3f7541cfbb7ebf636844223\n",
-        "stderr": ""
+    "ok": false,
+    "from_utc": "2026-06-01T00:00:00Z",
+    "to_utc": "2026-09-25T00:00:00Z",
+    "bars_available": false,
+    "tick_samples_available": true,
+    "coverage": {
+      "EURJPY": {
+        "bars": {
+          "M1": {
+            "first": null,
+            "last": null,
+            "rows": 0
+          },
+          "M15": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 8065
+          },
+          "M5": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 24193
+          }
+        },
+        "tick_samples": {
+          "2026-06-01T12:00:00Z": 1203,
+          "2026-06-15T12:00:00Z": 76,
+          "2026-07-15T12:00:00Z": 2394,
+          "2026-08-17T12:00:00Z": 3652,
+          "2026-09-01T12:00:00Z": 3229,
+          "2026-09-24T12:00:00Z": 6648
+        }
       },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n   94c031a..9402676  backtest-broader-history -> origin/backtest-broader-history\n"
+      "EURUSD": {
+        "bars": {
+          "M1": {
+            "first": null,
+            "last": null,
+            "rows": 0
+          },
+          "M15": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 8065
+          },
+          "M5": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 24193
+          }
+        },
+        "tick_samples": {
+          "2026-06-01T12:00:00Z": 625,
+          "2026-06-15T12:00:00Z": 114,
+          "2026-07-15T12:00:00Z": 3884,
+          "2026-08-17T12:00:00Z": 3605,
+          "2026-09-01T12:00:00Z": 3045,
+          "2026-09-24T12:00:00Z": 5108
+        }
       },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
+      "GBPJPY": {
+        "bars": {
+          "M1": {
+            "first": null,
+            "last": null,
+            "rows": 0
+          },
+          "M15": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 8065
+          },
+          "M5": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 24193
+          }
+        },
+        "tick_samples": {
+          "2026-06-01T12:00:00Z": 3448,
+          "2026-06-15T12:00:00Z": 111,
+          "2026-07-15T12:00:00Z": 4978,
+          "2026-08-17T12:00:00Z": 6162,
+          "2026-09-01T12:00:00Z": 6592,
+          "2026-09-24T12:00:00Z": 14614
+        }
       },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "backtest-broader-history\n",
-        "stderr": ""
+      "GBPUSD": {
+        "bars": {
+          "M1": {
+            "first": null,
+            "last": null,
+            "rows": 0
+          },
+          "M15": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 8065
+          },
+          "M5": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 24193
+          }
+        },
+        "tick_samples": {
+          "2026-06-01T12:00:00Z": 1005,
+          "2026-06-15T12:00:00Z": 145,
+          "2026-07-15T12:00:00Z": 4685,
+          "2026-08-17T12:00:00Z": 4067,
+          "2026-09-01T12:00:00Z": 5027,
+          "2026-09-24T12:00:00Z": 5423
+        }
       },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "--verify",
-          "refs/remotes/origin/backtest-broader-history"
-        ],
-        "exit_code": 0,
-        "stdout": "9402676258cd445d613feeb65589bd513eb04e7b\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-list",
-          "--left-right",
-          "--count",
-          "HEAD...refs/remotes/origin/backtest-broader-history"
-        ],
-        "exit_code": 0,
-        "stdout": "0\t2\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "pull",
-          "--ff-only",
-          "origin",
-          "backtest-broader-history"
-        ],
-        "exit_code": 0,
-        "stdout": "Updating 94c031a..9402676\nFast-forward\n docs/NEXT_TASK.md                                 |  18 ++-\n docs/milestones/019-broader-history-validation.md | 134 ++++++++++++++++++++++\n 2 files changed, 146 insertions(+), 6 deletions(-)\n create mode 100644 docs/milestones/019-broader-history-validation.md\n",
-        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * branch            backtest-broader-history -> FETCH_HEAD\n"
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "9402676258cd445d613feeb65589bd513eb04e7b\n",
-        "stderr": ""
+      "USDJPY": {
+        "bars": {
+          "M1": {
+            "first": null,
+            "last": null,
+            "rows": 0
+          },
+          "M15": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 8065
+          },
+          "M5": {
+            "first": "2026-06-01T00:00:00Z",
+            "last": "2026-09-25T00:00:00Z",
+            "rows": 24193
+          }
+        },
+        "tick_samples": {
+          "2026-06-01T12:00:00Z": 446,
+          "2026-06-15T12:00:00Z": 2704,
+          "2026-07-15T12:00:00Z": 4686,
+          "2026-08-17T12:00:00Z": 3808,
+          "2026-09-01T12:00:00Z": 3213,
+          "2026-09-24T12:00:00Z": 7967
+        }
       }
-    ]
+    },
+    "wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+    "discovery": {
+      "ok": true,
+      "native": {
+        "command": [
+          "/home/joel/.local/bin/uv",
+          "run",
+          "--locked",
+          "python",
+          "-c",
+          "import json,platform,numpy,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'pytest':pytest.__version__}))"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"python\": \"3.10.19\", \"machine\": \"x86_64\", \"numpy\": \"2.2.6\", \"pytest\": \"8.4.0\"}\n",
+        "stderr": ""
+      },
+      "wine_candidates": [
+        {
+          "label": "base",
+          "python": "C:\\Python310\\python.exe",
+          "probe": {
+            "command": [
+              "/usr/bin/wine",
+              "C:\\Python310\\python.exe",
+              "-c",
+              "import json,platform,numpy,MetaTrader5 as mt5,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'metatrader5':mt5.__version__,'pytest':pytest.__version__}))"
+            ],
+            "exit_code": 1,
+            "stdout": "",
+            "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'numpy'\n"
+          }
+        },
+        {
+          "label": ".venv-wine",
+          "python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+          "probe": {
+            "command": [
+              "/usr/bin/wine",
+              "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+              "-c",
+              "import json,platform,numpy,MetaTrader5 as mt5,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'metatrader5':mt5.__version__,'pytest':pytest.__version__}))"
+            ],
+            "exit_code": 0,
+            "stdout": "{\"python\": \"3.10.11\", \"machine\": \"AMD64\", \"numpy\": \"2.2.1\", \"metatrader5\": \"5.0.6180\", \"pytest\": \"9.1.1\"}\n",
+            "stderr": ""
+          }
+        }
+      ],
+      "selected_wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe"
+    },
+    "run": {
+      "command": [
+        "/usr/bin/wine",
+        "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+        "-c",
+        "\nimport json\nfrom datetime import datetime, timedelta, timezone\n\nimport MetaTrader5 as mt5\n\nfrom config import mt5 as mt5_config\nfrom mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs\n\nsymbols = [\"EURUSD\", \"EURJPY\", \"GBPUSD\", \"GBPJPY\", \"USDJPY\"]\nstart = datetime.fromisoformat(\"2026-06-01T00:00:00+00:00\")\nend = datetime.fromisoformat(\"2026-09-25T00:00:00+00:00\")\ncheckpoints = [\n    datetime.fromisoformat(value.replace(\"Z\", \"+00:00\"))\n    for value in [\n        \"2026-06-01T12:00:00Z\",\n        \"2026-06-15T12:00:00Z\",\n        \"2026-07-15T12:00:00Z\",\n        \"2026-08-17T12:00:00Z\",\n        \"2026-09-01T12:00:00Z\",\n        \"2026-09-24T12:00:00Z\",\n    ]\n]\ntimeframes = [\n    (\"M1\", mt5.TIMEFRAME_M1, 60),\n    (\"M5\", mt5.TIMEFRAME_M5, 300),\n    (\"M15\", mt5.TIMEFRAME_M15, 900),\n]\n\nif not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):\n    raise RuntimeError(\"MT5 initialize failed for read-only M019 coverage probe\")\n\ntry:\n    output = {}\n    for symbol in symbols:\n        if not mt5.symbol_select(symbol, True):\n            raise RuntimeError(f\"MT5 could not select {symbol}\")\n\n        bars = {}\n        for label, timeframe, seconds in timeframes:\n            rates = mt5.copy_rates_range(symbol, timeframe, start, end)\n            if rates is None or len(rates) == 0:\n                bars[label] = {\"rows\": 0, \"first\": None, \"last\": None}\n                continue\n            bars[label] = {\n                \"rows\": int(len(rates)),\n                \"first\": datetime.fromtimestamp(\n                    int(rates[0][\"time\"]), timezone.utc\n                ).isoformat().replace(\"+00:00\", \"Z\"),\n                \"last\": datetime.fromtimestamp(\n                    int(rates[-1][\"time\"]), timezone.utc\n                ).isoformat().replace(\"+00:00\", \"Z\"),\n            }\n\n        ticks = {}\n        for checkpoint in checkpoints:\n            sample_end = checkpoint + timedelta(minutes=15)\n            values = mt5.copy_ticks_range(\n                symbol,\n                checkpoint,\n                sample_end,\n                mt5.COPY_TICKS_ALL,\n            )\n            count = int(len(values)) if values is not None else 0\n            ticks[checkpoint.isoformat().replace(\"+00:00\", \"Z\")] = count\n\n        output[symbol] = {\"bars\": bars, \"tick_samples\": ticks}\n\n    print(json.dumps({\n        \"from_utc\": \"2026-06-01T00:00:00Z\",\n        \"to_utc\": \"2026-09-25T00:00:00Z\",\n        \"symbols\": output,\n    }, sort_keys=True))\nfinally:\n    mt5.shutdown()\n"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"from_utc\": \"2026-06-01T00:00:00Z\", \"symbols\": {\"EURJPY\": {\"bars\": {\"M1\": {\"first\": null, \"last\": null, \"rows\": 0}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 1203, \"2026-06-15T12:00:00Z\": 76, \"2026-07-15T12:00:00Z\": 2394, \"2026-08-17T12:00:00Z\": 3652, \"2026-09-01T12:00:00Z\": 3229, \"2026-09-24T12:00:00Z\": 6648}}, \"EURUSD\": {\"bars\": {\"M1\": {\"first\": null, \"last\": null, \"rows\": 0}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 625, \"2026-06-15T12:00:00Z\": 114, \"2026-07-15T12:00:00Z\": 3884, \"2026-08-17T12:00:00Z\": 3605, \"2026-09-01T12:00:00Z\": 3045, \"2026-09-24T12:00:00Z\": 5108}}, \"GBPJPY\": {\"bars\": {\"M1\": {\"first\": null, \"last\": null, \"rows\": 0}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 3448, \"2026-06-15T12:00:00Z\": 111, \"2026-07-15T12:00:00Z\": 4978, \"2026-08-17T12:00:00Z\": 6162, \"2026-09-01T12:00:00Z\": 6592, \"2026-09-24T12:00:00Z\": 14614}}, \"GBPUSD\": {\"bars\": {\"M1\": {\"first\": null, \"last\": null, \"rows\": 0}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 1005, \"2026-06-15T12:00:00Z\": 145, \"2026-07-15T12:00:00Z\": 4685, \"2026-08-17T12:00:00Z\": 4067, \"2026-09-01T12:00:00Z\": 5027, \"2026-09-24T12:00:00Z\": 5423}}, \"USDJPY\": {\"bars\": {\"M1\": {\"first\": null, \"last\": null, \"rows\": 0}, \"M15\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 8065}, \"M5\": {\"first\": \"2026-06-01T00:00:00Z\", \"last\": \"2026-09-25T00:00:00Z\", \"rows\": 24193}}, \"tick_samples\": {\"2026-06-01T12:00:00Z\": 446, \"2026-06-15T12:00:00Z\": 2704, \"2026-07-15T12:00:00Z\": 4686, \"2026-08-17T12:00:00Z\": 3808, \"2026-09-01T12:00:00Z\": 3213, \"2026-09-24T12:00:00Z\": 7967}}}, \"to_utc\": \"2026-09-25T00:00:00Z\"}\n",
+      "stderr": ""
+    }
   }
 }
