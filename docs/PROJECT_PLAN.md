@@ -19,22 +19,19 @@ Make historical results trustworthy enough to guide strategy development without
 11. shared-account five-symbol portfolio replay;
 12. deterministic baseline reporting;
 13. monotonic trailing-stop semantics;
-14. runtime cache sanitization.
+14. runtime cache sanitization;
+15. repository operations foundation;
+16. first real five-symbol baseline.
 
 Exact SHAs are in `MILESTONES.md`.
 
-## Repository operations foundation
+## Current analytical sequence
 
-### 15 — Repository operations foundation — COMPLETE
-Durable docs/agent handoff, safe GitHub-mailbox local control, and proven dead/generated repository cleanup.
+### 16 — First real baseline — COMPLETE
+Sep 1–24, 2026 across all five production symbols, unchanged strategy. The exact baseline reproduced twice byte-for-byte and is recorded in `docs/milestones/016-first-real-baseline.md`.
 
-## Next analytical sequence
-
-### 16 — First real baseline
-Run Sep 1–24, 2026 across all five production symbols, unchanged strategy.
-
-### 17 — Baseline diagnosis
-Inspect trade-by-trade evidence: symbol, side, session, spread, ATR/trailing, conversion, and loss clustering. Do not optimize yet.
+### 17 — Baseline diagnosis — NEXT
+Inspect deterministic trade-by-trade evidence: symbol, side, session, spread, ATR/trailing, conversion, and loss clustering. Do not optimize yet.
 
 ### 18 — Proven-defect corrections
 Fix only issues demonstrated by evidence, rerun the exact same dataset, compare before/after.
