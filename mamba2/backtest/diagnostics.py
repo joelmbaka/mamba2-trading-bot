@@ -126,7 +126,9 @@ class DiagnosticHistoricalBroker(HistoricalBroker):
             "bid": bid,
             "ask": ask,
             "spread_price": spread_price,
-            "spread_points": spread_price / point if point > 0 else None,
+            "spread_points": (
+                round(spread_price / point, 10) if point > 0 else None
+            ),
             "ask_source": "tick-derived" if ask_bar is not None else "bar-spread",
         }
 
