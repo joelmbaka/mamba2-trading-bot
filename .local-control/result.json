@@ -1,27 +1,18 @@
 {
   "version": 1,
-  "command_id": "mamba2-m017-switch-20260925-1324",
-  "completed_at": "2026-09-25T10:16:57.859028+00:00",
+  "command_id": "mamba2-m017-entry-checks-20260925-1335",
+  "completed_at": "2026-09-25T10:33:51.957569+00:00",
   "ok": true,
-  "action": "switch_branch",
+  "action": "repo_checks",
   "data": {
-    "target_branch": "backtest-baseline-diagnosis",
-    "before_branch": "backtest-first-baseline",
-    "after_branch": "backtest-baseline-diagnosis",
-    "before_sha": "0f22c342ae0ae6beae34fb11462fbf55eddded40",
-    "after_sha": "0f22c342ae0ae6beae34fb11462fbf55eddded40",
-    "reason": null,
+    "ok": true,
+    "clean": true,
+    "branch": "backtest-baseline-diagnosis",
+    "divergence": "0\t0",
+    "bot_cache_tracked": false,
+    "icon_tracked": true,
+    "icon_changed": false,
     "commands": [
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "backtest-first-baseline\n",
-        "stderr": ""
-      },
       {
         "command": [
           "git",
@@ -35,9 +26,8 @@
       {
         "command": [
           "git",
-          "check-ref-format",
-          "--branch",
-          "backtest-baseline-diagnosis"
+          "branch",
+          "--show-current"
         ],
         "exit_code": 0,
         "stdout": "backtest-baseline-diagnosis\n",
@@ -57,8 +47,52 @@
       {
         "command": [
           "git",
-          "fetch",
-          "origin"
+          "diff",
+          "--check"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "/home/joel/.local/bin/uv",
+          "lock",
+          "--check"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "Resolved 58 packages in 0.47ms\n"
+      },
+      {
+        "command": [
+          "git",
+          "ls-files",
+          "--error-unmatch",
+          "bot_cache.json"
+        ],
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "error: pathspec 'bot_cache.json' did not match any file(s) known to git\nDid you forget to 'git add'?\n"
+      },
+      {
+        "command": [
+          "git",
+          "ls-files",
+          "--error-unmatch",
+          "icon.png"
+        ],
+        "exit_code": 0,
+        "stdout": "icon.png\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--short",
+          "--",
+          "icon.png"
         ],
         "exit_code": 0,
         "stdout": "",
@@ -78,56 +112,13 @@
       {
         "command": [
           "git",
-          "rev-parse",
-          "--verify",
-          "refs/heads/backtest-baseline-diagnosis"
-        ],
-        "exit_code": 128,
-        "stdout": "",
-        "stderr": "fatal: Needed a single revision\n"
-      },
-      {
-        "command": [
-          "git",
-          "switch",
-          "--track",
-          "-c",
-          "backtest-baseline-diagnosis",
-          "origin/backtest-baseline-diagnosis"
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...origin/backtest-baseline-diagnosis"
         ],
         "exit_code": 0,
-        "stdout": "branch 'backtest-baseline-diagnosis' set up to track 'origin/backtest-baseline-diagnosis'.\n",
-        "stderr": "Switched to a new branch 'backtest-baseline-diagnosis'\n"
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "backtest-baseline-diagnosis\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "0f22c342ae0ae6beae34fb11462fbf55eddded40\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
+        "stdout": "0\t0\n",
         "stderr": ""
       }
     ]
