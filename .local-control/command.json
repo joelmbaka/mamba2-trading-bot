@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m020-control-pair-20260925-2118",
-  "action": "controlled_experiment_control_pair",
+  "id": "mamba2-m020-sync-treatment-20260925-2140",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
