@@ -396,7 +396,7 @@ def save_last_id(command_id):
     STATE_FILE.write_text(command_id + "\n", encoding="utf-8")
 
 
-def process_current_command_once():
+def process_current_command_once(force=False):
     fetch_control()
     sync_payload = git_sync(fetch=False)
     sync_data = sync_payload.get("data", {})
@@ -418,7 +418,7 @@ def process_current_command_once():
     command_id = str(command.get("id", "")).strip()
     if not command_id:
         raise RuntimeError("current command has no id")
-    if command_id == load_last_id():
+    if command_id == load_last_id() and not force:
         print(f"already processed {command_id}", flush=True)
         return 0
 
@@ -492,6 +492,8 @@ def main():
 
 
 if __name__ == "__main__":
+    if "--force-once" in sys.argv:
+        raise SystemExit(process_current_command_once(force=True))
     if "--once" in sys.argv:
         raise SystemExit(process_current_command_once())
     main()
