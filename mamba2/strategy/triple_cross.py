@@ -48,30 +48,69 @@ class StochasticTripleTFStrategy(Strategy):
         tf_trading = self.stochastic_timeframes['trading']
         tf_entry = self.stochastic_timeframes['entry']
 
-        # Get rates for each timeframe
-        rates_higher = rate_fetcher.get_rates(self.symbol, tf_higher)
+        # Get only the timeframes required by the active signal filters.
+        # A disabled higher-TF filter must not make M15 data a hidden
+        # prerequisite for M5/M1 signal evaluation.
+        rates_higher = (
+            rate_fetcher.get_rates(self.symbol, tf_higher)
+            if self.use_higher_tf
+            else None
+        )
         rates_trading = rate_fetcher.get_rates(self.symbol, tf_trading)
         rates_entry = rate_fetcher.get_rates(self.symbol, tf_entry)
 
-        # Check if we have enough data
-        if rates_higher is None or rates_trading is None or rates_entry is None:
+        required_rates = [rates_trading, rates_entry]
+        if self.use_higher_tf:
+            required_rates.append(rates_higher)
+        if any(rates is None for rates in required_rates):
             logger.warning("Not enough data for stochastic triple strategy")
             return
 
-        # Calculate stochastic for each timeframe
-        stoch_higher = get_stochastic(symbol=self.symbol, timeframe=tf_higher, rate_fetcher=rate_fetcher)
-        stoch_trading = get_stochastic(symbol=self.symbol, timeframe=tf_trading, rate_fetcher=rate_fetcher)
-        stoch_entry = get_stochastic(symbol=self.symbol, timeframe=tf_entry, rate_fetcher=rate_fetcher, lookback_period=10)
+        # Calculate stochastic only for active signal timeframes.
+        stoch_higher = (
+            get_stochastic(
+                symbol=self.symbol,
+                timeframe=tf_higher,
+                rate_fetcher=rate_fetcher,
+            )
+            if self.use_higher_tf
+            else None
+        )
+        stoch_trading = get_stochastic(
+            symbol=self.symbol,
+            timeframe=tf_trading,
+            rate_fetcher=rate_fetcher,
+        )
+        stoch_entry = get_stochastic(
+            symbol=self.symbol,
+            timeframe=tf_entry,
+            rate_fetcher=rate_fetcher,
+            lookback_period=10,
+        )
 
-        # Handle cases where stochastic calculation failed
-        if stoch_higher is None or stoch_trading is None or stoch_entry is None:
-            logger.warning(f"Could not calculate stochastic for one or more timeframes for {self.symbol}")
+        if (
+            stoch_trading is None
+            or stoch_entry is None
+            or (self.use_higher_tf and stoch_higher is None)
+        ):
+            logger.warning(
+                f"Could not calculate stochastic for one or more active "
+                f"timeframes for {self.symbol}"
+            )
             return
 
-        # Extract the last %K and %D for each
+        # Extract the last %K and %D for each active timeframe.
         try:
-            k_higher = stoch_higher['k'].iloc[-1]
-            d_higher = stoch_higher['d'].iloc[-1]
+            k_higher = (
+                stoch_higher['k'].iloc[-1]
+                if self.use_higher_tf
+                else None
+            )
+            d_higher = (
+                stoch_higher['d'].iloc[-1]
+                if self.use_higher_tf
+                else None
+            )
             k_trading = stoch_trading['k'].iloc[-1]
             d_trading = stoch_trading['d'].iloc[-1]
             # Add debug logging for stochastic values
@@ -250,16 +289,37 @@ class StochasticTripleTFStrategy(Strategy):
                #     logger.info(f"Output directory: {output_dir}")
                     
                     # Plot each timeframe in the same position directory
-                    plot_path1 = plot_rates(rates_higher, tf_higher, self.symbol, output_dir, position_ticket)
+                    plot_path1 = (
+                        plot_rates(
+                            rates_higher,
+                            tf_higher,
+                            self.symbol,
+                            output_dir,
+                            position_ticket,
+                        )
+                        if self.use_higher_tf
+                        else None
+                    )
                     plot_path2 = plot_rates(rates_trading, tf_trading, self.symbol, output_dir, position_ticket)
                     plot_path3 = plot_rates(rates_entry, tf_entry, self.symbol, output_dir, position_ticket)
 #                   logger.info(f"Saved plots to: {plot_path1}, {plot_path2}, {plot_path3}")
                     
                     # Save stochastics metrics
                     from mamba2.crew.market_analyst import get_metrics
-                    csv_path = get_metrics(position_ticket, self.symbol, market['rate_fetcher'], 
-                                         tf_higher, tf_trading, tf_entry, 10, 10, 10, 
-                                         order_type='buy', trend=trend)
+                    csv_path = get_metrics(
+                        position_ticket,
+                        self.symbol,
+                        market['rate_fetcher'],
+                        tf_higher,
+                        tf_trading,
+                        tf_entry,
+                        10,
+                        10,
+                        10,
+                        order_type='buy',
+                        trend=trend,
+                        include_higher_tf=self.use_higher_tf,
+                    )
             if sell_trend_allowed:
                 # Only look for sell signals
                 overbought_level = 80
@@ -317,7 +377,18 @@ class StochasticTripleTFStrategy(Strategy):
                     if current_candle['close'] >= ema7 or current_candle['close'] >= current_candle['open']:
                         logger.debug(f"{self.symbol} - Sell signal skipped - waiting for red candle below EMA7. Current close: {current_candle['close']}, EMA7: {ema7:.5f}")
                         return
-                    logger.info(f"📉 SELL Signal - {self.symbol}: Trend is {trend} - Higher K={k_higher:.2f} < D={d_higher:.2f}, Trading K={k_trading:.2f} < D={d_trading:.2f}, Entry K={stoch_entry['k'].iloc[-1]:.2f} < D={stoch_entry['d'].iloc[-1]:.2f}")
+                    higher_tf_log = (
+                        f"Higher K={k_higher:.2f} < D={d_higher:.2f}, "
+                        if self.use_higher_tf
+                        else ""
+                    )
+                    logger.info(
+                        f"📉 SELL Signal - {self.symbol}: Trend is {trend} - "
+                        f"{higher_tf_log}Trading K={k_trading:.2f} < "
+                        f"D={d_trading:.2f}, Entry K="
+                        f"{stoch_entry['k'].iloc[-1]:.2f} < "
+                        f"D={stoch_entry['d'].iloc[-1]:.2f}"
+                    )
                     # Place sell order
                     rates = market['rate_fetcher'].get_rates(self.symbol, 'M1')
                     # Get current market data from the broker
@@ -393,15 +464,36 @@ class StochasticTripleTFStrategy(Strategy):
                     position_ticket = resp.get('order') or int(time.time())
                     
                     # Plot each timeframe in the same position directory
-                    plot_path1 = plot_rates(rates_higher, tf_higher, self.symbol, output_dir, position_ticket)
+                    plot_path1 = (
+                        plot_rates(
+                            rates_higher,
+                            tf_higher,
+                            self.symbol,
+                            output_dir,
+                            position_ticket,
+                        )
+                        if self.use_higher_tf
+                        else None
+                    )
                     plot_path2 = plot_rates(rates_trading, tf_trading, self.symbol, output_dir, position_ticket)
                     plot_path3 = plot_rates(rates_entry, tf_entry, self.symbol, output_dir, position_ticket)
                     
                     # Save stochastics metrics
                     from mamba2.crew.market_analyst import get_metrics
-                    csv_path = get_metrics(position_ticket, self.symbol, market['rate_fetcher'], 
-                                         tf_higher, tf_trading, tf_entry, 10, 10, 10, 
-                                         order_type='sell', trend=trend)
+                    csv_path = get_metrics(
+                        position_ticket,
+                        self.symbol,
+                        market['rate_fetcher'],
+                        tf_higher,
+                        tf_trading,
+                        tf_entry,
+                        10,
+                        10,
+                        10,
+                        order_type='sell',
+                        trend=trend,
+                        include_higher_tf=self.use_higher_tf,
+                    )
         else:
             logger.debug(f"Skipping {self.symbol} - invalid stochastic values on one or more timeframes")
 

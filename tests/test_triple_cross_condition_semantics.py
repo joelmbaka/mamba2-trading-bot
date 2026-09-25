@@ -7,14 +7,14 @@ import pandas as pd
 import pytest
 
 
-def strategy_config(*, trend=False, rsi=False):
+def strategy_config(*, trend=False, rsi=False, higher=False):
     return SimpleNamespace(
         stochastic_timeframes={
             "higher": "M15",
             "trading": "M5",
             "entry": "M1",
         },
-        use_higher_tf=False,
+        use_higher_tf=higher,
         ENABLE_TREND_CONDITION=trend,
         ENABLE_RSI_CONDITION=rsi,
         position_size=0.1,
@@ -281,3 +281,112 @@ async def test_stochastic_conditions_still_block_orders(monkeypatch, signal):
     broker.order_send.assert_not_called()
     trend_mock.assert_not_called()
     rsi_mock.assert_not_called()
+
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("signal", ["buy", "sell"])
+async def test_higher_tf_off_does_not_require_m15_data(monkeypatch, signal):
+    from mamba2.crew import market_analyst, plotter
+    from mamba2.indicators import moving_average
+    from mamba2.strategy import triple_cross
+
+    monkeypatch.setattr(
+        triple_cross,
+        "config",
+        strategy_config(trend=False, rsi=False, higher=False),
+    )
+    values = stochastic_values(signal=signal)
+    stochastic_calls = []
+
+    def fake_stochastic(symbol, timeframe, rate_fetcher, **kwargs):
+        stochastic_calls.append(timeframe)
+        if timeframe == "M15":
+            raise AssertionError("M15 stochastic must not run when disabled")
+        k, d = values[timeframe]
+        return {
+            "k": pd.Series(k),
+            "d": pd.Series(d),
+            "closes": pd.Series([1.0, 1.0]),
+        }
+
+    class NoHigherRateFetcher(RateFetcher):
+        def get_rates(self, symbol, timeframe):
+            if timeframe == "M15":
+                raise AssertionError("M15 rates must not be required")
+            return super().get_rates(symbol, timeframe)
+
+    monkeypatch.setattr(triple_cross, "get_stochastic", fake_stochastic)
+    monkeypatch.setattr(triple_cross, "get_rsi", Mock())
+    monkeypatch.setattr(
+        moving_average,
+        "get_moving_average",
+        lambda *args, **kwargs: 1.1002 if signal == "buy" else 1.1003,
+    )
+    monkeypatch.setattr(plotter, "plot_rates", Mock(return_value="not-written"))
+    metrics = Mock(return_value=None)
+    monkeypatch.setattr(market_analyst, "get_metrics", metrics)
+    monkeypatch.setattr(triple_cross, "count_candle_pattern", lambda *args: 0)
+
+    broker = Broker()
+    strategy = triple_cross.StochasticTripleTFStrategy("EURUSD")
+    await strategy.evaluate(
+        {
+            "broker": broker,
+            "rate_fetcher": NoHigherRateFetcher(bullish=signal == "buy"),
+            "position_manager": None,
+        }
+    )
+
+    broker.order_send.assert_called_once()
+    assert "M15" not in stochastic_calls
+    assert metrics.call_args.kwargs["include_higher_tf"] is False
+
+
+@pytest.mark.asyncio
+async def test_higher_tf_on_still_requires_m15_stochastic(monkeypatch):
+    from mamba2.crew import market_analyst, plotter
+    from mamba2.indicators import moving_average
+    from mamba2.strategy import triple_cross
+
+    monkeypatch.setattr(
+        triple_cross,
+        "config",
+        strategy_config(trend=False, rsi=False, higher=True),
+    )
+    values = stochastic_values(signal="buy")
+    calls = []
+
+    def fake_stochastic(symbol, timeframe, rate_fetcher, **kwargs):
+        calls.append(timeframe)
+        k, d = values[timeframe]
+        return {
+            "k": pd.Series(k),
+            "d": pd.Series(d),
+            "closes": pd.Series([1.0, 1.0]),
+        }
+
+    monkeypatch.setattr(triple_cross, "get_stochastic", fake_stochastic)
+    monkeypatch.setattr(
+        moving_average,
+        "get_moving_average",
+        lambda *args, **kwargs: 1.1002,
+    )
+    monkeypatch.setattr(plotter, "plot_rates", Mock(return_value="not-written"))
+    metrics = Mock(return_value=None)
+    monkeypatch.setattr(market_analyst, "get_metrics", metrics)
+    monkeypatch.setattr(triple_cross, "count_candle_pattern", lambda *args: 0)
+
+    broker = Broker()
+    strategy = triple_cross.StochasticTripleTFStrategy("EURUSD")
+    await strategy.evaluate(
+        {
+            "broker": broker,
+            "rate_fetcher": RateFetcher(bullish=True),
+            "position_manager": None,
+        }
+    )
+
+    assert "M15" in calls
+    metrics.assert_called_once()
+    assert metrics.call_args.kwargs["include_higher_tf"] is True

@@ -51,7 +51,8 @@ def count_candle_pattern(candles, pattern_type, lookback=None):
 def get_metrics(position_ticket: str, symbol: str, rate_fetcher, 
                 tf_higher: str, tf_trading: str, tf_entry: str, 
                 lookback_period_higher: int, lookback_period_trading: int, lookback_period_entry: int, 
-                order_type: str = "", trend: str = None) -> str:
+                order_type: str = "", trend: str = None,
+                include_higher_tf: bool = True) -> str:
     """
     Calculate and save market metrics across multiple timeframes to a centralized CSV
     
@@ -83,7 +84,16 @@ def get_metrics(position_ticket: str, symbol: str, rate_fetcher,
         # Get stochastics for each timeframe (use same parameters as in strategy)
         logger.info(f"Getting stochastics for {symbol} - Higher TF: {tf_higher}, Trading TF: {tf_trading}, Entry TF: {tf_entry}")
         
-        stoch_higher = get_stochastic(symbol, tf_higher, lookback_period=lookback_period_higher, rate_fetcher=rate_fetcher)
+        stoch_higher = (
+            get_stochastic(
+                symbol,
+                tf_higher,
+                lookback_period=lookback_period_higher,
+                rate_fetcher=rate_fetcher,
+            )
+            if include_higher_tf
+            else None
+        )
         stoch_trading = get_stochastic(symbol, tf_trading, lookback_period=lookback_period_trading, rate_fetcher=rate_fetcher)
         stoch_entry = get_stochastic(symbol, tf_entry, lookback_period=lookback_period_entry, rate_fetcher=rate_fetcher)
         
