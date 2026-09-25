@@ -53,7 +53,12 @@ def record(proc):
 
 
 def fetch_control():
-    run(["git", "fetch", "origin"])
+    run([
+        "git",
+        "fetch",
+        "origin",
+        "local-control:refs/remotes/origin/local-control",
+    ])
 
 
 def read_command():
