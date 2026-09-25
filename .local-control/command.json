@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m017-diagnostics-native-20260925-1354",
-  "action": "test_full_native",
+  "id": "mamba2-m017-status-probe-20260925-1400",
+  "action": "status",
   "args": {},
   "requested_by": "chatgpt"
 }
