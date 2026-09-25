@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m019-coverage-probe-20260925-1606",
-  "action": "broader_history_coverage_probe",
+  "id": "mamba2-m019-status-after-chunking-20260925-1612",
+  "action": "status",
   "args": {},
   "requested_by": "chatgpt"
 }
