@@ -78,9 +78,16 @@ class DiagnosticHistoricalBroker(HistoricalBroker):
         )
         self._diagnostic_exits: dict[int, dict[str, Any]] = {}
         self._diagnostic_atr_manager: ATRManager | None = None
+        self._diagnostic_atr_timeframe: str | None = None
 
-    def attach_atr_manager(self, manager: ATRManager) -> None:
+    def attach_atr_manager(
+        self,
+        manager: ATRManager,
+        *,
+        timeframe: str,
+    ) -> None:
         self._diagnostic_atr_manager = manager
+        self._diagnostic_atr_timeframe = str(timeframe)
 
     def _spread_snapshot(
         self,
@@ -328,7 +335,7 @@ class DiagnosticHistoricalBroker(HistoricalBroker):
         ):
             atr = self._diagnostic_atr_manager.get_atr(
                 before["symbol"],
-                getattr(config, "atr_timeframe", "M5"),
+                self._diagnostic_atr_timeframe or "M5",
             )
 
         result = await super().order_modify(ticket=ticket, sl=sl, tp=tp)
@@ -805,7 +812,10 @@ def run_diagnostic_baseline(
         execution_costs=execution_costs,
     )
     atr_manager = ATRManager(feed)
-    broker.attach_atr_manager(atr_manager)
+    broker.attach_atr_manager(
+        atr_manager,
+        timeframe=str(config.atr_timeframe),
+    )
     position_manager = PositionManager(
         broker,
         atr_manager=atr_manager,
