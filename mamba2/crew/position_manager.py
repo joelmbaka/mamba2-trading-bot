@@ -139,7 +139,11 @@ class PositionManager:
                                 new_tp = current_price + (
                                     atr * config.atr_tp_multiplier
                                 )
-                                if new_sl > stop_loss:
+                                if self._is_more_protective_stop(
+                                    position_type,
+                                    current_sl=stop_loss,
+                                    candidate_sl=new_sl,
+                                ):
                                     await self._update_position_sl(
                                         position,
                                         new_sl,
@@ -156,7 +160,11 @@ class PositionManager:
                                 new_tp = current_price - (
                                     atr * config.atr_tp_multiplier
                                 )
-                                if new_sl < stop_loss:
+                                if self._is_more_protective_stop(
+                                    position_type,
+                                    current_sl=stop_loss,
+                                    candidate_sl=new_sl,
+                                ):
                                     await self._update_position_sl(
                                         position,
                                         new_sl,
@@ -170,6 +178,23 @@ class PositionManager:
             logger.opt(exception=e).error("Exception details:")
     
    
+    @staticmethod
+    def _is_more_protective_stop(
+        position_type: int,
+        *,
+        current_sl: float,
+        candidate_sl: float,
+    ) -> bool:
+        """Return whether a trailing stop moves strictly toward protection.
+
+        BUY stops may only move upward. SELL stops may only move downward.
+        Equality is intentionally rejected so an existing stop is never
+        rewritten without improving protection.
+        """
+        if position_type == 0:
+            return candidate_sl > current_sl
+        return candidate_sl < current_sl
+
     async def _update_position_sl(self, position: dict, new_sl: float, new_tp: float) -> Optional[bool]:
         """Update the stop loss and take profit of a position."""
         try:
