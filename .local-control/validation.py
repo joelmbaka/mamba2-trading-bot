@@ -32,6 +32,8 @@ def _safe_env(wine=False):
     if wine:
         env["WINEPREFIX"] = str(WINEPREFIX)
         env.setdefault("WINEDEBUG", "-all")
+    else:
+        env["UV_PROJECT_ENVIRONMENT"] = str(REPO / ".venv-native-control")
     return env
 
 
@@ -150,6 +152,12 @@ def _wine_windows_path(host_path):
 def _wine_python_candidates():
     candidates = [("base", WINE_PYTHON)]
 
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    if dedicated.is_file():
+        windows_path = _wine_windows_path(dedicated)
+        if windows_path:
+            candidates.append((".venv-wine", windows_path))
+
     # Previous validation work may use a repo-local Wine virtualenv. Discover
     # only top-level venv/wine-named directories; do not scan arbitrary user
     # data or file contents.
@@ -157,6 +165,8 @@ def _wine_python_candidates():
         if not child.is_dir():
             continue
         name = child.name.lower()
+        if child.name == ".venv-wine":
+            continue
         if "venv" not in name and "wine" not in name:
             continue
         executable = child / "Scripts" / "python.exe"
@@ -191,6 +201,104 @@ def _probe_wine_python(path):
         ],
         env=_safe_env(wine=True),
     )
+
+
+def bootstrap_wine_test_env():
+    """Create a dedicated pinned Wine test environment without touching live MT5."""
+
+    wine = _wine()
+    target_host = REPO / ".venv-wine"
+    target_win = _wine_windows_path(target_host)
+    constraints_win = _wine_windows_path(REPO / "constraints" / "wine-runtime.txt")
+    if not target_win or not constraints_win:
+        raise RuntimeError("unable to map Wine test-environment paths")
+
+    commands = []
+
+    base_probe = _run(
+        [
+            wine,
+            WINE_PYTHON,
+            "-c",
+            "import platform; print(platform.python_version())",
+        ],
+        env=_safe_env(wine=True),
+    )
+    commands.append(base_probe)
+    if base_probe["exit_code"] != 0 or base_probe["stdout"].strip() != "3.10.11":
+        return {
+            "ok": False,
+            "reason": "base Wine Python 3.10.11 is unavailable",
+            "commands": commands,
+        }
+
+    create = _run(
+        [wine, WINE_PYTHON, "-m", "venv", "--clear", target_win],
+        env=_safe_env(wine=True),
+    )
+    commands.append(create)
+    if create["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "failed to create dedicated Wine test venv",
+            "commands": commands,
+        }
+
+    target_python = target_win.rstrip("\\") + "\\Scripts\\python.exe"
+
+    install = _run(
+        [
+            wine,
+            target_python,
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "-c",
+            constraints_win,
+            "-e",
+            ".[dev]",
+        ],
+        env=_safe_env(wine=True),
+    )
+    commands.append(install)
+    if install["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "failed to install pinned Wine test dependencies",
+            "commands": commands,
+        }
+
+    verify = _run(
+        [
+            wine,
+            target_python,
+            "-c",
+            (
+                "import json,platform,numpy,MetaTrader5 as mt5,pytest;"
+                "from importlib.metadata import version;"
+                "print(json.dumps({'python':platform.python_version(),"
+                "'machine':platform.machine(),'numpy':numpy.__version__,"
+                "'metatrader5':mt5.__version__,'pywin32':version('pywin32'),"
+                "'pytest':pytest.__version__}))"
+            ),
+        ],
+        env=_safe_env(wine=True),
+    )
+    commands.append(verify)
+
+    ok = (
+        verify["exit_code"] == 0
+        and '"python": "3.10.11"' in verify["stdout"]
+        and '"numpy": "2.2.1"' in verify["stdout"]
+        and '"metatrader5": "5.0.6180"' in verify["stdout"]
+        and '"pywin32": "310"' in verify["stdout"]
+    )
+    return {
+        "ok": ok,
+        "wine_python": target_python,
+        "commands": commands,
+    }
 
 
 def runtime_discovery():
@@ -309,6 +417,7 @@ def test_full_wine():
 def execute(action):
     handlers = {
         "repo_checks": repo_checks,
+        "bootstrap_wine_test_env": bootstrap_wine_test_env,
         "runtime_discovery": runtime_discovery,
         "runtime_versions": runtime_versions,
         "test_core": test_core,
