@@ -626,6 +626,31 @@ Before the optimized path may be used for stochastic screening, require:
 If any economic field differs, reject the optimization and run stochastic
 screening on the accepted reference-v3 executable path instead.
 
+## Frozen stochastic-family execution scheduling — before non-reference results
+
+After the optimized 21/7/7 equivalence gate passes, the remaining eight
+predeclared stochastic tuples may be executed with **at most two independent
+arms concurrently** to reduce wall-clock time.
+
+This is scheduling only:
+
+- every arm remains a complete deterministic A/B pair;
+- every arm uses the same immutable accepted dataset and development partition;
+- each arm writes to a unique directory;
+- no process shares strategy/account/broker/cache state with another arm;
+- no result from one arm may alter another arm's parameters;
+- the set of tuples remains exactly the already-frozen nine-tuple grid;
+- 21/7/7 is reused from the separately accepted equivalence evidence rather
+  than replayed a third time;
+- validation, historical holdout, and M021 remain inaccessible.
+
+Maximum concurrency is fixed at **2 arms**. Do not raise it after observing
+runtime or results.
+
+The family action should be resumable from already-complete deterministic arm
+artifacts after an infrastructure interruption, but it must never overwrite a
+completed arm or silently accept a partial/inconsistent A/B pair.
+
 ## Frozen stochastic-family screening rubric — before results
 
 Before inspecting any stochastic-family development result, the following
