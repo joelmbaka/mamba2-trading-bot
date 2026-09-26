@@ -69,7 +69,8 @@ Local-control now contains fixed M022-only actions for:
 - repository/branch gating;
 - history-inventory cleanup;
 - historical inventory;
-- a bounded history-depth probe.
+- a bounded history-depth probe;
+- a fixed tick-derived inventory export with accepted-M019 overlap proof.
 
 The first inventory command was dispatched as:
 
@@ -96,10 +97,12 @@ Before freezing M022 data partitions:
 5. if older tick coverage exists, export a fixed candidate history using:
    - tick-derived synchronized Bid/Ask M1;
    - broker-native M5/M15;
-6. prove overlap against the accepted M019 dataset:
-   - M1 Bid timestamps/OHLC must agree within an explicitly frozen price tolerance;
-   - Ask M1 timestamps/OHLC must agree within an explicitly frozen price tolerance;
-   - native M5/M15 overlap must remain identical;
+6. prove overlap against the accepted M019 dataset using the predeclared acceptance rule:
+   - M1 Bid overlap indexes must be identical and OHLC must differ by no more than **0.5 symbol point**;
+   - Ask M1 overlap indexes must be identical and OHLC must differ by no more than **0.5 symbol point**;
+   - candidate Bid M1 and Ask M1 indexes must be identical with zero missing/extra Ask rows;
+   - native M5/M15 overlap frames must remain exactly identical;
+   - the M1 manifest source must identify `copy_ticks_range_bid_aggregation`;
 7. only then declare a longest common trustworthy range and freeze development / validation / untouched historical-holdout partitions.
 
 No Phase-1 parameter arm is authorized before that gate passes.
