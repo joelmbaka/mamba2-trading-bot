@@ -95,6 +95,27 @@ M020_D_DIAGNOSTIC_B = M019_DIR / "m020-d-diagnostic-b.json"
 M020_D_EVIDENCE_A = M019_DIR / "m020-d-evidence-a.json"
 M020_D_EVIDENCE_B = M019_DIR / "m020-d-evidence-b.json"
 
+ACCEPTED_M020_D_BASELINE_SHA256 = (
+    "94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766"
+)
+ACCEPTED_M020_D_DIAGNOSTIC_SHA256 = (
+    "45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e"
+)
+ACCEPTED_M020_D_EVIDENCE_SHA256 = (
+    "e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a"
+)
+
+M021_FROM_UTC = "2026-09-25T00:00:00Z"
+M021_PRIMARY_TO_UTC = "2026-10-23T00:00:00Z"
+M021_DIR = REPO / "backtest_data" / "m021-forward-20260925-20261023"
+M021_MANIFEST = M021_DIR / "manifest.json"
+M021_OUTPUT_DIR = M021_DIR / "results"
+M021_REG_CONTROL_BASELINE = M019_DIR / "m021-regression-control-baseline.json"
+M021_REG_CONTROL_DIAGNOSTIC = M019_DIR / "m021-regression-control-diagnostic.json"
+M021_REG_CANDIDATE_BASELINE = M019_DIR / "m021-regression-candidate-baseline.json"
+M021_REG_CANDIDATE_DIAGNOSTIC = M019_DIR / "m021-regression-candidate-diagnostic.json"
+M021_REG_CANDIDATE_EVIDENCE = M019_DIR / "m021-regression-candidate-evidence.json"
+
 
 def _safe_env(wine=False):
     env = os.environ.copy()
@@ -627,6 +648,48 @@ def _require_m020_branch():
         raise RuntimeError(
             "M020 action requires local HEAD to match "
             "origin/backtest-controlled-experiments"
+        )
+
+
+def _require_m021_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "prospective-forward-validation":
+        raise RuntimeError(
+            "M021 action requires branch prospective-forward-validation"
+        )
+
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("M021 action refuses a dirty worktree")
+
+    refresh = _run([
+        "git",
+        "fetch",
+        "origin",
+        (
+            "prospective-forward-validation:"
+            "refs/remotes/origin/prospective-forward-validation"
+        ),
+    ])
+    if refresh["exit_code"] != 0:
+        raise RuntimeError("M021 action could not refresh remote branch")
+
+    head = _run(["git", "rev-parse", "HEAD"])
+    remote = _run([
+        "git",
+        "rev-parse",
+        "--verify",
+        "refs/remotes/origin/prospective-forward-validation",
+    ])
+    if (
+        head["exit_code"] != 0
+        or remote["exit_code"] != 0
+        or head["stdout"].strip() != remote["stdout"].strip()
+    ):
+        raise RuntimeError(
+            "M021 action requires local HEAD to match "
+            "origin/prospective-forward-validation"
         )
 
 
@@ -2750,6 +2813,354 @@ def controlled_experiment_m020d_pair():
     }
 
 
+def _m021_readiness_payload():
+    code = (
+        "import json;"
+        "from datetime import datetime,timezone;"
+        "from mamba2.backtest.m021_forward_validation import readiness;"
+        "print(json.dumps(readiness("
+        "now_utc=datetime.now(timezone.utc),"
+        f"cutoff_utc={M021_PRIMARY_TO_UTC!r}"
+        "),sort_keys=True))"
+    )
+    run_result = _run(_native_command("-c", code), env=_safe_env())
+    if run_result["exit_code"] != 0:
+        return None, run_result
+    try:
+        payload = json.loads(run_result["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError):
+        return None, run_result
+    return payload, run_result
+
+
+def m021_forward_readiness():
+    _require_m021_branch()
+    payload, run_result = _m021_readiness_payload()
+    if payload is None:
+        return {
+            "ok": False,
+            "reason": "unable to evaluate frozen M021 readiness",
+            "run": run_result,
+        }
+    return {
+        "ok": True,
+        "protocol_gate": payload,
+        "refused_before_cutoff": not bool(payload.get("ready")),
+        "economic_results_computed": False,
+        "run": run_result,
+    }
+
+
+def m021_historical_regression():
+    _require_m021_branch()
+    if not M019_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M019 dataset manifest is missing",
+        }
+
+    outputs = (
+        M021_REG_CONTROL_BASELINE,
+        M021_REG_CONTROL_DIAGNOSTIC,
+        M021_REG_CANDIDATE_BASELINE,
+        M021_REG_CANDIDATE_DIAGNOSTIC,
+        M021_REG_CANDIDATE_EVIDENCE,
+    )
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    artifacts_before = _artifact_snapshot()
+    control = _run(
+        _native_command(
+            "-m",
+            "mamba2.backtest.experiments",
+            "--manifest",
+            str(M019_MANIFEST.relative_to(REPO)),
+            "--baseline-output",
+            str(M021_REG_CONTROL_BASELINE.relative_to(REPO)),
+            "--diagnostic-output",
+            str(M021_REG_CONTROL_DIAGNOSTIC.relative_to(REPO)),
+            "--arm",
+            "control",
+            "--expected-baseline-sha256",
+            ACCEPTED_M019_BASELINE_SHA256,
+            "--expected-diagnostic-sha256",
+            ACCEPTED_M019_DIAGNOSTIC_SHA256,
+            "--starting-balance",
+            "10000",
+        ),
+        env=_safe_env(),
+    )
+    if control["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M021 historical control regression failed",
+            "control": control,
+        }
+
+    candidate = _run(
+        _native_command(
+            "-m",
+            "mamba2.backtest.m020_spread_treatment",
+            "--manifest",
+            str(M019_MANIFEST.relative_to(REPO)),
+            "--baseline-output",
+            str(M021_REG_CANDIDATE_BASELINE.relative_to(REPO)),
+            "--diagnostic-output",
+            str(M021_REG_CANDIDATE_DIAGNOSTIC.relative_to(REPO)),
+            "--evidence-output",
+            str(M021_REG_CANDIDATE_EVIDENCE.relative_to(REPO)),
+            "--starting-balance",
+            "10000",
+        ),
+        env=_safe_env(),
+    )
+    if candidate["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M021 historical M020-D regression failed",
+            "control": control,
+            "candidate": candidate,
+        }
+
+    observed = {
+        "control_baseline": _sha256(M021_REG_CONTROL_BASELINE),
+        "control_diagnostic": _sha256(M021_REG_CONTROL_DIAGNOSTIC),
+        "candidate_baseline": _sha256(M021_REG_CANDIDATE_BASELINE),
+        "candidate_diagnostic": _sha256(M021_REG_CANDIDATE_DIAGNOSTIC),
+        "candidate_evidence": _sha256(M021_REG_CANDIDATE_EVIDENCE),
+    }
+    expected = {
+        "control_baseline": ACCEPTED_M019_BASELINE_SHA256,
+        "control_diagnostic": ACCEPTED_M019_DIAGNOSTIC_SHA256,
+        "candidate_baseline": ACCEPTED_M020_D_BASELINE_SHA256,
+        "candidate_diagnostic": ACCEPTED_M020_D_DIAGNOSTIC_SHA256,
+        "candidate_evidence": ACCEPTED_M020_D_EVIDENCE_SHA256,
+    }
+    artifacts_after = _artifact_snapshot()
+    no_new_strategy_artifacts = artifacts_before == artifacts_after
+    hashes_preserved = observed == expected
+    return {
+        "ok": bool(hashes_preserved and no_new_strategy_artifacts),
+        "hashes_preserved": hashes_preserved,
+        "observed": observed,
+        "expected": expected,
+        "no_new_strategy_artifacts": no_new_strategy_artifacts,
+        "control": control,
+        "candidate": candidate,
+    }
+
+
+def m021_primary_export():
+    _require_m021_branch()
+    payload, readiness_run = _m021_readiness_payload()
+    if payload is None:
+        return {
+            "ok": False,
+            "reason": "unable to evaluate M021 readiness",
+            "run": readiness_run,
+        }
+    if not payload.get("ready"):
+        return {
+            "ok": True,
+            "ready": False,
+            "refused_before_cutoff": True,
+            "export_attempted": False,
+            "economic_results_computed": False,
+            "protocol_gate": payload,
+            "run": readiness_run,
+        }
+
+    output_dir = _ensure_baseline_path(M021_DIR)
+    if output_dir.exists():
+        return {
+            "ok": False,
+            "reason": "M021 primary dataset directory already exists",
+            "path": str(output_dir.relative_to(REPO)),
+        }
+
+    wine_python, discovery = _select_wine_python()
+    wine = _wine()
+    command = [
+        wine,
+        wine_python,
+        "-m",
+        "mamba2.backtest.mt5_dataset",
+        "--symbols",
+        *M019_SYMBOLS,
+        "--timeframes",
+        "M1",
+        "M5",
+        "M15",
+        "--from-utc",
+        M021_FROM_UTC,
+        "--to-utc",
+        M021_PRIMARY_TO_UTC,
+        "--output-dir",
+        str(M021_DIR.relative_to(REPO)),
+        "--include-tick-ask",
+        "--tick-chunk-minutes",
+        "1440",
+        "--rate-chunk-days",
+        "7",
+    ]
+    export = _run(command, env=_safe_env(wine=True))
+    if export["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M021 read-only MT5 export failed",
+            "export": export,
+            "discovery": discovery,
+        }
+    if not M021_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "M021 export completed without manifest",
+            "export": export,
+        }
+
+    inspect_code = (
+        "import json,hashlib;"
+        "from pathlib import Path;"
+        "from mamba2.backtest.mt5_dataset import load_mt5_dataset;"
+        f"p=Path({str(M021_MANIFEST)!r});"
+        "d=load_mt5_dataset(p);"
+        "h=hashlib.sha256(p.read_bytes()).hexdigest();"
+        "print(json.dumps({"
+        "'manifest_sha256':h,"
+        "'account_currency':d.account_currency,"
+        "'symbols':sorted(d.m1_bars),"
+        "'m1_rows':{s:len(d.m1_bars[s]) for s in sorted(d.m1_bars)},"
+        "'ask_rows':{s:len(d.ask_m1_bars[s]) for s in sorted(d.ask_m1_bars)},"
+        "'native_rows':{s:{tf:len(df) for tf,df in sorted(d.native_timeframe_bars[s].items()) "
+        "for s in sorted(d.native_timeframe_bars)},"
+        "'requested_range':d.manifest.get('requested_range')"
+        "},sort_keys=True))"
+    )
+    inspect = _run(_native_command("-c", inspect_code), env=_safe_env())
+    if inspect["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M021 exported dataset failed integrity inspection",
+            "export": export,
+            "inspect": inspect,
+        }
+    try:
+        summary = json.loads(inspect["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError):
+        return {
+            "ok": False,
+            "reason": "unable to parse M021 dataset inspection",
+            "inspect": inspect,
+        }
+
+    range_ok = summary.get("requested_range") == {
+        "from_utc": M021_FROM_UTC,
+        "to_utc": M021_PRIMARY_TO_UTC,
+    }
+    symbols_ok = set(summary.get("symbols", [])) == set(M019_SYMBOLS)
+    ask_ok = all(
+        summary.get("m1_rows", {}).get(symbol, 0) > 0
+        and summary.get("ask_rows", {}).get(symbol)
+        == summary.get("m1_rows", {}).get(symbol)
+        for symbol in M019_SYMBOLS
+    )
+    native_ok = all(
+        summary.get("native_rows", {}).get(symbol, {}).get("M5", 0) > 0
+        and summary.get("native_rows", {}).get(symbol, {}).get("M15", 0) > 0
+        for symbol in M019_SYMBOLS
+    )
+    return {
+        "ok": bool(range_ok and symbols_ok and ask_ok and native_ok),
+        "ready": True,
+        "manifest": str(M021_MANIFEST.relative_to(REPO)),
+        "dataset": summary,
+        "economic_results_computed": False,
+        "export": export,
+        "inspect": inspect,
+        "wine_python": wine_python,
+        "discovery": discovery,
+    }
+
+
+def m021_primary_pair():
+    _require_m021_branch()
+    payload, readiness_run = _m021_readiness_payload()
+    if payload is None:
+        return {
+            "ok": False,
+            "reason": "unable to evaluate M021 readiness",
+            "run": readiness_run,
+        }
+    if not payload.get("ready"):
+        return {
+            "ok": True,
+            "ready": False,
+            "refused_before_cutoff": True,
+            "pair_attempted": False,
+            "economic_results_computed": False,
+            "protocol_gate": payload,
+            "run": readiness_run,
+        }
+    if not M021_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "M021 primary manifest is missing; export first",
+        }
+
+    regression = m021_historical_regression()
+    if not regression.get("ok"):
+        return {
+            "ok": False,
+            "reason": "M021 historical regression gate failed",
+            "regression": regression,
+        }
+
+    result = _run(
+        _native_command(
+            "-m",
+            "mamba2.backtest.m021_forward_validation",
+            "--manifest",
+            str(M021_MANIFEST.relative_to(REPO)),
+            "--output-dir",
+            str(M021_OUTPUT_DIR.relative_to(REPO)),
+            "--cutoff-utc",
+            M021_PRIMARY_TO_UTC,
+            "--now-utc",
+            payload["now_utc"],
+            "--starting-balance",
+            "10000",
+        ),
+        env=_safe_env(),
+    )
+    if result["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M021 primary paired replay failed",
+            "regression": regression,
+            "run": result,
+        }
+    try:
+        summary = json.loads(result["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError):
+        return {
+            "ok": False,
+            "reason": "unable to parse M021 paired replay result",
+            "run": result,
+        }
+    return {
+        "ok": bool(summary.get("ok")),
+        "ready": True,
+        "historical_regression": {
+            "hashes_preserved": regression.get("hashes_preserved"),
+            "observed": regression.get("observed"),
+        },
+        "pair": summary,
+        "run": result,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -2774,6 +3185,10 @@ ACTION_HANDLERS = {
     "controlled_experiment_m020b_diagnostic": controlled_experiment_m020b_diagnostic,
     "controlled_experiment_m020c_pair": controlled_experiment_m020c_pair,
     "controlled_experiment_m020d_pair": controlled_experiment_m020d_pair,
+    "m021_forward_readiness": m021_forward_readiness,
+    "m021_historical_regression": m021_historical_regression,
+    "m021_primary_export": m021_primary_export,
+    "m021_primary_pair": m021_primary_pair,
 }
 
 
