@@ -80,6 +80,8 @@ M020_TREATMENT_BASELINE_A = M019_DIR / "m020-a-treatment-baseline-a.json"
 M020_TREATMENT_BASELINE_B = M019_DIR / "m020-a-treatment-baseline-b.json"
 M020_TREATMENT_DIAGNOSTIC_A = M019_DIR / "m020-a-treatment-diagnostic-a.json"
 M020_TREATMENT_DIAGNOSTIC_B = M019_DIR / "m020-a-treatment-diagnostic-b.json"
+M020_B_DIAGNOSTIC_A = M019_DIR / "m020-b-spread-diagnostic-a.json"
+M020_B_DIAGNOSTIC_B = M019_DIR / "m020-b-spread-diagnostic-b.json"
 
 
 def _safe_env(wine=False):
@@ -2285,6 +2287,87 @@ def controlled_experiment_m020a_pair():
     }
 
 
+def controlled_experiment_m020b_diagnostic():
+    """Run deterministic read-only M020-B spread-confound reporting."""
+
+    _require_m020_branch()
+    if not M020_CONTROL_DIAGNOSTIC_A.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M020 control diagnostic is missing",
+        }
+    if _sha256(M020_CONTROL_DIAGNOSTIC_A) != ACCEPTED_M019_DIAGNOSTIC_SHA256:
+        return {
+            "ok": False,
+            "reason": "M020 control diagnostic does not match accepted M019",
+        }
+
+    outputs = (M020_B_DIAGNOSTIC_A, M020_B_DIAGNOSTIC_B)
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    runs = []
+    for output in outputs:
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.m020_diagnostics",
+                "--control-diagnostic",
+                str(M020_CONTROL_DIAGNOSTIC_A.relative_to(REPO)),
+                "--output",
+                str(output.relative_to(REPO)),
+                "--expected-control-diagnostic-sha256",
+                ACCEPTED_M019_DIAGNOSTIC_SHA256,
+            ),
+            env=_safe_env(),
+        )
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M020-B diagnostic command failed",
+                "runs": runs,
+            }
+
+    if any(not output.is_file() for output in outputs):
+        return {
+            "ok": False,
+            "reason": "M020-B output missing after successful command",
+            "runs": runs,
+        }
+
+    bytes_a = M020_B_DIAGNOSTIC_A.read_bytes()
+    bytes_b = M020_B_DIAGNOSTIC_B.read_bytes()
+    identical = bytes_a == bytes_b
+    sha_a = _sha256(M020_B_DIAGNOSTIC_A)
+    sha_b = _sha256(M020_B_DIAGNOSTIC_B)
+    report = json.loads(bytes_a.decode("utf-8"))
+
+    return {
+        "ok": bool(
+            identical
+            and report.get("strategy_behavior_changed") is False
+            and report.get("source_control_diagnostic_sha256")
+            == ACCEPTED_M019_DIAGNOSTIC_SHA256
+        ),
+        "diagnostic_id": "M020-B",
+        "strategy_behavior_changed": report.get("strategy_behavior_changed"),
+        "source_control_diagnostic_sha256": report.get(
+            "source_control_diagnostic_sha256"
+        ),
+        "outputs_identical": identical,
+        "output_sha256_a": sha_a,
+        "output_sha256_b": sha_b,
+        "blocked_session": report.get("blocked_session"),
+        "outside_blocked_session": report.get("outside_blocked_session"),
+        "matched_spread_band_comparison": report.get(
+            "matched_spread_band_comparison"
+        ),
+        "runs": runs,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -2306,6 +2389,7 @@ ACTION_HANDLERS = {
     "broader_history_run_pair": broader_history_run_pair,
     "controlled_experiment_control_pair": controlled_experiment_control_pair,
     "controlled_experiment_m020a_pair": controlled_experiment_m020a_pair,
+    "controlled_experiment_m020b_diagnostic": controlled_experiment_m020b_diagnostic,
 }
 
 
