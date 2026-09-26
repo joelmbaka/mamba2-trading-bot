@@ -131,11 +131,11 @@ The replacement local-control action `m022_history_depth_probe` is bounded to na
 2. Synchronize the Dell feature checkout to the latest `strategy-parameter-research` SHA.
 3. Re-run repository gates and feature tests, including the tick-derived-M1 exporter tests.
 4. Run `m022_history_depth_probe`.
-5. If it confirms materially older synchronized Bid/Ask tick coverage, run one fixed extended inventory export using:
+5. If it confirms materially older synchronized Bid/Ask tick coverage, run fixed action `m022_tick_inventory` (after explicit cleanup only if required), using:
    - tick-derived synchronized Bid/Ask M1;
    - native M5/M15;
    - end-exclusive cutoff `2026-09-25T00:00:00Z`.
-6. Validate overlap with accepted M019 history before trusting older tick-derived M1.
+6. Accept older tick-derived M1 only if its M019 overlap satisfies the frozen rule: identical Bid/Ask overlap indexes, Bid and Ask OHLC each within 0.5 symbol point, zero Ask index mismatch, exact native M5/M15 overlap, and manifest source `copy_ticks_range_bid_aggregation`.
 7. Record exact ranges/counts/gaps/hashes/source/runtime.
 8. Freeze development / validation / historical-holdout dates.
 9. Only then implement/run Phase-1 parameter arms.
