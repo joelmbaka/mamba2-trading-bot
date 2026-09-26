@@ -139,7 +139,172 @@ Never:
 - change accepted replay semantics silently;
 - stack multiple strategy treatments into one experiment.
 
-## Initial implementation task
+## M020-A implementation and validation
 
-Build the experiment harness first. It must prove the accepted M019 control is
-unchanged before M020-A treatment code is evaluated.
+Implementation HEAD:
+
+`3958b607ab12bf232c741fe520328b72dd9a23f2`
+
+Implementation components:
+
+- deterministic control/treatment harness in `mamba2/backtest/experiments.py`;
+- experiment-only `UtcEntrySessionFilterStrategy`;
+- diagnostic strategy transform hook that leaves normal callers unchanged;
+- exact unit coverage for the 00:00–03:59 UTC boundary and wrapper isolation;
+- permanent local-control actions for the immutable control pair and M020-A
+  treatment pair.
+
+Pre-treatment validation:
+
+- native suite: **184 passed, 2 skipped**;
+- Wine suite: **184 passed, 2 skipped**;
+- treatment-code control regression reproduced the accepted M019 baseline hash
+  exactly:
+  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
+- treatment-code control regression reproduced the accepted M019 diagnostic
+  hash exactly:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`.
+
+Real-data treatment command:
+
+`mamba2-m020a-treatment-pair-20260926-0603`
+
+Completed:
+
+`2026-09-26T03:26:37.880631+00:00`
+
+Treatment determinism:
+
+- baseline A/B identical: **PASS**;
+- treatment baseline SHA-256:
+  `65e3fe214e8e923175144dc9749c3fef521da964a796286805ebed745df42658`;
+- diagnostic A/B identical: **PASS**;
+- treatment diagnostic SHA-256:
+  `c18c9fdda3fa9cb69cfd90f507d217897875248e5f8d745aa49cafe73925157e`;
+- blocked-entry count in 00:00–03:59 UTC: **0**;
+- blocked evaluation boundaries A/B: **80,747 / 80,747**;
+- wrong-side initial-TP violations: **0**;
+- negative-P/L take-profit exits: **0**;
+- new strategy artifacts: **0**;
+- remaining open positions: **0**.
+
+### M020-A control vs treatment
+
+| Metric | Control | M020-A treatment | Delta |
+|---|---:|---:|---:|
+| Closed trades | 4,922 | 4,104 | -818 |
+| Wins | 1,899 | 1,642 | -257 |
+| Losses | 3,020 | 2,459 | -561 |
+| Flats | 3 | 3 | 0 |
+| Non-flat win rate | 38.6054% | 40.0390% | +1.4336 pp |
+| Net realized P/L | USD -1,716.6076 | USD -933.4296 | **USD +783.1780** |
+| Ending equity | USD 8,283.3924 | USD 9,066.5704 | **USD +783.1780** |
+| Maximum equity drawdown | USD 1,929.6970 | USD 1,271.3308 | **USD -658.3661** |
+| Maximum drawdown % | 19.2148% | 12.6592% | **-6.5556 pp** |
+
+Relative to control, the treatment reduced the historical net loss by about
+**45.62%**, reduced maximum equity drawdown by about **34.12%**, and reduced
+trade count by about **16.62%**.
+
+The treatment remains loss-making. This is not profitability evidence.
+
+### Stability by calendar entry period
+
+Every inspected calendar period improved relative to the immutable control:
+
+| Entry period | Control P/L | Treatment P/L | Delta |
+|---|---:|---:|---:|
+| Jun 23–30 | USD -170.1225 | USD -31.1150 | **USD +139.0075** |
+| July | USD -637.4844 | USD -243.2565 | **USD +394.2279** |
+| August | USD -674.9506 | USD -541.1094 | **USD +133.8413** |
+| Sep 1–24 | USD -234.0501 | USD -117.9487 | **USD +116.1014** |
+
+These slices were already inspected in M019 and are stability checks, not
+independent holdouts.
+
+### Stability by symbol
+
+Every symbol improved relative to control:
+
+| Symbol | Control P/L | Treatment P/L | Delta |
+|---|---:|---:|---:|
+| EURJPY | USD +113.6933 | USD +262.5154 | **USD +148.8220** |
+| EURUSD | USD -301.5929 | USD -223.4500 | **USD +78.1429** |
+| GBPJPY | USD -930.0207 | USD -509.6719 | **USD +420.3487** |
+| GBPUSD | USD -423.3857 | USD -292.1857 | **USD +131.2000** |
+| USDJPY | USD -175.3017 | USD -170.6373 | **USD +4.6644** |
+
+The effect is strongest in GBPJPY but is not exclusive to GBPJPY. USDJPY shows
+only a small improvement and remains effectively weak evidence for a universal
+symbol-independent effect.
+
+### Stability by side
+
+Both sides improved:
+
+| Side | Control P/L | Treatment P/L | Delta |
+|---|---:|---:|---:|
+| BUY | USD -762.8501 | USD -351.9240 | **USD +410.9261** |
+| SELL | USD -953.7575 | USD -581.5056 | **USD +372.2519** |
+
+The treatment does not justify a BUY-only or SELL-only rule.
+
+### Remaining weakness
+
+The treatment still produced:
+
+- net realized P/L: **USD -933.4296206208546**;
+- maximum drawdown: **USD 1,271.330847985335 / 12.659175316162072%**;
+- four negative symbols out of five;
+- all four calendar entry periods still negative;
+- August alone at **USD -541.1093680009491**.
+
+M020-A therefore does not establish a profitable strategy.
+
+### M020-A classification
+
+**PROMISING, NOT PROMOTED**
+
+The treatment effect is materially better than control and is directionally
+consistent across all four inspected calendar periods, all five symbols, and
+both BUY and SELL. That is stronger than an aggregate-only improvement.
+
+However:
+
+- the same June–September dataset was used to discover and test the hypothesis;
+- the 00:00–03:59 UTC bucket also had unusually high spread exposure;
+- removing the session sharply reduces the remaining spread tails;
+- treatment remains materially loss-making.
+
+M020-A is therefore a candidate for later genuinely forward/paper validation,
+not a live strategy change.
+
+## M020-B — authorized diagnostic before another treatment
+
+### Question
+
+Is M020-A's improvement primarily associated with the UTC session itself, or
+with the unusually wide entry spreads concentrated inside that session?
+
+### Scope
+
+M020-B is **diagnostic only**. It must not change strategy behavior.
+
+Using the immutable M019 control artifacts and the deterministic M020-A
+treatment artifacts, report the harmful-session population in fixed,
+predeclared descriptive views:
+
+1. entry-spread distribution and quantiles for 00:00–03:59 UTC;
+2. P/L, wins, losses, and trade count by spread quantile within that session;
+3. the same breakdown by symbol, BUY/SELL, and calendar entry period;
+4. compare blocked-session spread bands with the same spread bands outside the
+   blocked session where sample size permits;
+5. identify whether the observed loss is concentrated in extreme spread tails
+   or persists at ordinary spread levels;
+6. do not introduce a spread threshold or optimize a cutoff.
+
+The diagnostic may motivate a later single-variable spread experiment, but any
+such threshold must be documented before implementation and must not be stacked
+with the M020-A session filter.
+
+M020 remains **IN PROGRESS** until this confound diagnosis is recorded.
