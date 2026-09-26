@@ -99,47 +99,66 @@ The accepted M019/M020 regression artifacts must remain protected as specified i
 
 ## Current checkpoint
 
-The history-inventory gate is active; **no parameter results have been inspected**.
+The M022 history-inventory gate has **PASSED**. No M022 parameter result has yet been inspected.
 
-Verified evidence:
+Accepted dataset:
 
-- branch `strategy-parameter-research`;
-- original M022 start SHA `253b6ee840e5489a2c5db27d064500bb44f93e1e`;
-- current reviewed feature SHA before the next export:
-  `0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46`;
-- Dell worktree/repo gate clean and divergence `0/0`;
-- synchronized Bid/Ask ticks + native M5/M15 proven through 2025-08-25 for all five symbols;
-- 2025-07-28 failed common synchronized tick coverage because EURJPY lacked qualifying ticks;
-- the full tick-derived Bid/Ask M1 candidate was rejected by the frozen M019 overlap gate: Ask + M5/M15 matched, but tick-derived Bid M1 differed by 1–5 points on four symbols;
-- the 0.5-point gate was **not** relaxed;
-- MT5 `MaxBars` was safely raised from 100000 to 500000 with the original config backed up;
-- runtime `maxbars=500000` was verified;
-- native M1 for 2025-08-25 is now available for all five symbols;
-- no economic M022 result has been inspected;
-- M021 remains isolated.
+`backtest_data/m022-history-inventory-native-m1-v3/manifest.json`
+
+Manifest SHA-256:
+
+`143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`
+
+Common trading-date-list SHA-256:
+
+`2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5`
+
+The replacement M019 overlap gate passed exactly across all five symbols:
+
+- native Bid M1 exact;
+- Ask M1 exact;
+- native M5 exact;
+- native M15 exact;
+- zero missing/extra Ask rows.
+
+Frozen chronological partitions:
+
+- development:
+  `2025-08-25T00:00:00Z` → `2026-04-21T00:00:00Z`,
+  **169** common trading dates;
+- validation:
+  `2026-04-21T00:00:00Z` → `2026-07-08T00:00:00Z`,
+  **56** common trading dates;
+- untouched historical holdout:
+  `2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`,
+  **57** common trading dates.
+
+The holdout remains unopened for economic inspection.
+
+Local-control reliability was hardened on `local-control` at
+`d85e51d4a34ec52597e54cd8a1cad92f70fff2bb` by using
+`TimeoutStartSec=infinity` and `OnUnitInactiveSec=15s` while retaining the
+finite stop timeout and cgroup-wide kill semantics.
 
 ### Exact next authorized sequence
 
-1. Synchronize the Dell feature checkout to the latest `strategy-parameter-research` documentation SHA.
-2. Run the repository gate.
-3. Export a fresh versioned candidate using:
-   - native MT5 Bid M1;
-   - tick-derived Ask M1 aligned to native M1;
-   - native M5/M15;
-   - conservative start 2025-08-25;
-   - end-exclusive cutoff 2026-09-25T00:00:00Z.
-4. Apply the replacement frozen overlap gate recorded in the M022 milestone:
-   - native Bid M1 overlap index/frame exact;
-   - Ask overlap index exact and OHLC <= 0.5 point;
-   - zero candidate Ask-vs-Bid index mismatch;
-   - native M5/M15 exact;
-   - Ask source `copy_ticks_range`.
-5. Record exact ranges, counts, gaps, hashes, broker/runtime metadata.
-6. If the gate passes, materialize the already-frozen chronological 60% / 20% / 20% development / validation / untouched-holdout split at whole UTC trading-day boundaries and verify >=20 common trading dates per partition.
-7. Freeze the resulting exact dates/hashes in docs.
-8. Only then implement/run Phase-1 parameter arms one family at a time.
+1. Synchronize the Dell feature checkout to the latest M022 feature SHA after these documentation updates.
+2. Implement experiment-only parameter overrides and deterministic Phase-1 reporting without silently changing production defaults.
+3. Add synthetic/unit tests for override/default equivalence and reporting determinism.
+4. Preserve accepted M019/M020 regression artifacts.
+5. Run Phase 1 on the **development partition only**, one parameter family at a time, relative to the frozen reference configuration:
+   - stochastic tuples;
+   - symmetric oversold/overbought boundaries;
+   - EMA period;
+   - decision-time spread threshold;
+   - ATR SL/TP protection;
+   - all-hours vs 00:00–03:59 UTC exclusion.
+6. Do not run the full Cartesian product.
+7. Do not inspect validation while selecting within a Phase-1 family except according to a separately frozen shortlist procedure.
+8. Do not inspect the historical holdout yet.
+9. Freeze the Phase-1 shortlist and Phase-2 matrix before any combination runs.
 
-Do not revisit the failed tick-derived-Bid candidate by weakening tolerance.
+M021 remains independently frozen and excluded from all M022 tuning.
 
 ## Start here
 
