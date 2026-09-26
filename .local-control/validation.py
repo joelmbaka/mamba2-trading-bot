@@ -88,6 +88,12 @@ M020_C_DIAGNOSTIC_A = M019_DIR / "m020-c-diagnostic-a.json"
 M020_C_DIAGNOSTIC_B = M019_DIR / "m020-c-diagnostic-b.json"
 M020_C_DECISION_A = M019_DIR / "m020-c-decision-spread-a.json"
 M020_C_DECISION_B = M019_DIR / "m020-c-decision-spread-b.json"
+M020_D_BASELINE_A = M019_DIR / "m020-d-baseline-a.json"
+M020_D_BASELINE_B = M019_DIR / "m020-d-baseline-b.json"
+M020_D_DIAGNOSTIC_A = M019_DIR / "m020-d-diagnostic-a.json"
+M020_D_DIAGNOSTIC_B = M019_DIR / "m020-d-diagnostic-b.json"
+M020_D_EVIDENCE_A = M019_DIR / "m020-d-evidence-a.json"
+M020_D_EVIDENCE_B = M019_DIR / "m020-d-evidence-b.json"
 
 
 def _safe_env(wine=False):
@@ -2515,6 +2521,235 @@ def controlled_experiment_m020c_pair():
     }
 
 
+def controlled_experiment_m020d_pair():
+    """Run deterministic M020-D decision-time spread treatment twice."""
+
+    _require_m020_branch()
+    if not M019_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M019 dataset manifest is missing",
+        }
+    if (
+        not M020_CONTROL_BASELINE_A.is_file()
+        or not M020_CONTROL_DIAGNOSTIC_A.is_file()
+    ):
+        return {
+            "ok": False,
+            "reason": "M020 control artifacts are missing; run control pair",
+        }
+    if (
+        _sha256(M020_CONTROL_BASELINE_A) != ACCEPTED_M019_BASELINE_SHA256
+        or _sha256(M020_CONTROL_DIAGNOSTIC_A)
+        != ACCEPTED_M019_DIAGNOSTIC_SHA256
+    ):
+        return {
+            "ok": False,
+            "reason": "M020 control artifacts do not match accepted M019",
+        }
+
+    outputs = (
+        M020_D_BASELINE_A,
+        M020_D_BASELINE_B,
+        M020_D_DIAGNOSTIC_A,
+        M020_D_DIAGNOSTIC_B,
+        M020_D_EVIDENCE_A,
+        M020_D_EVIDENCE_B,
+    )
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    artifacts_before = _artifact_snapshot()
+    runs = []
+    for baseline_output, diagnostic_output, evidence_output in (
+        (M020_D_BASELINE_A, M020_D_DIAGNOSTIC_A, M020_D_EVIDENCE_A),
+        (M020_D_BASELINE_B, M020_D_DIAGNOSTIC_B, M020_D_EVIDENCE_B),
+    ):
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.m020_spread_treatment",
+                "--manifest",
+                str(M019_MANIFEST.relative_to(REPO)),
+                "--baseline-output",
+                str(baseline_output.relative_to(REPO)),
+                "--diagnostic-output",
+                str(diagnostic_output.relative_to(REPO)),
+                "--evidence-output",
+                str(evidence_output.relative_to(REPO)),
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M020-D treatment replay failed",
+                "runs": runs,
+            }
+
+    if any(not output.is_file() for output in outputs):
+        return {
+            "ok": False,
+            "reason": "M020-D output missing after successful replay",
+            "runs": runs,
+        }
+
+    baseline_identical = (
+        M020_D_BASELINE_A.read_bytes() == M020_D_BASELINE_B.read_bytes()
+    )
+    diagnostic_identical = (
+        M020_D_DIAGNOSTIC_A.read_bytes() == M020_D_DIAGNOSTIC_B.read_bytes()
+    )
+    evidence_identical = (
+        M020_D_EVIDENCE_A.read_bytes() == M020_D_EVIDENCE_B.read_bytes()
+    )
+
+    baseline_sha_a = _sha256(M020_D_BASELINE_A)
+    baseline_sha_b = _sha256(M020_D_BASELINE_B)
+    diagnostic_sha_a = _sha256(M020_D_DIAGNOSTIC_A)
+    diagnostic_sha_b = _sha256(M020_D_DIAGNOSTIC_B)
+    evidence_sha_a = _sha256(M020_D_EVIDENCE_A)
+    evidence_sha_b = _sha256(M020_D_EVIDENCE_B)
+
+    control_baseline = json.loads(
+        M020_CONTROL_BASELINE_A.read_text(encoding="utf-8")
+    )
+    control_diagnostic = json.loads(
+        M020_CONTROL_DIAGNOSTIC_A.read_text(encoding="utf-8")
+    )
+    treatment_baseline = json.loads(
+        M020_D_BASELINE_A.read_text(encoding="utf-8")
+    )
+    treatment_diagnostic = json.loads(
+        M020_D_DIAGNOSTIC_A.read_text(encoding="utf-8")
+    )
+    evidence = json.loads(M020_D_EVIDENCE_A.read_text(encoding="utf-8"))
+
+    treatment_trades = treatment_diagnostic.get("trades", [])
+    target_direction_violations = []
+    negative_take_profit = []
+    for trade in treatment_trades:
+        protection = trade.get("initial_protection") or {}
+        target = protection.get("applied_tp")
+        entry = trade.get("entry_price")
+        side = trade.get("side")
+        if target is not None and entry is not None:
+            crossed = (
+                side == "BUY" and float(target) <= float(entry)
+            ) or (
+                side == "SELL" and float(target) >= float(entry)
+            )
+            if crossed:
+                target_direction_violations.append(
+                    int(trade["position_ticket"])
+                )
+        if (
+            trade.get("exit_reason") == "take_profit"
+            and float(trade.get("net_realized_pl", 0.0)) < 0
+        ):
+            negative_take_profit.append(int(trade["position_ticket"]))
+
+    artifacts_after = _artifact_snapshot()
+    no_new_strategy_artifacts = artifacts_before == artifacts_after
+
+    control_aggregate = control_baseline.get("aggregate", {})
+    treatment_aggregate = treatment_baseline.get("aggregate", {})
+    control_analysis = control_diagnostic.get("analysis", {})
+    treatment_analysis = treatment_diagnostic.get("analysis", {})
+    control_months = _m019_monthly_trade_stats(
+        control_diagnostic.get("trades", [])
+    )
+    treatment_months = _m019_monthly_trade_stats(treatment_trades)
+
+    return {
+        "ok": bool(
+            baseline_identical
+            and diagnostic_identical
+            and evidence_identical
+            and evidence.get("accepted_spread_violation_count") == 0
+            and not target_direction_violations
+            and not negative_take_profit
+            and no_new_strategy_artifacts
+        ),
+        "experiment_id": "M020-D",
+        "treatment": evidence.get("treatment"),
+        "baseline_reports_identical": baseline_identical,
+        "baseline_sha256_a": baseline_sha_a,
+        "baseline_sha256_b": baseline_sha_b,
+        "diagnostics_identical": diagnostic_identical,
+        "diagnostic_sha256_a": diagnostic_sha_a,
+        "diagnostic_sha256_b": diagnostic_sha_b,
+        "evidence_identical": evidence_identical,
+        "evidence_sha256_a": evidence_sha_a,
+        "evidence_sha256_b": evidence_sha_b,
+        "rejected_order_count": evidence.get("rejected_order_count"),
+        "accepted_spread_violation_count": evidence.get(
+            "accepted_spread_violation_count"
+        ),
+        "maximum_accepted_decision_spread_points": evidence.get(
+            "maximum_accepted_decision_spread_points"
+        ),
+        "target_direction_violation_count": len(
+            target_direction_violations
+        ),
+        "negative_take_profit_count": len(negative_take_profit),
+        "no_new_strategy_artifacts": no_new_strategy_artifacts,
+        "control": {
+            "baseline_sha256": ACCEPTED_M019_BASELINE_SHA256,
+            "diagnostic_sha256": ACCEPTED_M019_DIAGNOSTIC_SHA256,
+            "aggregate": control_aggregate,
+        },
+        "treatment_result": {
+            "aggregate": treatment_aggregate,
+            "per_symbol": treatment_baseline.get("per_symbol"),
+            "by_entry_month": treatment_months,
+            "analysis": {
+                "by_symbol": treatment_analysis.get("by_symbol"),
+                "by_side": treatment_analysis.get("by_side"),
+                "by_exit_reason": treatment_analysis.get("by_exit_reason"),
+                "spread_by_outcome": treatment_analysis.get(
+                    "spread_by_outcome"
+                ),
+            },
+        },
+        "effect": {
+            "aggregate_delta": _m020_selected_delta(
+                treatment_aggregate,
+                control_aggregate,
+                (
+                    "accepted_orders",
+                    "closed_trades",
+                    "winning_closed_trades",
+                    "losing_closed_trades",
+                    "flat_closed_trades",
+                    "net_realized_pl",
+                    "ending_realized_balance",
+                    "ending_equity",
+                    "maximum_equity_drawdown",
+                    "maximum_equity_drawdown_pct",
+                ),
+            ),
+            "per_symbol": _m020_group_effect(
+                treatment_baseline.get("per_symbol") or {},
+                control_baseline.get("per_symbol") or {},
+            ),
+            "by_entry_month": _m020_group_effect(
+                treatment_months,
+                control_months,
+            ),
+            "by_side": _m020_group_effect(
+                treatment_analysis.get("by_side") or {},
+                control_analysis.get("by_side") or {},
+            ),
+        },
+        "runs": runs,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -2538,6 +2773,7 @@ ACTION_HANDLERS = {
     "controlled_experiment_m020a_pair": controlled_experiment_m020a_pair,
     "controlled_experiment_m020b_diagnostic": controlled_experiment_m020b_diagnostic,
     "controlled_experiment_m020c_pair": controlled_experiment_m020c_pair,
+    "controlled_experiment_m020d_pair": controlled_experiment_m020d_pair,
 }
 
 
