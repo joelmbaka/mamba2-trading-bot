@@ -1,19 +1,19 @@
 {
   "version": 1,
-  "command_id": "mamba2-m021-primary-export-refusal-20260926-1128",
-  "completed_at": "2026-09-26T08:28:43.665716+00:00",
+  "command_id": "mamba2-m021-primary-pair-refusal-20260926-1129",
+  "completed_at": "2026-09-26T08:29:23.002014+00:00",
   "ok": true,
-  "action": "m021_primary_export",
+  "action": "m021_primary_pair",
   "data": {
     "ok": true,
     "ready": false,
     "refused_before_cutoff": true,
-    "export_attempted": false,
+    "pair_attempted": false,
     "economic_results_computed": false,
     "protocol_gate": {
       "cutoff_utc": "2026-10-23T00:00:00Z",
       "economic_results_computed": false,
-      "now_utc": "2026-09-26T08:28:39.759165Z",
+      "now_utc": "2026-09-26T08:29:19.144881Z",
       "prospective_start_utc": "2026-09-25T00:00:00Z",
       "ready": false
     },
@@ -27,7 +27,7 @@
         "import json;from datetime import datetime,timezone;from mamba2.backtest.m021_forward_validation import readiness;print(json.dumps(readiness(now_utc=datetime.now(timezone.utc),cutoff_utc='2026-10-23T00:00:00Z'),sort_keys=True))"
       ],
       "exit_code": 0,
-      "stdout": "{\"cutoff_utc\": \"2026-10-23T00:00:00Z\", \"economic_results_computed\": false, \"now_utc\": \"2026-09-26T08:28:39.759165Z\", \"prospective_start_utc\": \"2026-09-25T00:00:00Z\", \"ready\": false}\n",
+      "stdout": "{\"cutoff_utc\": \"2026-10-23T00:00:00Z\", \"economic_results_computed\": false, \"now_utc\": \"2026-09-26T08:29:19.144881Z\", \"prospective_start_utc\": \"2026-09-25T00:00:00Z\", \"ready\": false}\n",
       "stderr": ""
     }
   }
