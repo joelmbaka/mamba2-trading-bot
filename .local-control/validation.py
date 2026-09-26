@@ -126,6 +126,12 @@ M022_TICK_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-tick-
 M022_TICK_INVENTORY_MANIFEST = M022_TICK_INVENTORY_DIR / "manifest.json"
 M022_NATIVE_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-native-m1-v3"
 M022_NATIVE_INVENTORY_MANIFEST = M022_NATIVE_INVENTORY_DIR / "manifest.json"
+M022_PHASE1_REGRESSION_DIR = REPO / "backtest_data" / "m022-phase1-regression-v1"
+M022_PHASE1_REG_CONTROL_BASELINE = M022_PHASE1_REGRESSION_DIR / "control-baseline.json"
+M022_PHASE1_REG_CONTROL_DIAGNOSTIC = M022_PHASE1_REGRESSION_DIR / "control-diagnostic.json"
+M022_PHASE1_REG_M020D_BASELINE = M022_PHASE1_REGRESSION_DIR / "m020d-baseline.json"
+M022_PHASE1_REG_M020D_DIAGNOSTIC = M022_PHASE1_REGRESSION_DIR / "m020d-diagnostic.json"
+M022_PHASE1_REG_M020D_EVIDENCE = M022_PHASE1_REGRESSION_DIR / "m020d-evidence.json"
 
 
 def _safe_env(wine=False):
@@ -3289,6 +3295,114 @@ def m021_primary_pair():
 
 
 
+def m022_phase1_default_regression():
+    """Hash-only regression of unchanged M019/M020-D executable semantics."""
+
+    feature_sha = _require_m022_branch()
+    if not M019_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M019 manifest is unavailable",
+            "feature_sha": feature_sha,
+        }
+
+    output_dir = _ensure_baseline_path(M022_PHASE1_REGRESSION_DIR)
+    if output_dir.exists():
+        return {
+            "ok": False,
+            "reason": "M022 Phase-1 regression directory already exists",
+            "feature_sha": feature_sha,
+            "path": str(output_dir.relative_to(REPO)),
+        }
+    output_dir.mkdir(parents=True)
+
+    control = _run(
+        _native_command(
+            "-m",
+            "mamba2.backtest.experiments",
+            "--manifest",
+            str(M019_MANIFEST.relative_to(REPO)),
+            "--baseline-output",
+            str(M022_PHASE1_REG_CONTROL_BASELINE.relative_to(REPO)),
+            "--diagnostic-output",
+            str(M022_PHASE1_REG_CONTROL_DIAGNOSTIC.relative_to(REPO)),
+            "--arm",
+            "control",
+            "--expected-baseline-sha256",
+            ACCEPTED_M019_BASELINE_SHA256,
+            "--expected-diagnostic-sha256",
+            ACCEPTED_M019_DIAGNOSTIC_SHA256,
+            "--starting-balance",
+            "10000",
+        ),
+        env=_safe_env(),
+    )
+    if control["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M022 default control no longer preserves accepted M019",
+            "feature_sha": feature_sha,
+            "control": control,
+        }
+
+    candidate = _run(
+        _native_command(
+            "-m",
+            "mamba2.backtest.m020_spread_treatment",
+            "--manifest",
+            str(M019_MANIFEST.relative_to(REPO)),
+            "--baseline-output",
+            str(M022_PHASE1_REG_M020D_BASELINE.relative_to(REPO)),
+            "--diagnostic-output",
+            str(M022_PHASE1_REG_M020D_DIAGNOSTIC.relative_to(REPO)),
+            "--evidence-output",
+            str(M022_PHASE1_REG_M020D_EVIDENCE.relative_to(REPO)),
+            "--starting-balance",
+            "10000",
+        ),
+        env=_safe_env(),
+    )
+    if candidate["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M022 default path no longer preserves M020-D execution",
+            "feature_sha": feature_sha,
+            "control_exit_code": control["exit_code"],
+            "candidate": candidate,
+        }
+
+    observed = {
+        "m019_baseline": _sha256(M022_PHASE1_REG_CONTROL_BASELINE),
+        "m019_diagnostic": _sha256(M022_PHASE1_REG_CONTROL_DIAGNOSTIC),
+        "m020d_baseline": _sha256(M022_PHASE1_REG_M020D_BASELINE),
+        "m020d_diagnostic": _sha256(M022_PHASE1_REG_M020D_DIAGNOSTIC),
+        "m020d_evidence": _sha256(M022_PHASE1_REG_M020D_EVIDENCE),
+    }
+    expected = {
+        "m019_baseline": ACCEPTED_M019_BASELINE_SHA256,
+        "m019_diagnostic": ACCEPTED_M019_DIAGNOSTIC_SHA256,
+        "m020d_baseline": ACCEPTED_M020_D_BASELINE_SHA256,
+        "m020d_diagnostic": ACCEPTED_M020_D_DIAGNOSTIC_SHA256,
+        "m020d_evidence": ACCEPTED_M020_D_EVIDENCE_SHA256,
+    }
+    preserved = observed == expected
+    return {
+        "ok": bool(preserved),
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "hashes_preserved": preserved,
+        "observed": observed,
+        "expected": expected,
+        "safety": {
+            "economic_replay_run": True,
+            "purpose": "accepted-artifact regression only",
+            "parameter_result_inspected": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def m022_phase1_tests():
     """Run fixed native tests for M022 Phase-1 research machinery."""
 
@@ -5472,6 +5586,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_phase1_default_regression": m022_phase1_default_regression,
     "m022_phase1_tests": m022_phase1_tests,
     "m022_inventory_tests": m022_inventory_tests,
     "m022_maxbars_recovery_probe": m022_maxbars_recovery_probe,
