@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-boundary-v3-hash-regression-20260926-1836",
-  "action": "m022_phase1_default_regression",
+  "id": "mamba2-m022-latest-grid-sync-20260926-1856",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
