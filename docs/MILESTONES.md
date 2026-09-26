@@ -25,6 +25,7 @@ should append a dated record here or add a dedicated file under
 | 017 | Baseline diagnosis | `e653ba87df2ff1e8afbad5704f9a8d81428d7b27` | Deterministic trade evidence; M016 report preserved byte-for-byte |
 | 018 | Proven-defect review and correction | `fb03bc197d60d5d7b5b218a86288811f72ec4f60` | Wrong-side initial ATR TP defect proven and narrowly corrected |
 | 019 | Broader-history validation | `94a74211175d0f1db7e4c00cb3ab1f8ca1f286bb` | Jun 23–Sep 24 deterministic broader replay; M018 and whole-window semantic parity preserved |
+| 020 | Controlled experiments | `0d85b82278ae08a88f8b5b942fb23ec000b11411` | Decision-time spread >10 treatment classified PROMISING in-sample; deterministic/safe, not promoted |
 
 ## Current acceptance evidence
 
@@ -65,6 +66,42 @@ causal proof.
 
 See `docs/milestones/019-broader-history-validation.md` for the complete
 record.
+
+## Milestone 020 acceptance evidence
+
+Milestone 020 closed with:
+
+- accepted implementation SHA:
+  `0d85b82278ae08a88f8b5b942fb23ec000b11411`;
+- final native: **195 passed, 2 skipped**;
+- final Wine: **195 passed, 2 skipped**;
+- immutable M019 baseline preserved:
+  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
+- immutable M019 diagnostic preserved:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
+- authoritative M020-D command:
+  `mamba2-m020d-authoritative-treatment-pair-20260926-1014`;
+- treatment baseline:
+  `94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`;
+- treatment diagnostic:
+  `45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`;
+- treatment evidence:
+  `e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`;
+- treatment accepted/closed: **4,664 / 4,664**;
+- rejected attempts: **976**;
+- accepted decision-spread violations: **0**;
+- net realized P/L:
+  **USD -677.647148799515** versus control **USD -1,716.607632002333**;
+- P/L delta: **USD +1,038.960483202818**;
+- maximum equity drawdown:
+  **USD 1,067.1062318369404 / 10.629228567139583%** versus control
+  **USD 1,929.6969567926317 / 19.214803229083717%**;
+- every inspected calendar period, symbol, and side improved;
+- classification: **PROMISING**;
+- production/live promotion: **NO**.
+
+M020 is closed. No M020-E is authorized. The next milestone is prospective
+paper/forward validation on genuinely later data.
 
 ## Closeout format for future milestones
 
