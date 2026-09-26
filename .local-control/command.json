@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-native-capacity-lite-20260926-1530",
-  "action": "m022_terminal_history_capacity_probe",
+  "id": "mamba2-m022-native-m1-file-probe-20260926-1537",
+  "action": "m022_native_m1_file_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
