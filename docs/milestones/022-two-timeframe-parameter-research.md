@@ -192,6 +192,97 @@ The partitioning rule is fixed before inspecting the M022 history-depth result:
 
 This rule may be changed only for a demonstrated mechanical impossibility discovered before parameter results are inspected; any such change must be documented before the replacement split is executed.
 
+## History inventory accepted and partitions frozen — 2026-09-26
+
+The replacement native-M1 candidate was recovered from the existing versioned
+`v3` directory and passed full integrity plus the replacement M019 overlap gate.
+
+Accepted candidate:
+
+`backtest_data/m022-history-inventory-native-m1-v3/manifest.json`
+
+Manifest SHA-256:
+
+`143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`
+
+Accepted M019 manifest SHA-256:
+
+`595efa4d65e35ae06c464edcc1a8dd4e410f6f7b73dfaf16081e0887346f440f`
+
+Verified source/runtime:
+
+- broker: `MetaQuotes-Demo`;
+- account currency: USD;
+- terminal build: 6215 / 25 Sep 2026;
+- candidate requested range:
+  `2025-08-25T00:00:00Z` to
+  `2026-09-25T00:00:00Z` end-exclusive;
+- common trading dates: **282**;
+- common-trading-date-list SHA-256:
+  `2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5`.
+
+For every one of EURUSD, EURJPY, GBPUSD, GBPJPY, and USDJPY:
+
+- native Bid M1 accepted-M019 overlap index matched exactly;
+- native Bid M1 accepted-M019 overlap frame matched exactly;
+- Ask M1 accepted-M019 overlap index matched exactly;
+- Ask M1 accepted-M019 OHLC delta was **0 points**;
+- native M5 overlap frame matched exactly;
+- native M15 overlap frame matched exactly;
+- candidate Bid/Ask indexes matched with zero missing or extra Ask rows.
+
+Approximate full candidate M1 row counts:
+
+- EURUSD: 404,867;
+- EURJPY: 405,196;
+- GBPUSD: 404,959;
+- GBPJPY: 405,094;
+- USDJPY: 405,062.
+
+The already-frozen chronological partition rule was then materialized without
+running any strategy/economic replay.
+
+### Frozen M022 partitions
+
+**Development**
+
+- start: `2025-08-25T00:00:00Z`;
+- end-exclusive: `2026-04-21T00:00:00Z`;
+- trading dates: **169**;
+- first trading date: 2025-08-25;
+- last trading date: 2026-04-20.
+
+**Validation**
+
+- start: `2026-04-21T00:00:00Z`;
+- end-exclusive: `2026-07-08T00:00:00Z`;
+- trading dates: **56**;
+- first trading date: 2026-04-21;
+- last trading date: 2026-07-07.
+
+**Untouched historical holdout**
+
+- start: `2026-07-08T00:00:00Z`;
+- end-exclusive: `2026-09-25T00:00:00Z`;
+- trading dates: **57**;
+- first trading date: 2026-07-08;
+- last trading date: 2026-09-24.
+
+Each partition exceeds the predeclared minimum of 20 common trading dates.
+
+Safety evidence for the inventory and partition freeze:
+
+- no economic replay run;
+- no parameter result inspected;
+- no M021 post-cutoff data used;
+- no real-order API called.
+
+The history inventory gate is therefore **PASSED**. Phase 1 may now be
+implemented and run **one parameter family at a time on development only**.
+Validation remains unused until development screening has produced a frozen
+shortlist. Historical holdout remains unopened until the Phase-1 shortlist,
+Phase-2 matrix, and finalist acceptance criteria are frozen.
+
 ## Parameter families — Phase 1 screening
 
 The initial research grid is deliberately bounded.
