@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-repo-gate-latest-20260926-1245",
-  "action": "repo_checks",
+  "id": "mamba2-m022-inventory-tests-20260926-1246",
+  "action": "m022_inventory_tests",
   "args": {},
   "requested_by": "chatgpt"
 }
