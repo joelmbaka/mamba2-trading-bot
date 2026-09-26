@@ -461,6 +461,34 @@ No validation data, historical holdout outcome, M021 prospective outcome,
 `reference-v1` partial P/L, or `reference-v2` economics were inspected to
 make these corrections.
 
+## Phase-1 replay performance gate — before accepted results
+
+Before any accepted `reference-v3` economics are inspected, the replay-only
+EMA path may use the same causal static-source caching pattern already used by
+stochastic and ATR.
+
+Reason:
+
+- the legacy replay EMA recalculates `ewm(...).mean()` over the full visible
+  M1 prefix on every boundary;
+- across ~169 development trading dates and later multi-arm screening, that is
+  computationally disproportionate;
+- the optimization changes only replay evaluation mechanics, not the
+  production strategy or mathematical EMA definition.
+
+Acceptance requirements for this performance change are frozen as:
+
+1. production/non-replay fetchers retain the existing path;
+2. cached replay EMA must equal the legacy visible-prefix EMA **exactly** at
+   deterministic checkpoints;
+3. focused M022 tests must pass;
+4. the full native test suite must pass;
+5. accepted M019 control baseline/diagnostic hashes must remain byte-exact;
+6. accepted M020-D baseline/diagnostic/evidence hashes must remain byte-exact.
+
+If any accepted hash changes, the cache is rejected and Phase 1 must not use
+its economic output.
+
 ## Frozen stochastic-family screening rubric — before results
 
 Before inspecting any stochastic-family development result, the following
