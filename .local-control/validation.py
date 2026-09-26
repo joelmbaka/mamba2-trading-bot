@@ -133,6 +133,7 @@ M022_PHASE1_REG_M020D_BASELINE = M022_PHASE1_REGRESSION_DIR / "m020d-baseline.js
 M022_PHASE1_REG_M020D_DIAGNOSTIC = M022_PHASE1_REGRESSION_DIR / "m020d-diagnostic.json"
 M022_PHASE1_REG_M020D_EVIDENCE = M022_PHASE1_REGRESSION_DIR / "m020d-evidence.json"
 M022_PHASE1_REFERENCE_DIR = REPO / "backtest_data" / "m022-phase1-development" / "reference-v1"
+M022_PHASE1_STOCHASTIC_DIR = REPO / "backtest_data" / "m022-phase1-development" / "stochastic-v1"
 
 
 def _safe_env(wine=False):
@@ -3296,6 +3297,179 @@ def m021_primary_pair():
 
 
 
+def m022_phase1_stochastic_family():
+    """Run the frozen nine-arm stochastic family on development only."""
+
+    feature_sha = _require_m022_branch()
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+    if not manifest.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 native-M1 manifest is unavailable",
+            "feature_sha": feature_sha,
+        }
+    if not M022_PHASE1_REFERENCE_DIR.is_dir():
+        return {
+            "ok": False,
+            "reason": "M022 reference pair must be accepted before stochastic family",
+            "feature_sha": feature_sha,
+        }
+
+    reference_summary_path = (
+        M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-a-summary.json"
+    )
+    if not reference_summary_path.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 reference summary is missing",
+            "feature_sha": feature_sha,
+        }
+    reference = json.loads(reference_summary_path.read_text(encoding="utf-8"))
+
+    output_root = _ensure_baseline_path(M022_PHASE1_STOCHASTIC_DIR)
+    if output_root.exists():
+        return {
+            "ok": False,
+            "reason": "M022 stochastic family output directory already exists",
+            "feature_sha": feature_sha,
+            "path": str(output_root.relative_to(REPO)),
+        }
+    output_root.mkdir(parents=True)
+
+    tuples = (
+        (9, 3, 3),
+        (10, 4, 4),
+        (10, 6, 6),
+        (14, 3, 3),
+        (14, 5, 5),
+        (14, 7, 7),
+        (21, 5, 5),
+        (21, 7, 7),
+        (28, 7, 7),
+    )
+    results = []
+    for k, d, slowing in tuples:
+        label = f"{k}-{d}-{slowing}"
+        arm_dir = output_root / label
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.parameter_research",
+                "--manifest",
+                str(manifest.relative_to(REPO)),
+                "--output-dir",
+                str(arm_dir.relative_to(REPO)),
+                "--family",
+                "stochastic",
+                "--value",
+                f"{k}/{d}/{slowing}",
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        if run["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": f"M022 stochastic arm {k}/{d}/{slowing} failed",
+                "feature_branch": "strategy-parameter-research",
+                "feature_sha": feature_sha,
+                "completed_arms": results,
+                "failed_run": {
+                    "tuple": [k, d, slowing],
+                    "exit_code": run["exit_code"],
+                    "stdout": _bounded(run["stdout"]),
+                    "stderr": _bounded(run["stderr"]),
+                },
+            }
+        try:
+            payload = json.loads(run["stdout"].strip().splitlines()[-1])
+        except (json.JSONDecodeError, IndexError):
+            return {
+                "ok": False,
+                "reason": f"unable to parse stochastic arm {k}/{d}/{slowing}",
+                "feature_sha": feature_sha,
+                "completed_arms": results,
+            }
+
+        summary = payload.get("summary") or {}
+        tp = summary.get("tp_safety") or {}
+        partition = summary.get("partition") or {}
+        arm_ok = bool(
+            payload.get("ok")
+            and payload.get("deterministic")
+            and payload.get("partition") == "development"
+            and partition.get("source_manifest_sha256")
+            == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+            and partition.get("start_utc") == "2025-08-25T00:00:00Z"
+            and partition.get("end_exclusive_utc") == "2026-04-21T00:00:00Z"
+            and int(tp.get("negative_pl_take_profit_exits", -1)) == 0
+            and int(tp.get("wrong_side_initial_tp", -1)) == 0
+        )
+        if not arm_ok:
+            return {
+                "ok": False,
+                "reason": f"M022 stochastic arm {k}/{d}/{slowing} failed invariants",
+                "feature_sha": feature_sha,
+                "completed_arms": results,
+                "failed_payload": payload,
+            }
+
+        results.append({
+            "tuple": [k, d, slowing],
+            "experiment_id": payload.get("experiment_id"),
+            "baseline_sha256": payload.get("baseline_sha256"),
+            "diagnostic_sha256": payload.get("diagnostic_sha256"),
+            "summary_sha256": payload.get("summary_sha256"),
+            "aggregate": summary.get("aggregate"),
+            "per_symbol": summary.get("per_symbol"),
+            "by_side": summary.get("by_side"),
+            "by_entry_utc_bucket": summary.get("by_entry_utc_bucket"),
+            "protection": summary.get("protection"),
+            "rejections": summary.get("rejections"),
+            "tp_safety": tp,
+        })
+
+    reference_fields = {
+        "aggregate": reference.get("aggregate"),
+        "per_symbol": reference.get("per_symbol"),
+        "by_side": reference.get("by_side"),
+        "by_entry_utc_bucket": reference.get("by_entry_utc_bucket"),
+        "protection": reference.get("protection"),
+        "rejections": reference.get("rejections"),
+        "tp_safety": reference.get("tp_safety"),
+    }
+    current = next(row for row in results if row["tuple"] == [21, 7, 7])
+    current_fields = {
+        key: current.get(key)
+        for key in reference_fields
+    }
+    reference_equivalent = current_fields == reference_fields
+
+    return {
+        "ok": bool(reference_equivalent),
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "family": "stochastic",
+        "partition": {
+            "name": "development",
+            "start_utc": "2025-08-25T00:00:00Z",
+            "end_exclusive_utc": "2026-04-21T00:00:00Z",
+            "trading_dates": 169,
+        },
+        "reference_21_7_7_economic_equivalence": reference_equivalent,
+        "arms": results,
+        "safety": {
+            "economic_replay_run": True,
+            "economic_partition": "development",
+            "validation_economic_data_used": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def m022_phase1_reference_pair():
     """Run the frozen M022 reference on development only, twice."""
 
@@ -5702,6 +5876,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_phase1_stochastic_family": m022_phase1_stochastic_family,
     "m022_phase1_reference_pair": m022_phase1_reference_pair,
     "m022_phase1_default_regression": m022_phase1_default_regression,
     "m022_phase1_tests": m022_phase1_tests,
