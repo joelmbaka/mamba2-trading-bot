@@ -4201,6 +4201,260 @@ def m022_tick_inventory_cleanup():
     }
 
 
+def m022_native_inventory_existing_probe():
+    """Read-only integrity/overlap probe for an existing native-M1 v3 artifact."""
+
+    feature_sha = _require_m022_branch()
+    root = M022_NATIVE_INVENTORY_DIR
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+
+    if not root.exists():
+        return {
+            "ok": False,
+            "complete": False,
+            "reason": "native-M1 v3 directory does not exist",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "path": str(root.relative_to(REPO)),
+        }
+
+    file_inventory = []
+    for path in sorted(root.rglob("*")):
+        if not path.is_file():
+            continue
+        relative = str(path.relative_to(root))
+        file_inventory.append({
+            "path": relative,
+            "bytes": int(path.stat().st_size),
+            "sha256": _sha256(path),
+        })
+
+    if not manifest.is_file():
+        return {
+            "ok": False,
+            "complete": False,
+            "reason": "existing native-M1 v3 directory has no manifest.json",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "path": str(root.relative_to(REPO)),
+            "files": file_inventory,
+            "safety": {
+                "read_only": True,
+                "economic_replay_run": False,
+                "real_order_api_called": False,
+                "m021_post_cutoff_data_used": False,
+            },
+        }
+
+    inspect_code = r'''
+import hashlib
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from mamba2.backtest.mt5_dataset import load_mt5_dataset
+
+candidate_path = Path(
+    "backtest_data/m022-history-inventory-native-m1-v3/manifest.json"
+)
+accepted_path = Path(
+    "backtest_data/broader-history-20260623-20260925/manifest.json"
+)
+symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+price_columns = ["open", "high", "low", "close"]
+overlap_start = pd.Timestamp("2026-06-23T00:00:00Z")
+overlap_end = pd.Timestamp("2026-09-25T00:00:00Z")
+
+def iso(value):
+    ts = pd.Timestamp(value)
+    if ts.tzinfo is None:
+        ts = ts.tz_localize("UTC")
+    else:
+        ts = ts.tz_convert("UTC")
+    return ts.isoformat().replace("+00:00", "Z")
+
+def compare_prices(left, right, point):
+    same_index = left.index.equals(right.index)
+    if not same_index:
+        return {
+            "same_index": False,
+            "left_rows": int(len(left)),
+            "right_rows": int(len(right)),
+            "max_abs_delta": None,
+            "max_delta_points": None,
+            "within_half_point": False,
+            "identical_frame": False,
+        }
+    lv = left[price_columns].to_numpy(dtype=float)
+    rv = right[price_columns].to_numpy(dtype=float)
+    delta = np.abs(lv - rv)
+    max_abs = float(delta.max()) if delta.size else 0.0
+    max_points = max_abs / point if point > 0 else None
+    return {
+        "same_index": True,
+        "left_rows": int(len(left)),
+        "right_rows": int(len(right)),
+        "max_abs_delta": max_abs,
+        "max_delta_points": max_points,
+        "within_half_point": bool(
+            max_points is not None and max_points <= 0.5
+        ),
+        "identical_frame": bool(left.equals(right)),
+    }
+
+try:
+    candidate = load_mt5_dataset(candidate_path)
+    accepted = load_mt5_dataset(accepted_path)
+except Exception as exc:
+    print(json.dumps({
+        "load_ok": False,
+        "error_type": type(exc).__name__,
+        "error": str(exc),
+    }, sort_keys=True))
+    raise SystemExit(0)
+
+per_symbol = {}
+overlap_ok = True
+common_dates = None
+
+for symbol in symbols:
+    point = float(candidate.symbol_metadata[symbol].point_size)
+    m1 = candidate.m1_bars[symbol]
+    ask = candidate.ask_m1_bars[symbol]
+    native = candidate.native_timeframe_bars[symbol]
+    missing_ask = m1.index.difference(ask.index)
+    ask_extra = ask.index.difference(m1.index)
+
+    cm1 = m1.loc[(m1.index >= overlap_start) & (m1.index < overlap_end)]
+    am1 = accepted.m1_bars[symbol].loc[
+        (accepted.m1_bars[symbol].index >= overlap_start)
+        & (accepted.m1_bars[symbol].index < overlap_end)
+    ]
+    cask = ask.loc[(ask.index >= overlap_start) & (ask.index < overlap_end)]
+    aask = accepted.ask_m1_bars[symbol].loc[
+        (accepted.ask_m1_bars[symbol].index >= overlap_start)
+        & (accepted.ask_m1_bars[symbol].index < overlap_end)
+    ]
+
+    bid_overlap = compare_prices(cm1, am1, point)
+    ask_overlap = compare_prices(cask, aask, point)
+
+    native_overlap = {}
+    for timeframe in ("M5", "M15"):
+        left = native[timeframe].loc[
+            (native[timeframe].index >= overlap_start)
+            & (native[timeframe].index < overlap_end)
+        ]
+        right_source = accepted.native_timeframe_bars[symbol][timeframe]
+        right = right_source.loc[
+            (right_source.index >= overlap_start)
+            & (right_source.index < overlap_end)
+        ]
+        native_overlap[timeframe] = {
+            "same_index": bool(left.index.equals(right.index)),
+            "identical_frame": bool(left.equals(right)),
+            "candidate_rows": int(len(left)),
+            "accepted_rows": int(len(right)),
+        }
+
+    ask_meta = candidate.manifest["symbols"][symbol].get("ask_m1", {})
+    symbol_ok = (
+        len(missing_ask) == 0
+        and len(ask_extra) == 0
+        and m1.index.equals(ask.index)
+        and bid_overlap["identical_frame"]
+        and ask_overlap["within_half_point"]
+        and ask_meta.get("source") == "copy_ticks_range"
+        and all(
+            native_overlap[tf]["identical_frame"]
+            for tf in ("M5", "M15")
+        )
+    )
+    overlap_ok = overlap_ok and symbol_ok
+
+    dates = set(m1.index.normalize())
+    dates &= set(ask.index.normalize())
+    dates &= set(native["M5"].index.normalize())
+    common_dates = dates if common_dates is None else common_dates & dates
+
+    per_symbol[symbol] = {
+        "m1_rows": int(len(m1)),
+        "ask_m1_rows": int(len(ask)),
+        "m5_rows": int(len(native["M5"])),
+        "m15_rows": int(len(native["M15"])),
+        "m1_first": iso(m1.index[0]),
+        "m1_last": iso(m1.index[-1]),
+        "ask_first": iso(ask.index[0]),
+        "ask_last": iso(ask.index[-1]),
+        "missing_ask_rows": int(len(missing_ask)),
+        "extra_ask_rows": int(len(ask_extra)),
+        "bid_overlap": bid_overlap,
+        "ask_overlap": ask_overlap,
+        "native_overlap": native_overlap,
+        "accepted": bool(symbol_ok),
+    }
+
+ordered_dates = sorted(common_dates or [])
+print(json.dumps({
+    "load_ok": True,
+    "overlap_ok": bool(overlap_ok),
+    "manifest_sha256": hashlib.sha256(candidate_path.read_bytes()).hexdigest(),
+    "accepted_m019_manifest_sha256": hashlib.sha256(
+        accepted_path.read_bytes()
+    ).hexdigest(),
+    "broker_server": candidate.manifest.get("broker_server"),
+    "account_currency": candidate.manifest.get("account_currency"),
+    "terminal_version": candidate.manifest.get("terminal_version"),
+    "requested_range": candidate.manifest.get("requested_range"),
+    "common_trading_date_count": int(len(ordered_dates)),
+    "first_common_trading_date": (
+        iso(ordered_dates[0]) if ordered_dates else None
+    ),
+    "last_common_trading_date": (
+        iso(ordered_dates[-1]) if ordered_dates else None
+    ),
+    "per_symbol": per_symbol,
+}, sort_keys=True))
+'''
+
+    inspect = _run(_native_command("-c", inspect_code), env=_safe_env())
+    if inspect["exit_code"] != 0:
+        return {
+            "ok": False,
+            "complete": False,
+            "reason": "existing v3 integrity probe process failed",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "files": file_inventory,
+            "inspect": inspect,
+        }
+
+    try:
+        payload = json.loads(inspect["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError) as exc:
+        raise RuntimeError("unable to parse existing v3 probe") from exc
+
+    complete = bool(payload.get("load_ok"))
+    return {
+        "ok": bool(complete and payload.get("overlap_ok")),
+        "complete": complete,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "path": str(root.relative_to(REPO)),
+        "files": file_inventory,
+        "integrity": payload,
+        "safety": {
+            "read_only": True,
+            "economic_replay_run": False,
+            "real_order_api_called": False,
+            "m021_post_cutoff_data_used": False,
+        },
+        "inspect": inspect,
+    }
+
+
 def m022_partition_freeze():
     """Materialize the frozen 60/20/20 M022 trading-date partition rule."""
 
@@ -5198,6 +5452,7 @@ ACTION_HANDLERS = {
     "m022_history_checkpoint_probe": m022_history_checkpoint_probe,
     "m022_history_depth_probe": m022_history_depth_probe,
     "m022_tick_inventory_cleanup": m022_tick_inventory_cleanup,
+    "m022_native_inventory_existing_probe": m022_native_inventory_existing_probe,
     "m022_partition_freeze": m022_partition_freeze,
     "m022_native_inventory": m022_native_inventory,
     "m022_tick_inventory": m022_tick_inventory,
