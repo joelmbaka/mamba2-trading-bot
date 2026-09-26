@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-tick-inventory-20260926-1402",
-  "action": "m022_tick_inventory",
+  "id": "mamba2-m022-sync-v2-20260926-1408",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
