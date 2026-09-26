@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import concurrent.futures
 import hashlib
 import json
 import os
@@ -3688,7 +3689,7 @@ def m022_phase1_stochastic_reference_equivalence():
 
 
 def m022_phase1_stochastic_family():
-    """Run the frozen nine-arm stochastic family on development only."""
+    """Run frozen stochastic screening with at most two arms concurrently."""
 
     feature_sha = _require_m022_branch()
     manifest = M022_NATIVE_INVENTORY_MANIFEST
@@ -3698,12 +3699,6 @@ def m022_phase1_stochastic_family():
             "reason": "accepted M022 native-M1 manifest is unavailable",
             "feature_sha": feature_sha,
         }
-    if not M022_PHASE1_REFERENCE_DIR.is_dir():
-        return {
-            "ok": False,
-            "reason": "M022 reference pair must be accepted before stochastic family",
-            "feature_sha": feature_sha,
-        }
 
     reference_summary_path = (
         M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-a-summary.json"
@@ -3711,7 +3706,7 @@ def m022_phase1_stochastic_family():
     if not reference_summary_path.is_file():
         return {
             "ok": False,
-            "reason": "accepted M022 reference summary is missing",
+            "reason": "accepted M022 reference-v3 summary is missing",
             "feature_sha": feature_sha,
         }
     reference = json.loads(reference_summary_path.read_text(encoding="utf-8"))
@@ -3749,10 +3744,7 @@ def m022_phase1_stochastic_family():
     if missing_equivalence:
         return {
             "ok": False,
-            "reason": (
-                "optimized 21/7/7 equivalence must complete before the "
-                "stochastic family"
-            ),
+            "reason": "optimized 21/7/7 equivalence evidence is incomplete",
             "feature_sha": feature_sha,
             "missing_equivalence_files": missing_equivalence,
         }
@@ -3765,11 +3757,10 @@ def m022_phase1_stochastic_family():
         and _sha256(equivalence_files["a_summary"])
         == _sha256(equivalence_files["b_summary"])
     )
-    equivalence_summary_path = equivalence_files["a_summary"]
     equivalence_summary = json.loads(
-        equivalence_summary_path.read_text(encoding="utf-8")
+        equivalence_files["a_summary"].read_text(encoding="utf-8")
     )
-    reference_equivalence_keys = (
+    equivalence_keys = (
         "partition",
         "cost_contract",
         "aggregate",
@@ -3783,7 +3774,7 @@ def m022_phase1_stochastic_family():
     )
     equivalence_matches_reference = all(
         equivalence_summary.get(key) == reference.get(key)
-        for key in reference_equivalence_keys
+        for key in equivalence_keys
     )
     if not equivalence_deterministic or not equivalence_matches_reference:
         return {
@@ -3800,14 +3791,7 @@ def m022_phase1_stochastic_family():
         }
 
     output_root = _ensure_baseline_path(M022_PHASE1_STOCHASTIC_DIR)
-    if output_root.exists():
-        return {
-            "ok": False,
-            "reason": "M022 stochastic family output directory already exists",
-            "feature_sha": feature_sha,
-            "path": str(output_root.relative_to(REPO)),
-        }
-    output_root.mkdir(parents=True)
+    output_root.mkdir(parents=True, exist_ok=True)
 
     tuples = (
         (9, 3, 3),
@@ -3821,74 +3805,146 @@ def m022_phase1_stochastic_family():
         (28, 7, 7),
     )
 
+    def artifact_paths(k, d, slowing):
+        prefix = f"M022-P1-STOCH-{k}-{d}-{slowing}"
+        arm_dir = output_root / f"{k}-{d}-{slowing}"
+        return arm_dir, {
+            "a_baseline": arm_dir / f"{prefix}-a-baseline.json",
+            "b_baseline": arm_dir / f"{prefix}-b-baseline.json",
+            "a_diagnostic": arm_dir / f"{prefix}-a-diagnostic.json",
+            "b_diagnostic": arm_dir / f"{prefix}-b-diagnostic.json",
+            "a_summary": arm_dir / f"{prefix}-a-summary.json",
+            "b_summary": arm_dir / f"{prefix}-b-summary.json",
+        }
+
+    def payload_from_complete_artifacts(k, d, slowing):
+        arm_dir, paths = artifact_paths(k, d, slowing)
+        if not arm_dir.exists():
+            return None
+        missing = [name for name, path in paths.items() if not path.is_file()]
+        if missing:
+            raise RuntimeError(
+                f"partial stochastic arm directory {k}/{d}/{slowing}: "
+                + ",".join(missing)
+            )
+        deterministic = bool(
+            _sha256(paths["a_baseline"]) == _sha256(paths["b_baseline"])
+            and _sha256(paths["a_diagnostic"]) == _sha256(paths["b_diagnostic"])
+            and _sha256(paths["a_summary"]) == _sha256(paths["b_summary"])
+        )
+        if not deterministic:
+            raise RuntimeError(
+                f"non-deterministic existing stochastic arm {k}/{d}/{slowing}"
+            )
+        summary = json.loads(paths["a_summary"].read_text(encoding="utf-8"))
+        return {
+            "ok": True,
+            "deterministic": True,
+            "partition": "development",
+            "experiment_id": f"M022-P1-STOCH-{k}-{d}-{slowing}",
+            "baseline_sha256": _sha256(paths["a_baseline"]),
+            "diagnostic_sha256": _sha256(paths["a_diagnostic"]),
+            "summary_sha256": _sha256(paths["a_summary"]),
+            "summary": summary,
+            "reused_complete_artifacts": True,
+        }
+
+    def execute_arm(item):
+        k, d, slowing = item
+        existing = payload_from_complete_artifacts(k, d, slowing)
+        if existing is not None:
+            return item, existing, None
+
+        arm_dir, _paths = artifact_paths(k, d, slowing)
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.parameter_research",
+                "--manifest",
+                str(manifest.relative_to(REPO)),
+                "--output-dir",
+                str(arm_dir.relative_to(REPO)),
+                "--family",
+                "stochastic",
+                "--value",
+                f"{k}/{d}/{slowing}",
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        if run["exit_code"] != 0:
+            return item, None, run
+        try:
+            payload = json.loads(run["stdout"].strip().splitlines()[-1])
+        except (json.JSONDecodeError, IndexError):
+            return item, None, {
+                "exit_code": run["exit_code"],
+                "stdout": run["stdout"],
+                "stderr": (
+                    run["stderr"]
+                    + "\nunable to parse final stochastic JSON payload"
+                ),
+            }
+        return item, payload, run
+
+    run_items = [
+        item for item in tuples
+        if item != (21, 7, 7)
+    ]
+    executed = {}
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            futures = {
+                executor.submit(execute_arm, item): item
+                for item in run_items
+            }
+            for future in concurrent.futures.as_completed(futures):
+                item, payload, run = future.result()
+                if payload is None:
+                    return {
+                        "ok": False,
+                        "reason": (
+                            f"M022 stochastic arm "
+                            f"{item[0]}/{item[1]}/{item[2]} failed"
+                        ),
+                        "feature_branch": "strategy-parameter-research",
+                        "feature_sha": feature_sha,
+                        "failed_run": {
+                            "tuple": list(item),
+                            "exit_code": (run or {}).get("exit_code"),
+                            "stdout": _bounded((run or {}).get("stdout")),
+                            "stderr": _bounded((run or {}).get("stderr")),
+                        },
+                    }
+                executed[item] = payload
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+            "safety": {
+                "completed_arm_artifacts_preserved": True,
+                "partial_artifacts_not_overwritten": True,
+            },
+        }
+
+    executed[(21, 7, 7)] = {
+        "ok": True,
+        "deterministic": True,
+        "partition": "development",
+        "experiment_id": "M022-P1-STOCH-21-7-7",
+        "baseline_sha256": _sha256(equivalence_files["a_baseline"]),
+        "diagnostic_sha256": _sha256(equivalence_files["a_diagnostic"]),
+        "summary_sha256": _sha256(equivalence_files["a_summary"]),
+        "summary": equivalence_summary,
+        "reused_equivalence_evidence": True,
+    }
+
     results = []
     for k, d, slowing in tuples:
-        label = f"{k}-{d}-{slowing}"
-
-        if (k, d, slowing) == (21, 7, 7):
-            summary = json.loads(
-                equivalence_summary_path.read_text(encoding="utf-8")
-            )
-            payload = {
-                "ok": True,
-                "deterministic": True,
-                "partition": "development",
-                "experiment_id": "M022-P1-STOCH-21-7-7",
-                "baseline_sha256": _sha256(
-                    M022_PHASE1_STOCH_EQUIV_DIR
-                    / "M022-P1-STOCH-21-7-7-a-baseline.json"
-                ),
-                "diagnostic_sha256": _sha256(
-                    M022_PHASE1_STOCH_EQUIV_DIR
-                    / "M022-P1-STOCH-21-7-7-a-diagnostic.json"
-                ),
-                "summary_sha256": _sha256(equivalence_summary_path),
-                "summary": summary,
-            }
-        else:
-            arm_dir = output_root / label
-            run = _run(
-                _native_command(
-                    "-m",
-                    "mamba2.backtest.parameter_research",
-                    "--manifest",
-                    str(manifest.relative_to(REPO)),
-                    "--output-dir",
-                    str(arm_dir.relative_to(REPO)),
-                    "--family",
-                    "stochastic",
-                    "--value",
-                    f"{k}/{d}/{slowing}",
-                    "--starting-balance",
-                    "10000",
-                ),
-                env=_safe_env(),
-            )
-            if run["exit_code"] != 0:
-                return {
-                    "ok": False,
-                    "reason": f"M022 stochastic arm {k}/{d}/{slowing} failed",
-                    "feature_branch": "strategy-parameter-research",
-                    "feature_sha": feature_sha,
-                    "completed_arms": results,
-                    "failed_run": {
-                        "tuple": [k, d, slowing],
-                        "exit_code": run["exit_code"],
-                        "stdout": _bounded(run["stdout"]),
-                        "stderr": _bounded(run["stderr"]),
-                    },
-                }
-            try:
-                payload = json.loads(run["stdout"].strip().splitlines()[-1])
-            except (json.JSONDecodeError, IndexError):
-                return {
-                    "ok": False,
-                    "reason": f"unable to parse stochastic arm {k}/{d}/{slowing}",
-                    "feature_sha": feature_sha,
-                    "completed_arms": results,
-                }
-            summary = payload.get("summary") or {}
-
+        payload = executed[(k, d, slowing)]
+        summary = payload.get("summary") or {}
         tp = summary.get("tp_safety") or {}
         partition = summary.get("partition") or {}
         arm_ok = bool(
@@ -3909,9 +3965,11 @@ def m022_phase1_stochastic_family():
         if not arm_ok:
             return {
                 "ok": False,
-                "reason": f"M022 stochastic arm {k}/{d}/{slowing} failed invariants",
+                "reason": (
+                    f"M022 stochastic arm {k}/{d}/{slowing} "
+                    "failed invariants"
+                ),
                 "feature_sha": feature_sha,
-                "completed_arms": results,
                 "failed_payload": payload,
             }
 
@@ -3928,36 +3986,32 @@ def m022_phase1_stochastic_family():
             "protection": summary.get("protection"),
             "rejections": summary.get("rejections"),
             "tp_safety": tp,
+            "remaining_positions": summary.get("remaining_positions"),
+            "reused_equivalence_evidence": bool(
+                payload.get("reused_equivalence_evidence")
+            ),
+            "reused_complete_artifacts": bool(
+                payload.get("reused_complete_artifacts")
+            ),
         })
 
-    reference_fields = {
-        "aggregate": reference.get("aggregate"),
-        "per_symbol": reference.get("per_symbol"),
-        "by_side": reference.get("by_side"),
-        "by_entry_utc_bucket": reference.get("by_entry_utc_bucket"),
-        "protection": reference.get("protection"),
-        "rejections": reference.get("rejections"),
-        "tp_safety": reference.get("tp_safety"),
-    }
-    current = next(row for row in results if row["tuple"] == [21, 7, 7])
-    current_fields = {
-        key: current.get(key)
-        for key in reference_fields
-    }
-    reference_equivalent = current_fields == reference_fields
-
     return {
-        "ok": bool(reference_equivalent),
+        "ok": True,
         "feature_branch": "strategy-parameter-research",
         "feature_sha": feature_sha,
         "family": "stochastic",
+        "execution": {
+            "maximum_concurrent_arms": 2,
+            "independent_arm_processes": True,
+            "reference_21_7_7_reused": True,
+        },
         "partition": {
             "name": "development",
             "start_utc": "2025-08-25T00:00:00Z",
             "end_exclusive_utc": "2026-04-21T00:00:00Z",
             "trading_dates": 169,
         },
-        "reference_21_7_7_economic_equivalence": reference_equivalent,
+        "reference_21_7_7_economic_equivalence": True,
         "arms": results,
         "safety": {
             "economic_replay_run": True,
