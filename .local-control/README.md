@@ -40,6 +40,8 @@ first_baseline_export
 first_baseline_run_pair
 baseline_diagnostic_run_pair
 controlled_experiment_control_pair
+controlled_experiment_m020a_pair
+controlled_experiment_m020b_diagnostic
 ```
 
 `switch_branch` requires:
@@ -147,3 +149,5 @@ It requires deterministic treatment baseline/diagnostic artifacts, zero
 gates, and no new strategy-reporting artifacts. It returns control/treatment
 aggregate, per-symbol, side, and calendar-subperiod comparisons without
 changing any other strategy parameter.
+
+`controlled_experiment_m020b_diagnostic` is a read-only M020-B reporting action. It consumes the accepted M019/M020 control diagnostic artifact, produces deterministic spread-band and percentile summaries for the 00:00–03:59 UTC population versus all other entry times, and does not run or modify strategy behavior.
