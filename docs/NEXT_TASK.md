@@ -101,46 +101,45 @@ The accepted M019/M020 regression artifacts must remain protected as specified i
 
 The history-inventory gate is active; **no parameter results have been inspected**.
 
-Verified starting gate:
+Verified evidence:
 
 - branch `strategy-parameter-research`;
 - original M022 start SHA `253b6ee840e5489a2c5db27d064500bb44f93e1e`;
-- Dell worktree clean;
-- divergence `0/0`;
-- lock check passed.
+- current reviewed feature SHA before the next export:
+  `0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46`;
+- Dell worktree/repo gate clean and divergence `0/0`;
+- synchronized Bid/Ask ticks + native M5/M15 proven through 2025-08-25 for all five symbols;
+- 2025-07-28 failed common synchronized tick coverage because EURJPY lacked qualifying ticks;
+- the full tick-derived Bid/Ask M1 candidate was rejected by the frozen M019 overlap gate: Ask + M5/M15 matched, but tick-derived Bid M1 differed by 1–5 points on four symbols;
+- the 0.5-point gate was **not** relaxed;
+- MT5 `MaxBars` was safely raised from 100000 to 500000 with the original config backed up;
+- runtime `maxbars=500000` was verified;
+- native M1 for 2025-08-25 is now available for all five symbols;
+- no economic M022 result has been inspected;
+- M021 remains isolated.
 
-Feature-branch inventory infrastructure now includes an opt-in tick-derived M1 path that reconstructs synchronized Bid and Ask M1 from the same MT5 tick stream. The ordinary native-M1 exporter remains the default and production strategy defaults are unchanged.
+### Exact next authorized sequence
 
-Why this was added:
-
-- prior M019 evidence showed native M1 retained only to roughly 2026-06-22;
-- native M5/M15 and real Bid/Ask tick samples existed earlier;
-- M022 must distinguish terminal native-M1 retention from actual trustworthy historical market-data availability.
-
-Pending Dell command:
-
-`mamba2-m022-history-inventory-20260926-1217`
-
-Do not overwrite or redispatch that command while it is still the active unpublished result. Its initial discovery method used a very old tick origin and is not the preferred method for the next probe.
-
-The replacement local-control action `m022_history_depth_probe` is bounded to native retained-history discovery plus a tick check from the common native M5/M15 start.
-
-## Exact next authorized sequence
-
-1. Review the published result for `mamba2-m022-history-inventory-20260926-1217` when present.
-2. Synchronize the Dell feature checkout to the latest `strategy-parameter-research` SHA.
-3. Re-run repository gates and feature tests, including the tick-derived-M1 exporter tests.
-4. Run `m022_history_depth_probe`.
-5. If it confirms materially older synchronized Bid/Ask tick coverage, run fixed action `m022_tick_inventory` (after explicit cleanup only if required), using:
-   - tick-derived synchronized Bid/Ask M1;
+1. Synchronize the Dell feature checkout to the latest `strategy-parameter-research` documentation SHA.
+2. Run the repository gate.
+3. Export a fresh versioned candidate using:
+   - native MT5 Bid M1;
+   - tick-derived Ask M1 aligned to native M1;
    - native M5/M15;
-   - end-exclusive cutoff `2026-09-25T00:00:00Z`.
-6. Accept older tick-derived M1 only if its M019 overlap satisfies the frozen rule: identical Bid/Ask overlap indexes, Bid and Ask OHLC each within 0.5 symbol point, zero Ask index mismatch, exact native M5/M15 overlap, and manifest source `copy_ticks_range_bid_aggregation`.
-7. Record exact ranges/counts/gaps/hashes/source/runtime.
-8. Freeze development / validation / historical-holdout dates.
-9. Only then implement/run Phase-1 parameter arms.
+   - conservative start 2025-08-25;
+   - end-exclusive cutoff 2026-09-25T00:00:00Z.
+4. Apply the replacement frozen overlap gate recorded in the M022 milestone:
+   - native Bid M1 overlap index/frame exact;
+   - Ask overlap index exact and OHLC <= 0.5 point;
+   - zero candidate Ask-vs-Bid index mismatch;
+   - native M5/M15 exact;
+   - Ask source `copy_ticks_range`.
+5. Record exact ranges, counts, gaps, hashes, broker/runtime metadata.
+6. If the gate passes, materialize the already-frozen chronological 60% / 20% / 20% development / validation / untouched-holdout split at whole UTC trading-day boundaries and verify >=20 common trading dates per partition.
+7. Freeze the resulting exact dates/hashes in docs.
+8. Only then implement/run Phase-1 parameter arms one family at a time.
 
-If the resulting trustworthy history is still too short for meaningful chronological separation, stop broad parameter optimization and document that limitation.
+Do not revisit the failed tick-derived-Bid candidate by weakening tolerance.
 
 ## Start here
 
