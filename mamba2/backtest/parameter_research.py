@@ -809,22 +809,136 @@ def reference_arm() -> Phase1Arm:
     )
 
 
+def boundary_arm(oversold: float, overbought: float) -> Phase1Arm:
+    pair = (float(oversold), float(overbought))
+    if pair not in PHASE1_BOUNDARIES:
+        raise ValueError("boundary pair is outside the frozen M022 grid")
+    params = Phase1Parameters(
+        oversold_level=pair[0],
+        overbought_level=pair[1],
+    )
+    return Phase1Arm(
+        experiment_id=f"M022-P1-BOUND-{int(pair[0])}-{int(pair[1])}",
+        family="boundaries",
+        value_label=f"{int(pair[0])}/{int(pair[1])}",
+        parameters=params,
+    )
+
+
+def ema_arm(period: int) -> Phase1Arm:
+    period = int(period)
+    if period not in PHASE1_EMA_PERIODS:
+        raise ValueError("EMA period is outside the frozen M022 grid")
+    params = Phase1Parameters(ema_period=period)
+    return Phase1Arm(
+        experiment_id=f"M022-P1-EMA-{period}",
+        family="ema",
+        value_label=str(period),
+        parameters=params,
+    )
+
+
+def spread_arm(max_points: float | None) -> Phase1Arm:
+    normalized = None if max_points is None else float(max_points)
+    if normalized not in PHASE1_SPREAD_POINTS:
+        raise ValueError("spread threshold is outside the frozen M022 grid")
+    params = Phase1Parameters(decision_spread_max_points=normalized)
+    label = "none" if normalized is None else f"{normalized:g}"
+    return Phase1Arm(
+        experiment_id=f"M022-P1-SPREAD-{label}",
+        family="spread",
+        value_label=label,
+        parameters=params,
+    )
+
+
+def atr_sl_arm(multiplier: float) -> Phase1Arm:
+    multiplier = float(multiplier)
+    if multiplier not in PHASE1_ATR_SL:
+        raise ValueError("ATR SL multiplier is outside the frozen M022 grid")
+    params = Phase1Parameters(atr_sl_multiplier=multiplier)
+    return Phase1Arm(
+        experiment_id=f"M022-P1-ATR-SL-{multiplier:g}",
+        family="atr-sl",
+        value_label=f"{multiplier:g}",
+        parameters=params,
+    )
+
+
+def atr_tp_arm(multiplier: float) -> Phase1Arm:
+    multiplier = float(multiplier)
+    if multiplier not in PHASE1_ATR_TP:
+        raise ValueError("ATR TP multiplier is outside the frozen M022 grid")
+    params = Phase1Parameters(atr_tp_multiplier=multiplier)
+    return Phase1Arm(
+        experiment_id=f"M022-P1-ATR-TP-{multiplier:g}",
+        family="atr-tp",
+        value_label=f"{multiplier:g}",
+        parameters=params,
+    )
+
+
+def session_arm(variant: str) -> Phase1Arm:
+    if variant not in PHASE1_SESSION_VARIANTS:
+        raise ValueError("session variant is outside the frozen M022 grid")
+    params = Phase1Parameters(
+        block_00_04_utc=variant == "block-00-04-utc"
+    )
+    return Phase1Arm(
+        experiment_id=(
+            "M022-P1-SESSION-ALL"
+            if variant == "all-hours"
+            else "M022-P1-SESSION-BLOCK-00-04"
+        ),
+        family="session",
+        value_label=variant,
+        parameters=params,
+    )
+
+
+def _require_value(args: argparse.Namespace, description: str) -> str:
+    if not args.value:
+        raise ValueError(f"{args.family} family requires --value {description}")
+    return args.value
+
+
 def _arm_from_cli(args: argparse.Namespace) -> Phase1Arm:
     if args.family == "reference":
         return reference_arm()
+
     if args.family == "stochastic":
-        if not args.value:
-            raise ValueError("stochastic family requires --value K/D/S")
-        parts = tuple(int(item) for item in args.value.split("/"))
+        raw = _require_value(args, "K/D/S")
+        parts = tuple(int(item) for item in raw.split("/"))
         if len(parts) != 3:
             raise ValueError("stochastic --value must be K/D/S")
         if parts not in PHASE1_STOCHASTIC_TUPLES:
             raise ValueError("stochastic tuple is outside the frozen M022 grid")
         return stochastic_arm(*parts)
-    raise ValueError(
-        "Phase-1 CLI currently exposes reference/stochastic only; "
-        "additional frozen families are enabled after machinery acceptance"
-    )
+
+    if args.family == "boundaries":
+        raw = _require_value(args, "LOW/HIGH")
+        parts = tuple(float(item) for item in raw.split("/"))
+        if len(parts) != 2:
+            raise ValueError("boundaries --value must be LOW/HIGH")
+        return boundary_arm(*parts)
+
+    if args.family == "ema":
+        return ema_arm(int(_require_value(args, "PERIOD")))
+
+    if args.family == "spread":
+        raw = _require_value(args, "none|POINTS").strip().lower()
+        return spread_arm(None if raw == "none" else float(raw))
+
+    if args.family == "atr-sl":
+        return atr_sl_arm(float(_require_value(args, "MULTIPLIER")))
+
+    if args.family == "atr-tp":
+        return atr_tp_arm(float(_require_value(args, "MULTIPLIER")))
+
+    if args.family == "session":
+        return session_arm(_require_value(args, "VARIANT"))
+
+    raise ValueError(f"unsupported Phase-1 family: {args.family}")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -835,7 +949,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--output-dir", required=True)
     parser.add_argument(
         "--family",
-        choices=("reference", "stochastic"),
+        choices=(
+            "reference",
+            "stochastic",
+            "boundaries",
+            "ema",
+            "spread",
+            "atr-sl",
+            "atr-tp",
+            "session",
+        ),
         required=True,
     )
     parser.add_argument("--value")
