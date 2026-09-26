@@ -252,6 +252,11 @@ def _canonical_json_sha256(value: Mapping[str, Any]) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _datetime_index_sha256(index: pd.DatetimeIndex) -> str:
+    payload = "\n".join(_iso(value) for value in index).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def _slice_frame(
     frame: pd.DataFrame,
     *,
@@ -301,6 +306,33 @@ def slice_dataset(
                 f"partition Bid/Ask M1 index mismatch for {symbol}"
             )
 
+    # Portfolio P/L conversion is intentionally same-boundary only. The
+    # accepted v3 source has sparse symbol-specific M1 gaps, so a union clock
+    # can reach a JPY exit boundary where no USDJPY conversion bar exists.
+    # M022 research therefore uses only M1 opens observable for every symbol.
+    # This is a research-view restriction; source files and production replay
+    # semantics remain unchanged.
+    common_m1_index = None
+    for symbol in sorted(m1):
+        symbol_index = m1[symbol].index.intersection(ask[symbol].index)
+        common_m1_index = (
+            symbol_index
+            if common_m1_index is None
+            else common_m1_index.intersection(symbol_index)
+        )
+    if common_m1_index is None or common_m1_index.empty:
+        raise ValueError("M022 partition has no strict common M1 timestamps")
+    common_m1_index = common_m1_index.sort_values()
+
+    m1 = {
+        symbol: frame.loc[common_m1_index].copy()
+        for symbol, frame in m1.items()
+    }
+    ask = {
+        symbol: frame.loc[common_m1_index].copy()
+        for symbol, frame in ask.items()
+    }
+
     manifest = dict(dataset.manifest)
     manifest["requested_range"] = {
         "from_utc": _iso(start),
@@ -308,6 +340,13 @@ def slice_dataset(
     }
     manifest["m022_partition"] = partition
     manifest["m022_source_manifest_sha256"] = M022_SOURCE_MANIFEST_SHA256
+    manifest["m022_strict_common_m1"] = True
+    manifest["m022_common_m1_rows"] = int(len(common_m1_index))
+    manifest["m022_common_m1_first_open_utc"] = _iso(common_m1_index[0])
+    manifest["m022_common_m1_last_open_utc"] = _iso(common_m1_index[-1])
+    manifest["m022_common_m1_index_sha256"] = _datetime_index_sha256(
+        common_m1_index
+    )
 
     return LoadedHistoricalDataset(
         m1_bars=m1,
@@ -349,6 +388,7 @@ def _partition_metadata(
     *,
     manifest_path: Path,
     partition: str,
+    dataset: LoadedHistoricalDataset,
 ) -> dict[str, Any]:
     start, end, count = M022_PARTITIONS[partition]
     source_manifest_sha = _sha256_path(manifest_path)
@@ -364,6 +404,21 @@ def _partition_metadata(
         "start_utc": start,
         "end_exclusive_utc": end,
         "common_trading_dates": count,
+        "strict_common_m1": bool(
+            dataset.manifest.get("m022_strict_common_m1")
+        ),
+        "common_m1_rows": int(
+            dataset.manifest.get("m022_common_m1_rows", 0)
+        ),
+        "common_m1_first_open_utc": dataset.manifest.get(
+            "m022_common_m1_first_open_utc"
+        ),
+        "common_m1_last_open_utc": dataset.manifest.get(
+            "m022_common_m1_last_open_utc"
+        ),
+        "common_m1_index_sha256": dataset.manifest.get(
+            "m022_common_m1_index_sha256"
+        ),
     }
     return {
         **specification,
@@ -446,12 +501,13 @@ def run_phase1_arm(
             "Phase-1 arm runner is development-only; validation/holdout remain closed"
         )
     manifest_file = Path(manifest_path)
+    full_dataset = load_mt5_dataset(manifest_file)
+    dataset = slice_dataset(full_dataset, partition=partition)
     partition_meta = _partition_metadata(
         manifest_path=manifest_file,
         partition=partition,
+        dataset=dataset,
     )
-    full_dataset = load_mt5_dataset(manifest_file)
-    dataset = slice_dataset(full_dataset, partition=partition)
     symbols = tuple(config.symbols)
 
     wrappers: list[ResearchStrategyWrapper] = []
