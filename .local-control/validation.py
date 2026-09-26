@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import signal
 import shutil
 import subprocess
 import time
@@ -163,6 +164,43 @@ def _run(cmd, *, env=None):
         "exit_code": proc.returncode,
         "stdout": _bounded(proc.stdout),
         "stderr": _bounded(proc.stderr),
+    }
+
+
+def _run_process_group_bounded(cmd, *, env=None, timeout_seconds):
+    """Run one external probe in its own group and kill that group on timeout."""
+
+    proc = subprocess.Popen(
+        cmd,
+        cwd=str(REPO),
+        text=True,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
+        start_new_session=True,
+    )
+    timed_out = False
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout_seconds)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        stdout, stderr = proc.communicate()
+        stderr = (stderr or "") + (
+            f"\nlocal-control hard-killed process group after "
+            f"{timeout_seconds}s\n"
+        )
+
+    return {
+        "command": list(cmd),
+        "exit_code": proc.returncode,
+        "timed_out": timed_out,
+        "stdout": _bounded(stdout),
+        "stderr": _bounded(stderr),
     }
 
 
@@ -3242,7 +3280,6 @@ def m022_history_checkpoint_probe():
     feature_sha = _require_m022_branch()
     wine_python, discovery = _select_wine_python()
     wine = _wine()
-    timeout_bin = shutil.which("timeout") or "/usr/bin/timeout"
 
     checkpoints = [
         "2026-06-01T00:00:00Z",
@@ -3375,11 +3412,8 @@ finally:
     stop_reason = None
 
     for checkpoint in checkpoints:
-        run = _run(
+        run = _run_process_group_bounded(
             [
-                timeout_bin,
-                "--signal=KILL",
-                "30s",
                 wine,
                 wine_python,
                 "-c",
@@ -3387,10 +3421,12 @@ finally:
                 checkpoint,
             ],
             env=_safe_env(wine=True),
+            timeout_seconds=30,
         )
         observation = {
             "checkpoint_utc": checkpoint,
             "exit_code": run["exit_code"],
+            "timed_out": run["timed_out"],
             "stderr": run["stderr"],
         }
         if run["stdout"].strip():

@@ -102,6 +102,12 @@ Wants=network-online.target
 Type=oneshot
 WorkingDirectory=$REPO
 ExecStart=$RUNNER --once
+# A Wine/MT5 descendant must never outlive the worker cgroup or make stop wait
+# forever. The checkpoint action also kills its own process group at 30s.
+KillMode=control-group
+TimeoutStopSec=10s
+SendSIGKILL=yes
+FinalKillSignal=SIGKILL
 EOF
 
 cat > "$TIMER" <<EOF
