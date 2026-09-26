@@ -72,15 +72,27 @@ def test_reference_arm_is_frozen_current_configuration():
     assert arm.parameters.block_00_04_utc is False
 
 
-def test_strategy_default_constructor_matches_current_config():
-    from config import config
-    from mamba2.strategy.triple_cross import StochasticTripleTFStrategy
+def test_strategy_default_constructor_matches_reference_config(monkeypatch):
+    from mamba2.strategy import triple_cross
 
-    default = StochasticTripleTFStrategy("EURUSD")
+    cfg = SimpleNamespace(
+        stochastic_timeframes={
+            "higher": "M15",
+            "trading": "M5",
+            "entry": "M1",
+        },
+        use_higher_tf=False,
+        stochastic_k_period=21,
+        stochastic_d_period=7,
+        stochastic_slowing=7,
+    )
+    monkeypatch.setattr(triple_cross, "config", cfg)
 
-    assert default.stochastic_k_period == int(config.stochastic_k_period)
-    assert default.stochastic_d_period == int(config.stochastic_d_period)
-    assert default.stochastic_slowing == int(config.stochastic_slowing)
+    default = triple_cross.StochasticTripleTFStrategy("EURUSD")
+
+    assert default.stochastic_k_period == 21
+    assert default.stochastic_d_period == 7
+    assert default.stochastic_slowing == 7
     assert default.oversold_level == 20.0
     assert default.overbought_level == 80.0
     assert default.ema_period == 7
