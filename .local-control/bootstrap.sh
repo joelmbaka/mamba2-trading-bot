@@ -127,10 +127,20 @@ Unit=chatgpt-mamba2-local-agent.service
 WantedBy=timers.target
 EOF
 
+# Load the hardened service definition before attempting to terminate any
+# previously stuck worker. Otherwise systemd may still use the old unit with no
+# finite stop timeout.
+systemctl --user daemon-reload
+
+# Kill the existing worker cgroup first so a stuck Wine/MT5 descendant cannot
+# block bootstrap. Errors are harmless when the unit is already inactive.
+systemctl --user kill --kill-whom=all --signal=SIGKILL \
+  chatgpt-mamba2-local-agent.service >/dev/null 2>&1 || true
+
 systemctl --user stop chatgpt-mamba2-local-agent.service || true
+systemctl --user reset-failed chatgpt-mamba2-local-agent.service >/dev/null 2>&1 || true
 systemctl --user disable chatgpt-mamba2-local-agent.service >/dev/null 2>&1 || true
 systemctl --user stop chatgpt-mamba2-local-agent.timer >/dev/null 2>&1 || true
-systemctl --user daemon-reload
 
 echo
 echo "=== PROCESS CURRENT QUEUED COMMAND ONCE ==="
