@@ -3621,6 +3621,162 @@ print(json.dumps({"restored": True, "target": str(target)}), flush=True)
     }
 
 
+def m022_native_m1_file_probe():
+    """Probe runtime MaxBars + Aug-2025 native M1 without Wine PIPE waits."""
+
+    feature_sha = _require_m022_branch()
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M022 Wine runtime")
+    wine = _wine()
+    wineserver = shutil.which("wineserver") or "/usr/bin/wineserver"
+
+    result_path = Path("/tmp/mamba2-m022-native-m1-probe.json")
+    try:
+        result_path.unlink()
+    except FileNotFoundError:
+        pass
+    windows_result = _wine_windows_path(result_path)
+    if not windows_result:
+        raise RuntimeError("cannot map M022 probe result path into Wine")
+
+    probe_code = r'''
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+import MetaTrader5 as mt5
+
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+out = Path(os.environ["M022_PROBE_RESULT"])
+symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed for M022 native-M1 probe")
+
+try:
+    terminal = mt5.terminal_info()
+    account = mt5.account_info()
+    payload = {
+        "phase": "terminal",
+        "maxbars": getattr(terminal, "maxbars", None),
+        "server": getattr(account, "server", None),
+        "currency": getattr(account, "currency", None),
+        "runtime": list(mt5.version()) if hasattr(mt5, "version") else None,
+        "native_m1_aug_25": {},
+    }
+    out.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+
+    for symbol in symbols:
+        if not mt5.symbol_select(symbol, True):
+            raise RuntimeError(f"could not select {symbol}")
+        rows = mt5.copy_rates_range(
+            symbol,
+            mt5.TIMEFRAME_M1,
+            datetime(2025, 8, 25, tzinfo=timezone.utc),
+            datetime(2025, 8, 26, tzinfo=timezone.utc),
+        )
+        payload["native_m1_aug_25"][symbol] = {
+            "rows": 0 if rows is None else int(len(rows)),
+            "first_bar_open_utc": (
+                None
+                if rows is None or len(rows) == 0
+                else datetime.fromtimestamp(
+                    int(rows[0]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z")
+            ),
+            "last_bar_open_utc": (
+                None
+                if rows is None or len(rows) == 0
+                else datetime.fromtimestamp(
+                    int(rows[-1]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z")
+            ),
+            "last_error": list(mt5.last_error()),
+        }
+        out.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+
+    payload["phase"] = "complete"
+    out.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+finally:
+    mt5.shutdown()
+'''
+
+    env = _safe_env(wine=True)
+    env["M022_PROBE_RESULT"] = windows_result
+    proc = subprocess.Popen(
+        [wine, wine_python, "-c", probe_code],
+        cwd=str(REPO),
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        env=env,
+        start_new_session=True,
+    )
+
+    deadline = time.monotonic() + 40
+    payload = None
+    while time.monotonic() < deadline:
+        if result_path.is_file():
+            try:
+                payload = json.loads(result_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                payload = None
+            if payload and payload.get("phase") == "complete":
+                break
+        time.sleep(0.5)
+
+    # MT5 may intentionally remain open after Python disconnects. Terminate
+    # the isolated Wine prefix explicitly so this probe cannot hold the
+    # one-shot systemd worker open.
+    stop_wine = _run_process_group_bounded(
+        [wineserver, "-k"],
+        env=env,
+        timeout_seconds=10,
+    )
+
+    try:
+        os.killpg(proc.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    try:
+        proc.wait(timeout=3)
+    except subprocess.TimeoutExpired:
+        pass
+
+    complete = bool(payload and payload.get("phase") == "complete")
+    maxbars_ok = bool(payload and payload.get("maxbars") == 500000)
+    history_ok = bool(
+        complete
+        and all(
+            payload.get("native_m1_aug_25", {}).get(symbol, {}).get("rows", 0)
+            >= 1000
+            for symbol in M022_SYMBOLS
+        )
+    )
+    return {
+        "ok": maxbars_ok and history_ok,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "probe": payload,
+        "complete": complete,
+        "maxbars_verified": maxbars_ok,
+        "native_aug_25_verified": history_ok,
+        "wine_shutdown": stop_wine,
+        "safety": {
+            "market_data_read_only": True,
+            "terminal_configuration_modified": False,
+            "real_order_api_called": False,
+            "economic_replay_run": False,
+            "m021_post_cutoff_data_used": False,
+        },
+    }
+
+
 def m022_terminal_history_capacity_probe():
     """Read-only probe of MT5 native-M1 capacity and max-bars configuration."""
 
@@ -4496,6 +4652,7 @@ ACTION_HANDLERS = {
     "m022_inventory_tests": m022_inventory_tests,
     "m022_maxbars_recovery_probe": m022_maxbars_recovery_probe,
     "m022_raise_mt5_maxbars": m022_raise_mt5_maxbars,
+    "m022_native_m1_file_probe": m022_native_m1_file_probe,
     "m022_terminal_history_capacity_probe": m022_terminal_history_capacity_probe,
     "m022_history_checkpoint_probe": m022_history_checkpoint_probe,
     "m022_history_depth_probe": m022_history_depth_probe,
