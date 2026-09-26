@@ -82,6 +82,12 @@ M020_TREATMENT_DIAGNOSTIC_A = M019_DIR / "m020-a-treatment-diagnostic-a.json"
 M020_TREATMENT_DIAGNOSTIC_B = M019_DIR / "m020-a-treatment-diagnostic-b.json"
 M020_B_DIAGNOSTIC_A = M019_DIR / "m020-b-spread-diagnostic-a.json"
 M020_B_DIAGNOSTIC_B = M019_DIR / "m020-b-spread-diagnostic-b.json"
+M020_C_BASELINE_A = M019_DIR / "m020-c-baseline-a.json"
+M020_C_BASELINE_B = M019_DIR / "m020-c-baseline-b.json"
+M020_C_DIAGNOSTIC_A = M019_DIR / "m020-c-diagnostic-a.json"
+M020_C_DIAGNOSTIC_B = M019_DIR / "m020-c-diagnostic-b.json"
+M020_C_DECISION_A = M019_DIR / "m020-c-decision-spread-a.json"
+M020_C_DECISION_B = M019_DIR / "m020-c-decision-spread-b.json"
 
 
 def _safe_env(wine=False):
@@ -2368,6 +2374,147 @@ def controlled_experiment_m020b_diagnostic():
     }
 
 
+def controlled_experiment_m020c_pair():
+    """Run deterministic causal decision-time spread diagnostics twice."""
+
+    _require_m020_branch()
+    if not M019_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M019 dataset manifest is missing",
+        }
+
+    outputs = (
+        M020_C_BASELINE_A,
+        M020_C_BASELINE_B,
+        M020_C_DIAGNOSTIC_A,
+        M020_C_DIAGNOSTIC_B,
+        M020_C_DECISION_A,
+        M020_C_DECISION_B,
+    )
+    for output in outputs:
+        if output.exists():
+            output.unlink()
+
+    artifacts_before = _artifact_snapshot()
+    runs = []
+    for baseline_output, diagnostic_output, decision_output in (
+        (M020_C_BASELINE_A, M020_C_DIAGNOSTIC_A, M020_C_DECISION_A),
+        (M020_C_BASELINE_B, M020_C_DIAGNOSTIC_B, M020_C_DECISION_B),
+    ):
+        result = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.m020_decision_spread",
+                "--manifest",
+                str(M019_MANIFEST.relative_to(REPO)),
+                "--baseline-output",
+                str(baseline_output.relative_to(REPO)),
+                "--diagnostic-output",
+                str(diagnostic_output.relative_to(REPO)),
+                "--output",
+                str(decision_output.relative_to(REPO)),
+                "--expected-baseline-sha256",
+                ACCEPTED_M019_BASELINE_SHA256,
+                "--expected-diagnostic-sha256",
+                ACCEPTED_M019_DIAGNOSTIC_SHA256,
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        runs.append(result)
+        if result["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M020-C decision-spread replay failed",
+                "runs": runs,
+            }
+
+    if any(not output.is_file() for output in outputs):
+        return {
+            "ok": False,
+            "reason": "M020-C output missing after successful replay",
+            "runs": runs,
+        }
+
+    baseline_sha_a = _sha256(M020_C_BASELINE_A)
+    baseline_sha_b = _sha256(M020_C_BASELINE_B)
+    diagnostic_sha_a = _sha256(M020_C_DIAGNOSTIC_A)
+    diagnostic_sha_b = _sha256(M020_C_DIAGNOSTIC_B)
+    decision_sha_a = _sha256(M020_C_DECISION_A)
+    decision_sha_b = _sha256(M020_C_DECISION_B)
+
+    baseline_identical = (
+        M020_C_BASELINE_A.read_bytes() == M020_C_BASELINE_B.read_bytes()
+    )
+    diagnostic_identical = (
+        M020_C_DIAGNOSTIC_A.read_bytes()
+        == M020_C_DIAGNOSTIC_B.read_bytes()
+    )
+    decision_identical = (
+        M020_C_DECISION_A.read_bytes() == M020_C_DECISION_B.read_bytes()
+    )
+    control_preserved = (
+        baseline_sha_a == ACCEPTED_M019_BASELINE_SHA256
+        and baseline_sha_b == ACCEPTED_M019_BASELINE_SHA256
+        and diagnostic_sha_a == ACCEPTED_M019_DIAGNOSTIC_SHA256
+        and diagnostic_sha_b == ACCEPTED_M019_DIAGNOSTIC_SHA256
+    )
+
+    report = json.loads(M020_C_DECISION_A.read_text(encoding="utf-8"))
+    reconciliation = report.get("reconciliation") or {}
+    artifacts_after = _artifact_snapshot()
+    no_new_strategy_artifacts = artifacts_before == artifacts_after
+
+    return {
+        "ok": bool(
+            baseline_identical
+            and diagnostic_identical
+            and decision_identical
+            and control_preserved
+            and report.get("strategy_behavior_changed") is False
+            and reconciliation.get("missing_decision_spread_rows") == 0
+            and no_new_strategy_artifacts
+        ),
+        "diagnostic_id": "M020-C",
+        "strategy_behavior_changed": report.get("strategy_behavior_changed"),
+        "baseline_reports_identical": baseline_identical,
+        "baseline_sha256_a": baseline_sha_a,
+        "baseline_sha256_b": baseline_sha_b,
+        "diagnostics_identical": diagnostic_identical,
+        "diagnostic_sha256_a": diagnostic_sha_a,
+        "diagnostic_sha256_b": diagnostic_sha_b,
+        "control_hashes_preserved": control_preserved,
+        "decision_reports_identical": decision_identical,
+        "decision_sha256_a": decision_sha_a,
+        "decision_sha256_b": decision_sha_b,
+        "reconciliation": reconciliation,
+        "decision_spread_percentiles": report.get(
+            "decision_spread_percentiles"
+        ),
+        "fill_spread_percentiles": report.get("fill_spread_percentiles"),
+        "decision_fill_pearson_correlation": report.get(
+            "decision_fill_pearson_correlation"
+        ),
+        "by_decision_spread_band": report.get("by_decision_spread_band"),
+        "decision_to_fill_band_transitions": report.get(
+            "decision_to_fill_band_transitions"
+        ),
+        "by_symbol_and_decision_spread_band": report.get(
+            "by_symbol_and_decision_spread_band"
+        ),
+        "by_side_and_decision_spread_band": report.get(
+            "by_side_and_decision_spread_band"
+        ),
+        "by_entry_month_and_decision_spread_band": report.get(
+            "by_entry_month_and_decision_spread_band"
+        ),
+        "no_new_strategy_artifacts": no_new_strategy_artifacts,
+        "runs": runs,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -2390,6 +2537,7 @@ ACTION_HANDLERS = {
     "controlled_experiment_control_pair": controlled_experiment_control_pair,
     "controlled_experiment_m020a_pair": controlled_experiment_m020a_pair,
     "controlled_experiment_m020b_diagnostic": controlled_experiment_m020b_diagnostic,
+    "controlled_experiment_m020c_pair": controlled_experiment_m020c_pair,
 }
 
 
