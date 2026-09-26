@@ -308,3 +308,131 @@ such threshold must be documented before implementation and must not be stacked
 with the M020-A session filter.
 
 M020 remains **IN PROGRESS** until this confound diagnosis is recorded.
+
+
+## M020-B result — spread confound diagnosis
+
+Validation:
+
+- native suite: **188 passed, 2 skipped**;
+- Wine suite: **188 passed, 2 skipped**;
+- Wine Python: **3.10.11 AMD64**;
+- Wine NumPy: **2.2.1**;
+- Wine MetaTrader5: **5.0.6180**;
+- command:
+  `mamba2-m020b-spread-diagnostic-20260926-0646`;
+- source control diagnostic SHA-256:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
+- output A/B byte-identical: **PASS**;
+- output SHA-256:
+  `8b57c2e8bbb4313e3d4e4aef758290a81d140ddd1797759944ab573f9b893a67`;
+- strategy behavior changed: **false**.
+
+Blocked-session population:
+
+- 842 trades;
+- 260 wins / 582 losses;
+- net P/L: **USD -839.9216322911675**;
+- mean spread: **19.899049881235154 points**;
+- median spread: **4 points**;
+- p75: **13 points**;
+- p90: **77 points**;
+- p95: **111 points**;
+- maximum: **300 points**.
+
+Fixed predeclared spread bands inside 00:00–03:59 UTC:
+
+| Entry spread | Trades | Net P/L |
+|---|---:|---:|
+| <=2 | 295 | **USD +68.8293** |
+| >2–5 | 195 | **USD +73.0221** |
+| >5–10 | 94 | USD -70.8953 |
+| >10–20 | 120 | USD -157.1550 |
+| >20–50 | 28 | USD -64.8227 |
+| >50–100 | 56 | USD -262.9088 |
+| >100 | 54 | USD -425.9911 |
+
+Rollups:
+
+- <=5 points: 490 trades, **USD +141.85132131550108**;
+- <=10 points: 584 trades, **USD +70.95600171225706**;
+- >10 points: 258 trades, **USD -910.8776340034257**;
+- >50 points: 110 trades, **USD -688.899959351615**.
+
+Both sides show the same qualitative split:
+
+- BUY <=5: **USD +45.9464**;
+- SELL <=5: **USD +95.9049**;
+- BUY >10: **USD -447.5654**;
+- SELL >10: **USD -463.3122**.
+
+The >10-point population was negative in every calendar period:
+
+- Jun 23–30: **USD -113.2399**;
+- July: **USD -407.4745**;
+- August: **USD -180.5966**;
+- Sep 1–24: **USD -209.5667**.
+
+It was also negative for all five symbols.
+
+Outside 00:00–03:59 UTC, spreads were much smaller:
+
+- 4,080 trades;
+- mean spread: **2.9166666666666665 points**;
+- p95: **10 points**;
+- maximum: **70 points**.
+
+The outside-session >10-point bands were also negative where observations
+existed.
+
+### M020-B interpretation
+
+The evidence does **not** support treating 00:00–03:59 UTC itself as the main
+harmful mechanism.
+
+Within that session, the <=5-point population was profitable overall, while the
+loss was dominated by wider spreads, especially >10 and >50 points. Therefore
+M020-A's time filter discards a meaningful population of low-spread trades that
+was not harmful in aggregate.
+
+This makes spread exposure a stronger causal candidate than clock time.
+
+However, M020-B measures **fill-time entry spread**. In the accepted replay an
+order is submitted from currently visible data and fills on the next M1
+execution bar. The next-bar fill spread is not available at the decision
+instant and cannot be used directly as a causal live filter without look-ahead.
+
+M020-B therefore does **not** authorize a spread threshold yet.
+
+## M020-C — authorized decision-time spread observability audit
+
+### Question
+
+Does the spread observable when the strategy submits an order show the same
+harmful relationship as the next-bar fill spread diagnosed in M020-B?
+
+### Scope
+
+M020-C is diagnostic only.
+
+It must record, without changing execution:
+
+- order-submission UTC timestamp;
+- decision-time bid and ask available through the broker at that instant;
+- decision-time spread points;
+- eventual fill-time spread points;
+- resulting trade outcome and net P/L.
+
+Then report:
+
+1. decision-time spread distribution and fixed predeclared bands;
+2. correlation/transition between decision-time and fill-time spread bands;
+3. P/L by decision-time spread band;
+4. the same by symbol, side, and calendar period;
+5. whether a fixed decision-time spread boundary has sufficiently stable
+   evidence to justify one later single-variable treatment.
+
+Do not filter or reject any order during M020-C.
+
+The accepted M019 baseline and diagnostic hashes must remain exactly unchanged
+on the ordinary control path.
