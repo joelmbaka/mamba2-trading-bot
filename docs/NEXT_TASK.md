@@ -1,89 +1,87 @@
 # Next Authorized Task
 
-## Milestone 020-D — decision-time spread treatment
+## Milestone 021 — prospective paper/forward validation
 
-Milestone 020 remains **IN PROGRESS**.
+Milestone 020 is **CLOSED**.
 
-Branch:
+Accepted M020 implementation SHA:
 
-`backtest-controlled-experiments`
+`0d85b82278ae08a88f8b5b942fb23ec000b11411`
 
-M020-A:
+Accepted M020-D classification:
 
-**PROMISING, NOT PROMOTED**
+**PROMISING**
 
-M020-B:
+M020-D is not promoted to production/live trading.
 
-**COMPLETE — fill-spread confound diagnosis**
+## Frozen candidate
 
-M020-C:
+The only candidate carried forward is the independent M020-D rule:
 
-**COMPLETE — decision-time spread observability**
+- reject a new order only when observable decision-time spread is **>10
+  points**;
+- allow **<=10 points**;
+- use only bid/ask observable at submission time.
 
-M020-C deterministic artifact SHA-256:
+Do not stack M020-A.
 
-`0bb6e878eacfce9982cba23b05e8c4c4e437731554fe8b5f913125429b8f6a4f`
+Do not change the threshold.
 
-Accepted M019 ordinary-control hashes remain:
+Do not add symbol, side, time, ATR, SL, TP, trailing, stochastic, EMA, RSI,
+trend, position-size, or execution-cost treatments.
 
-- baseline:
-  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
-- diagnostic:
-  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`.
+## Purpose of M021
 
-## Evidence motivating M020-D
+Obtain genuinely later paper/forward evidence without reusing the inspected
+June–September history as if it were a holdout.
 
-Decision-time spread is causal information available when the strategy submits
-an order.
+The first M021 task is to **predeclare the forward-validation protocol before
+inspecting forward outcomes**.
 
-M020-C shows:
+The protocol must define at minimum:
 
-- p90 decision-time spread: **10 points**;
-- decision/fill spread correlation: **0.9213069050932308**;
-- decision spread >10 points:
-  **444 trades / USD -1,119.284653164277**;
-- >10-point trades were negative in every inspected calendar period;
-- >10-point trades were negative for all five symbols;
-- >10-point trades were negative for BUY and SELL.
+1. the exact prospective observation start/cutoff;
+2. the minimum observation horizon and/or trade-count requirement;
+3. the frozen control and frozen M020-D candidate;
+4. deterministic reporting fields and hashes;
+5. aggregate P/L and maximum drawdown;
+6. per-symbol, BUY/SELL, and calendar-period stability;
+7. rejected-order counts and spread-boundary enforcement;
+8. the existing wrong-side TP, negative-TP, remaining-position, and
+   no-strategy-artifact safety gates;
+9. explicit treatment of commission/slippage/swap assumptions;
+10. a classification rule written before results are inspected.
 
-The >10-point boundary was predeclared before M020-C result interpretation and
-was not selected by a parameter sweep.
+## Data isolation
 
-## Treatment
+The accepted M019/M020 dataset ends at:
 
-Reject exactly one class of new orders:
+`2026-09-25T00:00:00Z`
 
-- if observable decision-time bid/ask spread is **>10 points**, reject the new
-  order;
-- if spread is **<=10 points**, preserve ordinary entry behavior.
+M021 evidence used for classification must be genuinely later than the
+already-inspected dataset and must not be backfilled with previously inspected
+June–September observations.
 
-Do not inspect next-bar fill spread to make the decision.
+Do not call a tiny later sample decisive merely because it is new. The minimum
+horizon/trade-count rule must be fixed before interpreting results.
 
-## Isolation
+## Safety
 
-M020-D must run directly against the immutable M019 control.
+Historical or market-data MT5 access remains read-only.
 
-Do not stack:
+Never:
 
-- M020-A's 00:00–03:59 UTC filter;
-- symbol filters;
-- side filters;
-- additional spread thresholds;
-- strategy parameter changes;
-- ATR/SL/TP/trailing changes.
+- enable real MT5 trading;
+- place, modify, or close a real MT5 order;
+- promote M020-D directly into production strategy behavior;
+- tune the >10 threshold from M021 results;
+- stack M020-A automatically;
+- invent actual commission, slippage, or swap costs.
 
-## Validation sequence
+## Milestone boundary
 
-1. full native suite;
-2. full Wine suite;
-3. immutable M019 control regression at current treatment-code HEAD;
-4. deterministic M020-D treatment pair;
-5. zero accepted entries with decision spread >10 points;
-6. existing wrong-side TP and negative-TP gates remain zero;
-7. no new strategy-reporting artifacts;
-8. compare aggregate, drawdown, symbol, side, and calendar-period effects.
+M020-E is not authorized.
 
-Do not accept M020-D merely because aggregate P/L improves.
-
-A genuinely later paper/forward milestone remains mandatory before any
-experimental strategy behavior is promoted toward live risk.
+M021 must remain a prospective paper/forward validation milestone. Any eventual
+move toward live risk requires separate review and explicit authorization after
+the forward evidence is complete.
