@@ -3309,6 +3309,155 @@ def m022_inventory_tests():
     }
 
 
+def m022_terminal_history_capacity_probe():
+    """Read-only probe of MT5 native-M1 capacity and max-bars configuration."""
+
+    feature_sha = _require_m022_branch()
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    if not dedicated.is_file():
+        raise RuntimeError("established M022 Wine runtime is missing: .venv-wine")
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M022 Wine runtime")
+    wine = _wine()
+
+    probe_code = r'''
+import json
+from pathlib import Path
+from datetime import datetime, timezone
+
+import MetaTrader5 as mt5
+
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed for M022 capacity probe")
+
+try:
+    terminal = mt5.terminal_info()
+    account = mt5.account_info()
+    output = {
+        "terminal": {
+            "path": getattr(terminal, "path", None),
+            "data_path": getattr(terminal, "data_path", None),
+            "commondata_path": getattr(terminal, "commondata_path", None),
+            "maxbars": getattr(terminal, "maxbars", None),
+            "build": list(mt5.version()) if hasattr(mt5, "version") else None,
+        },
+        "account": {
+            "server": getattr(account, "server", None),
+            "currency": getattr(account, "currency", None),
+        },
+        "native_m1": {},
+        "config_hits": [],
+    }
+
+    for symbol in symbols:
+        if not mt5.symbol_select(symbol, True):
+            raise RuntimeError(f"could not select {symbol}")
+        rates = mt5.copy_rates_from_pos(
+            symbol,
+            mt5.TIMEFRAME_M1,
+            0,
+            int(getattr(terminal, "maxbars", 100000)) + 5000,
+        )
+        rows = 0 if rates is None else int(len(rates))
+        first = None
+        last = None
+        if rows:
+            first = datetime.fromtimestamp(
+                int(rates[0]["time"]), timezone.utc
+            ).isoformat().replace("+00:00", "Z")
+            last = datetime.fromtimestamp(
+                int(rates[-1]["time"]), timezone.utc
+            ).isoformat().replace("+00:00", "Z")
+        old_day = mt5.copy_rates_range(
+            symbol,
+            mt5.TIMEFRAME_M1,
+            datetime(2025, 8, 25, tzinfo=timezone.utc),
+            datetime(2025, 8, 26, tzinfo=timezone.utc),
+        )
+        output["native_m1"][symbol] = {
+            "rows_returned": rows,
+            "first_bar_open_utc": first,
+            "last_bar_open_utc": last,
+            "aug_25_2025_rows": 0 if old_day is None else int(len(old_day)),
+            "last_error": list(mt5.last_error()),
+        }
+
+    roots = []
+    for raw in (
+        getattr(terminal, "path", None),
+        getattr(terminal, "data_path", None),
+    ):
+        if raw:
+            roots.append(Path(raw))
+
+    seen = set()
+    for root in roots:
+        candidates = []
+        for name in ("terminal.ini", "common.ini", "metaeditor.ini"):
+            candidates.extend(root.glob(name))
+            candidates.extend((root / "config").glob(name))
+        candidates.extend((root / "config").glob("*.ini"))
+
+        for path in candidates:
+            key = str(path).lower()
+            if key in seen or not path.is_file():
+                continue
+            seen.add(key)
+            try:
+                text = path.read_text(
+                    encoding="utf-16",
+                    errors="ignore",
+                )
+                if "maxbars" not in text.lower():
+                    text = path.read_text(
+                        encoding="utf-8",
+                        errors="ignore",
+                    )
+            except OSError:
+                continue
+            for line in text.splitlines():
+                normalized = line.strip()
+                if "maxbars" in normalized.lower():
+                    output["config_hits"].append({
+                        "path": str(path),
+                        "line": normalized[:200],
+                    })
+
+    print(json.dumps(output, sort_keys=True), flush=True)
+finally:
+    mt5.shutdown()
+'''
+
+    run = _run_process_group_bounded(
+        [wine, wine_python, "-c", probe_code],
+        env=_safe_env(wine=True),
+        timeout_seconds=45,
+    )
+    payload = None
+    if run["exit_code"] == 0 and run["stdout"].strip():
+        payload = json.loads(run["stdout"].strip().splitlines()[-1])
+    return {
+        "ok": run["exit_code"] == 0 and payload is not None,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "probe": payload,
+        "run": run,
+        "safety": {
+            "market_data_read_only": True,
+            "terminal_configuration_modified": False,
+            "real_order_api_called": False,
+            "economic_replay_run": False,
+            "m021_post_cutoff_data_used": False,
+        },
+    }
+
+
 def m022_history_checkpoint_probe():
     """Probe bounded historical checkpoints with a hard per-date kill limit."""
 
@@ -4016,6 +4165,7 @@ ACTION_HANDLERS = {
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
     "m022_inventory_tests": m022_inventory_tests,
+    "m022_terminal_history_capacity_probe": m022_terminal_history_capacity_probe,
     "m022_history_checkpoint_probe": m022_history_checkpoint_probe,
     "m022_history_depth_probe": m022_history_depth_probe,
     "m022_tick_inventory_cleanup": m022_tick_inventory_cleanup,
