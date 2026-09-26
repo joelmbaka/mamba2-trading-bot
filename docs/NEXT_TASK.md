@@ -1,145 +1,135 @@
 # Next Authorized Task
 
-## Milestone 021 — prospective paper/forward validation
+## Milestone 021 — wait for the frozen primary cutoff
 
 M020 is **CLOSED**.
 
-Accepted M020 implementation SHA:
-
-`0d85b82278ae08a88f8b5b942fb23ec000b11411`
-
-Frozen M021 protocol commit:
-
-`471892e247942ed91c0bbd9adae46e4a990c5db6`
-
-Frozen protocol:
-
-`docs/milestones/021-prospective-forward-validation.md`
+M021 is **OPEN — PROTOCOL AND EXECUTION MACHINERY FROZEN**.
 
 Branch:
 
 `prospective-forward-validation`
 
-## Current authorized phase
+Protocol-freeze commit:
 
-Implement only the machinery needed to execute the frozen M021 protocol.
+`471892e247942ed91c0bbd9adae46e4a990c5db6`
 
-Do **not** inspect, summarize, compare, classify, or otherwise interpret
-post-`2026-09-25T00:00:00Z` economic outcomes before the predeclared minimum
-window is complete.
+Accepted M021 machinery implementation SHA:
 
-The primary window ends:
+`f53d38b93434eb52b19f0f12a441e4439822e39e`
+
+Frozen protocol:
+
+`docs/milestones/021-prospective-forward-validation.md`
+
+## Current state
+
+The machinery phase is accepted.
+
+Validation completed on 2026-09-26:
+
+- native: **206 passed, 2 skipped**;
+- Wine: **206 passed, 2 skipped**;
+- M019 baseline preserved exactly:
+  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
+- M019 diagnostic preserved exactly:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
+- M020-D baseline preserved exactly:
+  `94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`;
+- M020-D diagnostic preserved exactly:
+  `45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`;
+- M020-D evidence preserved exactly:
+  `e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`;
+- pre-cutoff readiness: **not ready**;
+- pre-cutoff primary export: **refused, no export attempted**;
+- pre-cutoff paired replay: **refused, no economic results computed**.
+
+No post-cutoff economic outcome has been inspected.
+
+## Do not run the economic validation early
+
+The primary source-data window is:
+
+`[2026-09-25T00:00:00Z, 2026-10-23T00:00:00Z)`
+
+Do not run or bypass the economic replay before:
 
 `2026-10-23T00:00:00Z`
 
-The exact minimum evidence and extension rules are frozen in the M021 milestone
-document and must not be changed based on outcomes.
+The local-control actions already enforce this gate.
 
-## Frozen arms
+Do not inspect a partial-window P/L, drawdown, symbol result, side result,
+calendar-period result, or treatment classification.
 
-Control:
+## First authorized action at or after the primary cutoff
 
-- accepted M019 strategy behavior unchanged.
+At or after `2026-10-23T00:00:00Z`:
 
-Candidate:
+1. verify the feature branch is clean and matches origin;
+2. record exact native/Wine/runtime versions;
+3. run `m021_historical_regression` and require all accepted M019/M020-D
+   hashes to remain exact;
+4. run the read-only `m021_primary_export`;
+5. validate the manifest, requested range, row counts, Ask coverage, artifact
+   SHA-256 values, and runtime/source metadata;
+6. run `m021_primary_pair`;
+7. require byte-identical A/B artifacts for control and candidate;
+8. apply all treatment-boundary and safety gates;
+9. check the **predeclared count thresholds before interpreting economic
+   outcomes**.
+
+## Count-gate decision
+
+The primary cutoff can be classified only if all are met:
+
+- control closed trades >= **1,000**;
+- candidate closed trades >= **900**;
+- candidate closed trades >= **100 per symbol**;
+- candidate BUY closed trades >= **300**;
+- candidate SELL closed trades >= **300**.
+
+If any threshold is unmet, do not interpret P/L or drawdown. Extend the window
+only to the next frozen cutoff:
+
+- 2026-10-30T00:00:00Z
+- 2026-11-06T00:00:00Z
+- 2026-11-13T00:00:00Z
+- 2026-11-20T00:00:00Z
+
+Use the first cutoff that satisfies all count thresholds.
+
+If the eight-week cutoff is reached without all count thresholds, classify
+**INSUFFICIENT FOR CLASSIFICATION** and close M021 without tuning.
+
+## Frozen candidate
+
+Candidate remains exactly:
 
 - reject a new order only when observable decision-time spread is **>10
   points**;
 - allow **<=10 points**;
 - use only bid/ask observable at submission time.
 
-Do not stack M020-A.
+Never:
 
-Do not change the threshold.
+- stack M020-A;
+- change the threshold;
+- add symbol, side, session, ATR, SL, TP, trailing, stochastic, EMA, RSI,
+  trend, position-size, or execution-cost treatments;
+- invent commission, slippage, or swap;
+- enable real MT5 trading;
+- place, modify, or close a real MT5 order;
+- promote M020-D directly to production/live behavior.
 
-Do not add symbol, side, time, ATR, SL, TP, trailing, stochastic, EMA, RSI,
-trend, position-size, or execution-cost treatments.
-
-## Implementation scope
-
-Prepare deterministic M021 execution support for the frozen protocol.
-
-Allowed work:
-
-1. add protocol constants/metadata needed by the forward-validation harness;
-2. support the exact prospective start and fixed cutoff schedule from the
-   milestone document;
-3. support read-only MT5 export of prospective M1 Bid, Ask M1, M5, and M15 data
-   into a dataset isolated from M019/M020;
-4. record deterministic manifest metadata and SHA-256 hashes for all source
-   artifacts;
-5. add paired control/candidate replay support for a supplied **completed**
-   M021 window;
-6. add the required fixed symbol, BUY/SELL, seven-day-period, spread-boundary,
-   safety, P/L, and drawdown reporting fields;
-7. add A/B artifact determinism checks;
-8. add a readiness gate that refuses economic M021 execution before the
-   applicable frozen cutoff is complete;
-9. add fixed local-control actions needed for M021 export/validation;
-10. add synthetic/unit coverage for the frozen date, threshold, readiness, and
-    reporting rules.
-
-## Required regression gates
-
-Before any future M021 economic result is interpreted, preserve exactly:
-
-M019 baseline:
-
-`114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`
-
-M019 diagnostic:
-
-`84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`
-
-If executable code changes, also preserve the accepted M020-D treatment
-artifacts exactly:
-
-baseline:
-
-`94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`
-
-diagnostic:
-
-`45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`
-
-evidence:
-
-`e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`
-
-## Cost contract
-
-Keep exactly:
+Cost contract remains exactly:
 
 `SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`
 
-Do not invent actual broker commission, slippage, or swap.
+## Classification
 
-## Safety
+Use only the classification rule already frozen in the milestone document.
 
-Historical/market-data MT5 access remains read-only.
+Do not change the rule after seeing the prospective result.
 
-Never:
-
-- enable real MT5 trading;
-- place, modify, or close a real MT5 order;
-- promote M020-D into production/live strategy behavior;
-- inspect early M021 P/L as a basis for changing the protocol;
-- tune the >10 threshold from M021 data;
-- stack M020-A;
-- rewrite accepted replay semantics silently.
-
-## Acceptance for this implementation phase
-
-This machinery phase is acceptable when:
-
-- native and Wine suites pass;
-- synthetic M021 protocol/readiness/reporting tests pass;
-- immutable M019 control hashes remain exact;
-- accepted M020-D historical treatment hashes remain exact if executable code
-  changed;
-- a pre-cutoff M021 economic action is proven to refuse execution;
-- no post-cutoff economic outcome has been interpreted;
-- no production/live strategy behavior changed.
-
-After that, M021 waits for the first frozen observation cutoff that satisfies
-the protocol.
+Even **FORWARD-SUPPORTED** does not authorize live trading. Any live-risk step
+requires a separate later review and explicit authorization.
