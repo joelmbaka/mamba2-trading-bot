@@ -122,7 +122,7 @@ M022_PROBE_FLOOR_UTC = "2010-01-01T00:00:00Z"
 M022_SYMBOLS = list(FIRST_BASELINE_SYMBOLS)
 M022_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-raw"
 M022_INVENTORY_MANIFEST = M022_INVENTORY_DIR / "manifest.json"
-M022_TICK_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-tick-m1"
+M022_TICK_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-tick-m1-v2"
 M022_TICK_INVENTORY_MANIFEST = M022_TICK_INVENTORY_DIR / "manifest.json"
 
 
@@ -3690,7 +3690,7 @@ import pandas as pd
 from mamba2.backtest.mt5_dataset import load_mt5_dataset
 
 candidate_path = Path(
-    "backtest_data/m022-history-inventory-tick-m1/manifest.json"
+    "backtest_data/m022-history-inventory-tick-m1-v2/manifest.json"
 )
 accepted_path = Path(
     "backtest_data/broader-history-20260623-20260925/manifest.json"
