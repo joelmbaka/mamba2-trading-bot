@@ -1,27 +1,18 @@
 {
   "version": 1,
-  "command_id": "mamba2-m021-switch-prospective-forward-20260926-1055",
-  "completed_at": "2026-09-26T08:02:51.874525+00:00",
+  "command_id": "mamba2-m021-repo-checks-20260926-1103",
+  "completed_at": "2026-09-26T08:03:32.808282+00:00",
   "ok": true,
-  "action": "switch_branch",
+  "action": "repo_checks",
   "data": {
-    "target_branch": "prospective-forward-validation",
-    "before_branch": "backtest-controlled-experiments",
-    "after_branch": "prospective-forward-validation",
-    "before_sha": "5bb586709399c903a5d351ab4159b5a65ac64b95",
-    "after_sha": "f53d38b93434eb52b19f0f12a441e4439822e39e",
-    "reason": null,
+    "ok": true,
+    "clean": true,
+    "branch": "prospective-forward-validation",
+    "divergence": "0\t0",
+    "bot_cache_tracked": false,
+    "icon_tracked": true,
+    "icon_changed": false,
     "commands": [
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "backtest-controlled-experiments\n",
-        "stderr": ""
-      },
       {
         "command": [
           "git",
@@ -29,15 +20,14 @@
           "HEAD"
         ],
         "exit_code": 0,
-        "stdout": "5bb586709399c903a5d351ab4159b5a65ac64b95\n",
+        "stdout": "f53d38b93434eb52b19f0f12a441e4439822e39e\n",
         "stderr": ""
       },
       {
         "command": [
           "git",
-          "check-ref-format",
-          "--branch",
-          "prospective-forward-validation"
+          "branch",
+          "--show-current"
         ],
         "exit_code": 0,
         "stdout": "prospective-forward-validation\n",
@@ -57,13 +47,67 @@
       {
         "command": [
           "git",
+          "diff",
+          "--check"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "/home/joel/.local/bin/uv",
+          "lock",
+          "--check"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "Resolved 58 packages in 26ms\n"
+      },
+      {
+        "command": [
+          "git",
+          "ls-files",
+          "--error-unmatch",
+          "bot_cache.json"
+        ],
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "error: pathspec 'bot_cache.json' did not match any file(s) known to git\nDid you forget to 'git add'?\n"
+      },
+      {
+        "command": [
+          "git",
+          "ls-files",
+          "--error-unmatch",
+          "icon.png"
+        ],
+        "exit_code": 0,
+        "stdout": "icon.png\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--short",
+          "--",
+          "icon.png"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
           "fetch",
           "origin",
           "prospective-forward-validation:refs/remotes/origin/prospective-forward-validation"
         ],
         "exit_code": 0,
         "stdout": "",
-        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * [new branch]      prospective-forward-validation -> origin/prospective-forward-validation\n"
+        "stderr": ""
       },
       {
         "command": [
@@ -79,56 +123,13 @@
       {
         "command": [
           "git",
-          "rev-parse",
-          "--verify",
-          "refs/heads/prospective-forward-validation"
-        ],
-        "exit_code": 128,
-        "stdout": "",
-        "stderr": "fatal: Needed a single revision\n"
-      },
-      {
-        "command": [
-          "git",
-          "switch",
-          "--track",
-          "-c",
-          "prospective-forward-validation",
-          "origin/prospective-forward-validation"
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...origin/prospective-forward-validation"
         ],
         "exit_code": 0,
-        "stdout": "branch 'prospective-forward-validation' set up to track 'origin/prospective-forward-validation'.\n",
-        "stderr": "Switched to a new branch 'prospective-forward-validation'\n"
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "prospective-forward-validation\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "f53d38b93434eb52b19f0f12a441e4439822e39e\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
+        "stdout": "0\t0\n",
         "stderr": ""
       }
     ]
