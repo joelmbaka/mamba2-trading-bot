@@ -1,23 +1,34 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-optimized-cache-full-native-20260926-2030",
-  "completed_at": "2026-09-26T17:30:11.744374+00:00",
+  "command_id": "mamba2-m022-optimized-cache-hash-regression-20260926-2031",
+  "completed_at": "2026-09-26T17:48:18.609120+00:00",
   "ok": true,
-  "action": "test_full_native",
+  "action": "m022_phase1_default_regression",
   "data": {
     "ok": true,
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest"
-      ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 230 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  1%]\ntests/test_backtest_account_currency.py ............                     [  6%]\ntests/test_backtest_baseline_reporting.py ....                           [  8%]\ntests/test_backtest_diagnostics.py ....                                  [ 10%]\ntests/test_backtest_execution.py .........                               [ 14%]\ntests/test_backtest_execution_costs.py ............                      [ 19%]\ntests/test_backtest_experiments.py .....                                 [ 21%]\ntests/test_backtest_foundation.py ..........                             [ 26%]\ntests/test_backtest_native_runtime.py ....                               [ 27%]\ntests/test_backtest_portfolio_runner.py .........                        [ 31%]\ntests/test_backtest_spread_execution.py ........                         [ 35%]\ntests/test_backtest_strategy_integration.py ..                           [ 36%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 38%]\ntests/test_cache_manager_security.py .........                           [ 42%]\ntests/test_config_security.py ...                                        [ 43%]\ntests/test_detect_trend.py ...                                           [ 44%]\ntests/test_m020_decision_spread.py ...                                   [ 46%]\ntests/test_m020_diagnostics.py ....                                      [ 47%]\ntests/test_m020_spread_treatment.py ...                                  [ 49%]\ntests/test_m021_forward_validation.py ...........                        [ 53%]\ntests/test_mt5__broker.py ......                                         [ 56%]\ntests/test_mt5_dataset.py ..............                                 [ 62%]\ntests/test_parameter_research.py ......................                  [ 72%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 81%]\n.                                                                        [ 82%]\ntests/test_rates.py .......                                              [ 85%]\ntests/test_replay_indicator_cache.py ..                                  [ 86%]\ntests/test_stochastic_indicator.py ....                                  [ 87%]\ntests/test_trend_line.py ..                                              [ 88%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================== 230 passed, 2 skipped in 3.02s ========================\n",
-      "stderr": ""
+    "feature_branch": "strategy-parameter-research",
+    "feature_sha": "e41af2c0e714d4010f6f298743902f4964b873af",
+    "hashes_preserved": true,
+    "observed": {
+      "m019_baseline": "114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983",
+      "m019_diagnostic": "84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8",
+      "m020d_baseline": "94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766",
+      "m020d_diagnostic": "45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e",
+      "m020d_evidence": "e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a"
+    },
+    "expected": {
+      "m019_baseline": "114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983",
+      "m019_diagnostic": "84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8",
+      "m020d_baseline": "94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766",
+      "m020d_diagnostic": "45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e",
+      "m020d_evidence": "e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a"
+    },
+    "safety": {
+      "economic_replay_run": true,
+      "purpose": "accepted-artifact regression only",
+      "parameter_result_inspected": false,
+      "m021_post_cutoff_data_used": false,
+      "real_order_api_called": false
     }
   }
 }
