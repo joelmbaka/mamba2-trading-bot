@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-history-checkpoints-20260926-1352",
-  "completed_at": "2026-09-26T10:52:21.271435+00:00",
+  "command_id": "mamba2-m022-history-checkpoints-extended-20260926-1356",
+  "completed_at": "2026-09-26T10:55:39.005033+00:00",
   "ok": true,
   "action": "m022_history_checkpoint_probe",
   "data": {
@@ -23,10 +23,17 @@
       "2025-12-15T00:00:00Z",
       "2025-11-17T00:00:00Z",
       "2025-10-20T00:00:00Z",
-      "2025-09-22T00:00:00Z"
+      "2025-09-22T00:00:00Z",
+      "2025-08-25T00:00:00Z",
+      "2025-07-28T00:00:00Z",
+      "2025-06-30T00:00:00Z",
+      "2025-06-02T00:00:00Z",
+      "2025-05-05T00:00:00Z",
+      "2025-04-07T00:00:00Z",
+      "2025-03-10T00:00:00Z"
     ],
-    "oldest_passing_checkpoint_utc": "2025-09-22T00:00:00Z",
-    "stop_reason": null,
+    "oldest_passing_checkpoint_utc": "2025-08-25T00:00:00Z",
+    "stop_reason": "checkpoint 2025-07-28T00:00:00Z lacks complete synchronized Bid/Ask tick plus M5/M15 coverage for all symbols",
     "observations": [
       {
         "checkpoint_utc": "2026-06-01T00:00:00Z",
@@ -1597,6 +1604,216 @@
               "ticks": {
                 "first_synchronized_bid_ask_tick_utc": "2025-09-22T00:02:00.114000Z",
                 "valid_synchronized_bid_ask_rows": 22
+              }
+            }
+          },
+          "terminal_maxbars": 100000
+        }
+      },
+      {
+        "checkpoint_utc": "2025-08-25T00:00:00Z",
+        "exit_code": 0,
+        "timed_out": false,
+        "stderr": "",
+        "probe": {
+          "account_currency": "USD",
+          "all_symbols_pass": true,
+          "broker_server": "MetaQuotes-Demo",
+          "checkpoint_utc": "2025-08-25T00:00:00Z",
+          "runtime": {
+            "metatrader5_package": "5.0.6180",
+            "numpy": "2.2.1",
+            "python": "3.10.11",
+            "terminal_version": [
+              500,
+              6215,
+              "25 Sep 2026"
+            ]
+          },
+          "symbols": {
+            "EURJPY": {
+              "M15": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:03:06.366000Z",
+                "valid_synchronized_bid_ask_rows": 59
+              }
+            },
+            "EURUSD": {
+              "M15": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:03:46.599000Z",
+                "valid_synchronized_bid_ask_rows": 51
+              }
+            },
+            "GBPJPY": {
+              "M15": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:03:46.651000Z",
+                "valid_synchronized_bid_ask_rows": 82
+              }
+            },
+            "GBPUSD": {
+              "M15": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:02:10.319000Z",
+                "valid_synchronized_bid_ask_rows": 32
+              }
+            },
+            "USDJPY": {
+              "M15": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:03:46.709000Z",
+                "valid_synchronized_bid_ask_rows": 816
+              }
+            }
+          },
+          "terminal_maxbars": 100000
+        }
+      },
+      {
+        "checkpoint_utc": "2025-07-28T00:00:00Z",
+        "exit_code": 0,
+        "timed_out": false,
+        "stderr": "",
+        "probe": {
+          "account_currency": "USD",
+          "all_symbols_pass": false,
+          "broker_server": "MetaQuotes-Demo",
+          "checkpoint_utc": "2025-07-28T00:00:00Z",
+          "runtime": {
+            "metatrader5_package": "5.0.6180",
+            "numpy": "2.2.1",
+            "python": "3.10.11",
+            "terminal_version": [
+              500,
+              6215,
+              "25 Sep 2026"
+            ]
+          },
+          "symbols": {
+            "EURJPY": {
+              "M15": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": null,
+                "valid_synchronized_bid_ask_rows": 0
+              }
+            },
+            "EURUSD": {
+              "M15": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": "2025-07-28T00:01:01.200000Z",
+                "valid_synchronized_bid_ask_rows": 136
+              }
+            },
+            "GBPJPY": {
+              "M15": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": "2025-07-28T00:01:00.115000Z",
+                "valid_synchronized_bid_ask_rows": 140
+              }
+            },
+            "GBPUSD": {
+              "M15": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": "2025-07-28T00:01:08.672000Z",
+                "valid_synchronized_bid_ask_rows": 42
+              }
+            },
+            "USDJPY": {
+              "M15": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 49
+              },
+              "M5": {
+                "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                "rows": 145
+              },
+              "ticks": {
+                "first_synchronized_bid_ask_tick_utc": "2025-07-28T00:01:06.135000Z",
+                "valid_synchronized_bid_ask_rows": 102
               }
             }
           },
