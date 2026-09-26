@@ -52,7 +52,7 @@ m022_history_depth_probe
 m022_tick_inventory_cleanup
 m022_tick_inventory
 m022_history_inventory_cleanup
-m022_history_inventory
+m022_history_inventory  # retired refusal; do not use for new work
 ```
 
 `switch_branch` requires:
