@@ -238,6 +238,51 @@ Because M020-B used next-bar fill spread, the next authorized step is **M020-C
 decision-time spread observability audit**. It must measure only spread that was
 available when the strategy submitted the order and must not filter trades.
 
+## M020-C progress
+
+M020-C is complete.
+
+Real-data command:
+
+`mamba2-m020c-decision-spread-pair-20260926-0702`
+
+Validation:
+
+- native: **191 passed, 2 skipped**;
+- Wine: **191 passed, 2 skipped**;
+- accepted M019 baseline hash preserved exactly A/B;
+- accepted M019 diagnostic hash preserved exactly A/B;
+- decision-spread artifact A/B identical;
+- decision-spread SHA-256:
+  `0bb6e878eacfce9982cba23b05e8c4c4e437731554fe8b5f913125429b8f6a4f`;
+- decision rows: **4,922 / 4,922**;
+- missing rows: **0**;
+- strategy behavior changed: **false**.
+
+Key causal result:
+
+- decision spread <=10 points:
+  4,478 trades, **USD -597.3229788380668**;
+- decision spread >10 points:
+  444 trades, **USD -1,119.284653164277**.
+
+The >10-point population was negative across all four calendar periods, all five
+symbols, and both BUY/SELL. Decision-time and fill-time spreads correlated at
+**0.9213069050932308**.
+
+## M020-D progress
+
+M020-D is authorized as one independent treatment:
+
+- reject only new orders whose observable decision-time spread is >10 points;
+- allow <=10 points;
+- do not stack M020-A or any other filter.
+
+Implementation currently lives only in the experiment/backtest path; production
+strategy files are unchanged.
+
+Pre-treatment validation is in progress.
+
 ## Durable handoff
 
 A fresh ChatGPT or Codex session must start with:
@@ -285,6 +330,6 @@ action is exposed, and no real MT5 order action is permitted.
 
 **020 — Controlled experiments remains in progress**
 
-M020-C is the next authorized task. It is diagnostic only and must preserve the
-accepted M019 ordinary control hashes exactly. No spread threshold is yet
-authorized.
+M020-D is the current authorized treatment. It must pass native/Wine validation,
+an immutable-control regression, and a deterministic real-data treatment pair
+before classification.
