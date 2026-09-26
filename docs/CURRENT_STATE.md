@@ -4,19 +4,18 @@ Last updated: 2026-09-26
 
 ## Latest accepted implementation milestone
 
-**019 — Broader-history validation**
+**020 — Controlled experiments**
 
 Accepted implementation SHA:
 
-`94a74211175d0f1db7e4c00cb3ab1f8ca1f286bb`
+`0d85b82278ae08a88f8b5b942fb23ec000b11411`
 
-Starting M018 closeout SHA:
+Accepted prior milestone:
 
-`94c031a852751973e3f7541cfbb7ebf636844223`
+**019 — Broader-history validation**
 
-Milestone 019 changed historical-export/replay infrastructure only. It did not
-intentionally change strategy parameters, production fetcher behavior, or
-execution semantics.
+Milestone 020 changed experiment/backtest infrastructure only. It did not
+promote experimental behavior into the production/live strategy.
 
 ## M019 final validation
 
@@ -170,118 +169,98 @@ The deepest drawdown episode peaked at **USD 10,042.761998581507** on
 See `docs/milestones/019-broader-history-validation.md` for the complete
 acceptance record.
 
-## M020 progress — controlled experiments
+## M020 closeout — controlled experiments
 
-M020 implementation branch:
+Milestone 020 is **CLOSED**.
 
-`backtest-controlled-experiments`
+Accepted implementation SHA:
 
-Current reviewed implementation HEAD before documentation:
+`0d85b82278ae08a88f8b5b942fb23ec000b11411`
 
-`3958b607ab12bf232c741fe520328b72dd9a23f2`
-
-M020-A tested one treatment only: suppress new strategy entry evaluation during
-`00:00:00 <= UTC < 04:00:00`. Existing positions remained managed normally.
-
-Real-data treatment pair:
-
-`mamba2-m020a-treatment-pair-20260926-0603`
-
-Treatment determinism and safety gates:
-
-- baseline A/B identical: **PASS**;
-- treatment baseline SHA-256:
-  `65e3fe214e8e923175144dc9749c3fef521da964a796286805ebed745df42658`;
-- diagnostic A/B identical: **PASS**;
-- treatment diagnostic SHA-256:
-  `c18c9fdda3fa9cb69cfd90f507d217897875248e5f8d745aa49cafe73925157e`;
-- blocked-session entries: **0**;
-- wrong-side initial TP violations: **0**;
-- negative-P/L take-profit exits: **0**;
-- new strategy artifacts: **0**.
-
-Control vs treatment:
-
-- trades: **4,922 -> 4,104**;
-- net realized P/L:
-  **USD -1,716.607632002333 -> USD -933.4296206208546**;
-- maximum equity drawdown:
-  **USD 1,929.6969567926317 -> USD 1,271.330847985335**;
-- maximum drawdown %:
-  **19.214803229083717% -> 12.659175316162072%**;
-- non-flat win rate:
-  **38.60540760317138% -> 40.03901487442087%**.
-
-The P/L delta was **USD +783.1780113814784**. All four calendar periods, all
-five symbols, and both BUY/SELL improved relative to control, although the
-largest symbol contribution came from GBPJPY.
-
-Classification:
+M020-A:
 
 **PROMISING, NOT PROMOTED**
 
-The treatment remains loss-making and uses the already-inspected June–September
-dataset. It is not accepted for live risk.
+M020-B:
 
-M020-B diagnostic is complete.
+**COMPLETE — fill-spread confound diagnosis**
 
-Its deterministic output shows the broad time filter is over-inclusive:
+M020-C:
 
-- <=5 points inside 00:00–03:59 UTC:
-  **USD +141.85132131550108**;
-- >10 points inside 00:00–03:59 UTC:
-  **USD -910.8776340034257**;
-- >10-point losses persisted across all four calendar periods, both sides, and
-  all five symbols.
+**COMPLETE — decision-time spread observability**
 
-Because M020-B used next-bar fill spread, the next authorized step is **M020-C
-decision-time spread observability audit**. It must measure only spread that was
-available when the strategy submitted the order and must not filter trades.
+M020-D:
 
-## M020-C progress
+**PROMISING**
 
-M020-C is complete.
+The final accepted M020-D treatment rejects only a new order whose observable
+decision-time spread is **>10 points**. It does not stack the M020-A session
+filter and does not change production/live strategy behavior.
 
-Real-data command:
+Final validation after correcting rejected-order reporting:
 
-`mamba2-m020c-decision-spread-pair-20260926-0702`
+- native: **195 passed, 2 skipped**;
+- Wine: **195 passed, 2 skipped**;
+- immutable control command:
+  `mamba2-m020d-reporting-fix-control-20260926-0843`;
+- accepted M019 baseline preserved:
+  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
+- accepted M019 diagnostic preserved:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
+- authoritative treatment command:
+  `mamba2-m020d-authoritative-treatment-pair-20260926-1014`;
+- treatment baseline SHA-256:
+  `94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`;
+- treatment diagnostic SHA-256:
+  `45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`;
+- treatment evidence SHA-256:
+  `e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`;
+- result branch SHA:
+  `53e79d1da25994c87330faaaf805928de08c427e`;
+- rejected attempts: **976**;
+- accepted spread violations: **0**;
+- maximum accepted decision spread: **10 points**;
+- wrong-side initial TP violations: **0**;
+- negative-P/L take-profit exits: **0**;
+- new strategy-reporting artifacts: **0**;
+- remaining open positions: **0**.
 
-Validation:
+Control -> M020-D:
 
-- native: **191 passed, 2 skipped**;
-- Wine: **191 passed, 2 skipped**;
-- accepted M019 baseline hash preserved exactly A/B;
-- accepted M019 diagnostic hash preserved exactly A/B;
-- decision-spread artifact A/B identical;
-- decision-spread SHA-256:
-  `0bb6e878eacfce9982cba23b05e8c4c4e437731554fe8b5f913125429b8f6a4f`;
-- decision rows: **4,922 / 4,922**;
-- missing rows: **0**;
-- strategy behavior changed: **false**.
+- accepted/closed: **4,922/4,922 -> 4,664/4,664**;
+- wins/losses/flats:
+  **1,899/3,020/3 -> 1,860/2,800/4**;
+- non-flat win rate:
+  **38.60540760317138% -> 39.91416309012876%**;
+- net realized P/L:
+  **USD -1,716.607632002333 -> USD -677.647148799515**;
+- ending balance/equity:
+  **USD 8,283.392367997667 -> USD 9,322.352851200485**;
+- maximum equity drawdown:
+  **USD 1,929.6969567926317 / 19.214803229083717% ->
+  USD 1,067.1062318369404 / 10.629228567139583%**.
 
-Key causal result:
+P/L improvement:
 
-- decision spread <=10 points:
-  4,478 trades, **USD -597.3229788380668**;
-- decision spread >10 points:
-  444 trades, **USD -1,119.284653164277**.
+**USD +1,038.960483202818**
 
-The >10-point population was negative across all four calendar periods, all five
-symbols, and both BUY/SELL. Decision-time and fill-time spreads correlated at
-**0.9213069050932308**.
+All four inspected calendar periods, all five symbols, and both sides improve
+relative to control. GBPJPY contributes about **56.03%** of the improvement,
+but all four other symbols also improve. The treatment remains loss-making:
+three of four calendar periods, four of five symbols, and both sides remain
+negative.
 
-## M020-D progress
+M020-D is therefore **PROMISING**, but remains in-sample experimental evidence.
+It is not promoted to live risk.
 
-M020-D is authorized as one independent treatment:
+The first M020-D treatment pair also revealed a replay-reporting bug where
+intentional `retcode=1` rejections were counted under `accepted_orders`.
+That accounting bug was fixed and regression-tested before the authoritative
+pair. Rejected orders had never reached the pending execution queue, so the
+economic treatment behavior did not change.
 
-- reject only new orders whose observable decision-time spread is >10 points;
-- allow <=10 points;
-- do not stack M020-A or any other filter.
-
-Implementation currently lives only in the experiment/backtest path; production
-strategy files are unchanged.
-
-Pre-treatment validation is in progress.
+No M020-E is authorized. Further tuning of thresholds or stacking M020-A would
+reuse an already-inspected dataset and is outside the closed milestone.
 
 ## Durable handoff
 
@@ -328,8 +307,9 @@ action is exposed, and no real MT5 order action is permitted.
 
 ## Next milestone
 
-**020 — Controlled experiments remains in progress**
+**021 — Prospective paper/forward validation**
 
-M020-D is the current authorized treatment. It must pass native/Wine validation,
-an immutable-control regression, and a deterministic real-data treatment pair
-before classification.
+Freeze M020-D as an experimental candidate only. Before inspecting later
+outcomes, predeclare the forward-validation protocol. Use only genuinely later
+data, keep real MT5 trading disabled, and do not stack M020-A or tune another
+spread threshold.
