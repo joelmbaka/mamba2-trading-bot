@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m021-full-native-20260926-1104",
-  "action": "test_full_native",
+  "id": "mamba2-m021-full-wine-20260926-1106",
+  "action": "test_full_wine",
   "args": {},
   "requested_by": "chatgpt"
 }
