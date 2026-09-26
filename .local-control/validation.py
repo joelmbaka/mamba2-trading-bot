@@ -3297,6 +3297,254 @@ def m021_primary_pair():
 
 
 
+def m022_phase1_stochastic_assessment():
+    """Apply the predeclared stochastic shortlist rubric mechanically."""
+
+    feature_sha = _require_m022_branch()
+    reference_path = (
+        M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-a-summary.json"
+    )
+    if not reference_path.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 reference summary is unavailable",
+            "feature_sha": feature_sha,
+        }
+    if not M022_PHASE1_STOCHASTIC_DIR.is_dir():
+        return {
+            "ok": False,
+            "reason": "M022 stochastic family outputs are unavailable",
+            "feature_sha": feature_sha,
+        }
+
+    reference = json.loads(reference_path.read_text(encoding="utf-8"))
+    tuples = (
+        (9, 3, 3),
+        (10, 4, 4),
+        (10, 6, 6),
+        (14, 3, 3),
+        (14, 5, 5),
+        (14, 7, 7),
+        (21, 5, 5),
+        (21, 7, 7),
+        (28, 7, 7),
+    )
+
+    def numeric(mapping, key):
+        value = (mapping or {}).get(key)
+        return None if value is None else float(value)
+
+    def delta_breakdown(candidate, baseline, key):
+        names = sorted(set(candidate or {}) | set(baseline or {}))
+        rows = {}
+        positive = []
+        for name in names:
+            cand = numeric((candidate or {}).get(name), key)
+            ref = numeric((baseline or {}).get(name), key)
+            if cand is None or ref is None:
+                continue
+            delta = cand - ref
+            rows[name] = delta
+            if delta > 0:
+                positive.append((name, delta))
+        positive_sum = sum(value for _name, value in positive)
+        max_share = (
+            max(value for _name, value in positive) / positive_sum
+            if positive_sum > 0
+            else None
+        )
+        return {
+            "deltas": rows,
+            "positive_count": len(positive),
+            "positive_sum": positive_sum,
+            "max_positive_share": max_share,
+        }
+
+    ref_agg = reference.get("aggregate") or {}
+    ref_closed = int(ref_agg.get("closed_trades", 0))
+    activity_floor = ref_closed * 0.70
+    ref_symbols = reference.get("per_symbol") or {}
+    ref_sides = reference.get("by_side") or {}
+    ref_buckets = reference.get("by_entry_utc_bucket") or {}
+
+    arms = []
+    for k, d, slowing in tuples:
+        label = f"{k}-{d}-{slowing}"
+        summary_path = (
+            M022_PHASE1_STOCHASTIC_DIR
+            / label
+            / f"M022-P1-STOCH-{k}-{d}-{slowing}-a-summary.json"
+        )
+        if not summary_path.is_file():
+            return {
+                "ok": False,
+                "reason": f"stochastic summary missing for {k}/{d}/{slowing}",
+                "feature_sha": feature_sha,
+                "path": str(summary_path.relative_to(REPO)),
+            }
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        aggregate = summary.get("aggregate") or {}
+        closed = int(aggregate.get("closed_trades", 0))
+        tp = summary.get("tp_safety") or {}
+        partition = summary.get("partition") or {}
+
+        mandatory_ok = bool(
+            closed >= activity_floor
+            and int(tp.get("negative_pl_take_profit_exits", -1)) == 0
+            and int(tp.get("wrong_side_initial_tp", -1)) == 0
+            and partition.get("partition") == "development"
+            and partition.get("source_manifest_sha256")
+            == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+            and partition.get("strict_common_m1") is True
+            and bool(partition.get("common_m1_index_sha256"))
+        )
+
+        net_pl = float(aggregate.get("net_realized_pl", 0.0))
+        ref_net = float(ref_agg.get("net_realized_pl", 0.0))
+        improves_net = net_pl > ref_net
+
+        symbol_delta = delta_breakdown(
+            summary.get("per_symbol") or {},
+            ref_symbols,
+            "net_realized_pl",
+        )
+        side_delta = delta_breakdown(
+            summary.get("by_side") or {},
+            ref_sides,
+            "net_realized_pl",
+        )
+        bucket_delta = delta_breakdown(
+            summary.get("by_entry_utc_bucket") or {},
+            ref_buckets,
+            "net_realized_pl",
+        )
+
+        breadth_ok = True
+        if improves_net:
+            breadth_ok = bool(
+                symbol_delta["positive_count"] >= 2
+                and bucket_delta["positive_count"] >= 2
+                and (
+                    symbol_delta["max_positive_share"] is not None
+                    and symbol_delta["max_positive_share"] <= 0.70
+                )
+                and (
+                    side_delta["max_positive_share"] is not None
+                    and side_delta["max_positive_share"] <= 0.80
+                )
+            )
+
+        arms.append({
+            "tuple": [k, d, slowing],
+            "label": f"{k}/{d}/{slowing}",
+            "is_reference": [k, d, slowing] == [21, 7, 7],
+            "mandatory_ok": mandatory_ok,
+            "activity": {
+                "closed_trades": closed,
+                "reference_closed_trades": ref_closed,
+                "minimum_closed_trades": activity_floor,
+                "ratio_to_reference": (
+                    closed / ref_closed if ref_closed else None
+                ),
+            },
+            "objectives": {
+                "net_realized_pl": net_pl,
+                "maximum_equity_drawdown": float(
+                    aggregate.get("maximum_equity_drawdown", 0.0)
+                ),
+                "win_rate_nonflat_pct": aggregate.get(
+                    "win_rate_nonflat_pct"
+                ),
+            },
+            "net_pl_improves_reference": improves_net,
+            "breadth": {
+                "passes": breadth_ok,
+                "symbol": symbol_delta,
+                "side": side_delta,
+                "entry_utc_bucket": bucket_delta,
+            },
+        })
+
+    eligible = [row for row in arms if row["mandatory_ok"]]
+
+    def dominates(left, right):
+        l = left["objectives"]
+        r = right["objectives"]
+        l_win = l["win_rate_nonflat_pct"]
+        r_win = r["win_rate_nonflat_pct"]
+        if l_win is None or r_win is None:
+            return False
+        weak = (
+            l["net_realized_pl"] >= r["net_realized_pl"]
+            and l["maximum_equity_drawdown"]
+            <= r["maximum_equity_drawdown"]
+            and float(l_win) >= float(r_win)
+        )
+        strict = (
+            l["net_realized_pl"] > r["net_realized_pl"]
+            or l["maximum_equity_drawdown"]
+            < r["maximum_equity_drawdown"]
+            or float(l_win) > float(r_win)
+        )
+        return bool(weak and strict)
+
+    nondominated = []
+    for row in eligible:
+        if not any(
+            other is not row and dominates(other, row)
+            for other in eligible
+        ):
+            nondominated.append(row)
+
+    nondominated_labels = {row["label"] for row in nondominated}
+    shortlist = []
+    for row in arms:
+        pareto = row["label"] in nondominated_labels
+        row["pareto_nondominated"] = pareto
+        if row["is_reference"]:
+            row["screening_status"] = "REFERENCE"
+            shortlist.append(row["label"])
+        elif not row["mandatory_ok"]:
+            row["screening_status"] = "INELIGIBLE"
+        elif not pareto:
+            row["screening_status"] = "DOMINATED"
+        elif row["breadth"]["passes"]:
+            row["screening_status"] = "SHORTLIST"
+            shortlist.append(row["label"])
+        else:
+            row["screening_status"] = "FRAGILE / CONCENTRATED"
+
+    return {
+        "ok": True,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "family": "stochastic",
+        "rubric": {
+            "activity_floor_fraction": 0.70,
+            "objectives": {
+                "net_realized_pl": "maximize",
+                "maximum_equity_drawdown": "minimize",
+                "win_rate_nonflat_pct": "maximize",
+            },
+            "symbol_positive_delta_min_count": 2,
+            "calendar_bucket_positive_delta_min_count": 2,
+            "max_symbol_positive_delta_share": 0.70,
+            "max_side_positive_delta_share": 0.80,
+            "reference_always_retained": True,
+        },
+        "shortlist": shortlist,
+        "arms": arms,
+        "safety": {
+            "economic_replay_run": False,
+            "reads_existing_development_results_only": True,
+            "validation_economic_data_used": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def m022_phase1_stochastic_family():
     """Run the frozen nine-arm stochastic family on development only."""
 
@@ -5879,6 +6127,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_phase1_stochastic_assessment": m022_phase1_stochastic_assessment,
     "m022_phase1_stochastic_family": m022_phase1_stochastic_family,
     "m022_phase1_reference_pair": m022_phase1_reference_pair,
     "m022_phase1_default_regression": m022_phase1_default_regression,
