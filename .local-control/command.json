@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-full-native-tests-20260926-1610",
-  "action": "test_full_native",
+  "id": "mamba2-m022-default-regression-20260926-1612",
+  "action": "m022_phase1_default_regression",
   "args": {},
   "requested_by": "chatgpt"
 }
