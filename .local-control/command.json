@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-native-v3-repo-gate-20260926-1545",
-  "action": "repo_checks",
+  "id": "mamba2-m022-native-inventory-v3-20260926-1546",
+  "action": "m022_native_inventory",
   "args": {},
   "requested_by": "chatgpt"
 }
