@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m020d-control-regression-20260926-0719",
-  "action": "controlled_experiment_control_pair",
+  "id": "mamba2-m020d-treatment-pair-20260926-0808",
+  "action": "controlled_experiment_m020d_pair",
   "args": {},
   "requested_by": "chatgpt"
 }
