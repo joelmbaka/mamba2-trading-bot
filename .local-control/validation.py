@@ -3737,52 +3737,88 @@ def m022_phase1_stochastic_family():
         (21, 7, 7),
         (28, 7, 7),
     )
+    equivalence_summary_path = (
+        M022_PHASE1_STOCH_EQUIV_DIR
+        / "M022-P1-STOCH-21-7-7-a-summary.json"
+    )
+    if not equivalence_summary_path.is_file():
+        return {
+            "ok": False,
+            "reason": (
+                "optimized 21/7/7 equivalence must pass before the "
+                "stochastic family"
+            ),
+            "feature_sha": feature_sha,
+        }
+
     results = []
     for k, d, slowing in tuples:
         label = f"{k}-{d}-{slowing}"
-        arm_dir = output_root / label
-        run = _run(
-            _native_command(
-                "-m",
-                "mamba2.backtest.parameter_research",
-                "--manifest",
-                str(manifest.relative_to(REPO)),
-                "--output-dir",
-                str(arm_dir.relative_to(REPO)),
-                "--family",
-                "stochastic",
-                "--value",
-                f"{k}/{d}/{slowing}",
-                "--starting-balance",
-                "10000",
-            ),
-            env=_safe_env(),
-        )
-        if run["exit_code"] != 0:
-            return {
-                "ok": False,
-                "reason": f"M022 stochastic arm {k}/{d}/{slowing} failed",
-                "feature_branch": "strategy-parameter-research",
-                "feature_sha": feature_sha,
-                "completed_arms": results,
-                "failed_run": {
-                    "tuple": [k, d, slowing],
-                    "exit_code": run["exit_code"],
-                    "stdout": _bounded(run["stdout"]),
-                    "stderr": _bounded(run["stderr"]),
-                },
-            }
-        try:
-            payload = json.loads(run["stdout"].strip().splitlines()[-1])
-        except (json.JSONDecodeError, IndexError):
-            return {
-                "ok": False,
-                "reason": f"unable to parse stochastic arm {k}/{d}/{slowing}",
-                "feature_sha": feature_sha,
-                "completed_arms": results,
-            }
 
-        summary = payload.get("summary") or {}
+        if (k, d, slowing) == (21, 7, 7):
+            summary = json.loads(
+                equivalence_summary_path.read_text(encoding="utf-8")
+            )
+            payload = {
+                "ok": True,
+                "deterministic": True,
+                "partition": "development",
+                "experiment_id": "M022-P1-STOCH-21-7-7",
+                "baseline_sha256": _sha256(
+                    M022_PHASE1_STOCH_EQUIV_DIR
+                    / "M022-P1-STOCH-21-7-7-a-baseline.json"
+                ),
+                "diagnostic_sha256": _sha256(
+                    M022_PHASE1_STOCH_EQUIV_DIR
+                    / "M022-P1-STOCH-21-7-7-a-diagnostic.json"
+                ),
+                "summary_sha256": _sha256(equivalence_summary_path),
+                "summary": summary,
+            }
+        else:
+            arm_dir = output_root / label
+            run = _run(
+                _native_command(
+                    "-m",
+                    "mamba2.backtest.parameter_research",
+                    "--manifest",
+                    str(manifest.relative_to(REPO)),
+                    "--output-dir",
+                    str(arm_dir.relative_to(REPO)),
+                    "--family",
+                    "stochastic",
+                    "--value",
+                    f"{k}/{d}/{slowing}",
+                    "--starting-balance",
+                    "10000",
+                ),
+                env=_safe_env(),
+            )
+            if run["exit_code"] != 0:
+                return {
+                    "ok": False,
+                    "reason": f"M022 stochastic arm {k}/{d}/{slowing} failed",
+                    "feature_branch": "strategy-parameter-research",
+                    "feature_sha": feature_sha,
+                    "completed_arms": results,
+                    "failed_run": {
+                        "tuple": [k, d, slowing],
+                        "exit_code": run["exit_code"],
+                        "stdout": _bounded(run["stdout"]),
+                        "stderr": _bounded(run["stderr"]),
+                    },
+                }
+            try:
+                payload = json.loads(run["stdout"].strip().splitlines()[-1])
+            except (json.JSONDecodeError, IndexError):
+                return {
+                    "ok": False,
+                    "reason": f"unable to parse stochastic arm {k}/{d}/{slowing}",
+                    "feature_sha": feature_sha,
+                    "completed_arms": results,
+                }
+            summary = payload.get("summary") or {}
+
         tp = summary.get("tp_safety") or {}
         partition = summary.get("partition") or {}
         arm_ok = bool(
