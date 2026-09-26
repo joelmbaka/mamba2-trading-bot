@@ -1,90 +1,90 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-native-m1-file-probe-20260926-1537",
-  "completed_at": "2026-09-26T12:38:46.120409+00:00",
+  "command_id": "mamba2-m022-sync-native-v3-20260926-1543",
+  "completed_at": "2026-09-26T12:43:58.308641+00:00",
   "ok": true,
-  "action": "m022_native_m1_file_probe",
+  "action": "sync",
   "data": {
-    "ok": true,
-    "feature_branch": "strategy-parameter-research",
-    "feature_sha": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46",
-    "probe": {
-      "currency": "USD",
-      "maxbars": 500000,
-      "native_m1_aug_25": {
-        "EURJPY": {
-          "first_bar_open_utc": "2025-08-25T00:03:00Z",
-          "last_bar_open_utc": "2025-08-25T23:59:00Z",
-          "last_error": [
-            1,
-            "Success"
-          ],
-          "rows": 1437
-        },
-        "EURUSD": {
-          "first_bar_open_utc": "2025-08-25T00:03:00Z",
-          "last_bar_open_utc": "2025-08-25T23:59:00Z",
-          "last_error": [
-            1,
-            "Success"
-          ],
-          "rows": 1436
-        },
-        "GBPJPY": {
-          "first_bar_open_utc": "2025-08-25T00:03:00Z",
-          "last_bar_open_utc": "2025-08-25T23:59:00Z",
-          "last_error": [
-            1,
-            "Success"
-          ],
-          "rows": 1437
-        },
-        "GBPUSD": {
-          "first_bar_open_utc": "2025-08-25T00:02:00Z",
-          "last_bar_open_utc": "2025-08-25T23:59:00Z",
-          "last_error": [
-            1,
-            "Success"
-          ],
-          "rows": 1437
-        },
-        "USDJPY": {
-          "first_bar_open_utc": "2025-08-25T00:03:00Z",
-          "last_bar_open_utc": "2025-08-25T23:59:00Z",
-          "last_error": [
-            1,
-            "Success"
-          ],
-          "rows": 1437
-        }
+    "branch": "strategy-parameter-research",
+    "before_sha": "50adee960bc3ed1bc2c3fe1cecda509e2446cd08",
+    "after_sha": "50adee960bc3ed1bc2c3fe1cecda509e2446cd08",
+    "reason": null,
+    "commands": [
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "50adee960bc3ed1bc2c3fe1cecda509e2446cd08\n",
+        "stderr": ""
       },
-      "phase": "complete",
-      "runtime": [
-        500,
-        6215,
-        "25 Sep 2026"
-      ],
-      "server": "MetaQuotes-Demo"
-    },
-    "complete": true,
-    "maxbars_verified": true,
-    "native_aug_25_verified": true,
-    "wine_shutdown": {
-      "command": [
-        "/usr/bin/wineserver",
-        "-k"
-      ],
-      "exit_code": 0,
-      "timed_out": false,
-      "stdout": "",
-      "stderr": ""
-    },
-    "safety": {
-      "market_data_read_only": true,
-      "terminal_configuration_modified": false,
-      "real_order_api_called": false,
-      "economic_replay_run": false,
-      "m021_post_cutoff_data_used": false
-    }
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "strategy-parameter-research\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin",
+          "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "50adee960bc3ed1bc2c3fe1cecda509e2446cd08\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "0\t0\n",
+        "stderr": ""
+      }
+    ]
   }
 }
