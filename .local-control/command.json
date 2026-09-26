@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m020a-treatment-pair-20260926-0603",
-  "action": "controlled_experiment_m020a_pair",
+  "id": "mamba2-m020b-native-20260926-0640",
+  "action": "test_full_native",
   "args": {},
   "requested_by": "chatgpt"
 }
