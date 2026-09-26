@@ -305,11 +305,54 @@ action is exposed, and no real MT5 order action is permitted.
 - End-of-data does not force-liquidate.
 - Historical spread uses tick-derived Ask where available.
 
-## Next milestone
+## Active milestone — M021 prospective paper/forward validation
 
-**021 — Prospective paper/forward validation**
+M021 is **OPEN — PROTOCOL AND EXECUTION MACHINERY FROZEN**.
 
-Freeze M020-D as an experimental candidate only. Before inspecting later
-outcomes, predeclare the forward-validation protocol. Use only genuinely later
-data, keep real MT5 trading disabled, and do not stack M020-A or tune another
-spread threshold.
+Branch:
+
+`prospective-forward-validation`
+
+Protocol-freeze commit:
+
+`471892e247942ed91c0bbd9adae46e4a990c5db6`
+
+Accepted machinery implementation SHA:
+
+`f53d38b93434eb52b19f0f12a441e4439822e39e`
+
+The protocol was frozen before later outcomes were inspected.
+
+Primary prospective source-data window:
+
+`[2026-09-25T00:00:00Z, 2026-10-23T00:00:00Z)`
+
+The candidate remains exactly M020-D:
+
+- reject new order submissions only when observable decision-time spread is
+  **>10 points**;
+- allow **<=10 points**;
+- do not stack M020-A;
+- do not tune the threshold.
+
+M021 machinery validation on 2026-09-26:
+
+- native: **206 passed, 2 skipped**;
+- Wine: **206 passed, 2 skipped**;
+- historical M019 control baseline/diagnostic hashes: **exactly preserved**;
+- historical M020-D baseline/diagnostic/evidence hashes:
+  **exactly preserved**;
+- new strategy artifacts during regression: **0**;
+- readiness before primary cutoff: **false**;
+- early primary export: **refused before MT5 history access**;
+- early paired replay: **refused before economic computation**.
+
+No post-cutoff P/L, drawdown, symbol, side, period, or classification result has
+been inspected.
+
+M021 remains dormant until the primary cutoff
+`2026-10-23T00:00:00Z`. At that point the fixed protocol controls whether the
+window is classified or extended by a predeclared seven-day increment.
+
+Real MT5 trading remains disabled. M020-D is not promoted to production/live
+behavior.
