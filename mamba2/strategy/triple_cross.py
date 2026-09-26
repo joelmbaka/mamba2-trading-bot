@@ -27,20 +27,44 @@ class StochasticTripleTFStrategy(Strategy):
     - Entry timeframe (M1) for precise entry
     """
 
-    def __init__(self, symbol="EURUSD"):
+    def __init__(
+        self,
+        symbol="EURUSD",
+        *,
+        stochastic_k_period=None,
+        stochastic_d_period=None,
+        stochastic_slowing=None,
+        oversold_level=20,
+        overbought_level=80,
+        ema_period=7,
+    ):
         super().__init__()
         self.symbol = symbol
         self.stochastic_timeframes = config.stochastic_timeframes
         self.use_higher_tf = config.use_higher_tf  # New configuration option
         self.stochastic_k_period = int(
             getattr(config, "stochastic_k_period", 21)
+            if stochastic_k_period is None
+            else stochastic_k_period
         )
         self.stochastic_d_period = int(
             getattr(config, "stochastic_d_period", 7)
+            if stochastic_d_period is None
+            else stochastic_d_period
         )
         self.stochastic_slowing = int(
             getattr(config, "stochastic_slowing", 7)
+            if stochastic_slowing is None
+            else stochastic_slowing
         )
+        self.oversold_level = float(oversold_level)
+        self.overbought_level = float(overbought_level)
+        self.ema_period = int(ema_period)
+
+        if not 0 <= self.oversold_level < self.overbought_level <= 100:
+            raise ValueError("stochastic boundaries must satisfy 0 <= low < high <= 100")
+        if self.ema_period < 1:
+            raise ValueError("ema_period must be positive")
         
     async def evaluate(self, market):
         """Evaluate market conditions using triple timeframe stochastic."""
@@ -188,7 +212,7 @@ class StochasticTripleTFStrategy(Strategy):
 
             if buy_trend_allowed:
                 # Only look for buy signals
-                oversold_level = 20
+                oversold_level = self.oversold_level
                 buy_conditions = [
                     k_trading > d_trading,
                     (stoch_entry['k'] < oversold_level).any(),
@@ -225,10 +249,10 @@ class StochasticTripleTFStrategy(Strategy):
                     
                     # Get 7-period EMA
                     from mamba2.indicators.moving_average import get_moving_average
-                    ema7 = get_moving_average(self.symbol, 'M1', 7, 'ema', market['rate_fetcher'])
+                    ema7 = get_moving_average(self.symbol, 'M1', self.ema_period, 'ema', market['rate_fetcher'])
                     
                     if ema7 is None:
-                        logger.warning(f"Could not calculate 7-period EMA for {self.symbol}")
+                        logger.warning(f"Could not calculate {self.ema_period}-period EMA for {self.symbol}")
                         return
                     
                     # Check if current candle is green and closed above EMA7
@@ -318,7 +342,7 @@ class StochasticTripleTFStrategy(Strategy):
                         )
             if sell_trend_allowed:
                 # Only look for sell signals
-                overbought_level = 80
+                overbought_level = self.overbought_level
                 sell_conditions = [
                     k_trading < d_trading,
                     (stoch_entry['k'] > overbought_level).any(),
@@ -362,10 +386,10 @@ class StochasticTripleTFStrategy(Strategy):
                     
                     # Get 7-period EMA
                     from mamba2.indicators.moving_average import get_moving_average
-                    ema7 = get_moving_average(self.symbol, 'M1', 7, 'ema', market['rate_fetcher'])
+                    ema7 = get_moving_average(self.symbol, 'M1', self.ema_period, 'ema', market['rate_fetcher'])
                     
                     if ema7 is None:
-                        logger.warning(f"Could not calculate 7-period EMA for {self.symbol}")
+                        logger.warning(f"Could not calculate {self.ema_period}-period EMA for {self.symbol}")
                         return
                     
                     # Check if current candle is red and closed below EMA7
