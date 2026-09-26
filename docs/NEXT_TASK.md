@@ -99,66 +99,96 @@ The accepted M019/M020 regression artifacts must remain protected as specified i
 
 ## Current checkpoint
 
-The M022 history-inventory gate has **PASSED**. No M022 parameter result has yet been inspected.
+The M022 history/data gate has passed and the first scientifically accepted
+development economic reference has now passed.
 
-Accepted dataset:
+Accepted source dataset:
 
 `backtest_data/m022-history-inventory-native-m1-v3/manifest.json`
 
-Manifest SHA-256:
+Source manifest SHA-256:
 
 `143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`
 
-Common trading-date-list SHA-256:
-
-`2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5`
-
-The replacement M019 overlap gate passed exactly across all five symbols:
-
-- native Bid M1 exact;
-- Ask M1 exact;
-- native M5 exact;
-- native M15 exact;
-- zero missing/extra Ask rows.
-
-Frozen chronological partitions:
+Frozen partitions remain:
 
 - development:
   `2025-08-25T00:00:00Z` → `2026-04-21T00:00:00Z`,
-  **169** common trading dates;
+  **169** trading dates;
 - validation:
   `2026-04-21T00:00:00Z` → `2026-07-08T00:00:00Z`,
-  **56** common trading dates;
+  **56** trading dates;
 - untouched historical holdout:
   `2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`,
-  **57** common trading dates.
+  **57** trading dates.
 
-The holdout remains unopened for economic inspection.
+Validation and historical holdout remain closed for economic inspection.
 
-Local-control reliability was hardened on `local-control` at
-`d85e51d4a34ec52597e54cd8a1cad92f70fff2bb` by using
-`TimeoutStartSec=infinity` and `OnUnitInactiveSec=15s` while retaining the
-finite stop timeout and cgroup-wide kill semantics.
+### Accepted reference-v3
 
-### Exact next authorized sequence
+Command:
 
-1. Synchronize the Dell feature checkout to the latest M022 feature SHA after these documentation updates.
-2. Implement experiment-only parameter overrides and deterministic Phase-1 reporting without silently changing production defaults.
-3. Add synthetic/unit tests for override/default equivalence and reporting determinism.
-4. Preserve accepted M019/M020 regression artifacts.
-5. Run Phase 1 on the **development partition only**, one parameter family at a time, relative to the frozen reference configuration:
-   - stochastic tuples;
-   - symmetric oversold/overbought boundaries;
-   - EMA period;
-   - decision-time spread threshold;
-   - ATR SL/TP protection;
-   - all-hours vs 00:00–03:59 UTC exclusion.
-6. Do not run the full Cartesian product.
-7. Do not inspect validation while selecting within a Phase-1 family except according to a separately frozen shortlist procedure.
-8. Do not inspect the historical holdout yet.
-9. Freeze the Phase-1 shortlist and Phase-2 matrix before any combination runs.
+`mamba2-m022-phase1-reference-v3-20260926-1859`
 
-M021 remains independently frozen and excluded from all M022 tuning.
+Feature SHA:
+
+`3136d2143f79e80ea0ce9688559b7e7aaaca7ef5`
+
+Reference evidence:
+
+- deterministic A/B: PASS;
+- replay boundaries: **241,474**;
+- replay-boundary SHA:
+  `17685ae6a08ce8e6e4f3af215f4215f92fe87de24f5a934d7935778634d47e28`;
+- closed trades: **12,006**;
+- net realized P/L: **-$15,499.3611**;
+- ending realized balance: **-$5,499.3611**;
+- max equity drawdown: **$15,501.9142 / 155.0054%**;
+- non-flat win rate: **32.8667%**;
+- remaining open positions: **3**;
+- TP/safety invariants: PASS;
+- validation used: no;
+- historical holdout used: no;
+- M021 outcomes used: no;
+- live orders: no.
+
+Reference artifact hashes:
+
+- baseline:
+  `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+- diagnostic:
+  `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+- summary:
+  `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+
+### Current authorized gate
+
+Before any non-reference stochastic tuple is allowed, validate the
+post-reference replay-cache optimization frozen in the M022 milestone:
+
+1. sync optimized feature code;
+2. exact cached-vs-legacy stochastic/ATR/EMA parity tests;
+3. focused M022 tests;
+4. full native tests;
+5. fresh exact M019/M020-D hash regression;
+6. optimized stochastic **21/7/7** deterministic A/B run;
+7. require exact economic equivalence to reference-v3 across:
+   - partition/cost contract;
+   - aggregate;
+   - per-symbol;
+   - BUY/SELL;
+   - fixed UTC buckets;
+   - protection;
+   - rejection counts;
+   - TP/safety;
+   - remaining positions.
+
+Only if all seven gates pass may the remaining eight stochastic tuples run.
+
+After the stochastic family completes, apply the predeclared Pareto/activity/
+concentration rubric mechanically before beginning the next Phase-1 family.
+
+Do not inspect validation or holdout. Do not use M021 outcomes.
 
 ## Start here
 
