@@ -16,6 +16,7 @@ from mamba2.backtest.parameter_research import (
     Phase1Arm,
     Phase1Parameters,
     ResearchStrategyWrapper,
+    _strict_common_boundary_clock,
     _temporary_research_config,
     reference_arm,
     run_phase1_arm,
@@ -258,7 +259,7 @@ def test_slice_dataset_excludes_all_post_development_rows():
     )
 
 
-def test_slice_dataset_uses_strict_common_m1_clock_across_symbols():
+def test_slice_dataset_preserves_symbol_m1_and_builds_shared_boundaries():
     index = pd.date_range(
         "2026-04-20T23:55:00Z",
         "2026-04-20T23:59:00Z",
@@ -318,15 +319,24 @@ def test_slice_dataset_uses_strict_common_m1_clock_across_symbols():
     )
 
     sliced = slice_dataset(dataset, partition="development")
-    expected = eur_index.intersection(jpy_index)
+    boundaries = _strict_common_boundary_clock(
+        sliced.m1_bars,
+        sliced.ask_m1_bars,
+        end_exclusive=pd.Timestamp("2026-04-21T00:00:00Z"),
+    )
 
-    assert sliced.m1_bars["EURUSD"].index.equals(expected)
-    assert sliced.m1_bars["USDJPY"].index.equals(expected)
-    assert sliced.ask_m1_bars["EURUSD"].index.equals(expected)
-    assert sliced.ask_m1_bars["USDJPY"].index.equals(expected)
-    assert sliced.manifest["m022_strict_common_m1"] is True
-    assert sliced.manifest["m022_common_m1_rows"] == len(expected)
-    assert sliced.manifest["m022_common_m1_index_sha256"]
+    assert sliced.m1_bars["EURUSD"].index.equals(eur_index)
+    assert sliced.m1_bars["USDJPY"].index.equals(jpy_index)
+    assert sliced.ask_m1_bars["EURUSD"].index.equals(eur_index)
+    assert sliced.ask_m1_bars["USDJPY"].index.equals(jpy_index)
+    assert pd.Timestamp("2026-04-20T23:57:00Z") not in boundaries
+    assert pd.Timestamp("2026-04-20T23:58:00Z") not in boundaries
+    assert pd.Timestamp("2026-04-20T23:59:00Z") in boundaries
+    assert pd.Timestamp("2026-04-21T00:00:00Z") in boundaries
+    assert sliced.manifest["m022_strict_common_boundary_clock"] is True
+    assert sliced.manifest["m022_full_symbol_m1_preserved"] is True
+    assert sliced.manifest["m022_replay_boundary_count"] == len(boundaries)
+    assert sliced.manifest["m022_replay_boundary_sha256"]
 
 
 def test_phase1_runner_refuses_validation_before_reading_manifest():
