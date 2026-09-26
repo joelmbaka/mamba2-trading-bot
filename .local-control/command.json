@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-phase1-tests-current-20260926-1706",
-  "action": "m022_phase1_tests",
+  "id": "mamba2-m022-phase1-rubric-sync-20260926-1707",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
