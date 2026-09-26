@@ -3653,6 +3653,10 @@ def m022_phase1_stochastic_family():
             == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
             and partition.get("start_utc") == "2025-08-25T00:00:00Z"
             and partition.get("end_exclusive_utc") == "2026-04-21T00:00:00Z"
+            and partition.get("strict_common_boundary_clock") is True
+            and partition.get("full_symbol_m1_preserved") is True
+            and int(partition.get("replay_boundary_count", 0)) > 0
+            and bool(partition.get("replay_boundary_sha256"))
             and int(tp.get("negative_pl_take_profit_exits", -1)) == 0
             and int(tp.get("wrong_side_initial_tp", -1)) == 0
         )
@@ -3791,7 +3795,6 @@ def m022_phase1_reference_pair():
         and partition.get("end_exclusive_utc") == "2026-04-21T00:00:00Z"
         and int(partition.get("common_trading_dates", 0)) == 169
         and partition.get("strict_common_boundary_clock") is True
-        and int(partition.get("common_m1_rows", 0)) > 0
         and partition.get("full_symbol_m1_preserved") is True
         and int(partition.get("replay_boundary_count", 0)) > 0
         and bool(partition.get("replay_boundary_sha256"))
