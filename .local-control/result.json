@@ -1,71 +1,1519 @@
 {
   "version": 1,
-  "command_id": "mamba2-m020b-wine-20260926-0644",
-  "completed_at": "2026-09-26T03:43:36.149272+00:00",
+  "command_id": "mamba2-m020b-spread-diagnostic-20260926-0646",
+  "completed_at": "2026-09-26T03:44:16.638543+00:00",
   "ok": true,
-  "action": "test_full_wine",
+  "action": "controlled_experiment_m020b_diagnostic",
   "data": {
     "ok": true,
-    "run": {
-      "command": [
-        "/usr/bin/wine",
-        "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
-        "-m",
-        "pytest"
-      ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts =============================\nplatform win32 -- Python 3.10.11, pytest-9.1.1, pluggy-1.6.0\nrootdir: Z:\\home\\joel\\Dev\\mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.4.0, mock-3.15.1\nasyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 188 items / 2 skipped\n\ntests\\test_atr_manager.py ....                                           [  2%]\ntests\\test_backtest_account_currency.py ............                     [  8%]\ntests\\test_backtest_baseline_reporting.py ....                           [ 10%]\ntests\\test_backtest_diagnostics.py ....                                  [ 12%]\ntests\\test_backtest_execution.py .........                               [ 17%]\ntests\\test_backtest_execution_costs.py ............                      [ 23%]\ntests\\test_backtest_experiments.py .....                                 [ 26%]\ntests\\test_backtest_foundation.py ..........                             [ 31%]\ntests\\test_backtest_native_runtime.py ....                               [ 34%]\ntests\\test_backtest_portfolio_runner.py ........                         [ 38%]\ntests\\test_backtest_spread_execution.py ........                         [ 42%]\ntests\\test_backtest_strategy_integration.py ..                           [ 43%]\ntests\\test_backtest_strategy_lifecycle.py .....                          [ 46%]\ntests\\test_cache_manager_security.py .........                           [ 51%]\ntests\\test_config_security.py ...                                        [ 52%]\ntests\\test_detect_trend.py ...                                           [ 54%]\ntests\\test_m020_diagnostics.py ....                                      [ 56%]\ntests\\test_mt5__broker.py ......                                         [ 59%]\ntests\\test_mt5_dataset.py ............                                   [ 65%]\ntests\\test_position_manager_trailing_semantics.py ...................... [ 77%]\n.                                                                        [ 78%]\ntests\\test_rates.py .......                                              [ 81%]\ntests\\test_replay_indicator_cache.py ..                                  [ 82%]\ntests\\test_stochastic_indicator.py ....                                  [ 85%]\ntests\\test_trend_line.py ..                                              [ 86%]\ntests\\test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================= 188 passed, 2 skipped in 6.07s ========================\n",
-      "stderr": "",
-      "wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
-      "discovery": {
-        "ok": true,
-        "native": {
-          "command": [
-            "/home/joel/.local/bin/uv",
-            "run",
-            "--locked",
-            "python",
-            "-c",
-            "import json,platform,numpy,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'pytest':pytest.__version__}))"
-          ],
-          "exit_code": 0,
-          "stdout": "{\"python\": \"3.10.19\", \"machine\": \"x86_64\", \"numpy\": \"2.2.6\", \"pytest\": \"8.4.0\"}\n",
-          "stderr": ""
-        },
-        "wine_candidates": [
-          {
-            "label": "base",
-            "python": "C:\\Python310\\python.exe",
-            "probe": {
-              "command": [
-                "/usr/bin/wine",
-                "C:\\Python310\\python.exe",
-                "-c",
-                "import json,platform,numpy,MetaTrader5 as mt5,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'metatrader5':mt5.__version__,'pytest':pytest.__version__}))"
-              ],
-              "exit_code": 1,
-              "stdout": "",
-              "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'numpy'\n"
-            }
+    "diagnostic_id": "M020-B",
+    "strategy_behavior_changed": false,
+    "source_control_diagnostic_sha256": "84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8",
+    "outputs_identical": true,
+    "output_sha256_a": "8b57c2e8bbb4313e3d4e4aef758290a81d140ddd1797759944ab573f9b893a67",
+    "output_sha256_b": "8b57c2e8bbb4313e3d4e4aef758290a81d140ddd1797759944ab573f9b893a67",
+    "blocked_session": {
+      "by_entry_month_and_spread_band": {
+        "2026-06": {
+          "00 <=2": {
+            "closed_trades": 20,
+            "entry_spread_points": {
+              "count": 20,
+              "maximum": 2.0,
+              "mean": 0.6,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 15,
+            "net_realized_pl": -27.398923960634637,
+            "wins": 5
           },
-          {
-            "label": ".venv-wine",
-            "python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
-            "probe": {
-              "command": [
-                "/usr/bin/wine",
-                "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
-                "-c",
-                "import json,platform,numpy,MetaTrader5 as mt5,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'metatrader5':mt5.__version__,'pytest':pytest.__version__}))"
-              ],
-              "exit_code": 0,
-              "stdout": "{\"python\": \"3.10.11\", \"machine\": \"AMD64\", \"numpy\": \"2.2.1\", \"metatrader5\": \"5.0.6180\", \"pytest\": \"9.1.1\"}\n",
-              "stderr": ""
-            }
+          "01 >2-5": {
+            "closed_trades": 7,
+            "entry_spread_points": {
+              "count": 7,
+              "maximum": 5.0,
+              "mean": 4.142857142857143,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 5,
+            "net_realized_pl": 2.1433416213390544,
+            "wins": 2
+          },
+          "02 >5-10": {
+            "closed_trades": 3,
+            "entry_spread_points": {
+              "count": 3,
+              "maximum": 10.0,
+              "mean": 8.666666666666666,
+              "minimum": 8.0
+            },
+            "flats": 0,
+            "losses": 2,
+            "net_realized_pl": -5.047781660476478,
+            "wins": 1
+          },
+          "03 >10-20": {
+            "closed_trades": 5,
+            "entry_spread_points": {
+              "count": 5,
+              "maximum": 15.0,
+              "mean": 14.2,
+              "minimum": 13.0
+            },
+            "flats": 0,
+            "losses": 4,
+            "net_realized_pl": -10.097055457799843,
+            "wins": 1
+          },
+          "04 >20-50": {
+            "closed_trades": 5,
+            "entry_spread_points": {
+              "count": 5,
+              "maximum": 42.0,
+              "mean": 33.2,
+              "minimum": 22.0
+            },
+            "flats": 0,
+            "losses": 3,
+            "net_realized_pl": -6.823127120048491,
+            "wins": 2
+          },
+          "05 >50-100": {
+            "closed_trades": 9,
+            "entry_spread_points": {
+              "count": 9,
+              "maximum": 92.0,
+              "mean": 73.55555555555556,
+              "minimum": 56.0
+            },
+            "flats": 0,
+            "losses": 8,
+            "net_realized_pl": -56.154559245604375,
+            "wins": 1
+          },
+          "06 >100": {
+            "closed_trades": 4,
+            "entry_spread_points": {
+              "count": 4,
+              "maximum": 203.0,
+              "mean": 158.75,
+              "minimum": 113.0
+            },
+            "flats": 0,
+            "losses": 4,
+            "net_realized_pl": -40.16511987411786,
+            "wins": 0
           }
-        ],
-        "selected_wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe"
+        },
+        "2026-07": {
+          "00 <=2": {
+            "closed_trades": 101,
+            "entry_spread_points": {
+              "count": 101,
+              "maximum": 2.0,
+              "mean": 0.3465346534653465,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 47,
+            "net_realized_pl": 60.439170718451365,
+            "wins": 54
+          },
+          "01 >2-5": {
+            "closed_trades": 50,
+            "entry_spread_points": {
+              "count": 50,
+              "maximum": 5.0,
+              "mean": 4.12,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 32,
+            "net_realized_pl": -27.390290600912458,
+            "wins": 18
+          },
+          "02 >5-10": {
+            "closed_trades": 33,
+            "entry_spread_points": {
+              "count": 33,
+              "maximum": 10.0,
+              "mean": 8.545454545454545,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 28,
+            "net_realized_pl": -44.07999533697293,
+            "wins": 5
+          },
+          "03 >10-20": {
+            "closed_trades": 34,
+            "entry_spread_points": {
+              "count": 34,
+              "maximum": 20.0,
+              "mean": 13.264705882352942,
+              "minimum": 11.0
+            },
+            "flats": 0,
+            "losses": 26,
+            "net_realized_pl": -74.38205097303955,
+            "wins": 8
+          },
+          "04 >20-50": {
+            "closed_trades": 13,
+            "entry_spread_points": {
+              "count": 13,
+              "maximum": 50.0,
+              "mean": 35.30769230769231,
+              "minimum": 22.0
+            },
+            "flats": 0,
+            "losses": 11,
+            "net_realized_pl": -33.90023033030824,
+            "wins": 2
+          },
+          "05 >50-100": {
+            "closed_trades": 21,
+            "entry_spread_points": {
+              "count": 21,
+              "maximum": 100.0,
+              "mean": 79.76190476190476,
+              "minimum": 52.0
+            },
+            "flats": 0,
+            "losses": 16,
+            "net_realized_pl": -92.75832203671682,
+            "wins": 5
+          },
+          "06 >100": {
+            "closed_trades": 27,
+            "entry_spread_points": {
+              "count": 27,
+              "maximum": 225.0,
+              "mean": 150.62962962962962,
+              "minimum": 103.0
+            },
+            "flats": 0,
+            "losses": 23,
+            "net_realized_pl": -206.433863829753,
+            "wins": 4
+          }
+        },
+        "2026-08": {
+          "00 <=2": {
+            "closed_trades": 103,
+            "entry_spread_points": {
+              "count": 103,
+              "maximum": 2.0,
+              "mean": 0.7572815533980582,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 71,
+            "net_realized_pl": 62.59732813891368,
+            "wins": 32
+          },
+          "01 >2-5": {
+            "closed_trades": 69,
+            "entry_spread_points": {
+              "count": 69,
+              "maximum": 5.0,
+              "mean": 3.869565217391304,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 46,
+            "net_realized_pl": 2.255144594124887,
+            "wins": 23
+          },
+          "02 >5-10": {
+            "closed_trades": 30,
+            "entry_spread_points": {
+              "count": 30,
+              "maximum": 10.0,
+              "mean": 8.1,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 27,
+            "net_realized_pl": -27.352102132211666,
+            "wins": 3
+          },
+          "03 >10-20": {
+            "closed_trades": 51,
+            "entry_spread_points": {
+              "count": 51,
+              "maximum": 20.0,
+              "mean": 13.96078431372549,
+              "minimum": 11.0
+            },
+            "flats": 0,
+            "losses": 39,
+            "net_realized_pl": -51.58086363920921,
+            "wins": 12
+          },
+          "04 >20-50": {
+            "closed_trades": 8,
+            "entry_spread_points": {
+              "count": 8,
+              "maximum": 46.0,
+              "mean": 33.375,
+              "minimum": 21.0
+            },
+            "flats": 0,
+            "losses": 7,
+            "net_realized_pl": -15.450187035129334,
+            "wins": 1
+          },
+          "05 >50-100": {
+            "closed_trades": 11,
+            "entry_spread_points": {
+              "count": 11,
+              "maximum": 100.0,
+              "mean": 78.0909090909091,
+              "minimum": 51.0
+            },
+            "flats": 0,
+            "losses": 9,
+            "net_realized_pl": -43.61077072687156,
+            "wins": 2
+          },
+          "06 >100": {
+            "closed_trades": 10,
+            "entry_spread_points": {
+              "count": 10,
+              "maximum": 182.0,
+              "mean": 137.8,
+              "minimum": 101.0
+            },
+            "flats": 0,
+            "losses": 9,
+            "net_realized_pl": -69.95480862352647,
+            "wins": 1
+          }
+        },
+        "2026-09": {
+          "00 <=2": {
+            "closed_trades": 71,
+            "entry_spread_points": {
+              "count": 71,
+              "maximum": 2.0,
+              "mean": 0.9295774647887324,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 47,
+            "net_realized_pl": -26.808324596822313,
+            "wins": 24
+          },
+          "01 >2-5": {
+            "closed_trades": 69,
+            "entry_spread_points": {
+              "count": 69,
+              "maximum": 5.0,
+              "mean": 3.8405797101449277,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 40,
+            "net_realized_pl": 96.01387540104156,
+            "wins": 29
+          },
+          "02 >5-10": {
+            "closed_trades": 28,
+            "entry_spread_points": {
+              "count": 28,
+              "maximum": 10.0,
+              "mean": 8.285714285714286,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 18,
+            "net_realized_pl": 5.584559526417074,
+            "wins": 10
+          },
+          "03 >10-20": {
+            "closed_trades": 30,
+            "entry_spread_points": {
+              "count": 30,
+              "maximum": 18.0,
+              "mean": 12.866666666666667,
+              "minimum": 11.0
+            },
+            "flats": 0,
+            "losses": 21,
+            "net_realized_pl": -21.09498744276459,
+            "wins": 9
+          },
+          "04 >20-50": {
+            "closed_trades": 2,
+            "entry_spread_points": {
+              "count": 2,
+              "maximum": 43.0,
+              "mean": 36.0,
+              "minimum": 29.0
+            },
+            "flats": 0,
+            "losses": 2,
+            "net_realized_pl": -8.6491726535113,
+            "wins": 0
+          },
+          "05 >50-100": {
+            "closed_trades": 15,
+            "entry_spread_points": {
+              "count": 15,
+              "maximum": 98.0,
+              "mean": 74.93333333333334,
+              "minimum": 51.0
+            },
+            "flats": 0,
+            "losses": 11,
+            "net_realized_pl": -70.385197719758,
+            "wins": 4
+          },
+          "06 >100": {
+            "closed_trades": 13,
+            "entry_spread_points": {
+              "count": 13,
+              "maximum": 300.0,
+              "mean": 156.15384615384616,
+              "minimum": 101.0
+            },
+            "flats": 0,
+            "losses": 11,
+            "net_realized_pl": -109.43731729526706,
+            "wins": 2
+          }
+        }
+      },
+      "by_side_and_spread_band": {
+        "BUY": {
+          "00 <=2": {
+            "closed_trades": 130,
+            "entry_spread_points": {
+              "count": 130,
+              "maximum": 2.0,
+              "mean": 0.7307692307692307,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 76,
+            "net_realized_pl": 44.94366293593777,
+            "wins": 54
+          },
+          "01 >2-5": {
+            "closed_trades": 79,
+            "entry_spread_points": {
+              "count": 79,
+              "maximum": 5.0,
+              "mean": 4.037974683544304,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 53,
+            "net_realized_pl": 1.0027109110566306,
+            "wins": 26
+          },
+          "02 >5-10": {
+            "closed_trades": 43,
+            "entry_spread_points": {
+              "count": 43,
+              "maximum": 10.0,
+              "mean": 8.279069767441861,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 32,
+            "net_realized_pl": -31.29016033919399,
+            "wins": 11
+          },
+          "03 >10-20": {
+            "closed_trades": 59,
+            "entry_spread_points": {
+              "count": 59,
+              "maximum": 20.0,
+              "mean": 13.220338983050848,
+              "minimum": 11.0
+            },
+            "flats": 0,
+            "losses": 46,
+            "net_realized_pl": -136.41156782761968,
+            "wins": 13
+          },
+          "04 >20-50": {
+            "closed_trades": 10,
+            "entry_spread_points": {
+              "count": 10,
+              "maximum": 46.0,
+              "mean": 31.6,
+              "minimum": 21.0
+            },
+            "flats": 0,
+            "losses": 9,
+            "net_realized_pl": -19.72291959000049,
+            "wins": 1
+          },
+          "05 >50-100": {
+            "closed_trades": 24,
+            "entry_spread_points": {
+              "count": 24,
+              "maximum": 98.0,
+              "mean": 74.70833333333333,
+              "minimum": 51.0
+            },
+            "flats": 0,
+            "losses": 18,
+            "net_realized_pl": -87.14090045805725,
+            "wins": 6
+          },
+          "06 >100": {
+            "closed_trades": 21,
+            "entry_spread_points": {
+              "count": 21,
+              "maximum": 300.0,
+              "mean": 148.14285714285714,
+              "minimum": 101.0
+            },
+            "flats": 0,
+            "losses": 18,
+            "net_realized_pl": -204.29003206411574,
+            "wins": 3
+          }
+        },
+        "SELL": {
+          "00 <=2": {
+            "closed_trades": 165,
+            "entry_spread_points": {
+              "count": 165,
+              "maximum": 2.0,
+              "mean": 0.5818181818181818,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 104,
+            "net_realized_pl": 23.885587363970238,
+            "wins": 61
+          },
+          "01 >2-5": {
+            "closed_trades": 116,
+            "entry_spread_points": {
+              "count": 116,
+              "maximum": 5.0,
+              "mean": 3.8620689655172415,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 70,
+            "net_realized_pl": 72.0193601045364,
+            "wins": 46
+          },
+          "02 >5-10": {
+            "closed_trades": 51,
+            "entry_spread_points": {
+              "count": 51,
+              "maximum": 10.0,
+              "mean": 8.372549019607844,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 43,
+            "net_realized_pl": -39.605159264050016,
+            "wins": 8
+          },
+          "03 >10-20": {
+            "closed_trades": 61,
+            "entry_spread_points": {
+              "count": 61,
+              "maximum": 20.0,
+              "mean": 13.770491803278688,
+              "minimum": 11.0
+            },
+            "flats": 0,
+            "losses": 44,
+            "net_realized_pl": -20.74338968519351,
+            "wins": 17
+          },
+          "04 >20-50": {
+            "closed_trades": 18,
+            "entry_spread_points": {
+              "count": 18,
+              "maximum": 50.0,
+              "mean": 36.0,
+              "minimum": 22.0
+            },
+            "flats": 0,
+            "losses": 14,
+            "net_realized_pl": -45.09979754899689,
+            "wins": 4
+          },
+          "05 >50-100": {
+            "closed_trades": 32,
+            "entry_spread_points": {
+              "count": 32,
+              "maximum": 100.0,
+              "mean": 78.96875,
+              "minimum": 51.0
+            },
+            "flats": 0,
+            "losses": 26,
+            "net_realized_pl": -175.7679492708934,
+            "wins": 6
+          },
+          "06 >100": {
+            "closed_trades": 33,
+            "entry_spread_points": {
+              "count": 33,
+              "maximum": 229.0,
+              "mean": 151.4848484848485,
+              "minimum": 103.0
+            },
+            "flats": 0,
+            "losses": 29,
+            "net_realized_pl": -221.70107755854872,
+            "wins": 4
+          }
+        }
+      },
+      "by_spread_band": {
+        "00 <=2": {
+          "closed_trades": 295,
+          "entry_spread_points": {
+            "count": 295,
+            "maximum": 2.0,
+            "mean": 0.6474576271186441,
+            "minimum": 0.0
+          },
+          "flats": 0,
+          "losses": 180,
+          "net_realized_pl": 68.82925029990803,
+          "wins": 115
+        },
+        "01 >2-5": {
+          "closed_trades": 195,
+          "entry_spread_points": {
+            "count": 195,
+            "maximum": 5.0,
+            "mean": 3.933333333333333,
+            "minimum": 3.0
+          },
+          "flats": 0,
+          "losses": 123,
+          "net_realized_pl": 73.02207101559304,
+          "wins": 72
+        },
+        "02 >5-10": {
+          "closed_trades": 94,
+          "entry_spread_points": {
+            "count": 94,
+            "maximum": 10.0,
+            "mean": 8.329787234042554,
+            "minimum": 6.0
+          },
+          "flats": 0,
+          "losses": 75,
+          "net_realized_pl": -70.89531960324402,
+          "wins": 19
+        },
+        "03 >10-20": {
+          "closed_trades": 120,
+          "entry_spread_points": {
+            "count": 120,
+            "maximum": 20.0,
+            "mean": 13.5,
+            "minimum": 11.0
+          },
+          "flats": 0,
+          "losses": 90,
+          "net_realized_pl": -157.15495751281327,
+          "wins": 30
+        },
+        "04 >20-50": {
+          "closed_trades": 28,
+          "entry_spread_points": {
+            "count": 28,
+            "maximum": 50.0,
+            "mean": 34.42857142857143,
+            "minimum": 21.0
+          },
+          "flats": 0,
+          "losses": 23,
+          "net_realized_pl": -64.82271713899738,
+          "wins": 5
+        },
+        "05 >50-100": {
+          "closed_trades": 56,
+          "entry_spread_points": {
+            "count": 56,
+            "maximum": 100.0,
+            "mean": 77.14285714285714,
+            "minimum": 51.0
+          },
+          "flats": 0,
+          "losses": 44,
+          "net_realized_pl": -262.9088497289507,
+          "wins": 12
+        },
+        "06 >100": {
+          "closed_trades": 54,
+          "entry_spread_points": {
+            "count": 54,
+            "maximum": 300.0,
+            "mean": 150.1851851851852,
+            "minimum": 101.0
+          },
+          "flats": 0,
+          "losses": 47,
+          "net_realized_pl": -425.99110962266434,
+          "wins": 7
+        }
+      },
+      "by_symbol_and_spread_band": {
+        "EURJPY": {
+          "00 <=2": {
+            "closed_trades": 7,
+            "entry_spread_points": {
+              "count": 7,
+              "maximum": 2.0,
+              "mean": 1.0,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 4,
+            "net_realized_pl": 18.355599510883174,
+            "wins": 3
+          },
+          "01 >2-5": {
+            "closed_trades": 113,
+            "entry_spread_points": {
+              "count": 113,
+              "maximum": 5.0,
+              "mean": 4.176991150442478,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 73,
+            "net_realized_pl": 11.468018283369283,
+            "wins": 40
+          },
+          "02 >5-10": {
+            "closed_trades": 10,
+            "entry_spread_points": {
+              "count": 10,
+              "maximum": 10.0,
+              "mean": 7.2,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 5,
+            "net_realized_pl": 20.996836381581616,
+            "wins": 5
+          },
+          "03 >10-20": {
+            "closed_trades": 4,
+            "entry_spread_points": {
+              "count": 4,
+              "maximum": 17.0,
+              "mean": 13.25,
+              "minimum": 12.0
+            },
+            "flats": 0,
+            "losses": 3,
+            "net_realized_pl": -13.463535763077928,
+            "wins": 1
+          },
+          "04 >20-50": {
+            "closed_trades": 7,
+            "entry_spread_points": {
+              "count": 7,
+              "maximum": 46.0,
+              "mean": 39.57142857142857,
+              "minimum": 31.0
+            },
+            "flats": 0,
+            "losses": 6,
+            "net_realized_pl": -9.19206091746862,
+            "wins": 1
+          },
+          "05 >50-100": {
+            "closed_trades": 32,
+            "entry_spread_points": {
+              "count": 32,
+              "maximum": 100.0,
+              "mean": 73.40625,
+              "minimum": 51.0
+            },
+            "flats": 0,
+            "losses": 24,
+            "net_realized_pl": -106.25745146480405,
+            "wins": 8
+          },
+          "06 >100": {
+            "closed_trades": 11,
+            "entry_spread_points": {
+              "count": 11,
+              "maximum": 300.0,
+              "mean": 141.63636363636363,
+              "minimum": 101.0
+            },
+            "flats": 0,
+            "losses": 9,
+            "net_realized_pl": -82.59068654461859,
+            "wins": 2
+          }
+        },
+        "EURUSD": {
+          "00 <=2": {
+            "closed_trades": 122,
+            "entry_spread_points": {
+              "count": 122,
+              "maximum": 2.0,
+              "mean": 0.5245901639344263,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 73,
+            "net_realized_pl": 0.7642857142586832,
+            "wins": 49
+          },
+          "01 >2-5": {
+            "closed_trades": 7,
+            "entry_spread_points": {
+              "count": 7,
+              "maximum": 5.0,
+              "mean": 4.142857142857143,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 7,
+            "net_realized_pl": -13.978571428570064,
+            "wins": 0
+          },
+          "02 >5-10": {
+            "closed_trades": 9,
+            "entry_spread_points": {
+              "count": 9,
+              "maximum": 10.0,
+              "mean": 8.222222222222221,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 9,
+            "net_realized_pl": -16.007142857143997,
+            "wins": 0
+          },
+          "03 >10-20": {
+            "closed_trades": 11,
+            "entry_spread_points": {
+              "count": 11,
+              "maximum": 18.0,
+              "mean": 12.636363636363637,
+              "minimum": 11.0
+            },
+            "flats": 0,
+            "losses": 7,
+            "net_realized_pl": -14.928571428571846,
+            "wins": 4
+          },
+          "04 >20-50": {
+            "closed_trades": 8,
+            "entry_spread_points": {
+              "count": 8,
+              "maximum": 50.0,
+              "mean": 29.5,
+              "minimum": 22.0
+            },
+            "flats": 0,
+            "losses": 6,
+            "net_realized_pl": -16.407142857146617,
+            "wins": 2
+          },
+          "05 >50-100": {
+            "closed_trades": 2,
+            "entry_spread_points": {
+              "count": 2,
+              "maximum": 78.0,
+              "mean": 74.0,
+              "minimum": 70.0
+            },
+            "flats": 0,
+            "losses": 2,
+            "net_realized_pl": -23.39285714285655,
+            "wins": 0
+          },
+          "06 >100": {
+            "closed_trades": 0,
+            "entry_spread_points": {
+              "count": 0,
+              "maximum": null,
+              "mean": null,
+              "minimum": null
+            },
+            "flats": 0,
+            "losses": 0,
+            "net_realized_pl": 0,
+            "wins": 0
+          }
+        },
+        "GBPJPY": {
+          "00 <=2": {
+            "closed_trades": 3,
+            "entry_spread_points": {
+              "count": 3,
+              "maximum": 1.0,
+              "mean": 0.3333333333333333,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 3,
+            "net_realized_pl": -13.439329666161097,
+            "wins": 0
+          },
+          "01 >2-5": {
+            "closed_trades": 1,
+            "entry_spread_points": {
+              "count": 1,
+              "maximum": 5.0,
+              "mean": 5.0,
+              "minimum": 5.0
+            },
+            "flats": 0,
+            "losses": 0,
+            "net_realized_pl": 0.4400289010988244,
+            "wins": 1
+          },
+          "02 >5-10": {
+            "closed_trades": 70,
+            "entry_spread_points": {
+              "count": 70,
+              "maximum": 10.0,
+              "mean": 8.6,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 56,
+            "net_realized_pl": -68.04938343736944,
+            "wins": 14
+          },
+          "03 >10-20": {
+            "closed_trades": 41,
+            "entry_spread_points": {
+              "count": 41,
+              "maximum": 20.0,
+              "mean": 13.926829268292684,
+              "minimum": 11.0
+            },
+            "flats": 0,
+            "losses": 30,
+            "net_realized_pl": 16.47706036813088,
+            "wins": 11
+          },
+          "04 >20-50": {
+            "closed_trades": 3,
+            "entry_spread_points": {
+              "count": 3,
+              "maximum": 46.0,
+              "mean": 29.333333333333332,
+              "minimum": 21.0
+            },
+            "flats": 0,
+            "losses": 2,
+            "net_realized_pl": -3.4730639694130603,
+            "wins": 1
+          },
+          "05 >50-100": {
+            "closed_trades": 13,
+            "entry_spread_points": {
+              "count": 13,
+              "maximum": 100.0,
+              "mean": 92.3076923076923,
+              "minimum": 81.0
+            },
+            "flats": 0,
+            "losses": 9,
+            "net_realized_pl": -70.92820848180575,
+            "wins": 4
+          },
+          "06 >100": {
+            "closed_trades": 37,
+            "entry_spread_points": {
+              "count": 37,
+              "maximum": 229.0,
+              "mean": 154.16216216216216,
+              "minimum": 101.0
+            },
+            "flats": 0,
+            "losses": 32,
+            "net_realized_pl": -311.23301285240376,
+            "wins": 5
+          }
+        },
+        "GBPUSD": {
+          "00 <=2": {
+            "closed_trades": 104,
+            "entry_spread_points": {
+              "count": 104,
+              "maximum": 2.0,
+              "mean": 0.4326923076923077,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 67,
+            "net_realized_pl": -33.614285714298475,
+            "wins": 37
+          },
+          "01 >2-5": {
+            "closed_trades": 2,
+            "entry_spread_points": {
+              "count": 2,
+              "maximum": 3.0,
+              "mean": 3.0,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 1,
+            "net_realized_pl": 8.735714285714735,
+            "wins": 1
+          },
+          "02 >5-10": {
+            "closed_trades": 1,
+            "entry_spread_points": {
+              "count": 1,
+              "maximum": 6.0,
+              "mean": 6.0,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 1,
+            "net_realized_pl": -5.392857142858532,
+            "wins": 0
+          },
+          "03 >10-20": {
+            "closed_trades": 24,
+            "entry_spread_points": {
+              "count": 24,
+              "maximum": 11.0,
+              "mean": 11.0,
+              "minimum": 11.0
+            },
+            "flats": 0,
+            "losses": 20,
+            "net_realized_pl": -56.3928571428507,
+            "wins": 4
+          },
+          "04 >20-50": {
+            "closed_trades": 3,
+            "entry_spread_points": {
+              "count": 3,
+              "maximum": 42.0,
+              "mean": 35.333333333333336,
+              "minimum": 22.0
+            },
+            "flats": 0,
+            "losses": 2,
+            "net_realized_pl": -8.107142857141092,
+            "wins": 1
+          },
+          "05 >50-100": {
+            "closed_trades": 5,
+            "entry_spread_points": {
+              "count": 5,
+              "maximum": 100.0,
+              "mean": 70.0,
+              "minimum": 56.0
+            },
+            "flats": 0,
+            "losses": 5,
+            "net_realized_pl": -33.62857142857001,
+            "wins": 0
+          },
+          "06 >100": {
+            "closed_trades": 3,
+            "entry_spread_points": {
+              "count": 3,
+              "maximum": 183.0,
+              "mean": 161.0,
+              "minimum": 150.0
+            },
+            "flats": 0,
+            "losses": 3,
+            "net_realized_pl": -12.921428571430749,
+            "wins": 0
+          }
+        },
+        "USDJPY": {
+          "00 <=2": {
+            "closed_trades": 59,
+            "entry_spread_points": {
+              "count": 59,
+              "maximum": 2.0,
+              "mean": 1.2542372881355932,
+              "minimum": 0.0
+            },
+            "flats": 0,
+            "losses": 33,
+            "net_realized_pl": 96.76298045522579,
+            "wins": 26
+          },
+          "01 >2-5": {
+            "closed_trades": 72,
+            "entry_spread_points": {
+              "count": 72,
+              "maximum": 5.0,
+              "mean": 3.5416666666666665,
+              "minimum": 3.0
+            },
+            "flats": 0,
+            "losses": 42,
+            "net_realized_pl": 66.35688097398027,
+            "wins": 30
+          },
+          "02 >5-10": {
+            "closed_trades": 4,
+            "entry_spread_points": {
+              "count": 4,
+              "maximum": 9.0,
+              "mean": 7.25,
+              "minimum": 6.0
+            },
+            "flats": 0,
+            "losses": 4,
+            "net_realized_pl": -2.4427725474536257,
+            "wins": 0
+          },
+          "03 >10-20": {
+            "closed_trades": 40,
+            "entry_spread_points": {
+              "count": 40,
+              "maximum": 15.0,
+              "mean": 14.825,
+              "minimum": 13.0
+            },
+            "flats": 0,
+            "losses": 30,
+            "net_realized_pl": -88.84705354644359,
+            "wins": 10
+          },
+          "04 >20-50": {
+            "closed_trades": 7,
+            "entry_spread_points": {
+              "count": 7,
+              "maximum": 44.0,
+              "mean": 36.714285714285715,
+              "minimum": 23.0
+            },
+            "flats": 0,
+            "losses": 7,
+            "net_realized_pl": -27.643306537827975,
+            "wins": 0
+          },
+          "05 >50-100": {
+            "closed_trades": 4,
+            "entry_spread_points": {
+              "count": 4,
+              "maximum": 85.0,
+              "mean": 68.25,
+              "minimum": 52.0
+            },
+            "flats": 0,
+            "losses": 4,
+            "net_realized_pl": -28.701761210914366,
+            "wins": 0
+          },
+          "06 >100": {
+            "closed_trades": 3,
+            "entry_spread_points": {
+              "count": 3,
+              "maximum": 139.0,
+              "mean": 121.66666666666667,
+              "minimum": 113.0
+            },
+            "flats": 0,
+            "losses": 3,
+            "net_realized_pl": -19.24598165421125,
+            "wins": 0
+          }
+        }
+      },
+      "spread_percentiles": {
+        "p00": 0.0,
+        "p100": 300.0,
+        "p25": 1.0,
+        "p50": 4.0,
+        "p75": 13.0,
+        "p90": 77.0,
+        "p95": 111.0,
+        "p99": 199.72000000000025
+      },
+      "summary": {
+        "closed_trades": 842,
+        "entry_spread_points": {
+          "count": 842,
+          "maximum": 300.0,
+          "mean": 19.899049881235154,
+          "minimum": 0.0
+        },
+        "flats": 0,
+        "losses": 582,
+        "net_realized_pl": -839.9216322911675,
+        "wins": 260
       }
-    }
+    },
+    "outside_blocked_session": {
+      "by_spread_band": {
+        "00 <=2": {
+          "closed_trades": 2643,
+          "entry_spread_points": {
+            "count": 2643,
+            "maximum": 2.0,
+            "mean": 0.793416572077185,
+            "minimum": 0.0
+          },
+          "flats": 3,
+          "losses": 1525,
+          "net_realized_pl": -257.03769518908564,
+          "wins": 1115
+        },
+        "01 >2-5": {
+          "closed_trades": 622,
+          "entry_spread_points": {
+            "count": 622,
+            "maximum": 5.0,
+            "mean": 3.445337620578778,
+            "minimum": 3.0
+          },
+          "flats": 0,
+          "losses": 376,
+          "net_realized_pl": -69.13328165169446,
+          "wins": 246
+        },
+        "02 >5-10": {
+          "closed_trades": 635,
+          "entry_spread_points": {
+            "count": 635,
+            "maximum": 10.0,
+            "mean": 7.790551181102362,
+            "minimum": 6.0
+          },
+          "flats": 0,
+          "losses": 407,
+          "net_realized_pl": -377.47834862933246,
+          "wins": 228
+        },
+        "03 >10-20": {
+          "closed_trades": 155,
+          "entry_spread_points": {
+            "count": 155,
+            "maximum": 18.0,
+            "mean": 12.703225806451613,
+            "minimum": 11.0
+          },
+          "flats": 0,
+          "losses": 110,
+          "net_realized_pl": -103.96740507689833,
+          "wins": 45
+        },
+        "04 >20-50": {
+          "closed_trades": 24,
+          "entry_spread_points": {
+            "count": 24,
+            "maximum": 48.0,
+            "mean": 28.083333333333332,
+            "minimum": 21.0
+          },
+          "flats": 0,
+          "losses": 19,
+          "net_realized_pl": -59.03320105144476,
+          "wins": 5
+        },
+        "05 >50-100": {
+          "closed_trades": 1,
+          "entry_spread_points": {
+            "count": 1,
+            "maximum": 70.0,
+            "mean": 70.0,
+            "minimum": 70.0
+          },
+          "flats": 0,
+          "losses": 1,
+          "net_realized_pl": -10.036068112718914,
+          "wins": 0
+        },
+        "06 >100": {
+          "closed_trades": 0,
+          "entry_spread_points": {
+            "count": 0,
+            "maximum": null,
+            "mean": null,
+            "minimum": null
+          },
+          "flats": 0,
+          "losses": 0,
+          "net_realized_pl": 0,
+          "wins": 0
+        }
+      },
+      "spread_percentiles": {
+        "p00": 0.0,
+        "p100": 70.0,
+        "p25": 0.0,
+        "p50": 2.0,
+        "p75": 4.0,
+        "p90": 8.0,
+        "p95": 10.0,
+        "p99": 15.0
+      },
+      "summary": {
+        "closed_trades": 4080,
+        "entry_spread_points": {
+          "count": 4080,
+          "maximum": 70.0,
+          "mean": 2.9166666666666665,
+          "minimum": 0.0
+        },
+        "flats": 3,
+        "losses": 2438,
+        "net_realized_pl": -876.685999711174,
+        "wins": 1639
+      }
+    },
+    "matched_spread_band_comparison": {
+      "00 <=2": {
+        "blocked_session": {
+          "closed_trades": 295,
+          "entry_spread_points": {
+            "count": 295,
+            "maximum": 2.0,
+            "mean": 0.6474576271186441,
+            "minimum": 0.0
+          },
+          "flats": 0,
+          "losses": 180,
+          "net_realized_pl": 68.82925029990803,
+          "wins": 115
+        },
+        "outside_blocked_session": {
+          "closed_trades": 2643,
+          "entry_spread_points": {
+            "count": 2643,
+            "maximum": 2.0,
+            "mean": 0.793416572077185,
+            "minimum": 0.0
+          },
+          "flats": 3,
+          "losses": 1525,
+          "net_realized_pl": -257.03769518908564,
+          "wins": 1115
+        }
+      },
+      "01 >2-5": {
+        "blocked_session": {
+          "closed_trades": 195,
+          "entry_spread_points": {
+            "count": 195,
+            "maximum": 5.0,
+            "mean": 3.933333333333333,
+            "minimum": 3.0
+          },
+          "flats": 0,
+          "losses": 123,
+          "net_realized_pl": 73.02207101559304,
+          "wins": 72
+        },
+        "outside_blocked_session": {
+          "closed_trades": 622,
+          "entry_spread_points": {
+            "count": 622,
+            "maximum": 5.0,
+            "mean": 3.445337620578778,
+            "minimum": 3.0
+          },
+          "flats": 0,
+          "losses": 376,
+          "net_realized_pl": -69.13328165169446,
+          "wins": 246
+        }
+      },
+      "02 >5-10": {
+        "blocked_session": {
+          "closed_trades": 94,
+          "entry_spread_points": {
+            "count": 94,
+            "maximum": 10.0,
+            "mean": 8.329787234042554,
+            "minimum": 6.0
+          },
+          "flats": 0,
+          "losses": 75,
+          "net_realized_pl": -70.89531960324402,
+          "wins": 19
+        },
+        "outside_blocked_session": {
+          "closed_trades": 635,
+          "entry_spread_points": {
+            "count": 635,
+            "maximum": 10.0,
+            "mean": 7.790551181102362,
+            "minimum": 6.0
+          },
+          "flats": 0,
+          "losses": 407,
+          "net_realized_pl": -377.47834862933246,
+          "wins": 228
+        }
+      },
+      "03 >10-20": {
+        "blocked_session": {
+          "closed_trades": 120,
+          "entry_spread_points": {
+            "count": 120,
+            "maximum": 20.0,
+            "mean": 13.5,
+            "minimum": 11.0
+          },
+          "flats": 0,
+          "losses": 90,
+          "net_realized_pl": -157.15495751281327,
+          "wins": 30
+        },
+        "outside_blocked_session": {
+          "closed_trades": 155,
+          "entry_spread_points": {
+            "count": 155,
+            "maximum": 18.0,
+            "mean": 12.703225806451613,
+            "minimum": 11.0
+          },
+          "flats": 0,
+          "losses": 110,
+          "net_realized_pl": -103.96740507689833,
+          "wins": 45
+        }
+      },
+      "04 >20-50": {
+        "blocked_session": {
+          "closed_trades": 28,
+          "entry_spread_points": {
+            "count": 28,
+            "maximum": 50.0,
+            "mean": 34.42857142857143,
+            "minimum": 21.0
+          },
+          "flats": 0,
+          "losses": 23,
+          "net_realized_pl": -64.82271713899738,
+          "wins": 5
+        },
+        "outside_blocked_session": {
+          "closed_trades": 24,
+          "entry_spread_points": {
+            "count": 24,
+            "maximum": 48.0,
+            "mean": 28.083333333333332,
+            "minimum": 21.0
+          },
+          "flats": 0,
+          "losses": 19,
+          "net_realized_pl": -59.03320105144476,
+          "wins": 5
+        }
+      },
+      "05 >50-100": {
+        "blocked_session": {
+          "closed_trades": 56,
+          "entry_spread_points": {
+            "count": 56,
+            "maximum": 100.0,
+            "mean": 77.14285714285714,
+            "minimum": 51.0
+          },
+          "flats": 0,
+          "losses": 44,
+          "net_realized_pl": -262.9088497289507,
+          "wins": 12
+        },
+        "outside_blocked_session": {
+          "closed_trades": 1,
+          "entry_spread_points": {
+            "count": 1,
+            "maximum": 70.0,
+            "mean": 70.0,
+            "minimum": 70.0
+          },
+          "flats": 0,
+          "losses": 1,
+          "net_realized_pl": -10.036068112718914,
+          "wins": 0
+        }
+      },
+      "06 >100": {
+        "blocked_session": {
+          "closed_trades": 54,
+          "entry_spread_points": {
+            "count": 54,
+            "maximum": 300.0,
+            "mean": 150.1851851851852,
+            "minimum": 101.0
+          },
+          "flats": 0,
+          "losses": 47,
+          "net_realized_pl": -425.99110962266434,
+          "wins": 7
+        },
+        "outside_blocked_session": {
+          "closed_trades": 0,
+          "entry_spread_points": {
+            "count": 0,
+            "maximum": null,
+            "mean": null,
+            "minimum": null
+          },
+          "flats": 0,
+          "losses": 0,
+          "net_realized_pl": 0,
+          "wins": 0
+        }
+      }
+    },
+    "runs": [
+      {
+        "command": [
+          "/home/joel/.local/bin/uv",
+          "run",
+          "--locked",
+          "python",
+          "-m",
+          "mamba2.backtest.m020_diagnostics",
+          "--control-diagnostic",
+          "backtest_data/broader-history-20260623-20260925/m020-control-diagnostic-a.json",
+          "--output",
+          "backtest_data/broader-history-20260623-20260925/m020-b-spread-diagnostic-a.json",
+          "--expected-control-diagnostic-sha256",
+          "84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostic_id\": \"M020-B\", \"ok\": true, \"output\": \"backtest_data/broader-history-20260623-20260925/m020-b-spread-diagnostic-a.json\", \"output_sha256\": \"8b57c2e8bbb4313e3d4e4aef758290a81d140ddd1797759944ab573f9b893a67\", \"source_control_diagnostic_sha256\": \"84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8\", \"strategy_behavior_changed\": false, \"summary\": {\"blocked_session\": {\"closed_trades\": 842, \"entry_spread_points\": {\"count\": 842, \"maximum\": 300.0, \"mean\": 19.899049881235154, \"minimum\": 0.0}, \"flats\": 0, \"losses\": 582, \"net_realized_pl\": -839.9216322911675, \"wins\": 260}, \"blocked_session_spread_percentiles\": {\"p00\": 0.0, \"p100\": 300.0, \"p25\": 1.0, \"p50\": 4.0, \"p75\": 13.0, \"p90\": 77.0, \"p95\": 111.0, \"p99\": 199.72000000000025}, \"matched_spread_band_comparison\": {\"00 <=2\": {\"blocked_session\": {\"closed_trades\": 295, \"entry_spread_points\": {\"count\": 295, \"maximum\": 2.0, \"mean\": 0.6474576271186441, \"minimum\": 0.0}, \"flats\": 0, \"losses\": 180, \"net_realized_pl\": 68.82925029990803, \"wins\": 115}, \"outside_blocked_session\": {\"closed_trades\": 2643, \"entry_spread_points\": {\"count\": 2643, \"maximum\": 2.0, \"mean\": 0.793416572077185, \"minimum\": 0.0}, \"flats\": 3, \"losses\": 1525, \"net_realized_pl\": -257.03769518908564, \"wins\": 1115}}, \"01 >2-5\": {\"blocked_session\": {\"closed_trades\": 195, \"entry_spread_points\": {\"count\": 195, \"maximum\": 5.0, \"mean\": 3.933333333333333, \"minimum\": 3.0}, \"flats\": 0, \"losses\": 123, \"net_realized_pl\": 73.02207101559304, \"wins\": 72}, \"outside_blocked_session\": {\"closed_trades\": 622, \"entry_spread_points\": {\"count\": 622, \"maximum\": 5.0, \"mean\": 3.445337620578778, \"minimum\": 3.0}, \"flats\": 0, \"losses\": 376, \"net_realized_pl\": -69.13328165169446, \"wins\": 246}}, \"02 >5-10\": {\"blocked_session\": {\"closed_trades\": 94, \"entry_spread_points\": {\"count\": 94, \"maximum\": 10.0, \"mean\": 8.329787234042554, \"minimum\": 6.0}, \"flats\": 0, \"losses\": 75, \"net_realized_pl\": -70.89531960324402, \"wins\": 19}, \"outside_blocked_session\": {\"closed_trades\": 635, \"entry_spread_points\": {\"count\": 635, \"maximum\": 10.0, \"mean\": 7.790551181102362, \"minimum\": 6.0}, \"flats\": 0, \"losses\": 407, \"net_realized_pl\": -377.47834862933246, \"wins\": 228}}, \"03 >10-20\": {\"blocked_session\": {\"closed_trades\": 120, \"entry_spread_points\": {\"count\": 120, \"maximum\": 20.0, \"mean\": 13.5, \"minimum\": 11.0}, \"flats\": 0, \"losses\": 90, \"net_realized_pl\": -157.15495751281327, \"wins\": 30}, \"outside_blocked_session\": {\"closed_trades\": 155, \"entry_spread_points\": {\"count\": 155, \"maximum\": 18.0, \"mean\": 12.703225806451613, \"minimum\": 11.0}, \"flats\": 0, \"losses\": 110, \"net_realized_pl\": -103.96740507689833, \"wins\": 45}}, \"04 >20-50\": {\"blocked_session\": {\"closed_trades\": 28, \"entry_spread_points\": {\"count\": 28, \"maximum\": 50.0, \"mean\": 34.42857142857143, \"minimum\": 21.0}, \"flats\": 0, \"losses\": 23, \"net_realized_pl\": -64.82271713899738, \"wins\": 5}, \"outside_blocked_session\": {\"closed_trades\": 24, \"entry_spread_points\": {\"count\": 24, \"maximum\": 48.0, \"mean\": 28.083333333333332, \"minimum\": 21.0}, \"flats\": 0, \"losses\": 19, \"net_realized_pl\": -59.03320105144476, \"wins\": 5}}, \"05 >50-100\": {\"blocked_session\": {\"closed_trades\": 56, \"entry_spread_points\": {\"count\": 56, \"maximum\": 100.0, \"mean\": 77.14285714285714, \"minimum\": 51.0}, \"flats\": 0, \"losses\": 44, \"net_realized_pl\": -262.9088497289507, \"wins\": 12}, \"outside_blocked_session\": {\"closed_trades\": 1, \"entry_spread_points\": {\"count\": 1, \"maximum\": 70.0, \"mean\": 70.0, \"minimum\": 70.0}, \"flats\": 0, \"losses\": 1, \"net_realized_pl\": -10.036068112718914, \"wins\": 0}}, \"06 >100\": {\"blocked_session\": {\"closed_trades\": 54, \"entry_spread_points\": {\"count\": 54, \"maximum\": 300.0, \"mean\": 150.1851851851852, \"minimum\": 101.0}, \"flats\": 0, \"losses\": 47, \"net_realized_pl\": -425.99110962266434, \"wins\": 7}, \"outside_blocked_session\": {\"closed_trades\": 0, \"entry_spread_points\": {\"count\": 0, \"maximum\": null, \"mean\": null, \"minimum\": null}, \"flats\": 0, \"losses\": 0, \"net_realized_pl\": 0, \"wins\": 0}}}, \"outside_blocked_session\": {\"closed_trades\": 4080, \"entry_spread_points\": {\"count\": 4080, \"maximum\": 70.0, \"mean\": 2.9166666666666665, \"minimum\": 0.0}, \"flats\": 3, \"losses\": 2438, \"net_realized_pl\": -876.685999711174, \"wins\": 1639}}}\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "/home/joel/.local/bin/uv",
+          "run",
+          "--locked",
+          "python",
+          "-m",
+          "mamba2.backtest.m020_diagnostics",
+          "--control-diagnostic",
+          "backtest_data/broader-history-20260623-20260925/m020-control-diagnostic-a.json",
+          "--output",
+          "backtest_data/broader-history-20260623-20260925/m020-b-spread-diagnostic-b.json",
+          "--expected-control-diagnostic-sha256",
+          "84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"diagnostic_id\": \"M020-B\", \"ok\": true, \"output\": \"backtest_data/broader-history-20260623-20260925/m020-b-spread-diagnostic-b.json\", \"output_sha256\": \"8b57c2e8bbb4313e3d4e4aef758290a81d140ddd1797759944ab573f9b893a67\", \"source_control_diagnostic_sha256\": \"84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8\", \"strategy_behavior_changed\": false, \"summary\": {\"blocked_session\": {\"closed_trades\": 842, \"entry_spread_points\": {\"count\": 842, \"maximum\": 300.0, \"mean\": 19.899049881235154, \"minimum\": 0.0}, \"flats\": 0, \"losses\": 582, \"net_realized_pl\": -839.9216322911675, \"wins\": 260}, \"blocked_session_spread_percentiles\": {\"p00\": 0.0, \"p100\": 300.0, \"p25\": 1.0, \"p50\": 4.0, \"p75\": 13.0, \"p90\": 77.0, \"p95\": 111.0, \"p99\": 199.72000000000025}, \"matched_spread_band_comparison\": {\"00 <=2\": {\"blocked_session\": {\"closed_trades\": 295, \"entry_spread_points\": {\"count\": 295, \"maximum\": 2.0, \"mean\": 0.6474576271186441, \"minimum\": 0.0}, \"flats\": 0, \"losses\": 180, \"net_realized_pl\": 68.82925029990803, \"wins\": 115}, \"outside_blocked_session\": {\"closed_trades\": 2643, \"entry_spread_points\": {\"count\": 2643, \"maximum\": 2.0, \"mean\": 0.793416572077185, \"minimum\": 0.0}, \"flats\": 3, \"losses\": 1525, \"net_realized_pl\": -257.03769518908564, \"wins\": 1115}}, \"01 >2-5\": {\"blocked_session\": {\"closed_trades\": 195, \"entry_spread_points\": {\"count\": 195, \"maximum\": 5.0, \"mean\": 3.933333333333333, \"minimum\": 3.0}, \"flats\": 0, \"losses\": 123, \"net_realized_pl\": 73.02207101559304, \"wins\": 72}, \"outside_blocked_session\": {\"closed_trades\": 622, \"entry_spread_points\": {\"count\": 622, \"maximum\": 5.0, \"mean\": 3.445337620578778, \"minimum\": 3.0}, \"flats\": 0, \"losses\": 376, \"net_realized_pl\": -69.13328165169446, \"wins\": 246}}, \"02 >5-10\": {\"blocked_session\": {\"closed_trades\": 94, \"entry_spread_points\": {\"count\": 94, \"maximum\": 10.0, \"mean\": 8.329787234042554, \"minimum\": 6.0}, \"flats\": 0, \"losses\": 75, \"net_realized_pl\": -70.89531960324402, \"wins\": 19}, \"outside_blocked_session\": {\"closed_trades\": 635, \"entry_spread_points\": {\"count\": 635, \"maximum\": 10.0, \"mean\": 7.790551181102362, \"minimum\": 6.0}, \"flats\": 0, \"losses\": 407, \"net_realized_pl\": -377.47834862933246, \"wins\": 228}}, \"03 >10-20\": {\"blocked_session\": {\"closed_trades\": 120, \"entry_spread_points\": {\"count\": 120, \"maximum\": 20.0, \"mean\": 13.5, \"minimum\": 11.0}, \"flats\": 0, \"losses\": 90, \"net_realized_pl\": -157.15495751281327, \"wins\": 30}, \"outside_blocked_session\": {\"closed_trades\": 155, \"entry_spread_points\": {\"count\": 155, \"maximum\": 18.0, \"mean\": 12.703225806451613, \"minimum\": 11.0}, \"flats\": 0, \"losses\": 110, \"net_realized_pl\": -103.96740507689833, \"wins\": 45}}, \"04 >20-50\": {\"blocked_session\": {\"closed_trades\": 28, \"entry_spread_points\": {\"count\": 28, \"maximum\": 50.0, \"mean\": 34.42857142857143, \"minimum\": 21.0}, \"flats\": 0, \"losses\": 23, \"net_realized_pl\": -64.82271713899738, \"wins\": 5}, \"outside_blocked_session\": {\"closed_trades\": 24, \"entry_spread_points\": {\"count\": 24, \"maximum\": 48.0, \"mean\": 28.083333333333332, \"minimum\": 21.0}, \"flats\": 0, \"losses\": 19, \"net_realized_pl\": -59.03320105144476, \"wins\": 5}}, \"05 >50-100\": {\"blocked_session\": {\"closed_trades\": 56, \"entry_spread_points\": {\"count\": 56, \"maximum\": 100.0, \"mean\": 77.14285714285714, \"minimum\": 51.0}, \"flats\": 0, \"losses\": 44, \"net_realized_pl\": -262.9088497289507, \"wins\": 12}, \"outside_blocked_session\": {\"closed_trades\": 1, \"entry_spread_points\": {\"count\": 1, \"maximum\": 70.0, \"mean\": 70.0, \"minimum\": 70.0}, \"flats\": 0, \"losses\": 1, \"net_realized_pl\": -10.036068112718914, \"wins\": 0}}, \"06 >100\": {\"blocked_session\": {\"closed_trades\": 54, \"entry_spread_points\": {\"count\": 54, \"maximum\": 300.0, \"mean\": 150.1851851851852, \"minimum\": 101.0}, \"flats\": 0, \"losses\": 47, \"net_realized_pl\": -425.99110962266434, \"wins\": 7}, \"outside_blocked_session\": {\"closed_trades\": 0, \"entry_spread_points\": {\"count\": 0, \"maximum\": null, \"mean\": null, \"minimum\": null}, \"flats\": 0, \"losses\": 0, \"net_realized_pl\": 0, \"wins\": 0}}}, \"outside_blocked_session\": {\"closed_trades\": 4080, \"entry_spread_points\": {\"count\": 4080, \"maximum\": 70.0, \"mean\": 2.9166666666666665, \"minimum\": 0.0}, \"flats\": 3, \"losses\": 2438, \"net_realized_pl\": -876.685999711174, \"wins\": 1639}}}\n",
+        "stderr": ""
+      }
+    ]
   }
 }
