@@ -3236,16 +3236,37 @@ def m022_inventory_tests():
     }
 
 
-def m022_history_depth_probe():
-    """Probe native timeframe depth and tick coverage at the native common start."""
+def m022_history_checkpoint_probe():
+    """Probe bounded historical checkpoints with a hard per-date kill limit."""
 
     feature_sha = _require_m022_branch()
     wine_python, discovery = _select_wine_python()
     wine = _wine()
+    timeout_bin = shutil.which("timeout") or "/usr/bin/timeout"
+
+    checkpoints = [
+        "2026-06-01T00:00:00Z",
+        "2026-05-18T00:00:00Z",
+        "2026-05-04T00:00:00Z",
+        "2026-04-20T00:00:00Z",
+        "2026-04-06T00:00:00Z",
+        "2026-03-23T00:00:00Z",
+        "2026-03-09T00:00:00Z",
+        "2026-02-23T00:00:00Z",
+        "2026-02-09T00:00:00Z",
+        "2026-01-26T00:00:00Z",
+        "2026-01-12T00:00:00Z",
+        "2025-12-15T00:00:00Z",
+        "2025-11-17T00:00:00Z",
+        "2025-10-20T00:00:00Z",
+        "2025-09-22T00:00:00Z",
+    ]
+
     probe_code = r'''
 import json
 import platform
-from datetime import datetime, timezone
+import sys
+from datetime import datetime, timedelta, timezone
 
 import MetaTrader5 as mt5
 import numpy as np
@@ -3254,124 +3275,85 @@ from config import mt5 as mt5_config
 from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
 
 symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
-cutoff = datetime.fromisoformat("2026-09-25T00:00:00+00:00")
-timeframes = {
-    "M1": (mt5.TIMEFRAME_M1, 50000),
-    "M5": (mt5.TIMEFRAME_M5, 50000),
-    "M15": (mt5.TIMEFRAME_M15, 30000),
-}
+checkpoint = datetime.fromisoformat(sys.argv[1].replace("Z", "+00:00"))
+rates_end = checkpoint + timedelta(hours=12)
+ticks_end = checkpoint + timedelta(minutes=10)
 
 if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
-    raise RuntimeError("MT5 initialize failed for read-only M022 depth probe")
-
-def iso_epoch(seconds):
-    return datetime.fromtimestamp(
-        int(seconds), timezone.utc
-    ).isoformat().replace("+00:00", "Z")
+    raise RuntimeError("MT5 initialize failed for M022 checkpoint probe")
 
 try:
     account = mt5.account_info()
     terminal = mt5.terminal_info()
     output = {}
-    native_starts = []
+    all_ok = True
 
     for symbol in symbols:
         if not mt5.symbol_select(symbol, True):
             raise RuntimeError(f"MT5 could not select {symbol}")
 
-        native = {}
-        for label, (timeframe, requested_count) in timeframes.items():
-            rates = mt5.copy_rates_from_pos(
-                symbol,
-                timeframe,
-                0,
-                requested_count,
+        symbol_result = {}
+        for label, timeframe in (
+            ("M5", mt5.TIMEFRAME_M5),
+            ("M15", mt5.TIMEFRAME_M15),
+        ):
+            rates = mt5.copy_rates_range(
+                symbol, timeframe, checkpoint, rates_end
             )
-            if rates is None or len(rates) == 0:
-                native[label] = {
-                    "rows_returned": 0,
-                    "first_bar_open_utc": None,
-                    "last_bar_open_utc": None,
-                }
-                continue
-            times = [int(row["time"]) for row in rates]
-            first = iso_epoch(min(times))
-            last = iso_epoch(max(times))
-            native[label] = {
-                "requested_count": requested_count,
-                "rows_returned": int(len(rates)),
-                "probe_limit_reached": int(len(rates)) >= requested_count,
+            rows = 0 if rates is None else int(len(rates))
+            first = None
+            last = None
+            if rows:
+                first = datetime.fromtimestamp(
+                    int(rates[0]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z")
+                last = datetime.fromtimestamp(
+                    int(rates[-1]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z")
+            symbol_result[label] = {
+                "rows": rows,
                 "first_bar_open_utc": first,
                 "last_bar_open_utc": last,
             }
-            if label in ("M5", "M15"):
-                native_starts.append(first)
+            if rows == 0:
+                all_ok = False
 
-        output[symbol] = {"native": native}
-
-    native_common = (
-        max(native_starts)
-        if len(native_starts) == len(symbols) * 2
-        else None
-    )
-
-    first_ticks = []
-    if native_common is not None:
-        native_common_dt = datetime.fromisoformat(
-            native_common.replace("Z", "+00:00")
+        ticks = mt5.copy_ticks_range(
+            symbol, checkpoint, ticks_end, mt5.COPY_TICKS_ALL
         )
-        for symbol in symbols:
-            ticks = mt5.copy_ticks_from(
-                symbol,
-                native_common_dt,
-                1024,
-                mt5.COPY_TICKS_ALL,
-            )
-            first_tick = None
-            valid_tick_rows = 0
-            if ticks is not None:
-                names = ticks.dtype.names or ()
-                for row in ticks:
-                    bid = float(row["bid"])
-                    ask = float(row["ask"])
-                    if bid <= 0 or ask <= 0 or ask < bid:
-                        continue
-                    raw_time = (
-                        int(row["time_msc"]) / 1000.0
-                        if "time_msc" in names
-                        else float(row["time"])
-                    )
-                    timestamp = datetime.fromtimestamp(raw_time, timezone.utc)
-                    if timestamp >= cutoff:
-                        continue
-                    valid_tick_rows += 1
-                    if first_tick is None:
-                        first_tick = timestamp
-
-            value = (
+        valid = 0
+        first_tick = None
+        if ticks is not None:
+            names = ticks.dtype.names or ()
+            for row in ticks:
+                bid = float(row["bid"])
+                ask = float(row["ask"])
+                if bid <= 0 or ask <= 0 or ask < bid:
+                    continue
+                raw_time = (
+                    int(row["time_msc"]) / 1000.0
+                    if "time_msc" in names
+                    else float(row["time"])
+                )
+                ts = datetime.fromtimestamp(raw_time, timezone.utc)
+                valid += 1
+                if first_tick is None:
+                    first_tick = ts
+        symbol_result["ticks"] = {
+            "valid_synchronized_bid_ask_rows": valid,
+            "first_synchronized_bid_ask_tick_utc": (
                 first_tick.isoformat().replace("+00:00", "Z")
-                if first_tick is not None
-                else None
-            )
-            output[symbol]["tick_at_native_common"] = {
-                "requested_from_utc": native_common,
-                "first_synchronized_bid_ask_tick_utc": value,
-                "valid_probe_rows": valid_tick_rows,
-            }
-            if value:
-                first_ticks.append(value)
-
-    strict_common = (
-        max([native_common, *first_ticks])
-        if native_common is not None and len(first_ticks) == len(symbols)
-        else None
-    )
+                if first_tick is not None else None
+            ),
+        }
+        if valid == 0:
+            all_ok = False
+        output[symbol] = symbol_result
 
     print(json.dumps({
-        "cutoff_utc": "2026-09-25T00:00:00Z",
+        "checkpoint_utc": sys.argv[1],
+        "all_symbols_pass": all_ok,
         "symbols": output,
-        "native_m5_m15_common_start_utc": native_common,
-        "candidate_tick_m1_native_m5_m15_common_start_utc": strict_common,
         "broker_server": getattr(account, "server", None),
         "account_currency": getattr(account, "currency", None),
         "terminal_maxbars": getattr(terminal, "maxbars", None),
@@ -3383,40 +3365,66 @@ try:
                 list(mt5.version()) if hasattr(mt5, "version") else None
             ),
         },
-    }, sort_keys=True))
+    }, sort_keys=True), flush=True)
 finally:
     mt5.shutdown()
 '''
-    timeout_bin = shutil.which("timeout") or "/usr/bin/timeout"
-    run = _run(
-        [timeout_bin, "90s", wine, wine_python, "-c", probe_code],
-        env=_safe_env(wine=True),
-    )
-    if run["exit_code"] != 0:
-        return {
-            "ok": False,
-            "reason": "read-only M022 history-depth probe failed",
-            "feature_branch": "strategy-parameter-research",
-            "feature_sha": feature_sha,
-            "run": run,
-            "wine_python": wine_python,
-            "discovery": discovery,
+
+    observations = []
+    oldest_passing = None
+    stop_reason = None
+
+    for checkpoint in checkpoints:
+        run = _run(
+            [
+                timeout_bin,
+                "--signal=KILL",
+                "30s",
+                wine,
+                wine_python,
+                "-c",
+                probe_code,
+                checkpoint,
+            ],
+            env=_safe_env(wine=True),
+        )
+        observation = {
+            "checkpoint_utc": checkpoint,
+            "exit_code": run["exit_code"],
+            "stderr": run["stderr"],
         }
+        if run["stdout"].strip():
+            try:
+                payload = json.loads(run["stdout"].strip().splitlines()[-1])
+                observation["probe"] = payload
+            except json.JSONDecodeError:
+                observation["stdout_tail"] = run["stdout"][-4000:]
 
-    try:
-        payload = json.loads(run["stdout"].strip().splitlines()[-1])
-    except (json.JSONDecodeError, IndexError) as exc:
-        raise RuntimeError("unable to parse M022 depth probe") from exc
+        observations.append(observation)
 
-    complete = (
-        payload.get("candidate_tick_m1_native_m5_m15_common_start_utc")
-        is not None
-    )
+        payload = observation.get("probe")
+        if run["exit_code"] != 0:
+            stop_reason = (
+                f"checkpoint {checkpoint} did not complete within the fixed "
+                "read-only process boundary or returned an error"
+            )
+            break
+        if not payload or not payload.get("all_symbols_pass"):
+            stop_reason = (
+                f"checkpoint {checkpoint} lacks complete synchronized "
+                "Bid/Ask tick plus M5/M15 coverage for all symbols"
+            )
+            break
+        oldest_passing = checkpoint
+
     return {
-        "ok": complete,
+        "ok": oldest_passing is not None,
         "feature_branch": "strategy-parameter-research",
         "feature_sha": feature_sha,
-        "probe": payload,
+        "checkpoint_order": checkpoints,
+        "oldest_passing_checkpoint_utc": oldest_passing,
+        "stop_reason": stop_reason,
+        "observations": observations,
         "wine_python": wine_python,
         "discovery": discovery,
         "safety": {
@@ -3425,7 +3433,27 @@ finally:
             "economic_replay_run": False,
             "m021_post_cutoff_data_used": False,
         },
-        "run": run,
+    }
+
+
+def m022_history_depth_probe():
+    """Retired M022 probe; use the hard-bounded checkpoint action."""
+
+    feature_sha = _require_m022_branch()
+    return {
+        "ok": False,
+        "reason": (
+            "m022_history_depth_probe is retired because MT5/Wine can ignore "
+            "the soft timeout; use m022_history_checkpoint_probe"
+        ),
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "safety": {
+            "market_data_read_only": True,
+            "real_order_api_called": False,
+            "economic_replay_run": False,
+            "m021_post_cutoff_data_used": False,
+        },
     }
 
 
@@ -3477,7 +3505,7 @@ def m022_tick_inventory():
             "required_manifest": str(M019_MANIFEST.relative_to(REPO)),
         }
 
-    depth = m022_history_depth_probe()
+    depth = m022_history_checkpoint_probe()
     if not depth.get("ok"):
         return {
             "ok": False,
@@ -3489,7 +3517,7 @@ def m022_tick_inventory():
 
     candidate_start_utc = (
         depth.get("probe", {})
-        .get("candidate_tick_m1_native_m5_m15_common_start_utc")
+        .get("oldest_passing_checkpoint_utc")
     )
     if not candidate_start_utc:
         return {
@@ -3890,6 +3918,7 @@ ACTION_HANDLERS = {
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
     "m022_inventory_tests": m022_inventory_tests,
+    "m022_history_checkpoint_probe": m022_history_checkpoint_probe,
     "m022_history_depth_probe": m022_history_depth_probe,
     "m022_tick_inventory_cleanup": m022_tick_inventory_cleanup,
     "m022_tick_inventory": m022_tick_inventory,
