@@ -489,6 +489,102 @@ Acceptance requirements for this performance change are frozen as:
 If any accepted hash changes, the cache is rejected and Phase 1 must not use
 its economic output.
 
+## Accepted Phase-1 development reference — reference-v3
+
+The first scientifically accepted M022 economic reference is
+`reference-v3`, command:
+
+`mamba2-m022-phase1-reference-v3-20260926-1859`
+
+Feature SHA:
+
+`3136d2143f79e80ea0ce9688559b7e7aaaca7ef5`
+
+Partition / replay evidence:
+
+- development only;
+- 169 common trading dates;
+- `2025-08-25T00:00:00Z` →
+  `2026-04-21T00:00:00Z` end-exclusive;
+- strict shared replay-boundary clock: **enabled**;
+- full per-symbol M1 histories preserved: **yes**;
+- replay boundaries: **241,474**;
+- replay-boundary SHA-256:
+  `17685ae6a08ce8e6e4f3af215f4215f92fe87de24f5a934d7935778634d47e28`.
+
+Determinism:
+
+- A/B deterministic: **PASS**;
+- baseline SHA-256:
+  `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+- diagnostic SHA-256:
+  `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+- summary SHA-256:
+  `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+
+Reference economics:
+
+- starting balance: **$10,000.00**;
+- accepted orders: **12,009**;
+- closed trades: **12,006**;
+- winning closed trades: **3,944**;
+- losing closed trades: **8,056**;
+- flat closed trades: **6**;
+- non-flat win rate: **32.8667%**;
+- net realized P/L: **-$15,499.3611**;
+- ending realized balance: **-$5,499.3611**;
+- ending equity: **-$5,499.1874**;
+- maximum equity drawdown: **$15,501.9142 / 155.0054%**;
+- remaining open positions at partition boundary: **3**.
+
+Per-symbol net realized P/L:
+
+- EURUSD: **-$1,447.1571**;
+- EURJPY: **-$4,682.2258**;
+- GBPUSD: **-$2,265.9643**;
+- GBPJPY: **-$5,883.9896**;
+- USDJPY: **-$1,220.0242**.
+
+Side split:
+
+- BUY: 5,505 closed trades, **-$6,212.4445**;
+- SELL: 6,501 closed trades, **-$9,286.9165**.
+
+Fixed entry-UTC buckets:
+
+- 00:00–03:59: **-$4,259.9982**;
+- 04:00–07:59: **-$2,079.5525**;
+- 08:00–11:59: **-$1,723.6605**;
+- 12:00–15:59: **-$1,244.1172**;
+- 16:00–19:59: **-$1,794.6665**;
+- 20:00–23:59: **-$4,397.3662**.
+
+Protection / safety:
+
+- all 12,006 closed trades had initial protection;
+- trades with trailing: **5,090**;
+- total trailing modifications: **8,633**;
+- negative-P/L take-profit exits: **0**;
+- wrong-side initial TP: **0**;
+- decision-spread rejections: **0**;
+- session-blocked evaluation boundaries: **0**.
+
+Cost contract:
+
+`SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`
+
+Safety:
+
+- validation economic data used: **no**;
+- historical holdout economic data used: **no**;
+- M021 post-cutoff outcome used: **no**;
+- real-order API called: **no**.
+
+This reference is now the fixed development comparator for Phase 1. Its poor
+absolute economics do not authorize ad hoc parameter search; all subsequent
+screening remains constrained to the predeclared families and frozen
+shortlisting rubric.
+
 ## Post-reference replay-cache optimization gate — frozen before stochastic results
 
 The accepted `reference-v3` run, once complete, remains tied to feature SHA
