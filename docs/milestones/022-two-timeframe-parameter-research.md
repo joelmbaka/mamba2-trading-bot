@@ -1,6 +1,6 @@
 # Milestone 022 — Two-Timeframe Parameter Research
 
-Status: **PLANNED — RESEARCH PROTOCOL DEFINED, NO PARAMETER RESULTS INSPECTED**
+Status: **IN PROGRESS — HISTORY INVENTORY GATE, NO PARAMETER RESULTS INSPECTED**
 
 Protocol date: 2026-09-26
 
@@ -44,6 +44,65 @@ Prefer a materially longer history than the already-inspected 2026-06-23 through
 Record exact available UTC ranges, row counts, missing-data/Ask diagnostics, manifest/artifact hashes, broker/source metadata, and runtime versions.
 
 Do not silently fabricate or forward-fill unavailable Ask history.
+
+## Inventory implementation checkpoint — 2026-09-26
+
+The M022 start gate was verified before local execution:
+
+- starting branch: `strategy-parameter-research`;
+- starting SHA: `253b6ee840e5489a2c5db27d064500bb44f93e1e`;
+- Dell repository gate: clean worktree, local/remote divergence `0/0`, lock check passed;
+- no M021 economic result was inspected or used.
+
+Historical M019 evidence showed that broker-native M1 retention must not be treated as the same thing as total trustworthy market-data depth:
+
+- chunked native M1 history reached only to approximately 2026-06-22;
+- native M5/M15 history was already available from 2026-06-01;
+- synchronized tick samples containing Bid/Ask were also available on 2026-06-01 and 2026-06-15 for all five symbols.
+
+Therefore M022 must separately test whether an older M1 Bid/Ask stream can be truthfully reconstructed from the broker's own ticks. It must not fabricate or forward-fill missing minutes.
+
+The feature branch now contains an **opt-in research/export mode** that reconstructs synchronized Bid and Ask M1 OHLC from the same `COPY_TICKS_ALL` stream while leaving the existing native-M1 export path unchanged by default. Broker-native M5/M15 remain unchanged. This infrastructure requires overlap validation against previously accepted native/tick-derived history before any older tick-derived M1 range can be declared trustworthy.
+
+Local-control now contains fixed M022-only actions for:
+
+- repository/branch gating;
+- history-inventory cleanup;
+- historical inventory;
+- a bounded history-depth probe.
+
+The first inventory command was dispatched as:
+
+`mamba2-m022-history-inventory-20260926-1217`
+
+That first implementation attempted to discover the earliest Ask tick from a very old origin before exporting. It became a long-running read-only MT5 operation and **must not be repeated as the preferred discovery method**. Its published result, when available, is evidence only; do not infer history depth from runtime duration.
+
+The replacement depth probe is bounded:
+
+1. inspect retained native M1/M5/M15 depth with fixed `copy_rates_from_pos` limits;
+2. compute the common native M5/M15 start;
+3. probe synchronized Bid/Ask ticks only from that known common start;
+4. report source/broker/runtime metadata;
+5. run no strategy replay and compute no economic result.
+
+### Next inventory acceptance gate
+
+Before freezing M022 data partitions:
+
+1. obtain/review the pending first-inventory result;
+2. synchronize the Dell checkout to the latest feature SHA;
+3. run the feature tests, including the opt-in tick-derived-M1 exporter tests;
+4. run the bounded M022 depth probe;
+5. if older tick coverage exists, export a fixed candidate history using:
+   - tick-derived synchronized Bid/Ask M1;
+   - broker-native M5/M15;
+6. prove overlap against the accepted M019 dataset:
+   - M1 Bid timestamps/OHLC must agree within an explicitly frozen price tolerance;
+   - Ask M1 timestamps/OHLC must agree within an explicitly frozen price tolerance;
+   - native M5/M15 overlap must remain identical;
+7. only then declare a longest common trustworthy range and freeze development / validation / untouched historical-holdout partitions.
+
+No Phase-1 parameter arm is authorized before that gate passes.
 
 ## Data separation
 
