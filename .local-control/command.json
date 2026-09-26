@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "mamba2-m022-raise-maxbars-20260926-1426",
+  "id": "mamba2-m022-raise-maxbars-20260926-1430",
   "action": "m022_raise_mt5_maxbars",
   "args": {},
   "requested_by": "chatgpt"
