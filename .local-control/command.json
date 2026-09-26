@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-phase1-reference-20260926-1708",
-  "action": "m022_phase1_reference_pair",
+  "id": "mamba2-m022-common-clock-sync-20260926-1714",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
