@@ -5,6 +5,7 @@ import os
 import signal
 import shutil
 import subprocess
+import tempfile
 import time
 from pathlib import Path
 
@@ -168,28 +169,62 @@ def _run(cmd, *, env=None):
 
 
 def _run_process_group_bounded(cmd, *, env=None, timeout_seconds):
-    """Run one external probe in its own group and kill that group on timeout."""
+    """Run one external probe with a hard wall-clock bound.
 
-    proc = subprocess.Popen(
-        cmd,
-        cwd=str(REPO),
-        text=True,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=env,
-        start_new_session=True,
-    )
-    timed_out = False
-    try:
-        stdout, stderr = proc.communicate(timeout=timeout_seconds)
-    except subprocess.TimeoutExpired:
-        timed_out = True
+    Output is captured to regular temporary files rather than PIPEs. Wine may
+    leave helper processes alive outside the probe process group; inherited
+    PIPE descriptors from those helpers can otherwise make communicate() wait
+    forever even after the probe group is SIGKILLed.
+    """
+
+    with (
+        tempfile.TemporaryFile(mode="w+t", encoding="utf-8") as stdout_file,
+        tempfile.TemporaryFile(mode="w+t", encoding="utf-8") as stderr_file,
+    ):
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(REPO),
+            text=True,
+            stdin=subprocess.DEVNULL,
+            stdout=stdout_file,
+            stderr=stderr_file,
+            env=env,
+            start_new_session=True,
+        )
+        timed_out = False
+
         try:
-            os.killpg(proc.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        stdout, stderr = proc.communicate()
+            proc.wait(timeout=timeout_seconds)
+        except subprocess.TimeoutExpired:
+            timed_out = True
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+
+            # The process-group kill should terminate the direct child. Keep
+            # this wait bounded too; never turn timeout recovery into another
+            # unbounded wait.
+            try:
+                proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                try:
+                    proc.kill()
+                except ProcessLookupError:
+                    pass
+                try:
+                    proc.wait(timeout=2)
+                except subprocess.TimeoutExpired:
+                    pass
+
+        stdout_file.flush()
+        stderr_file.flush()
+        stdout_file.seek(0)
+        stderr_file.seek(0)
+        stdout = stdout_file.read()
+        stderr = stderr_file.read()
+
+    if timed_out:
         stderr = (stderr or "") + (
             f"\nlocal-control hard-killed process group after "
             f"{timeout_seconds}s\n"
@@ -197,7 +232,7 @@ def _run_process_group_bounded(cmd, *, env=None, timeout_seconds):
 
     return {
         "command": list(cmd),
-        "exit_code": proc.returncode,
+        "exit_code": proc.returncode if proc.returncode is not None else -9,
         "timed_out": timed_out,
         "stdout": _bounded(stdout),
         "stderr": _bounded(stderr),
