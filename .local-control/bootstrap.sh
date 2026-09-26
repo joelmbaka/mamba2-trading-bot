@@ -108,6 +108,7 @@ ExecStart=$RUNNER --once
 # A Wine/MT5 descendant must never outlive the worker cgroup or make stop wait
 # forever. The checkpoint action also kills its own process group at 30s.
 KillMode=control-group
+TimeoutStartSec=infinity
 TimeoutStopSec=10s
 SendSIGKILL=yes
 FinalKillSignal=SIGKILL
@@ -119,7 +120,7 @@ Description=Poll ChatGPT Mamba2 GitHub mailbox
 
 [Timer]
 OnBootSec=10s
-OnUnitActiveSec=15s
+OnUnitInactiveSec=15s
 AccuracySec=1s
 Unit=chatgpt-mamba2-local-agent.service
 
