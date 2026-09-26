@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-phase1-reference-v3-20260926-1859",
-  "action": "m022_phase1_reference_pair",
+  "id": "mamba2-m022-optimized-cache-sync-20260926-2022",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
