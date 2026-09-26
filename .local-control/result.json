@@ -1,137 +1,2296 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-v2-repo-gate-20260926-1410",
-  "completed_at": "2026-09-26T11:08:37.394164+00:00",
-  "ok": true,
-  "action": "repo_checks",
+  "command_id": "mamba2-m022-tick-inventory-v2-20260926-1411",
+  "completed_at": "2026-09-26T11:16:31.072407+00:00",
+  "ok": false,
+  "action": "m022_tick_inventory",
   "data": {
-    "ok": true,
-    "clean": true,
-    "branch": "strategy-parameter-research",
-    "divergence": "0\t0",
-    "bot_cache_tracked": false,
-    "icon_tracked": true,
-    "icon_changed": false,
-    "commands": [
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46\n",
-        "stderr": ""
+    "ok": false,
+    "feature_branch": "strategy-parameter-research",
+    "feature_sha": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46",
+    "candidate_start_utc": "2025-08-25T00:00:00Z",
+    "cutoff_utc": "2026-09-25T00:00:00Z",
+    "depth": {
+      "ok": true,
+      "feature_branch": "strategy-parameter-research",
+      "feature_sha": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46",
+      "checkpoint_order": [
+        "2026-06-01T00:00:00Z",
+        "2026-05-18T00:00:00Z",
+        "2026-05-04T00:00:00Z",
+        "2026-04-20T00:00:00Z",
+        "2026-04-06T00:00:00Z",
+        "2026-03-23T00:00:00Z",
+        "2026-03-09T00:00:00Z",
+        "2026-02-23T00:00:00Z",
+        "2026-02-09T00:00:00Z",
+        "2026-01-26T00:00:00Z",
+        "2026-01-12T00:00:00Z",
+        "2025-12-15T00:00:00Z",
+        "2025-11-17T00:00:00Z",
+        "2025-10-20T00:00:00Z",
+        "2025-09-22T00:00:00Z",
+        "2025-08-25T00:00:00Z",
+        "2025-07-28T00:00:00Z",
+        "2025-06-30T00:00:00Z",
+        "2025-06-02T00:00:00Z",
+        "2025-05-05T00:00:00Z",
+        "2025-04-07T00:00:00Z",
+        "2025-03-10T00:00:00Z"
+      ],
+      "oldest_passing_checkpoint_utc": "2025-08-25T00:00:00Z",
+      "stop_reason": "checkpoint 2025-07-28T00:00:00Z lacks complete synchronized Bid/Ask tick plus M5/M15 coverage for all symbols",
+      "observations": [
+        {
+          "checkpoint_utc": "2026-06-01T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-06-01T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-06-01T00:00:00.030000Z",
+                  "valid_synchronized_bid_ask_rows": 166
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-06-01T00:00:00.017000Z",
+                  "valid_synchronized_bid_ask_rows": 170
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-06-01T00:00:00.049000Z",
+                  "valid_synchronized_bid_ask_rows": 88
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-06-01T00:00:00.028000Z",
+                  "valid_synchronized_bid_ask_rows": 179
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-06-01T00:00:00Z",
+                  "last_bar_open_utc": "2026-06-01T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-06-01T00:00:00.032000Z",
+                  "valid_synchronized_bid_ask_rows": 118
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-05-18T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-05-18T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-18T00:00:00.052000Z",
+                  "valid_synchronized_bid_ask_rows": 144
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-18T00:00:00.037000Z",
+                  "valid_synchronized_bid_ask_rows": 157
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-18T00:00:00.056000Z",
+                  "valid_synchronized_bid_ask_rows": 88
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-18T00:00:00.051000Z",
+                  "valid_synchronized_bid_ask_rows": 86
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-18T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-18T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-18T00:00:00.054000Z",
+                  "valid_synchronized_bid_ask_rows": 117
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-05-04T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-05-04T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-04T00:00:00.018000Z",
+                  "valid_synchronized_bid_ask_rows": 348
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-04T00:00:00.017000Z",
+                  "valid_synchronized_bid_ask_rows": 251
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-04T00:00:30.835000Z",
+                  "valid_synchronized_bid_ask_rows": 88
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-04T00:00:00.017000Z",
+                  "valid_synchronized_bid_ask_rows": 95
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-05-04T00:00:00Z",
+                  "last_bar_open_utc": "2026-05-04T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-05-04T00:00:00.019000Z",
+                  "valid_synchronized_bid_ask_rows": 166
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-04-20T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-04-20T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-20T00:00:00.018000Z",
+                  "valid_synchronized_bid_ask_rows": 531
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-20T00:00:00.021000Z",
+                  "valid_synchronized_bid_ask_rows": 408
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-20T00:00:00.018000Z",
+                  "valid_synchronized_bid_ask_rows": 277
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-20T00:00:00.021000Z",
+                  "valid_synchronized_bid_ask_rows": 110
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-20T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-20T00:00:00.017000Z",
+                  "valid_synchronized_bid_ask_rows": 195
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-04-06T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-04-06T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-06T00:00:30.766000Z",
+                  "valid_synchronized_bid_ask_rows": 97
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-06T00:00:00.015000Z",
+                  "valid_synchronized_bid_ask_rows": 130
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-06T00:00:00.038000Z",
+                  "valid_synchronized_bid_ask_rows": 53
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-06T00:00:00.016000Z",
+                  "valid_synchronized_bid_ask_rows": 55
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-04-06T00:00:00Z",
+                  "last_bar_open_utc": "2026-04-06T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-04-06T00:00:00.042000Z",
+                  "valid_synchronized_bid_ask_rows": 28
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-03-23T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-03-23T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-23T00:00:00.077000Z",
+                  "valid_synchronized_bid_ask_rows": 1490
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-23T00:00:00.078000Z",
+                  "valid_synchronized_bid_ask_rows": 789
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-23T00:00:00.078000Z",
+                  "valid_synchronized_bid_ask_rows": 1534
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-23T00:00:00.075000Z",
+                  "valid_synchronized_bid_ask_rows": 713
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-23T00:00:00.088000Z",
+                  "valid_synchronized_bid_ask_rows": 972
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-03-09T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-03-09T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-09T00:00:00.057000Z",
+                  "valid_synchronized_bid_ask_rows": 2227
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-09T00:00:00.056000Z",
+                  "valid_synchronized_bid_ask_rows": 2558
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-09T00:00:00.086000Z",
+                  "valid_synchronized_bid_ask_rows": 2450
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-09T00:00:00.086000Z",
+                  "valid_synchronized_bid_ask_rows": 2061
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-03-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-03-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-03-09T00:00:00.056000Z",
+                  "valid_synchronized_bid_ask_rows": 897
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-02-23T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-02-23T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-23T00:00:47.339000Z",
+                  "valid_synchronized_bid_ask_rows": 150
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-23T00:00:00.014000Z",
+                  "valid_synchronized_bid_ask_rows": 112
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-23T00:01:28.970000Z",
+                  "valid_synchronized_bid_ask_rows": 130
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-23T00:01:28.972000Z",
+                  "valid_synchronized_bid_ask_rows": 85
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-23T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-23T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-23T00:01:29.864000Z",
+                  "valid_synchronized_bid_ask_rows": 15
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-02-09T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-02-09T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-09T00:00:51.115000Z",
+                  "valid_synchronized_bid_ask_rows": 363
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-09T00:00:00.024000Z",
+                  "valid_synchronized_bid_ask_rows": 134
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-09T00:01:00.117000Z",
+                  "valid_synchronized_bid_ask_rows": 296
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-09T00:01:23.517000Z",
+                  "valid_synchronized_bid_ask_rows": 24
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-02-09T00:00:00Z",
+                  "last_bar_open_utc": "2026-02-09T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-02-09T00:01:00.118000Z",
+                  "valid_synchronized_bid_ask_rows": 328
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-01-26T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-01-26T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-26T00:00:48.309000Z",
+                  "valid_synchronized_bid_ask_rows": 407
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-26T00:00:00.023000Z",
+                  "valid_synchronized_bid_ask_rows": 236
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-26T00:01:17.316000Z",
+                  "valid_synchronized_bid_ask_rows": 209
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-26T00:01:06.320000Z",
+                  "valid_synchronized_bid_ask_rows": 75
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-26T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-26T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-26T00:01:06.309000Z",
+                  "valid_synchronized_bid_ask_rows": 262
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2026-01-12T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2026-01-12T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-12T00:00:46.189000Z",
+                  "valid_synchronized_bid_ask_rows": 202
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-12T00:00:00.022000Z",
+                  "valid_synchronized_bid_ask_rows": 145
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-12T00:01:06.392000Z",
+                  "valid_synchronized_bid_ask_rows": 48
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-12T00:01:06.392000Z",
+                  "valid_synchronized_bid_ask_rows": 21
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2026-01-12T00:00:00Z",
+                  "last_bar_open_utc": "2026-01-12T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2026-01-12T00:01:13.993000Z",
+                  "valid_synchronized_bid_ask_rows": 71
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2025-12-15T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2025-12-15T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-12-15T00:00:47.114000Z",
+                  "valid_synchronized_bid_ask_rows": 142
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 140
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-12-15T00:02:40.202000Z",
+                  "valid_synchronized_bid_ask_rows": 3
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-12-15T00:01:06.515000Z",
+                  "valid_synchronized_bid_ask_rows": 58
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-12-15T00:01:06.517000Z",
+                  "valid_synchronized_bid_ask_rows": 33
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-12-15T00:00:00Z",
+                  "last_bar_open_utc": "2025-12-15T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-12-15T00:01:23.318000Z",
+                  "valid_synchronized_bid_ask_rows": 41
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2025-11-17T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2025-11-17T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-11-17T00:00:47.359000Z",
+                  "valid_synchronized_bid_ask_rows": 116
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-11-17T00:01:24.137000Z",
+                  "valid_synchronized_bid_ask_rows": 66
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-11-17T00:01:21.154000Z",
+                  "valid_synchronized_bid_ask_rows": 118
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-11-17T00:01:28.369000Z",
+                  "valid_synchronized_bid_ask_rows": 90
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-11-17T00:00:00Z",
+                  "last_bar_open_utc": "2025-11-17T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-11-17T00:01:21.155000Z",
+                  "valid_synchronized_bid_ask_rows": 25
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2025-10-20T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2025-10-20T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-10-20T00:00:58.122000Z",
+                  "valid_synchronized_bid_ask_rows": 93
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-10-20T00:01:00.113000Z",
+                  "valid_synchronized_bid_ask_rows": 110
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-10-20T00:01:00.131000Z",
+                  "valid_synchronized_bid_ask_rows": 44
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-10-20T00:01:28.859000Z",
+                  "valid_synchronized_bid_ask_rows": 18
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-10-20T00:00:00Z",
+                  "last_bar_open_utc": "2025-10-20T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-10-20T00:01:00.116000Z",
+                  "valid_synchronized_bid_ask_rows": 408
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2025-09-22T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2025-09-22T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-09-22T00:00:56.095000Z",
+                  "valid_synchronized_bid_ask_rows": 54
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-09-22T00:02:39.757000Z",
+                  "valid_synchronized_bid_ask_rows": 45
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-09-22T00:02:46.003000Z",
+                  "valid_synchronized_bid_ask_rows": 48
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-09-22T00:02:00.116000Z",
+                  "valid_synchronized_bid_ask_rows": 21
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-09-22T00:00:00Z",
+                  "last_bar_open_utc": "2025-09-22T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-09-22T00:02:00.114000Z",
+                  "valid_synchronized_bid_ask_rows": 22
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2025-08-25T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": true,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2025-08-25T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:03:06.366000Z",
+                  "valid_synchronized_bid_ask_rows": 59
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:03:46.599000Z",
+                  "valid_synchronized_bid_ask_rows": 51
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:03:46.651000Z",
+                  "valid_synchronized_bid_ask_rows": 82
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:02:10.319000Z",
+                  "valid_synchronized_bid_ask_rows": 32
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-08-25T00:00:00Z",
+                  "last_bar_open_utc": "2025-08-25T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-08-25T00:03:46.709000Z",
+                  "valid_synchronized_bid_ask_rows": 816
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        },
+        {
+          "checkpoint_utc": "2025-07-28T00:00:00Z",
+          "exit_code": 0,
+          "timed_out": false,
+          "stderr": "",
+          "probe": {
+            "account_currency": "USD",
+            "all_symbols_pass": false,
+            "broker_server": "MetaQuotes-Demo",
+            "checkpoint_utc": "2025-07-28T00:00:00Z",
+            "runtime": {
+              "metatrader5_package": "5.0.6180",
+              "numpy": "2.2.1",
+              "python": "3.10.11",
+              "terminal_version": [
+                500,
+                6215,
+                "25 Sep 2026"
+              ]
+            },
+            "symbols": {
+              "EURJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": null,
+                  "valid_synchronized_bid_ask_rows": 0
+                }
+              },
+              "EURUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-07-28T00:01:01.200000Z",
+                  "valid_synchronized_bid_ask_rows": 136
+                }
+              },
+              "GBPJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-07-28T00:01:00.115000Z",
+                  "valid_synchronized_bid_ask_rows": 140
+                }
+              },
+              "GBPUSD": {
+                "M15": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-07-28T00:01:08.672000Z",
+                  "valid_synchronized_bid_ask_rows": 42
+                }
+              },
+              "USDJPY": {
+                "M15": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 49
+                },
+                "M5": {
+                  "first_bar_open_utc": "2025-07-28T00:00:00Z",
+                  "last_bar_open_utc": "2025-07-28T12:00:00Z",
+                  "rows": 145
+                },
+                "ticks": {
+                  "first_synchronized_bid_ask_tick_utc": "2025-07-28T00:01:06.135000Z",
+                  "valid_synchronized_bid_ask_rows": 102
+                }
+              }
+            },
+            "terminal_maxbars": 100000
+          }
+        }
+      ],
+      "wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+      "discovery": {
+        "selection": "established-dedicated-wine-runtime",
+        "host_path": "/home/joel/Dev/mamba2-trading-bot/.venv-wine/Scripts/python.exe",
+        "wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe"
       },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "strategy-parameter-research\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "diff",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "/home/joel/.local/bin/uv",
-          "lock",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": "Resolved 58 packages in 12ms\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "bot_cache.json"
-        ],
-        "exit_code": 1,
-        "stdout": "",
-        "stderr": "error: pathspec 'bot_cache.json' did not match any file(s) known to git\nDid you forget to 'git add'?\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "icon.png"
-        ],
-        "exit_code": 0,
-        "stdout": "icon.png\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--short",
-          "--",
-          "icon.png"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin",
-          "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "--verify",
-          "refs/remotes/origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-list",
-          "--left-right",
-          "--count",
-          "HEAD...origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "0\t0\n",
-        "stderr": ""
+      "safety": {
+        "market_data_read_only": true,
+        "real_order_api_called": false,
+        "economic_replay_run": false,
+        "m021_post_cutoff_data_used": false
       }
-    ]
+    },
+    "inventory": {
+      "accepted_m019_manifest_path": "backtest_data/broader-history-20260623-20260925/manifest.json",
+      "accepted_m019_manifest_sha256": "595efa4d65e35ae06c464edcc1a8dd4e410f6f7b73dfaf16081e0887346f440f",
+      "accepted_overlap_end_exclusive_utc": "2026-09-25T00:00:00Z",
+      "accepted_overlap_start_utc": "2026-06-23T00:00:00Z",
+      "account_currency": "USD",
+      "broker_server": "MetaQuotes-Demo",
+      "manifest_path": "backtest_data/m022-history-inventory-tick-m1-v2/manifest.json",
+      "manifest_sha256": "cfaf3d130eb8fc2abf2e467e43cc5bba735df711ebb8bc9766e865713ba4065b",
+      "overlap_ok": false,
+      "per_symbol": {
+        "EURJPY": {
+          "ask_m1": {
+            "extra_vs_bid_m1_rows": 0,
+            "first_bar_open_utc": "2025-08-25T00:03:00Z",
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "missing_vs_bid_m1_rows": 0,
+            "rows": 405615,
+            "sha256": "adb241d01db6809ef36712243875f09a0af88387263aa31e18329b4e7a0ae3f5",
+            "spread_points_max": 593.9999999999941,
+            "spread_points_min": 0.0,
+            "valid_ticks": 47481927,
+            "zero_spread_ticks": 2764716
+          },
+          "m1": {
+            "first_bar_open_utc": "2025-08-25T00:03:00Z",
+            "interval_gap_count": 129,
+            "largest_interval_gap_minutes": 2942.0,
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "rows": 405615,
+            "sha256": "1a66057af544f13341379083c003d06f2b858a315649a5003ba43ff84fb2b990",
+            "source": "copy_ticks_range_bid_aggregation"
+          },
+          "m15": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 61,
+            "largest_interval_gap_minutes": 2955.0,
+            "last_bar_open_utc": "2026-09-24T23:45:00Z",
+            "rows": 27027,
+            "sha256": "58709b1eddb2a4160d6ab1d32f5b3f260650ff7eee2bac421750f2666ba774e1"
+          },
+          "m5": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 64,
+            "largest_interval_gap_minutes": 2945.0,
+            "last_bar_open_utc": "2026-09-24T23:55:00Z",
+            "rows": 81069,
+            "sha256": "bb49fba66073a1fdfa9d70715067d57c2710450b442e25f1aba1d99956a4d6ab"
+          },
+          "overlap": {
+            "accepted": false,
+            "ask_m1": {
+              "left_rows": 97914,
+              "max_abs_delta": 0.0,
+              "max_delta_points": 0.0,
+              "right_rows": 97914,
+              "same_index": true,
+              "within_half_point": true
+            },
+            "bid_m1": {
+              "left_rows": 97914,
+              "max_abs_delta": 0.0010000000000047748,
+              "max_delta_points": 1.0000000000047748,
+              "right_rows": 97914,
+              "same_index": true,
+              "within_half_point": false
+            },
+            "native": {
+              "M15": {
+                "accepted_rows": 6528,
+                "candidate_rows": 6528,
+                "identical_frame": true,
+                "same_index": true
+              },
+              "M5": {
+                "accepted_rows": 19584,
+                "candidate_rows": 19584,
+                "identical_frame": true,
+                "same_index": true
+              }
+            }
+          },
+          "point": 0.001
+        },
+        "EURUSD": {
+          "ask_m1": {
+            "extra_vs_bid_m1_rows": 0,
+            "first_bar_open_utc": "2025-08-25T00:03:00Z",
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "missing_vs_bid_m1_rows": 0,
+            "rows": 405283,
+            "sha256": "7cca2326ead010df7dcc38fdbd787ec051804ce7145b4645325ea9f67ca0548c",
+            "spread_points_max": 394.0000000000054,
+            "spread_points_min": 0.0,
+            "valid_ticks": 41003938,
+            "zero_spread_ticks": 14383624
+          },
+          "m1": {
+            "first_bar_open_utc": "2025-08-25T00:03:00Z",
+            "interval_gap_count": 201,
+            "largest_interval_gap_minutes": 2943.0,
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "rows": 405283,
+            "sha256": "19a3a92141989e9d1ed174447e43ada627c13ed8b3cef39d800a07d587fdc2fe",
+            "source": "copy_ticks_range_bid_aggregation"
+          },
+          "m15": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 63,
+            "largest_interval_gap_minutes": 2955.0,
+            "last_bar_open_utc": "2026-09-24T23:45:00Z",
+            "rows": 27026,
+            "sha256": "7cb004ec43ee6dd94698713b031f3ccaa42788fa481d31a3906963d939c8d828"
+          },
+          "m5": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 84,
+            "largest_interval_gap_minutes": 2945.0,
+            "last_bar_open_utc": "2026-09-24T23:55:00Z",
+            "rows": 81036,
+            "sha256": "c8dc043c301531b11452a95273bd2fceec8f7ca933d99c5d7338d3f4ab2bb2e9"
+          },
+          "overlap": {
+            "accepted": false,
+            "ask_m1": {
+              "left_rows": 97914,
+              "max_abs_delta": 0.0,
+              "max_delta_points": 0.0,
+              "right_rows": 97914,
+              "same_index": true,
+              "within_half_point": true
+            },
+            "bid_m1": {
+              "left_rows": 97914,
+              "max_abs_delta": 1.0000000000065512e-05,
+              "max_delta_points": 1.0000000000065512,
+              "right_rows": 97914,
+              "same_index": true,
+              "within_half_point": false
+            },
+            "native": {
+              "M15": {
+                "accepted_rows": 6528,
+                "candidate_rows": 6528,
+                "identical_frame": true,
+                "same_index": true
+              },
+              "M5": {
+                "accepted_rows": 19584,
+                "candidate_rows": 19584,
+                "identical_frame": true,
+                "same_index": true
+              }
+            }
+          },
+          "point": 1e-05
+        },
+        "GBPJPY": {
+          "ask_m1": {
+            "extra_vs_bid_m1_rows": 0,
+            "first_bar_open_utc": "2025-08-25T00:03:00Z",
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "missing_vs_bid_m1_rows": 0,
+            "rows": 405401,
+            "sha256": "cfeb814ca757f1d1f47bc459fba5785764cd0024508f9c917067c4a8ca945be7",
+            "spread_points_max": 599.9999999999943,
+            "spread_points_min": 0.0,
+            "valid_ticks": 78469047,
+            "zero_spread_ticks": 505664
+          },
+          "m1": {
+            "first_bar_open_utc": "2025-08-25T00:03:00Z",
+            "interval_gap_count": 180,
+            "largest_interval_gap_minutes": 2943.0,
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "rows": 405401,
+            "sha256": "1832e5e83b889f40e01f6e2c95217307f9859fd397e767ee2ab6b85f0c69451c",
+            "source": "copy_ticks_range_bid_aggregation"
+          },
+          "m15": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 61,
+            "largest_interval_gap_minutes": 2955.0,
+            "last_bar_open_utc": "2026-09-24T23:45:00Z",
+            "rows": 27027,
+            "sha256": "d4dccf509e6eca2efa1d6662353da1b2e1a23cca5845060e7343bba658c91aba"
+          },
+          "m5": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 63,
+            "largest_interval_gap_minutes": 2945.0,
+            "last_bar_open_utc": "2026-09-24T23:55:00Z",
+            "rows": 81066,
+            "sha256": "80057a3f8b250e105e3f0f9603080428bffa0ed84764a125a2c3c79086df151d"
+          },
+          "overlap": {
+            "accepted": true,
+            "ask_m1": {
+              "left_rows": 97911,
+              "max_abs_delta": 0.0,
+              "max_delta_points": 0.0,
+              "right_rows": 97911,
+              "same_index": true,
+              "within_half_point": true
+            },
+            "bid_m1": {
+              "left_rows": 97911,
+              "max_abs_delta": 0.0,
+              "max_delta_points": 0.0,
+              "right_rows": 97911,
+              "same_index": true,
+              "within_half_point": true
+            },
+            "native": {
+              "M15": {
+                "accepted_rows": 6528,
+                "candidate_rows": 6528,
+                "identical_frame": true,
+                "same_index": true
+              },
+              "M5": {
+                "accepted_rows": 19584,
+                "candidate_rows": 19584,
+                "identical_frame": true,
+                "same_index": true
+              }
+            }
+          },
+          "point": 0.001
+        },
+        "GBPUSD": {
+          "ask_m1": {
+            "extra_vs_bid_m1_rows": 0,
+            "first_bar_open_utc": "2025-08-25T00:02:00Z",
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "missing_vs_bid_m1_rows": 0,
+            "rows": 405376,
+            "sha256": "6ba85501302117bfbe4a4606f7258cec5dbdb90de9a876f9725f3ec53d1e8050",
+            "spread_points_max": 666.000000000011,
+            "spread_points_min": 0.0,
+            "valid_ticks": 51554737,
+            "zero_spread_ticks": 20400305
+          },
+          "m1": {
+            "first_bar_open_utc": "2025-08-25T00:02:00Z",
+            "interval_gap_count": 224,
+            "largest_interval_gap_minutes": 2943.0,
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "rows": 405376,
+            "sha256": "aec9dd7cda781de1b27945758a0c488a1f4180f2d4529457ac5fae1dbfe16eaa",
+            "source": "copy_ticks_range_bid_aggregation"
+          },
+          "m15": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 63,
+            "largest_interval_gap_minutes": 2955.0,
+            "last_bar_open_utc": "2026-09-24T23:45:00Z",
+            "rows": 27022,
+            "sha256": "56f074146c627171acec86ad7ccb8b4b3722e19a87d16a1f49af8c2d09d15b35"
+          },
+          "m5": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 68,
+            "largest_interval_gap_minutes": 2945.0,
+            "last_bar_open_utc": "2026-09-24T23:55:00Z",
+            "rows": 81048,
+            "sha256": "5ba1aecfda6c2262a26beca9d1994d7d0c6b0fd342672a4a36622a72b5813777"
+          },
+          "overlap": {
+            "accepted": false,
+            "ask_m1": {
+              "left_rows": 97911,
+              "max_abs_delta": 0.0,
+              "max_delta_points": 0.0,
+              "right_rows": 97911,
+              "same_index": true,
+              "within_half_point": true
+            },
+            "bid_m1": {
+              "left_rows": 97911,
+              "max_abs_delta": 5.0000000000105516e-05,
+              "max_delta_points": 5.000000000010552,
+              "right_rows": 97911,
+              "same_index": true,
+              "within_half_point": false
+            },
+            "native": {
+              "M15": {
+                "accepted_rows": 6528,
+                "candidate_rows": 6528,
+                "identical_frame": true,
+                "same_index": true
+              },
+              "M5": {
+                "accepted_rows": 19584,
+                "candidate_rows": 19584,
+                "identical_frame": true,
+                "same_index": true
+              }
+            }
+          },
+          "point": 1e-05
+        },
+        "USDJPY": {
+          "ask_m1": {
+            "extra_vs_bid_m1_rows": 0,
+            "first_bar_open_utc": "2025-08-25T00:03:00Z",
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "missing_vs_bid_m1_rows": 0,
+            "rows": 405478,
+            "sha256": "7c2b86cf066683c825b76cc48a7562f79c10d555082f8b296af34c099f0bf855",
+            "spread_points_max": 371.9999999999857,
+            "spread_points_min": 0.0,
+            "valid_ticks": 44156803,
+            "zero_spread_ticks": 5422799
+          },
+          "m1": {
+            "first_bar_open_utc": "2025-08-25T00:03:00Z",
+            "interval_gap_count": 222,
+            "largest_interval_gap_minutes": 2943.0,
+            "last_bar_open_utc": "2026-09-24T23:59:00Z",
+            "rows": 405478,
+            "sha256": "6cb77680b5a4ab771921fd20e264efb58b799668ff2bd5b6dc93fd0cb798e3a8",
+            "source": "copy_ticks_range_bid_aggregation"
+          },
+          "m15": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 61,
+            "largest_interval_gap_minutes": 2955.0,
+            "last_bar_open_utc": "2026-09-24T23:45:00Z",
+            "rows": 27027,
+            "sha256": "5f725677e0fc96af350d731b0333131bfc4545e5ac08c43d7b76b873da97eace"
+          },
+          "m5": {
+            "first_bar_open_utc": "2025-08-25T00:00:00Z",
+            "interval_gap_count": 65,
+            "largest_interval_gap_minutes": 2945.0,
+            "last_bar_open_utc": "2026-09-24T23:55:00Z",
+            "rows": 81067,
+            "sha256": "cecf14142951ff001f37a294e3de1c319a1ec3609043c2e8a0671d087445ff2a"
+          },
+          "overlap": {
+            "accepted": false,
+            "ask_m1": {
+              "left_rows": 97910,
+              "max_abs_delta": 0.0,
+              "max_delta_points": 0.0,
+              "right_rows": 97910,
+              "same_index": true,
+              "within_half_point": true
+            },
+            "bid_m1": {
+              "left_rows": 97910,
+              "max_abs_delta": 0.0020000000000095497,
+              "max_delta_points": 2.0000000000095497,
+              "right_rows": 97910,
+              "same_index": true,
+              "within_half_point": false
+            },
+            "native": {
+              "M15": {
+                "accepted_rows": 6528,
+                "candidate_rows": 6528,
+                "identical_frame": true,
+                "same_index": true
+              },
+              "M5": {
+                "accepted_rows": 19584,
+                "candidate_rows": 19584,
+                "identical_frame": true,
+                "same_index": true
+              }
+            }
+          },
+          "point": 0.001
+        }
+      },
+      "price_overlap_tolerance_points": 0.5,
+      "requested_range": {
+        "from_utc": "2025-08-25T00:00:00Z",
+        "to_utc": "2026-09-25T00:00:00Z"
+      },
+      "source": "MetaTrader5",
+      "strict_common_end_exclusive_utc": "2026-09-25T00:00:00Z",
+      "strict_common_start_utc": "2025-08-25T00:03:00Z",
+      "terminal_version": [
+        500,
+        6215,
+        "25 Sep 2026"
+      ]
+    },
+    "wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+    "discovery": {
+      "selection": "established-dedicated-wine-runtime",
+      "host_path": "/home/joel/Dev/mamba2-trading-bot/.venv-wine/Scripts/python.exe",
+      "wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe"
+    },
+    "safety": {
+      "market_data_read_only": true,
+      "real_order_api_called": false,
+      "economic_replay_run": false,
+      "m021_post_cutoff_data_used": false
+    },
+    "export": {
+      "command": [
+        "/usr/bin/timeout",
+        "--signal=KILL",
+        "15m",
+        "/usr/bin/wine",
+        "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+        "-m",
+        "mamba2.backtest.mt5_dataset",
+        "--symbols",
+        "EURUSD",
+        "EURJPY",
+        "GBPUSD",
+        "GBPJPY",
+        "USDJPY",
+        "--timeframes",
+        "M1",
+        "M5",
+        "M15",
+        "--from-utc",
+        "2025-08-25T00:00:00Z",
+        "--to-utc",
+        "2026-09-25T00:00:00Z",
+        "--output-dir",
+        "backtest_data/m022-history-inventory-tick-m1-v2",
+        "--include-tick-ask",
+        "--derive-m1-from-ticks",
+        "--tick-chunk-minutes",
+        "1440",
+        "--rate-chunk-days",
+        "7"
+      ],
+      "exit_code": 0,
+      "stdout": "backtest_data\\m022-history-inventory-tick-m1-v2\\manifest.json\n",
+      "stderr": "C:\\Python310\\lib\\runpy.py:126: RuntimeWarning: 'mamba2.backtest.mt5_dataset' found in sys.modules after import of package 'mamba2.backtest', but prior to execution of 'mamba2.backtest.mt5_dataset'; this may result in unpredictable behaviour\n  warn(RuntimeWarning(msg))\n"
+    },
+    "inspect": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-c",
+        "\nimport hashlib\nimport json\nfrom pathlib import Path\n\nimport numpy as np\nimport pandas as pd\n\nfrom mamba2.backtest.mt5_dataset import load_mt5_dataset\n\ncandidate_path = Path(\n    \"backtest_data/m022-history-inventory-tick-m1-v2/manifest.json\"\n)\naccepted_path = Path(\n    \"backtest_data/broader-history-20260623-20260925/manifest.json\"\n)\ncandidate = load_mt5_dataset(candidate_path)\naccepted = load_mt5_dataset(accepted_path)\nsymbols = [\"EURUSD\", \"EURJPY\", \"GBPUSD\", \"GBPJPY\", \"USDJPY\"]\nprice_columns = [\"open\", \"high\", \"low\", \"close\"]\noverlap_start = pd.Timestamp(\"2026-06-23T00:00:00Z\")\noverlap_end = pd.Timestamp(\"2026-09-25T00:00:00Z\")\n\ndef iso(value):\n    ts = pd.Timestamp(value)\n    if ts.tzinfo is None:\n        ts = ts.tz_localize(\"UTC\")\n    else:\n        ts = ts.tz_convert(\"UTC\")\n    return ts.isoformat().replace(\"+00:00\", \"Z\")\n\ndef gap_summary(frame, minutes):\n    diffs = frame.index.to_series().diff().dropna()\n    expected = pd.Timedelta(minutes=minutes)\n    gaps = diffs[diffs > expected]\n    largest = gaps.max() if not gaps.empty else None\n    return {\n        \"interval_gap_count\": int(len(gaps)),\n        \"largest_interval_gap_minutes\": (\n            float(largest / pd.Timedelta(minutes=1))\n            if largest is not None else None\n        ),\n    }\n\ndef compare_prices(left, right, point):\n    same_index = left.index.equals(right.index)\n    if not same_index:\n        return {\n            \"same_index\": False,\n            \"left_rows\": int(len(left)),\n            \"right_rows\": int(len(right)),\n            \"max_abs_delta\": None,\n            \"max_delta_points\": None,\n            \"within_half_point\": False,\n        }\n    left_values = left[price_columns].to_numpy(dtype=float)\n    right_values = right[price_columns].to_numpy(dtype=float)\n    delta = np.abs(left_values - right_values)\n    max_abs = float(delta.max()) if delta.size else 0.0\n    max_points = max_abs / point if point > 0 else None\n    return {\n        \"same_index\": True,\n        \"left_rows\": int(len(left)),\n        \"right_rows\": int(len(right)),\n        \"max_abs_delta\": max_abs,\n        \"max_delta_points\": max_points,\n        \"within_half_point\": bool(max_points is not None and max_points <= 0.5),\n    }\n\nper_symbol = {}\noverlap_ok = True\nfor symbol in symbols:\n    metadata = candidate.symbol_metadata[symbol]\n    point = float(metadata.point_size)\n    m1 = candidate.m1_bars[symbol]\n    ask = candidate.ask_m1_bars[symbol]\n    native = candidate.native_timeframe_bars[symbol]\n    missing_ask = m1.index.difference(ask.index)\n    ask_extra = ask.index.difference(m1.index)\n\n    candidate_m1_overlap = m1.loc[\n        (m1.index >= overlap_start) & (m1.index < overlap_end)\n    ]\n    accepted_m1_overlap = accepted.m1_bars[symbol].loc[\n        (accepted.m1_bars[symbol].index >= overlap_start)\n        & (accepted.m1_bars[symbol].index < overlap_end)\n    ]\n    candidate_ask_overlap = ask.loc[\n        (ask.index >= overlap_start) & (ask.index < overlap_end)\n    ]\n    accepted_ask_overlap = accepted.ask_m1_bars[symbol].loc[\n        (accepted.ask_m1_bars[symbol].index >= overlap_start)\n        & (accepted.ask_m1_bars[symbol].index < overlap_end)\n    ]\n\n    bid_overlap = compare_prices(\n        candidate_m1_overlap,\n        accepted_m1_overlap,\n        point,\n    )\n    ask_overlap = compare_prices(\n        candidate_ask_overlap,\n        accepted_ask_overlap,\n        point,\n    )\n\n    native_overlap = {}\n    for timeframe in (\"M5\", \"M15\"):\n        left = native[timeframe].loc[\n            (native[timeframe].index >= overlap_start)\n            & (native[timeframe].index < overlap_end)\n        ]\n        right_source = accepted.native_timeframe_bars[symbol][timeframe]\n        right = right_source.loc[\n            (right_source.index >= overlap_start)\n            & (right_source.index < overlap_end)\n        ]\n        native_overlap[timeframe] = {\n            \"same_index\": bool(left.index.equals(right.index)),\n            \"identical_frame\": bool(left.equals(right)),\n            \"candidate_rows\": int(len(left)),\n            \"accepted_rows\": int(len(right)),\n        }\n\n    source_entry = candidate.manifest[\"symbols\"][symbol][\"files\"][\"M1\"]\n    symbol_ok = (\n        len(missing_ask) == 0\n        and len(ask_extra) == 0\n        and m1.index.equals(ask.index)\n        and source_entry.get(\"source\") == \"copy_ticks_range_bid_aggregation\"\n        and bid_overlap[\"within_half_point\"]\n        and ask_overlap[\"within_half_point\"]\n        and all(\n            native_overlap[tf][\"identical_frame\"]\n            for tf in (\"M5\", \"M15\")\n        )\n    )\n    overlap_ok = overlap_ok and symbol_ok\n\n    files = candidate.manifest[\"symbols\"][symbol][\"files\"]\n    ask_meta = candidate.manifest[\"symbols\"][symbol][\"ask_m1\"]\n    per_symbol[symbol] = {\n        \"point\": point,\n        \"m1\": {\n            \"rows\": int(len(m1)),\n            \"first_bar_open_utc\": iso(m1.index[0]),\n            \"last_bar_open_utc\": iso(m1.index[-1]),\n            \"sha256\": files[\"M1\"][\"sha256\"],\n            \"source\": source_entry.get(\"source\"),\n            **gap_summary(m1, 1),\n        },\n        \"ask_m1\": {\n            \"rows\": int(len(ask)),\n            \"first_bar_open_utc\": iso(ask.index[0]),\n            \"last_bar_open_utc\": iso(ask.index[-1]),\n            \"sha256\": ask_meta[\"sha256\"],\n            \"missing_vs_bid_m1_rows\": int(len(missing_ask)),\n            \"extra_vs_bid_m1_rows\": int(len(ask_extra)),\n            \"valid_ticks\": ask_meta.get(\"valid_ticks\"),\n            \"spread_points_min\": ask_meta.get(\"spread_points_min\"),\n            \"spread_points_max\": ask_meta.get(\"spread_points_max\"),\n            \"zero_spread_ticks\": ask_meta.get(\"zero_spread_ticks\"),\n        },\n        \"m5\": {\n            \"rows\": int(len(native[\"M5\"])),\n            \"first_bar_open_utc\": iso(native[\"M5\"].index[0]),\n            \"last_bar_open_utc\": iso(native[\"M5\"].index[-1]),\n            \"sha256\": files[\"M5\"][\"sha256\"],\n            **gap_summary(native[\"M5\"], 5),\n        },\n        \"m15\": {\n            \"rows\": int(len(native[\"M15\"])),\n            \"first_bar_open_utc\": iso(native[\"M15\"].index[0]),\n            \"last_bar_open_utc\": iso(native[\"M15\"].index[-1]),\n            \"sha256\": files[\"M15\"][\"sha256\"],\n            **gap_summary(native[\"M15\"], 15),\n        },\n        \"overlap\": {\n            \"bid_m1\": bid_overlap,\n            \"ask_m1\": ask_overlap,\n            \"native\": native_overlap,\n            \"accepted\": bool(symbol_ok),\n        },\n    }\n\nmanifest_sha = hashlib.sha256(candidate_path.read_bytes()).hexdigest()\naccepted_manifest_sha = hashlib.sha256(accepted_path.read_bytes()).hexdigest()\nstarts = []\nfor symbol in symbols:\n    starts.extend([\n        candidate.m1_bars[symbol].index[0],\n        candidate.ask_m1_bars[symbol].index[0],\n        candidate.native_timeframe_bars[symbol][\"M5\"].index[0],\n        candidate.native_timeframe_bars[symbol][\"M15\"].index[0],\n    ])\nstrict_common_start = max(starts)\n\nprint(json.dumps({\n    \"manifest_path\": str(candidate_path),\n    \"manifest_sha256\": manifest_sha,\n    \"accepted_m019_manifest_path\": str(accepted_path),\n    \"accepted_m019_manifest_sha256\": accepted_manifest_sha,\n    \"source\": candidate.manifest.get(\"source\"),\n    \"broker_server\": candidate.manifest.get(\"broker_server\"),\n    \"account_currency\": candidate.manifest.get(\"account_currency\"),\n    \"terminal_version\": candidate.manifest.get(\"terminal_version\"),\n    \"requested_range\": candidate.manifest.get(\"requested_range\"),\n    \"strict_common_start_utc\": iso(strict_common_start),\n    \"strict_common_end_exclusive_utc\": \"2026-09-25T00:00:00Z\",\n    \"accepted_overlap_start_utc\": \"2026-06-23T00:00:00Z\",\n    \"accepted_overlap_end_exclusive_utc\": \"2026-09-25T00:00:00Z\",\n    \"price_overlap_tolerance_points\": 0.5,\n    \"overlap_ok\": bool(overlap_ok),\n    \"per_symbol\": per_symbol,\n}, sort_keys=True))\n"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"accepted_m019_manifest_path\": \"backtest_data/broader-history-20260623-20260925/manifest.json\", \"accepted_m019_manifest_sha256\": \"595efa4d65e35ae06c464edcc1a8dd4e410f6f7b73dfaf16081e0887346f440f\", \"accepted_overlap_end_exclusive_utc\": \"2026-09-25T00:00:00Z\", \"accepted_overlap_start_utc\": \"2026-06-23T00:00:00Z\", \"account_currency\": \"USD\", \"broker_server\": \"MetaQuotes-Demo\", \"manifest_path\": \"backtest_data/m022-history-inventory-tick-m1-v2/manifest.json\", \"manifest_sha256\": \"cfaf3d130eb8fc2abf2e467e43cc5bba735df711ebb8bc9766e865713ba4065b\", \"overlap_ok\": false, \"per_symbol\": {\"EURJPY\": {\"ask_m1\": {\"extra_vs_bid_m1_rows\": 0, \"first_bar_open_utc\": \"2025-08-25T00:03:00Z\", \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"missing_vs_bid_m1_rows\": 0, \"rows\": 405615, \"sha256\": \"adb241d01db6809ef36712243875f09a0af88387263aa31e18329b4e7a0ae3f5\", \"spread_points_max\": 593.9999999999941, \"spread_points_min\": 0.0, \"valid_ticks\": 47481927, \"zero_spread_ticks\": 2764716}, \"m1\": {\"first_bar_open_utc\": \"2025-08-25T00:03:00Z\", \"interval_gap_count\": 129, \"largest_interval_gap_minutes\": 2942.0, \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"rows\": 405615, \"sha256\": \"1a66057af544f13341379083c003d06f2b858a315649a5003ba43ff84fb2b990\", \"source\": \"copy_ticks_range_bid_aggregation\"}, \"m15\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 61, \"largest_interval_gap_minutes\": 2955.0, \"last_bar_open_utc\": \"2026-09-24T23:45:00Z\", \"rows\": 27027, \"sha256\": \"58709b1eddb2a4160d6ab1d32f5b3f260650ff7eee2bac421750f2666ba774e1\"}, \"m5\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 64, \"largest_interval_gap_minutes\": 2945.0, \"last_bar_open_utc\": \"2026-09-24T23:55:00Z\", \"rows\": 81069, \"sha256\": \"bb49fba66073a1fdfa9d70715067d57c2710450b442e25f1aba1d99956a4d6ab\"}, \"overlap\": {\"accepted\": false, \"ask_m1\": {\"left_rows\": 97914, \"max_abs_delta\": 0.0, \"max_delta_points\": 0.0, \"right_rows\": 97914, \"same_index\": true, \"within_half_point\": true}, \"bid_m1\": {\"left_rows\": 97914, \"max_abs_delta\": 0.0010000000000047748, \"max_delta_points\": 1.0000000000047748, \"right_rows\": 97914, \"same_index\": true, \"within_half_point\": false}, \"native\": {\"M15\": {\"accepted_rows\": 6528, \"candidate_rows\": 6528, \"identical_frame\": true, \"same_index\": true}, \"M5\": {\"accepted_rows\": 19584, \"candidate_rows\": 19584, \"identical_frame\": true, \"same_index\": true}}}, \"point\": 0.001}, \"EURUSD\": {\"ask_m1\": {\"extra_vs_bid_m1_rows\": 0, \"first_bar_open_utc\": \"2025-08-25T00:03:00Z\", \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"missing_vs_bid_m1_rows\": 0, \"rows\": 405283, \"sha256\": \"7cca2326ead010df7dcc38fdbd787ec051804ce7145b4645325ea9f67ca0548c\", \"spread_points_max\": 394.0000000000054, \"spread_points_min\": 0.0, \"valid_ticks\": 41003938, \"zero_spread_ticks\": 14383624}, \"m1\": {\"first_bar_open_utc\": \"2025-08-25T00:03:00Z\", \"interval_gap_count\": 201, \"largest_interval_gap_minutes\": 2943.0, \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"rows\": 405283, \"sha256\": \"19a3a92141989e9d1ed174447e43ada627c13ed8b3cef39d800a07d587fdc2fe\", \"source\": \"copy_ticks_range_bid_aggregation\"}, \"m15\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 63, \"largest_interval_gap_minutes\": 2955.0, \"last_bar_open_utc\": \"2026-09-24T23:45:00Z\", \"rows\": 27026, \"sha256\": \"7cb004ec43ee6dd94698713b031f3ccaa42788fa481d31a3906963d939c8d828\"}, \"m5\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 84, \"largest_interval_gap_minutes\": 2945.0, \"last_bar_open_utc\": \"2026-09-24T23:55:00Z\", \"rows\": 81036, \"sha256\": \"c8dc043c301531b11452a95273bd2fceec8f7ca933d99c5d7338d3f4ab2bb2e9\"}, \"overlap\": {\"accepted\": false, \"ask_m1\": {\"left_rows\": 97914, \"max_abs_delta\": 0.0, \"max_delta_points\": 0.0, \"right_rows\": 97914, \"same_index\": true, \"within_half_point\": true}, \"bid_m1\": {\"left_rows\": 97914, \"max_abs_delta\": 1.0000000000065512e-05, \"max_delta_points\": 1.0000000000065512, \"right_rows\": 97914, \"same_index\": true, \"within_half_point\": false}, \"native\": {\"M15\": {\"accepted_rows\": 6528, \"candidate_rows\": 6528, \"identical_frame\": true, \"same_index\": true}, \"M5\": {\"accepted_rows\": 19584, \"candidate_rows\": 19584, \"identical_frame\": true, \"same_index\": true}}}, \"point\": 1e-05}, \"GBPJPY\": {\"ask_m1\": {\"extra_vs_bid_m1_rows\": 0, \"first_bar_open_utc\": \"2025-08-25T00:03:00Z\", \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"missing_vs_bid_m1_rows\": 0, \"rows\": 405401, \"sha256\": \"cfeb814ca757f1d1f47bc459fba5785764cd0024508f9c917067c4a8ca945be7\", \"spread_points_max\": 599.9999999999943, \"spread_points_min\": 0.0, \"valid_ticks\": 78469047, \"zero_spread_ticks\": 505664}, \"m1\": {\"first_bar_open_utc\": \"2025-08-25T00:03:00Z\", \"interval_gap_count\": 180, \"largest_interval_gap_minutes\": 2943.0, \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"rows\": 405401, \"sha256\": \"1832e5e83b889f40e01f6e2c95217307f9859fd397e767ee2ab6b85f0c69451c\", \"source\": \"copy_ticks_range_bid_aggregation\"}, \"m15\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 61, \"largest_interval_gap_minutes\": 2955.0, \"last_bar_open_utc\": \"2026-09-24T23:45:00Z\", \"rows\": 27027, \"sha256\": \"d4dccf509e6eca2efa1d6662353da1b2e1a23cca5845060e7343bba658c91aba\"}, \"m5\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 63, \"largest_interval_gap_minutes\": 2945.0, \"last_bar_open_utc\": \"2026-09-24T23:55:00Z\", \"rows\": 81066, \"sha256\": \"80057a3f8b250e105e3f0f9603080428bffa0ed84764a125a2c3c79086df151d\"}, \"overlap\": {\"accepted\": true, \"ask_m1\": {\"left_rows\": 97911, \"max_abs_delta\": 0.0, \"max_delta_points\": 0.0, \"right_rows\": 97911, \"same_index\": true, \"within_half_point\": true}, \"bid_m1\": {\"left_rows\": 97911, \"max_abs_delta\": 0.0, \"max_delta_points\": 0.0, \"right_rows\": 97911, \"same_index\": true, \"within_half_point\": true}, \"native\": {\"M15\": {\"accepted_rows\": 6528, \"candidate_rows\": 6528, \"identical_frame\": true, \"same_index\": true}, \"M5\": {\"accepted_rows\": 19584, \"candidate_rows\": 19584, \"identical_frame\": true, \"same_index\": true}}}, \"point\": 0.001}, \"GBPUSD\": {\"ask_m1\": {\"extra_vs_bid_m1_rows\": 0, \"first_bar_open_utc\": \"2025-08-25T00:02:00Z\", \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"missing_vs_bid_m1_rows\": 0, \"rows\": 405376, \"sha256\": \"6ba85501302117bfbe4a4606f7258cec5dbdb90de9a876f9725f3ec53d1e8050\", \"spread_points_max\": 666.000000000011, \"spread_points_min\": 0.0, \"valid_ticks\": 51554737, \"zero_spread_ticks\": 20400305}, \"m1\": {\"first_bar_open_utc\": \"2025-08-25T00:02:00Z\", \"interval_gap_count\": 224, \"largest_interval_gap_minutes\": 2943.0, \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"rows\": 405376, \"sha256\": \"aec9dd7cda781de1b27945758a0c488a1f4180f2d4529457ac5fae1dbfe16eaa\", \"source\": \"copy_ticks_range_bid_aggregation\"}, \"m15\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 63, \"largest_interval_gap_minutes\": 2955.0, \"last_bar_open_utc\": \"2026-09-24T23:45:00Z\", \"rows\": 27022, \"sha256\": \"56f074146c627171acec86ad7ccb8b4b3722e19a87d16a1f49af8c2d09d15b35\"}, \"m5\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 68, \"largest_interval_gap_minutes\": 2945.0, \"last_bar_open_utc\": \"2026-09-24T23:55:00Z\", \"rows\": 81048, \"sha256\": \"5ba1aecfda6c2262a26beca9d1994d7d0c6b0fd342672a4a36622a72b5813777\"}, \"overlap\": {\"accepted\": false, \"ask_m1\": {\"left_rows\": 97911, \"max_abs_delta\": 0.0, \"max_delta_points\": 0.0, \"right_rows\": 97911, \"same_index\": true, \"within_half_point\": true}, \"bid_m1\": {\"left_rows\": 97911, \"max_abs_delta\": 5.0000000000105516e-05, \"max_delta_points\": 5.000000000010552, \"right_rows\": 97911, \"same_index\": true, \"within_half_point\": false}, \"native\": {\"M15\": {\"accepted_rows\": 6528, \"candidate_rows\": 6528, \"identical_frame\": true, \"same_index\": true}, \"M5\": {\"accepted_rows\": 19584, \"candidate_rows\": 19584, \"identical_frame\": true, \"same_index\": true}}}, \"point\": 1e-05}, \"USDJPY\": {\"ask_m1\": {\"extra_vs_bid_m1_rows\": 0, \"first_bar_open_utc\": \"2025-08-25T00:03:00Z\", \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"missing_vs_bid_m1_rows\": 0, \"rows\": 405478, \"sha256\": \"7c2b86cf066683c825b76cc48a7562f79c10d555082f8b296af34c099f0bf855\", \"spread_points_max\": 371.9999999999857, \"spread_points_min\": 0.0, \"valid_ticks\": 44156803, \"zero_spread_ticks\": 5422799}, \"m1\": {\"first_bar_open_utc\": \"2025-08-25T00:03:00Z\", \"interval_gap_count\": 222, \"largest_interval_gap_minutes\": 2943.0, \"last_bar_open_utc\": \"2026-09-24T23:59:00Z\", \"rows\": 405478, \"sha256\": \"6cb77680b5a4ab771921fd20e264efb58b799668ff2bd5b6dc93fd0cb798e3a8\", \"source\": \"copy_ticks_range_bid_aggregation\"}, \"m15\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 61, \"largest_interval_gap_minutes\": 2955.0, \"last_bar_open_utc\": \"2026-09-24T23:45:00Z\", \"rows\": 27027, \"sha256\": \"5f725677e0fc96af350d731b0333131bfc4545e5ac08c43d7b76b873da97eace\"}, \"m5\": {\"first_bar_open_utc\": \"2025-08-25T00:00:00Z\", \"interval_gap_count\": 65, \"largest_interval_gap_minutes\": 2945.0, \"last_bar_open_utc\": \"2026-09-24T23:55:00Z\", \"rows\": 81067, \"sha256\": \"cecf14142951ff001f37a294e3de1c319a1ec3609043c2e8a0671d087445ff2a\"}, \"overlap\": {\"accepted\": false, \"ask_m1\": {\"left_rows\": 97910, \"max_abs_delta\": 0.0, \"max_delta_points\": 0.0, \"right_rows\": 97910, \"same_index\": true, \"within_half_point\": true}, \"bid_m1\": {\"left_rows\": 97910, \"max_abs_delta\": 0.0020000000000095497, \"max_delta_points\": 2.0000000000095497, \"right_rows\": 97910, \"same_index\": true, \"within_half_point\": false}, \"native\": {\"M15\": {\"accepted_rows\": 6528, \"candidate_rows\": 6528, \"identical_frame\": true, \"same_index\": true}, \"M5\": {\"accepted_rows\": 19584, \"candidate_rows\": 19584, \"identical_frame\": true, \"same_index\": true}}}, \"point\": 0.001}}, \"price_overlap_tolerance_points\": 0.5, \"requested_range\": {\"from_utc\": \"2025-08-25T00:00:00Z\", \"to_utc\": \"2026-09-25T00:00:00Z\"}, \"source\": \"MetaTrader5\", \"strict_common_end_exclusive_utc\": \"2026-09-25T00:00:00Z\", \"strict_common_start_utc\": \"2025-08-25T00:03:00Z\", \"terminal_version\": [500, 6215, \"25 Sep 2026\"]}\n",
+      "stderr": ""
+    }
   }
 }
