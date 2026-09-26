@@ -3309,6 +3309,74 @@ def m022_inventory_tests():
     }
 
 
+def m022_maxbars_recovery_probe():
+    """Read MaxBars config state without initializing or restarting MT5."""
+
+    feature_sha = _require_m022_branch()
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M022 Wine runtime")
+    wine = _wine()
+
+    probe_code = r'''
+import hashlib
+import json
+from pathlib import Path
+
+target = Path(r"C:\Program Files\MetaTrader 5\config\common.ini")
+backup = target.with_name("common.ini.m022-maxbars-100000.backup")
+if not target.is_file():
+    raise RuntimeError(f"common.ini is missing: {target}")
+
+raw = target.read_bytes()
+values = []
+for value in (100000, 500000):
+    markers = [
+        f"MaxBars={value}".encode("utf-8"),
+        f"MaxBars={value}".encode("utf-16le"),
+        f"MaxBars={value}".encode("utf-16be"),
+    ]
+    if any(marker in raw for marker in markers):
+        values.append(value)
+
+print(json.dumps({
+    "target": str(target),
+    "sha256": hashlib.sha256(raw).hexdigest(),
+    "maxbars_markers": values,
+    "backup_exists": backup.is_file(),
+    "backup_sha256": (
+        hashlib.sha256(backup.read_bytes()).hexdigest()
+        if backup.is_file()
+        else None
+    ),
+}, sort_keys=True), flush=True)
+'''
+
+    run = _run_process_group_bounded(
+        [wine, wine_python, "-c", probe_code],
+        env=_safe_env(wine=True),
+        timeout_seconds=30,
+    )
+    payload = None
+    if run["exit_code"] == 0 and run["stdout"].strip():
+        payload = json.loads(run["stdout"].strip().splitlines()[-1])
+    return {
+        "ok": run["exit_code"] == 0 and payload is not None,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "probe": payload,
+        "run": run,
+        "safety": {
+            "read_only": True,
+            "terminal_initialized": False,
+            "terminal_configuration_modified": False,
+            "real_order_api_called": False,
+            "economic_replay_run": False,
+        },
+    }
+
+
 def m022_raise_mt5_maxbars():
     """Raise only MT5 MaxBars, with Wine-local backup and rollback."""
 
@@ -4412,6 +4480,7 @@ ACTION_HANDLERS = {
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
     "m022_inventory_tests": m022_inventory_tests,
+    "m022_maxbars_recovery_probe": m022_maxbars_recovery_probe,
     "m022_raise_mt5_maxbars": m022_raise_mt5_maxbars,
     "m022_terminal_history_capacity_probe": m022_terminal_history_capacity_probe,
     "m022_history_checkpoint_probe": m022_history_checkpoint_probe,
