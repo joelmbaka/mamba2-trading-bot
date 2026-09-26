@@ -43,6 +43,11 @@ controlled_experiment_control_pair
 controlled_experiment_m020a_pair
 controlled_experiment_m020b_diagnostic
 controlled_experiment_m020c_pair
+controlled_experiment_m020d_pair
+m021_forward_readiness
+m021_historical_regression
+m021_primary_export
+m021_primary_pair
 ```
 
 `switch_branch` requires:
