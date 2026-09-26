@@ -529,6 +529,9 @@ def run_phase1_arm(
         )
         baseline_report["research"] = metadata
         baseline_report["cost_assumptions"]["m022_contract"] = COST_CONTRACT
+        baseline_report["cost_assumptions"]["historical_spread"] = (
+            "native Bid M1 + tick-derived Ask M1"
+        )
         baseline_report["configuration"]["m1_boundaries"] = {
             "oversold": float(arm.parameters.oversold_level),
             "overbought": float(arm.parameters.overbought_level),
