@@ -97,8 +97,53 @@ Never:
 
 The accepted M019/M020 regression artifacts must remain protected as specified in the M022 milestone.
 
+## Current checkpoint
+
+The history-inventory gate is active; **no parameter results have been inspected**.
+
+Verified starting gate:
+
+- branch `strategy-parameter-research`;
+- original M022 start SHA `253b6ee840e5489a2c5db27d064500bb44f93e1e`;
+- Dell worktree clean;
+- divergence `0/0`;
+- lock check passed.
+
+Feature-branch inventory infrastructure now includes an opt-in tick-derived M1 path that reconstructs synchronized Bid and Ask M1 from the same MT5 tick stream. The ordinary native-M1 exporter remains the default and production strategy defaults are unchanged.
+
+Why this was added:
+
+- prior M019 evidence showed native M1 retained only to roughly 2026-06-22;
+- native M5/M15 and real Bid/Ask tick samples existed earlier;
+- M022 must distinguish terminal native-M1 retention from actual trustworthy historical market-data availability.
+
+Pending Dell command:
+
+`mamba2-m022-history-inventory-20260926-1217`
+
+Do not overwrite or redispatch that command while it is still the active unpublished result. Its initial discovery method used a very old tick origin and is not the preferred method for the next probe.
+
+The replacement local-control action `m022_history_depth_probe` is bounded to native retained-history discovery plus a tick check from the common native M5/M15 start.
+
+## Exact next authorized sequence
+
+1. Review the published result for `mamba2-m022-history-inventory-20260926-1217` when present.
+2. Synchronize the Dell feature checkout to the latest `strategy-parameter-research` SHA.
+3. Re-run repository gates and feature tests, including the tick-derived-M1 exporter tests.
+4. Run `m022_history_depth_probe`.
+5. If it confirms materially older synchronized Bid/Ask tick coverage, run one fixed extended inventory export using:
+   - tick-derived synchronized Bid/Ask M1;
+   - native M5/M15;
+   - end-exclusive cutoff `2026-09-25T00:00:00Z`.
+6. Validate overlap with accepted M019 history before trusting older tick-derived M1.
+7. Record exact ranges/counts/gaps/hashes/source/runtime.
+8. Freeze development / validation / historical-holdout dates.
+9. Only then implement/run Phase-1 parameter arms.
+
+If the resulting trustworthy history is still too short for meaningful chronological separation, stop broad parameter optimization and document that limitation.
+
 ## Start here
 
-Read the durable handoff docs and the M022 milestone first. Then verify branch/HEAD/worktree assumptions and begin with the history-inventory + experiment-machinery phase.
+Read the durable handoff docs and M022 milestone, then resume from the exact sequence above.
 
-Do not interpret parameter winners until the data partitions and reporting/selection rules are documented.
+Do not interpret parameter winners until the historical inventory, partitions, reporting rules, and selection rules are frozen.
