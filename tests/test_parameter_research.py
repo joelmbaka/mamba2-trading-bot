@@ -258,6 +258,77 @@ def test_slice_dataset_excludes_all_post_development_rows():
     )
 
 
+def test_slice_dataset_uses_strict_common_m1_clock_across_symbols():
+    index = pd.date_range(
+        "2026-04-20T23:55:00Z",
+        "2026-04-20T23:59:00Z",
+        freq="min",
+    )
+    eur_index = index
+    jpy_index = index.delete(2)
+    m5_index = pd.DatetimeIndex(
+        [pd.Timestamp("2026-04-20T23:55:00Z")]
+    )
+    m15_index = pd.DatetimeIndex(
+        [pd.Timestamp("2026-04-20T23:45:00Z")]
+    )
+
+    dataset = LoadedHistoricalDataset(
+        m1_bars={
+            "EURUSD": _bars(eur_index, 1.10),
+            "USDJPY": _bars(jpy_index, 145.0),
+        },
+        native_timeframe_bars={
+            "EURUSD": {
+                "M5": _bars(m5_index, 1.10),
+                "M15": _bars(m15_index, 1.10),
+            },
+            "USDJPY": {
+                "M5": _bars(m5_index, 145.0),
+                "M15": _bars(m15_index, 145.0),
+            },
+        },
+        ask_m1_bars={
+            "EURUSD": _ask_bars(eur_index, 1.1001),
+            "USDJPY": _ask_bars(jpy_index, 145.001),
+        },
+        symbol_metadata={
+            "EURUSD": SymbolExecutionMetadata(
+                point_size=0.00001,
+                digits=5,
+                contract_size=100000.0,
+                quote_currency="USD",
+                base_currency="EUR",
+            ),
+            "USDJPY": SymbolExecutionMetadata(
+                point_size=0.001,
+                digits=3,
+                contract_size=100000.0,
+                quote_currency="JPY",
+                base_currency="USD",
+            ),
+        },
+        account_currency="USD",
+        manifest={
+            "requested_range": {
+                "from_utc": "2025-08-25T00:00:00Z",
+                "to_utc": "2026-09-25T00:00:00Z",
+            }
+        },
+    )
+
+    sliced = slice_dataset(dataset, partition="development")
+    expected = eur_index.intersection(jpy_index)
+
+    assert sliced.m1_bars["EURUSD"].index.equals(expected)
+    assert sliced.m1_bars["USDJPY"].index.equals(expected)
+    assert sliced.ask_m1_bars["EURUSD"].index.equals(expected)
+    assert sliced.ask_m1_bars["USDJPY"].index.equals(expected)
+    assert sliced.manifest["m022_strict_common_m1"] is True
+    assert sliced.manifest["m022_common_m1_rows"] == len(expected)
+    assert sliced.manifest["m022_common_m1_index_sha256"]
+
+
 def test_phase1_runner_refuses_validation_before_reading_manifest():
     with pytest.raises(ValueError, match="development-only"):
         run_phase1_arm(
