@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-latest-grid-tests-20260926-1858",
-  "action": "m022_phase1_tests",
+  "id": "mamba2-m022-phase1-reference-v3-20260926-1859",
+  "action": "m022_phase1_reference_pair",
   "args": {},
   "requested_by": "chatgpt"
 }
