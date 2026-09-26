@@ -121,6 +121,28 @@ M021 prospective data is not an M022 tuning partition and remains isolated.
 
 If trustworthy history is too short to support meaningful chronological separation, stop and document the limitation before broad optimization.
 
+### Predeclared partition rule — frozen before history-depth result
+
+The partitioning rule is fixed before inspecting the M022 history-depth result:
+
+1. Start from the **longest common trustworthy range** that passes the frozen M019 overlap gate, capped end-exclusive at `2026-09-25T00:00:00Z`.
+2. Build the ordered set of UTC trading dates represented in the accepted common M1/M5 data for all five symbols. Partition boundaries must fall at UTC day boundaries; do not choose boundaries after looking at parameter performance.
+3. Assign whole trading dates chronologically:
+   - **development:** first 60%;
+   - **validation:** next 20%;
+   - **historical holdout:** final 20%.
+   Use floor rounding for the first two allocations and give any remainder to the holdout.
+4. Require **at least 20 common trading dates in each partition**. If any partition would have fewer than 20, M022 broad optimization stops and the history limitation is documented instead of weakening the split after seeing results.
+5. The historical holdout remains unopened for candidate selection until the Phase-1 shortlist, Phase-2 matrix, and finalist acceptance criteria are frozen.
+6. Indicator warm-up may read immediately preceding historical bars needed to establish state at a partition boundary, but:
+   - no order may be submitted before the scored partition start;
+   - no position may be carried into the scored partition from warm-up;
+   - warm-up trades/P&L do not exist and are not scored;
+   - validation/holdout warm-up may use only prior **market-data state**, never prior partition outcome-based tuning.
+7. M021 prospective observations remain outside all three M022 partitions.
+
+This rule may be changed only for a demonstrated mechanical impossibility discovered before parameter results are inspected; any such change must be documented before the replacement split is executed.
+
 ## Parameter families — Phase 1 screening
 
 The initial research grid is deliberately bounded.
