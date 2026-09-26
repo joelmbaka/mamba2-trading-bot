@@ -48,6 +48,8 @@ m021_forward_readiness
 m021_historical_regression
 m021_primary_export
 m021_primary_pair
+m022_history_inventory_cleanup
+m022_history_inventory
 ```
 
 `switch_branch` requires:
