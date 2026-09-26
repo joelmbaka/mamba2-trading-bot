@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m020c-decision-spread-pair-20260926-0702",
-  "action": "controlled_experiment_m020c_pair",
+  "id": "mamba2-m020d-native-20260926-0715",
+  "action": "test_full_native",
   "args": {},
   "requested_by": "chatgpt"
 }
