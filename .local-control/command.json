@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m020c-wine-20260926-0700",
-  "action": "test_full_wine",
+  "id": "mamba2-m020c-decision-spread-pair-20260926-0702",
+  "action": "controlled_experiment_m020c_pair",
   "args": {},
   "requested_by": "chatgpt"
 }
