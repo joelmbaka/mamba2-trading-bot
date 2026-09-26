@@ -1,90 +1,44 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-common-clock-sync-20260926-1714",
-  "completed_at": "2026-09-26T14:16:19.718108+00:00",
+  "command_id": "mamba2-m022-common-clock-tests-20260926-1717",
+  "completed_at": "2026-09-26T14:18:25.074365+00:00",
   "ok": true,
-  "action": "sync",
+  "action": "m022_phase1_tests",
   "data": {
-    "branch": "strategy-parameter-research",
-    "before_sha": "b81324d76812337d3dc647e14c1b9ae7213c95a2",
-    "after_sha": "b81324d76812337d3dc647e14c1b9ae7213c95a2",
-    "reason": null,
-    "commands": [
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "b81324d76812337d3dc647e14c1b9ae7213c95a2\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "strategy-parameter-research\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin",
-          "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "--verify",
-          "refs/remotes/origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "b81324d76812337d3dc647e14c1b9ae7213c95a2\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-list",
-          "--left-right",
-          "--count",
-          "HEAD...refs/remotes/origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "0\t0\n",
-        "stderr": ""
-      }
-    ]
+    "ok": true,
+    "feature_branch": "strategy-parameter-research",
+    "feature_sha": "b81324d76812337d3dc647e14c1b9ae7213c95a2",
+    "tests": [
+      "tests/test_parameter_research.py",
+      "tests/test_triple_cross_condition_semantics.py",
+      "tests/test_backtest_baseline_reporting.py",
+      "tests/test_position_manager_trailing_semantics.py",
+      "tests/test_backtest_strategy_lifecycle.py"
+    ],
+    "run": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_parameter_research.py",
+        "tests/test_triple_cross_condition_semantics.py",
+        "tests/test_backtest_baseline_reporting.py",
+        "tests/test_position_manager_trailing_semantics.py",
+        "tests/test_backtest_strategy_lifecycle.py"
+      ],
+      "exit_code": 0,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 67 items\n\ntests/test_parameter_research.py .........                               [ 13%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 50%]\n.                                                                        [ 52%]\ntests/test_backtest_baseline_reporting.py ....                           [ 58%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 91%]\n.                                                                        [ 92%]\ntests/test_backtest_strategy_lifecycle.py .....                          [100%]\n\n============================== 67 passed in 0.80s ==============================\n",
+      "stderr": ""
+    },
+    "safety": {
+      "market_data_read_only": true,
+      "real_order_api_called": false,
+      "economic_replay_run": false,
+      "m021_post_cutoff_data_used": false,
+      "parameter_result_inspected": false
+    }
   }
 }
