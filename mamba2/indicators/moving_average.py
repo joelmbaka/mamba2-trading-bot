@@ -2,6 +2,73 @@ from mamba2.crew.logger import logger
 import pandas as pd
 from typing import Optional, Union
 
+def _replay_cached_moving_average(
+    rate_fetcher,
+    *,
+    symbol: str,
+    timeframe: Union[str, int],
+    visible_rates: pd.DataFrame,
+    ma_period: int,
+    ma_method: str,
+):
+    """Return an exact causal replay cache for supported moving averages."""
+
+    if ma_method not in {"ema", "sma"}:
+        return None, False
+
+    static_getter = getattr(
+        rate_fetcher,
+        "get_static_rates_for_indicator",
+        None,
+    )
+    if not callable(static_getter):
+        return None, False
+
+    source = static_getter(symbol, str(timeframe))
+    if source is None or len(source) < len(visible_rates):
+        return None, False
+
+    visible_length = len(visible_rates)
+    if not source.index[:visible_length].equals(visible_rates.index):
+        return None, False
+
+    cache = getattr(rate_fetcher, "_replay_indicator_cache", None)
+    if cache is None:
+        cache = {}
+        try:
+            setattr(rate_fetcher, "_replay_indicator_cache", cache)
+        except (AttributeError, TypeError):
+            return None, False
+
+    key = (
+        "moving_average",
+        symbol,
+        str(timeframe),
+        int(ma_period),
+        str(ma_method),
+    )
+    signature = (
+        id(source),
+        len(source),
+        source.index[0] if len(source) else None,
+        source.index[-1] if len(source) else None,
+    )
+    cached = cache.get(key)
+    if cached is None or cached["signature"] != signature:
+        closes = source["close"]
+        if ma_method == "ema":
+            series = closes.ewm(span=ma_period, adjust=False).mean()
+        else:
+            series = closes.rolling(ma_period).mean()
+        cached = {
+            "signature": signature,
+            "series": series,
+        }
+        cache[key] = cached
+
+    return cached["series"].iloc[visible_length - 1], True
+
+
 def get_moving_average(symbol: str = "EURUSD", timeframe: Union[str, int] = None, ma_period: int = 13, 
                        ma_method: str = "ema", rate_fetcher=None) -> Optional[float]:
     """
@@ -45,6 +112,17 @@ def get_moving_average(symbol: str = "EURUSD", timeframe: Union[str, int] = None
 
         # We'll use the 'close' price for calculation
         closes = rates['close']
+
+        cached_ma, used_cache = _replay_cached_moving_average(
+            rate_fetcher,
+            symbol=symbol,
+            timeframe=timeframe,
+            visible_rates=rates,
+            ma_period=ma_period,
+            ma_method=ma_method,
+        )
+        if used_cache:
+            return cached_ma
 
         # Calculate the moving average based on the method
         if ma_method == 'sma':
