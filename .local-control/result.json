@@ -1,137 +1,14 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-native-v3-repo-gate-20260926-1545",
-  "completed_at": "2026-09-26T12:44:54.897957+00:00",
-  "ok": true,
-  "action": "repo_checks",
+  "command_id": "mamba2-m022-native-inventory-v3-20260926-1546",
+  "completed_at": "2026-09-26T13:10:06.671583+00:00",
+  "ok": false,
+  "action": "m022_native_inventory",
   "data": {
-    "ok": true,
-    "clean": true,
-    "branch": "strategy-parameter-research",
-    "divergence": "0\t0",
-    "bot_cache_tracked": false,
-    "icon_tracked": true,
-    "icon_changed": false,
-    "commands": [
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "50adee960bc3ed1bc2c3fe1cecda509e2446cd08\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "strategy-parameter-research\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "diff",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "/home/joel/.local/bin/uv",
-          "lock",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": "Resolved 58 packages in 0.65ms\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "bot_cache.json"
-        ],
-        "exit_code": 1,
-        "stdout": "",
-        "stderr": "error: pathspec 'bot_cache.json' did not match any file(s) known to git\nDid you forget to 'git add'?\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "icon.png"
-        ],
-        "exit_code": 0,
-        "stdout": "icon.png\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--short",
-          "--",
-          "icon.png"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin",
-          "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "--verify",
-          "refs/remotes/origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "50adee960bc3ed1bc2c3fe1cecda509e2446cd08\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-list",
-          "--left-right",
-          "--count",
-          "HEAD...origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "0\t0\n",
-        "stderr": ""
-      }
-    ]
+    "ok": false,
+    "reason": "M022 native inventory directory already exists; refusing overwrite of versioned evidence",
+    "feature_branch": "strategy-parameter-research",
+    "feature_sha": "50adee960bc3ed1bc2c3fe1cecda509e2446cd08",
+    "path": "backtest_data/m022-history-inventory-native-m1-v3"
   }
 }
