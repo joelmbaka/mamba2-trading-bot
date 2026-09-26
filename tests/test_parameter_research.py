@@ -18,9 +18,15 @@ from mamba2.backtest.parameter_research import (
     ResearchStrategyWrapper,
     _strict_common_boundary_clock,
     _temporary_research_config,
+    atr_sl_arm,
+    atr_tp_arm,
+    boundary_arm,
+    ema_arm,
     reference_arm,
     run_phase1_arm,
+    session_arm,
     slice_dataset,
+    spread_arm,
 )
 
 
@@ -71,6 +77,54 @@ def test_reference_arm_is_frozen_current_configuration():
     assert arm.parameters.atr_tp_multiplier == 2.0
     assert arm.parameters.decision_spread_max_points is None
     assert arm.parameters.block_00_04_utc is False
+
+
+@pytest.mark.parametrize(
+    ("factory", "value", "family", "label"),
+    [
+        (boundary_arm, (15.0, 85.0), "boundaries", "15/85"),
+        (ema_arm, 9, "ema", "9"),
+        (spread_arm, 8.0, "spread", "8"),
+        (spread_arm, None, "spread", "none"),
+        (atr_sl_arm, 1.25, "atr-sl", "1.25"),
+        (atr_tp_arm, 2.5, "atr-tp", "2.5"),
+        (session_arm, "block-00-04-utc", "session", "block-00-04-utc"),
+    ],
+)
+def test_frozen_family_factories_build_only_reference_relative_arms(
+    factory,
+    value,
+    family,
+    label,
+):
+    arm = factory(*value) if isinstance(value, tuple) else factory(value)
+
+    assert arm.family == family
+    assert arm.value_label == label
+    assert arm.parameters.stochastic_k_period == 21
+    assert arm.parameters.stochastic_d_period == 7
+    assert arm.parameters.stochastic_slowing == 7
+    assert arm.parameters.oversold_level in {15.0, 20.0, 25.0}
+    assert arm.parameters.overbought_level in {75.0, 80.0, 85.0}
+    assert arm.parameters.ema_period in {5, 7, 9, 12}
+    assert arm.parameters.atr_sl_multiplier in {0.75, 1.0, 1.25, 1.5}
+    assert arm.parameters.atr_tp_multiplier in {1.0, 1.5, 2.0, 2.5, 3.0}
+
+
+@pytest.mark.parametrize(
+    ("call", "message"),
+    [
+        (lambda: boundary_arm(10, 90), "boundary pair"),
+        (lambda: ema_arm(8), "EMA period"),
+        (lambda: spread_arm(6), "spread threshold"),
+        (lambda: atr_sl_arm(2), "ATR SL"),
+        (lambda: atr_tp_arm(4), "ATR TP"),
+        (lambda: session_arm("london-only"), "session variant"),
+    ],
+)
+def test_frozen_family_factories_reject_out_of_grid_values(call, message):
+    with pytest.raises(ValueError, match=message):
+        call()
 
 
 def test_strategy_default_constructor_matches_reference_config(monkeypatch):
