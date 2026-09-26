@@ -3515,10 +3515,7 @@ def m022_tick_inventory():
             "depth": depth,
         }
 
-    candidate_start_utc = (
-        depth.get("probe", {})
-        .get("oldest_passing_checkpoint_utc")
-    )
+    candidate_start_utc = depth.get("oldest_passing_checkpoint_utc")
     if not candidate_start_utc:
         return {
             "ok": False,
@@ -3532,6 +3529,9 @@ def m022_tick_inventory():
     wine = _wine()
     export = _run(
         [
+            shutil.which("timeout") or "/usr/bin/timeout",
+            "--signal=KILL",
+            "15m",
             wine,
             wine_python,
             "-m",
