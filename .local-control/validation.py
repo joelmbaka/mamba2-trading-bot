@@ -3670,21 +3670,21 @@ try:
     for symbol in symbols:
         if not mt5.symbol_select(symbol, True):
             raise RuntimeError(f"could not select {symbol}")
-        rates = mt5.copy_rates_from_pos(
+        recent = mt5.copy_rates_from_pos(
             symbol,
             mt5.TIMEFRAME_M1,
             0,
-            int(getattr(terminal, "maxbars", 100000)) + 5000,
+            2000,
         )
-        rows = 0 if rates is None else int(len(rates))
-        first = None
-        last = None
-        if rows:
-            first = datetime.fromtimestamp(
-                int(rates[0]["time"]), timezone.utc
+        recent_rows = 0 if recent is None else int(len(recent))
+        recent_first = None
+        recent_last = None
+        if recent_rows:
+            recent_first = datetime.fromtimestamp(
+                int(recent[0]["time"]), timezone.utc
             ).isoformat().replace("+00:00", "Z")
-            last = datetime.fromtimestamp(
-                int(rates[-1]["time"]), timezone.utc
+            recent_last = datetime.fromtimestamp(
+                int(recent[-1]["time"]), timezone.utc
             ).isoformat().replace("+00:00", "Z")
         old_day = mt5.copy_rates_range(
             symbol,
@@ -3693,10 +3693,24 @@ try:
             datetime(2025, 8, 26, tzinfo=timezone.utc),
         )
         output["native_m1"][symbol] = {
-            "rows_returned": rows,
-            "first_bar_open_utc": first,
-            "last_bar_open_utc": last,
+            "recent_rows_returned": recent_rows,
+            "recent_first_bar_open_utc": recent_first,
+            "recent_last_bar_open_utc": recent_last,
             "aug_25_2025_rows": 0 if old_day is None else int(len(old_day)),
+            "aug_25_2025_first_bar_open_utc": (
+                None
+                if old_day is None or len(old_day) == 0
+                else datetime.fromtimestamp(
+                    int(old_day[0]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z")
+            ),
+            "aug_25_2025_last_bar_open_utc": (
+                None
+                if old_day is None or len(old_day) == 0
+                else datetime.fromtimestamp(
+                    int(old_day[-1]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z")
+            ),
             "last_error": list(mt5.last_error()),
         }
 
