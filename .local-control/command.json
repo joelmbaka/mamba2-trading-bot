@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m020d-reporting-fix-wine-20260926-0841",
-  "action": "test_full_wine",
+  "id": "mamba2-m020d-reporting-fix-control-20260926-0843",
+  "action": "controlled_experiment_control_pair",
   "args": {},
   "requested_by": "chatgpt"
 }
