@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m021-primary-export-refusal-20260926-1128",
-  "action": "m021_primary_export",
+  "id": "mamba2-m021-primary-pair-refusal-20260926-1129",
+  "action": "m021_primary_pair",
   "args": {},
   "requested_by": "chatgpt"
 }
