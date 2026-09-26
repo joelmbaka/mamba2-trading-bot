@@ -3310,33 +3310,42 @@ def m022_inventory_tests():
 
 
 def m022_raise_mt5_maxbars():
-    """Raise only MT5 MaxBars, with backup, verification, and rollback."""
+    """Raise only MT5 MaxBars, with Wine-local backup and rollback."""
 
     feature_sha = _require_m022_branch()
-    target = (
-        WINEPREFIX
-        / "drive_c"
-        / "Program Files"
-        / "MetaTrader 5"
-        / "config"
-        / "common.ini"
-    )
-    if not target.is_file():
-        return {
-            "ok": False,
-            "reason": "MT5 common.ini not found at fixed Wine path",
-            "feature_sha": feature_sha,
-            "path": str(target),
-        }
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M022 Wine runtime")
+    wine = _wine()
 
-    backup_dir = _ensure_baseline_path(
-        REPO / "backtest_data" / "m022-terminal-config-backup"
-    )
-    backup_dir.mkdir(parents=True, exist_ok=True)
-    backup = backup_dir / "common.ini.maxbars-100000.backup"
+    prepare_code = r'''
+import hashlib
+import json
+import os
+from pathlib import Path
+
+import MetaTrader5 as mt5
+
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed before MaxBars update")
+
+try:
+    terminal = mt5.terminal_info()
+    account = mt5.account_info()
+    if getattr(account, "server", None) != "MetaQuotes-Demo":
+        raise RuntimeError("MaxBars update requires MetaQuotes-Demo account")
+
+    target = Path(getattr(terminal, "path")) / "config" / "common.ini"
+    backup = target.with_name("common.ini.m022-maxbars-100000.backup")
+    if not target.is_file():
+        raise RuntimeError(f"verified MT5 common.ini is missing: {target}")
 
     raw = target.read_bytes()
-    replacements = [
+    patterns = [
         (b"MaxBars=100000", b"MaxBars=500000", "single-byte"),
         (
             "MaxBars=100000".encode("utf-16le"),
@@ -3349,30 +3358,62 @@ def m022_raise_mt5_maxbars():
             "utf-16be",
         ),
     ]
-    selected = None
-    for old, new, encoding in replacements:
-        if old in raw:
-            selected = (old, new, encoding)
-            break
-
-    already_500k = (
+    already = (
         b"MaxBars=500000" in raw
         or "MaxBars=500000".encode("utf-16le") in raw
         or "MaxBars=500000".encode("utf-16be") in raw
     )
-    if selected is None and not already_500k:
-        return {
-            "ok": False,
-            "reason": "fixed MaxBars=100000 marker not found; refusing edit",
-            "feature_sha": feature_sha,
-            "path": str(target),
-        }
+    selected = None
+    for old, new, encoding in patterns:
+        if old in raw:
+            selected = (old, new, encoding)
+            break
+    if selected is None and not already:
+        raise RuntimeError(
+            "fixed MaxBars=100000 marker not found; refusing edit"
+        )
 
     before_sha = hashlib.sha256(raw).hexdigest()
     if not backup.exists():
         backup.write_bytes(raw)
 
-    wine = _wine()
+    modified = False
+    encoding = "already-500000"
+    if selected is not None:
+        old, new, encoding = selected
+        updated = raw.replace(old, new, 1)
+        temp = target.with_name("common.ini.m022.tmp")
+        temp.write_bytes(updated)
+        os.replace(temp, target)
+        modified = True
+
+    print(json.dumps({
+        "target": str(target),
+        "backup": str(backup),
+        "before_sha256": before_sha,
+        "encoding_match": encoding,
+        "modified": modified,
+        "server": getattr(account, "server", None),
+        "old_maxbars_runtime": getattr(terminal, "maxbars", None),
+    }, sort_keys=True), flush=True)
+finally:
+    mt5.shutdown()
+'''
+
+    prepare = _run_process_group_bounded(
+        [wine, wine_python, "-c", prepare_code],
+        env=_safe_env(wine=True),
+        timeout_seconds=45,
+    )
+    if prepare["exit_code"] != 0 or not prepare["stdout"].strip():
+        return {
+            "ok": False,
+            "reason": "Wine-local MaxBars preparation failed before restart",
+            "feature_sha": feature_sha,
+            "prepare": prepare,
+        }
+    prepared = json.loads(prepare["stdout"].strip().splitlines()[-1])
+
     kill_runs = []
     for image in ("terminal64.exe", "terminal.exe"):
         kill_runs.append(
@@ -3383,23 +3424,6 @@ def m022_raise_mt5_maxbars():
             )
         )
     time.sleep(2)
-
-    modified = False
-    encoding = "already-500000"
-    if selected is not None:
-        old, new, encoding = selected
-        updated = raw.replace(old, new, 1)
-        if updated == raw:
-            raise RuntimeError("MaxBars replacement produced no change")
-        temp = target.with_name("common.ini.m022.tmp")
-        temp.write_bytes(updated)
-        os.replace(temp, target)
-        modified = True
-
-    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
-    wine_python = _wine_windows_path(dedicated)
-    if not wine_python:
-        raise RuntimeError("cannot map established M022 Wine runtime")
 
     verify_code = r'''
 import json
@@ -3430,7 +3454,7 @@ try:
         if not mt5.symbol_select(symbol, True):
             raise RuntimeError(f"could not select {symbol}")
         rows = None
-        for _attempt in range(6):
+        for _attempt in range(8):
             rows = mt5.copy_rates_range(
                 symbol,
                 mt5.TIMEFRAME_M1,
@@ -3466,7 +3490,7 @@ finally:
     verify = _run_process_group_bounded(
         [wine, wine_python, "-c", verify_code],
         env=_safe_env(wine=True),
-        timeout_seconds=120,
+        timeout_seconds=150,
     )
     payload = None
     if verify["exit_code"] == 0 and verify["stdout"].strip():
@@ -3480,37 +3504,41 @@ finally:
 
     rollback = None
     if not verified:
-        rollback_bytes = backup.read_bytes()
-        temp = target.with_name("common.ini.m022.rollback.tmp")
-        temp.write_bytes(rollback_bytes)
-        os.replace(temp, target)
-        rollback_runs = []
         for image in ("terminal64.exe", "terminal.exe"):
-            rollback_runs.append(
-                _run_process_group_bounded(
-                    [wine, "taskkill", "/F", "/IM", image],
-                    env=_safe_env(wine=True),
-                    timeout_seconds=15,
-                )
+            _run_process_group_bounded(
+                [wine, "taskkill", "/F", "/IM", image],
+                env=_safe_env(wine=True),
+                timeout_seconds=15,
             )
-        rollback = {
-            "restored_backup": True,
-            "kill_runs": rollback_runs,
-        }
+        rollback_code = r'''
+import json
+import os
+from pathlib import Path
 
-    after_raw = target.read_bytes()
-    after_sha = hashlib.sha256(after_raw).hexdigest()
+target = Path(r"C:\Program Files\MetaTrader 5\config\common.ini")
+backup = target.with_name("common.ini.m022-maxbars-100000.backup")
+if not backup.is_file():
+    raise RuntimeError("M022 MaxBars rollback backup is missing")
+temp = target.with_name("common.ini.m022.rollback.tmp")
+temp.write_bytes(backup.read_bytes())
+os.replace(temp, target)
+print(json.dumps({"restored": True, "target": str(target)}), flush=True)
+'''
+        rollback_run = _run_process_group_bounded(
+            [wine, wine_python, "-c", rollback_code],
+            env=_safe_env(wine=True),
+            timeout_seconds=30,
+        )
+        rollback = {
+            "restored_backup": rollback_run["exit_code"] == 0,
+            "run": rollback_run,
+        }
 
     return {
         "ok": verified,
         "feature_branch": "strategy-parameter-research",
         "feature_sha": feature_sha,
-        "config_path": str(target),
-        "backup_path": str(backup.relative_to(REPO)),
-        "encoding_match": encoding,
-        "modified": modified,
-        "before_sha256": before_sha,
-        "after_sha256": after_sha,
+        "prepared": prepared,
         "kill_runs": kill_runs,
         "verification": payload,
         "verify_run": verify,
