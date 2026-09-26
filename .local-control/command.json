@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "mamba2-m022-native-capacity-after-maxbars-20260926-1525",
+  "id": "mamba2-m022-native-capacity-lite-20260926-1530",
   "action": "m022_terminal_history_capacity_probe",
   "args": {},
   "requested_by": "chatgpt"
