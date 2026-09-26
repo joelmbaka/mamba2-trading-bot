@@ -84,7 +84,20 @@ def _replay_cached_components(
         return None
 
     visible_length = len(visible_rates)
-    if not source.index[:visible_length].equals(visible_rates.index):
+    prefix_getter = getattr(
+        rate_fetcher,
+        "get_visible_prefix_length_for_indicator",
+        None,
+    )
+    expected_length = (
+        prefix_getter(symbol, str(timeframe))
+        if callable(prefix_getter)
+        else None
+    )
+    if expected_length is not None:
+        if int(expected_length) != visible_length:
+            return None
+    elif not source.index[:visible_length].equals(visible_rates.index):
         return None
 
     cache = getattr(rate_fetcher, "_replay_indicator_cache", None)
@@ -112,25 +125,37 @@ def _replay_cached_components(
     )
     cached = cache.get(key)
     if cached is None or cached["signature"] != signature:
+        components = _calculate_stochastic_components(
+            source,
+            k_period=k_period,
+            d_period=d_period,
+            slowing=slowing,
+            price_field=price_field,
+        )
+        unequal = (
+            components["highest_high"] != components["lowest_low"]
+        ).astype(np.uint8)
+        range_seen = np.maximum.accumulate(unequal).astype(bool)
         cached = {
             "signature": signature,
-            "components": _calculate_stochastic_components(
-                source,
-                k_period=k_period,
-                d_period=d_period,
-                slowing=slowing,
-                price_field=price_field,
-            ),
+            "components": components,
+            "range_seen": range_seen,
         }
         cache[key] = cached
 
     components = cached["components"]
+    all_prices_equal = (
+        True
+        if visible_length == 0
+        else not bool(cached["range_seen"][visible_length - 1])
+    )
     return {
         "highest_high": components["highest_high"][:visible_length],
         "lowest_low": components["lowest_low"][:visible_length],
         "k": components["k"].iloc[:visible_length],
         "d": components["d"].iloc[:visible_length],
         "closes": components["closes"].iloc[:visible_length],
+        "all_prices_equal": all_prices_equal,
     }
 
 
@@ -191,7 +216,10 @@ def get_stochastic(
 
         highest_high = components["highest_high"]
         lowest_low = components["lowest_low"]
-        if np.all(highest_high == lowest_low):
+        all_prices_equal = components.get("all_prices_equal")
+        if all_prices_equal is None:
+            all_prices_equal = bool(np.all(highest_high == lowest_low))
+        if all_prices_equal:
             logger.warning(
                 f"All prices equal for {symbol} {timeframe} "
                 "- cannot calculate stochastic"
