@@ -248,6 +248,37 @@ class ReplayFeed:
         return self.get_rates(symbol, timeframe_name)
 
 
+    def get_visible_prefix_length_for_indicator(
+        self,
+        symbol: str,
+        timeframe: str | int,
+    ) -> int | None:
+        """Return the exact causal prefix length for static replay sources.
+
+        Indicator caches use this replay-only hook to prove that the visible
+        frame is the leading prefix of the immutable source without comparing
+        every timestamp on every replay boundary. Production rate fetchers do
+        not implement this method.
+        """
+        if symbol not in self._bars or self.current_time is None:
+            return 0
+
+        timeframe_name = _timeframe_name(timeframe)
+        if timeframe_name == "M1":
+            source = self._bars[symbol]
+            cutoff = self.current_time - pd.Timedelta(minutes=1)
+            return int(source.index.searchsorted(cutoff, side="right"))
+
+        native = self._native_timeframe_bars.get(symbol, {}).get(
+            timeframe_name
+        )
+        if native is None:
+            return None
+
+        minutes = TIMEFRAME_MINUTES[timeframe_name]
+        cutoff = self.current_time - pd.Timedelta(minutes=minutes)
+        return int(native.index.searchsorted(cutoff, side="right"))
+
     def get_static_rates_for_indicator(
         self,
         symbol: str,
