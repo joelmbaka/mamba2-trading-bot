@@ -1,44 +1,90 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-phase1-tests-20260926-1600",
-  "completed_at": "2026-09-26T13:25:37.673253+00:00",
-  "ok": false,
-  "action": "m022_phase1_tests",
+  "command_id": "mamba2-m022-phase1-sync-20260926-1605",
+  "completed_at": "2026-09-26T13:27:41.329341+00:00",
+  "ok": true,
+  "action": "sync",
   "data": {
-    "ok": false,
-    "feature_branch": "strategy-parameter-research",
-    "feature_sha": "1b6132094b961f2b5c66e9a413ee29ad5b921dbb",
-    "tests": [
-      "tests/test_parameter_research.py",
-      "tests/test_triple_cross_condition_semantics.py",
-      "tests/test_backtest_baseline_reporting.py",
-      "tests/test_position_manager_trailing_semantics.py",
-      "tests/test_backtest_strategy_lifecycle.py"
-    ],
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest",
-        "tests/test_parameter_research.py",
-        "tests/test_triple_cross_condition_semantics.py",
-        "tests/test_backtest_baseline_reporting.py",
-        "tests/test_position_manager_trailing_semantics.py",
-        "tests/test_backtest_strategy_lifecycle.py"
-      ],
-      "exit_code": 1,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 66 items\n\ntests/test_parameter_research.py .FF.....                                [ 12%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 50%]\n.                                                                        [ 51%]\ntests/test_backtest_baseline_reporting.py ....                           [ 57%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 90%]\n.                                                                        [ 92%]\ntests/test_backtest_strategy_lifecycle.py .....                          [100%]\n\n=================================== FAILURES ===================================\n_________ test_strategy_default_constructor_matches_explicit_reference _________\n\n    def test_strategy_default_constructor_matches_explicit_reference():\n        from mamba2.strategy.triple_cross import StochasticTripleTFStrategy\n    \n        default = StochasticTripleTFStrategy(\"EURUSD\")\n        explicit = StochasticTripleTFStrategy(\n            \"EURUSD\",\n            stochastic_k_period=21,\n            stochastic_d_period=7,\n            stochastic_slowing=7,\n            oversold_level=20,\n            overbought_level=80,\n            ema_period=7,\n        )\n    \n        for name in (\n            \"stochastic_k_period\",\n            \"stochastic_d_period\",\n            \"stochastic_slowing\",\n            \"oversold_level\",\n            \"overbought_level\",\n            \"ema_period\",\n        ):\n>           assert getattr(default, name) == getattr(explicit, name)\nE           AssertionError: assert 1 == 21\nE            +  where 1 = getattr(<mamba2.strategy.triple_cross.StochasticTripleTFStrategy object at 0x7eb8f97428f0>, 'stochastic_k_period')\nE            +  and   21 = getattr(<mamba2.strategy.triple_cross.StochasticTripleTFStrategy object at 0x7eb8f9742950>, 'stochastic_k_period')\n\ntests/test_parameter_research.py:97: AssertionError\n______________ test_strategy_boundary_and_ema_overrides_are_used _______________\n\nmonkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7eb8f2627d00>\n\n    @pytest.mark.asyncio\n    async def test_strategy_boundary_and_ema_overrides_are_used(monkeypatch):\n        from mamba2.indicators import moving_average\n        from mamba2.strategy import triple_cross\n    \n        cfg = SimpleNamespace(\n            stochastic_timeframes={\n                \"higher\": \"M15\",\n                \"trading\": \"M5\",\n                \"entry\": \"M1\",\n            },\n            use_higher_tf=False,\n            ENABLE_TREND_CONDITION=False,\n            ENABLE_RSI_CONDITION=False,\n            position_size=0.1,\n            stochastic_k_period=21,\n            stochastic_d_period=7,\n            stochastic_slowing=7,\n        )\n        monkeypatch.setattr(triple_cross, \"config\", cfg)\n    \n        def fake_stochastic(_symbol, timeframe, _fetcher, **_kwargs):\n            if timeframe == \"M5\":\n                k, d = [50.0, 60.0], [50.0, 50.0]\n            elif timeframe == \"M1\":\n                k, d = [14.0, 30.0], [20.0, 20.0]\n            else:\n                raise AssertionError(\"M15 must stay disabled\")\n            return {\n                \"k\": pd.Series(k),\n                \"d\": pd.Series(d),\n                \"closes\": pd.Series([1.0, 1.0]),\n            }\n    \n        monkeypatch.setattr(triple_cross, \"get_stochastic\", fake_stochastic)\n        monkeypatch.setattr(triple_cross, \"count_candle_pattern\", lambda *args: 0)\n    \n        ema_periods = []\n    \n        def fake_ema(_symbol, _timeframe, period, _kind, _fetcher):\n            ema_periods.append(period)\n            return 1.1002\n    \n        monkeypatch.setattr(moving_average, \"get_moving_average\", fake_ema)\n    \n        class Fetcher:\n            def get_rates(self, _symbol, _timeframe):\n                return pd.DataFrame(\n                    {\n                        \"open\": [1.1000, 1.1001],\n                        \"high\": [1.1003, 1.1006],\n                        \"low\": [1.0998, 1.0999],\n                        \"close\": [1.1001, 1.1005],\n                    }\n                )\n    \n        class Broker:\n            def __init__(self):\n                self.order_send = Mock(\n                    return_value={\"retcode\": 0, \"order\": 1, \"price\": 1.1005}\n                )\n    \n            def symbol_info_tick(self, _symbol):\n                return {\"bid\": 1.1004, \"ask\": 1.1005}\n    \n        broker = Broker()\n        strategy = triple_cross.StochasticTripleTFStrategy(\n            \"EURUSD\",\n            oversold_level=15,\n            overbought_level=85,\n            ema_period=9,\n        )\n>       await strategy.evaluate(\n            {\n                \"broker\": broker,\n                \"rate_fetcher\": Fetcher(),\n                \"position_manager\": None,\n                \"reporting_enabled\": False,\n            }\n        )\n\ntests/test_parameter_research.py:172: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = <mamba2.strategy.triple_cross.StochasticTripleTFStrategy object at 0x7eb8f26274c0>\nmarket = {'broker': <test_parameter_research.test_strategy_boundary_and_ema_overrides_are_used.<locals>.Broker object at 0x7eb8...st_strategy_boundary_and_ema_overrides_are_used.<locals>.Fetcher object at 0x7eb8f2627340>, 'reporting_enabled': False}\n\n       async def evaluate(self, market):\n           \"\"\"Evaluate market conditions using triple timeframe stochastic.\"\"\"\n    #       logger.info(f\"StochasticTripleTFStrategy: Evaluating {self.symbol}...\")\n    \n           # Get the rate_fetcher from market\n           rate_fetcher = market.get('rate_fetcher')\n           if not rate_fetcher:\n               logger.error(\"No rate_fetcher in market context\")\n               return\n    \n           replay_getter = getattr(\n               rate_fetcher,\n               \"get_visible_rates_for_indicator\",\n               None,\n           )\n    \n           def read_rates(timeframe):\n               if callable(replay_getter):\n                   return replay_getter(self.symbol, timeframe)\n               return rate_fetcher.get_rates(self.symbol, timeframe)\n    \n           # Fetch rates for the three timeframes\n           tf_higher = self.stochastic_timeframes['higher']\n           tf_trading = self.stochastic_timeframes['trading']\n           tf_entry = self.stochastic_timeframes['entry']\n    \n           # Get only the timeframes required by the active signal filters.\n           # A disabled higher-TF filter must not make M15 data a hidden\n           # prerequisite for M5/M1 signal evaluation.\n           rates_higher = (\n               read_rates(tf_higher)\n               if self.use_higher_tf\n               else None\n           )\n           rates_trading = read_rates(tf_trading)\n           rates_entry = read_rates(tf_entry)\n    \n           required_rates = [rates_trading, rates_entry]\n           if self.use_higher_tf:\n               required_rates.append(rates_higher)\n           if any(rates is None for rates in required_rates):\n               logger.warning(\"Not enough data for stochastic triple strategy\")\n               return\n    \n           # Calculate stochastic only for active signal timeframes.\n           stoch_higher = (\n               get_stochastic(\n                   symbol=self.symbol,\n                   timeframe=tf_higher,\n                   k_period=self.stochastic_k_period,\n                   d_period=self.stochastic_d_period,\n                   slowing=self.stochastic_slowing,\n                   rate_fetcher=rate_fetcher,\n               )\n               if self.use_higher_tf\n               else None\n           )\n>          stoch_trading = get_stochastic(\n               symbol=self.symbol,\n               timeframe=tf_trading,\n               k_period=self.stochastic_k_period,\n               d_period=self.stochastic_d_period,\n               slowing=self.stochastic_slowing,\n               rate_fetcher=rate_fetcher,\n           )\nE          TypeError: test_strategy_boundary_and_ema_overrides_are_used.<locals>.fake_stochastic() missing 2 required positional arguments: '_symbol' and '_fetcher'\n\nmamba2/strategy/triple_cross.py:126: TypeError\n=========================== short test summary info ============================\nFAILED tests/test_parameter_research.py::test_strategy_default_constructor_matches_explicit_reference\nFAILED tests/test_parameter_research.py::test_strategy_boundary_and_ema_overrides_are_used\n========================= 2 failed, 64 passed in 0.91s =========================\n",
-      "stderr": ""
-    },
-    "safety": {
-      "market_data_read_only": true,
-      "real_order_api_called": false,
-      "economic_replay_run": false,
-      "m021_post_cutoff_data_used": false,
-      "parameter_result_inspected": false
-    }
+    "branch": "strategy-parameter-research",
+    "before_sha": "4fabf679d1c9815ca27946d9cd732f563550789a",
+    "after_sha": "4fabf679d1c9815ca27946d9cd732f563550789a",
+    "reason": null,
+    "commands": [
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "4fabf679d1c9815ca27946d9cd732f563550789a\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "strategy-parameter-research\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin",
+          "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "4fabf679d1c9815ca27946d9cd732f563550789a\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "0\t0\n",
+        "stderr": ""
+      }
+    ]
   }
 }
