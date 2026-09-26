@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-optimized-cache-full-native-20260926-2030",
-  "action": "test_full_native",
+  "id": "mamba2-m022-optimized-cache-hash-regression-20260926-2031",
+  "action": "m022_phase1_default_regression",
   "args": {},
   "requested_by": "chatgpt"
 }
