@@ -42,6 +42,7 @@ baseline_diagnostic_run_pair
 controlled_experiment_control_pair
 controlled_experiment_m020a_pair
 controlled_experiment_m020b_diagnostic
+controlled_experiment_m020c_pair
 ```
 
 `switch_branch` requires:
@@ -151,3 +152,13 @@ aggregate, per-symbol, side, and calendar-subperiod comparisons without
 changing any other strategy parameter.
 
 `controlled_experiment_m020b_diagnostic` is a read-only M020-B reporting action. It consumes the accepted M019/M020 control diagnostic artifact, produces deterministic spread-band and percentile summaries for the 00:00–03:59 UTC population versus all other entry times, and does not run or modify strategy behavior.
+
+
+### M020-C decision-time spread workflow
+
+`controlled_experiment_m020c_pair` runs the causal decision-time spread
+diagnostic twice on `backtest-controlled-experiments`. It requires both runs
+to reproduce the accepted M019 baseline and diagnostic hashes exactly, requires
+the new decision-spread artifacts to be byte-identical, and refuses missing
+decision-spread rows or any new strategy-reporting artifact. It is historical,
+read-only, and never filters or rejects an order.
