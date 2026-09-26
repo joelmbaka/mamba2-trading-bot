@@ -3372,11 +3372,17 @@ def m022_phase1_stochastic_assessment():
     arms = []
     for k, d, slowing in tuples:
         label = f"{k}-{d}-{slowing}"
-        summary_path = (
-            M022_PHASE1_STOCHASTIC_DIR
-            / label
-            / f"M022-P1-STOCH-{k}-{d}-{slowing}-a-summary.json"
-        )
+        if (k, d, slowing) == (21, 7, 7):
+            summary_path = (
+                M022_PHASE1_STOCH_EQUIV_DIR
+                / "M022-P1-STOCH-21-7-7-a-summary.json"
+            )
+        else:
+            summary_path = (
+                M022_PHASE1_STOCHASTIC_DIR
+                / label
+                / f"M022-P1-STOCH-{k}-{d}-{slowing}-a-summary.json"
+            )
         if not summary_path.is_file():
             return {
                 "ok": False,
