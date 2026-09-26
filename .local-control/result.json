@@ -1,27 +1,18 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-switch-parameter-research-20260926-1208",
-  "completed_at": "2026-09-26T09:11:46.875712+00:00",
+  "command_id": "mamba2-m022-repo-checks-20260926-1213",
+  "completed_at": "2026-09-26T09:16:40.561735+00:00",
   "ok": true,
-  "action": "switch_branch",
+  "action": "repo_checks",
   "data": {
-    "target_branch": "strategy-parameter-research",
-    "before_branch": "prospective-forward-validation",
-    "after_branch": "strategy-parameter-research",
-    "before_sha": "441119c87a1c00177c8c6f20feacd3df4b730d70",
-    "after_sha": "253b6ee840e5489a2c5db27d064500bb44f93e1e",
-    "reason": null,
+    "ok": true,
+    "clean": true,
+    "branch": "strategy-parameter-research",
+    "divergence": "0\t0",
+    "bot_cache_tracked": false,
+    "icon_tracked": true,
+    "icon_changed": false,
     "commands": [
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "prospective-forward-validation\n",
-        "stderr": ""
-      },
       {
         "command": [
           "git",
@@ -29,15 +20,14 @@
           "HEAD"
         ],
         "exit_code": 0,
-        "stdout": "441119c87a1c00177c8c6f20feacd3df4b730d70\n",
+        "stdout": "253b6ee840e5489a2c5db27d064500bb44f93e1e\n",
         "stderr": ""
       },
       {
         "command": [
           "git",
-          "check-ref-format",
-          "--branch",
-          "strategy-parameter-research"
+          "branch",
+          "--show-current"
         ],
         "exit_code": 0,
         "stdout": "strategy-parameter-research\n",
@@ -57,13 +47,67 @@
       {
         "command": [
           "git",
+          "diff",
+          "--check"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "/home/joel/.local/bin/uv",
+          "lock",
+          "--check"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "Resolved 58 packages in 2ms\n"
+      },
+      {
+        "command": [
+          "git",
+          "ls-files",
+          "--error-unmatch",
+          "bot_cache.json"
+        ],
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "error: pathspec 'bot_cache.json' did not match any file(s) known to git\nDid you forget to 'git add'?\n"
+      },
+      {
+        "command": [
+          "git",
+          "ls-files",
+          "--error-unmatch",
+          "icon.png"
+        ],
+        "exit_code": 0,
+        "stdout": "icon.png\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--short",
+          "--",
+          "icon.png"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
           "fetch",
           "origin",
           "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
         ],
         "exit_code": 0,
         "stdout": "",
-        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * [new branch]      strategy-parameter-research -> origin/strategy-parameter-research\n"
+        "stderr": ""
       },
       {
         "command": [
@@ -79,56 +123,13 @@
       {
         "command": [
           "git",
-          "rev-parse",
-          "--verify",
-          "refs/heads/strategy-parameter-research"
-        ],
-        "exit_code": 128,
-        "stdout": "",
-        "stderr": "fatal: Needed a single revision\n"
-      },
-      {
-        "command": [
-          "git",
-          "switch",
-          "--track",
-          "-c",
-          "strategy-parameter-research",
-          "origin/strategy-parameter-research"
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...origin/strategy-parameter-research"
         ],
         "exit_code": 0,
-        "stdout": "branch 'strategy-parameter-research' set up to track 'origin/strategy-parameter-research'.\n",
-        "stderr": "Switched to a new branch 'strategy-parameter-research'\n"
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "strategy-parameter-research\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "253b6ee840e5489a2c5db27d064500bb44f93e1e\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
+        "stdout": "0\t0\n",
         "stderr": ""
       }
     ]
