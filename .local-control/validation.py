@@ -3256,9 +3256,9 @@ from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
 symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
 cutoff = datetime.fromisoformat("2026-09-25T00:00:00+00:00")
 timeframes = {
-    "M1": mt5.TIMEFRAME_M1,
-    "M5": mt5.TIMEFRAME_M5,
-    "M15": mt5.TIMEFRAME_M15,
+    "M1": (mt5.TIMEFRAME_M1, 50000),
+    "M5": (mt5.TIMEFRAME_M5, 50000),
+    "M15": (mt5.TIMEFRAME_M15, 30000),
 }
 
 if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
@@ -3280,12 +3280,12 @@ try:
             raise RuntimeError(f"MT5 could not select {symbol}")
 
         native = {}
-        for label, timeframe in timeframes.items():
+        for label, (timeframe, requested_count) in timeframes.items():
             rates = mt5.copy_rates_from_pos(
                 symbol,
                 timeframe,
                 0,
-                200000,
+                requested_count,
             )
             if rates is None or len(rates) == 0:
                 native[label] = {
@@ -3298,7 +3298,9 @@ try:
             first = iso_epoch(min(times))
             last = iso_epoch(max(times))
             native[label] = {
+                "requested_count": requested_count,
                 "rows_returned": int(len(rates)),
+                "probe_limit_reached": int(len(rates)) >= requested_count,
                 "first_bar_open_utc": first,
                 "last_bar_open_utc": last,
             }
@@ -3385,8 +3387,9 @@ try:
 finally:
     mt5.shutdown()
 '''
+    timeout_bin = shutil.which("timeout") or "/usr/bin/timeout"
     run = _run(
-        [wine, wine_python, "-c", probe_code],
+        [timeout_bin, "90s", wine, wine_python, "-c", probe_code],
         env=_safe_env(wine=True),
     )
     if run["exit_code"] != 0:
