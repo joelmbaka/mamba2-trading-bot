@@ -1,6 +1,6 @@
 # Milestone 020 — Controlled Experiments
 
-Status: **IN PROGRESS**
+Status: **CLOSED — M020-D PROMISING, NOT PROMOTED**
 
 Date started: 2026-09-25
 
@@ -581,3 +581,201 @@ Before interpretation:
 
 Even if M020-D improves the historical result, it remains in-sample controlled
 evidence. A genuinely later paper/forward milestone remains mandatory.
+
+
+## M020-D authoritative result and closeout
+
+Accepted M020 implementation SHA:
+
+`0d85b82278ae08a88f8b5b942fb23ec000b11411`
+
+The accepted implementation remains experiment/backtest-only. Production/live
+strategy files were not changed.
+
+### Reporting correction before final acceptance
+
+The first M020-D pair exposed a replay-reporting defect: the strategy broker
+adapter appended every `order_send` response to its `accepted_orders`
+collection, including intentional M020-D rejections with `retcode = 1`.
+Treatment behavior itself was correct — rejected orders never entered the
+pending queue — but the accepted-order metric was mislabeled.
+
+The fix was deliberately narrow:
+
+- record an order in the accepted-order collection only when the normalized
+  replay response has `retcode = 0`;
+- add regression coverage proving a rejected response is not counted as
+  accepted;
+- do not change the M020-D threshold or treatment behavior.
+
+Post-fix validation at the accepted implementation SHA:
+
+- native: **195 passed, 2 skipped**;
+- Wine: **195 passed, 2 skipped**;
+- Wine Python: **3.10.11 AMD64**;
+- Wine NumPy: **2.2.1**;
+- Wine MetaTrader5: **5.0.6180**;
+- Wine pytest: **9.1.1**.
+
+Immutable M019 control regression after the reporting fix:
+
+- command:
+  `mamba2-m020d-reporting-fix-control-20260926-0843`;
+- baseline A/B byte-identical: **PASS**;
+- accepted M019 baseline preserved:
+  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
+- diagnostic A/B byte-identical: **PASS**;
+- accepted M019 diagnostic preserved:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
+- aggregate reproduced exactly:
+  **4,922 accepted / 4,922 closed / USD -1,716.607632002333 /
+  USD 1,929.6969567926317 max DD / 19.214803229083717%**.
+
+### Authoritative M020-D treatment pair
+
+Command:
+
+`mamba2-m020d-authoritative-treatment-pair-20260926-1014`
+
+Completed:
+
+`2026-09-26T07:40:11.922692+00:00`
+
+Published local-control-results SHA:
+
+`53e79d1da25994c87330faaaf805928de08c427e`
+
+Deterministic treatment artifacts:
+
+- treatment baseline A/B identical: **PASS**;
+- treatment baseline SHA-256:
+  `94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`;
+- treatment diagnostic A/B identical: **PASS**;
+- treatment diagnostic SHA-256:
+  `45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`;
+- treatment evidence A/B identical: **PASS**;
+- treatment evidence SHA-256:
+  `e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`.
+
+Safety and treatment gates:
+
+- rejected order attempts: **976**;
+- accepted decision-spread violations: **0**;
+- maximum accepted decision-time spread: **10 points**;
+- wrong-side initial TP violations: **0**;
+- negative-P/L take-profit exits: **0**;
+- new strategy-reporting artifacts: **0**;
+- remaining open positions: **0**;
+- M020-A session filter stacked: **false**.
+
+The corrected treatment report reconciles exactly:
+
+- accepted orders: **4,664**;
+- closed trades: **4,664**.
+
+### Control vs M020-D
+
+| Metric | M019 control | M020-D | Delta |
+|---|---:|---:|---:|
+| Accepted orders | 4,922 | 4,664 | -258 |
+| Closed trades | 4,922 | 4,664 | -258 |
+| Wins | 1,899 | 1,860 | -39 |
+| Losses | 3,020 | 2,800 | -220 |
+| Flats | 3 | 4 | +1 |
+| Non-flat win rate | 38.6054% | 39.9142% | +1.3088 pp |
+| Net realized P/L | USD -1,716.6076 | USD -677.6471 | **USD +1,038.9605** |
+| Ending balance/equity | USD 8,283.3924 | USD 9,322.3529 | **USD +1,038.9605** |
+| Maximum equity drawdown | USD 1,929.6970 | USD 1,067.1062 | **USD -862.5907** |
+| Maximum drawdown % | 19.2148% | 10.6292% | **-8.5856 pp** |
+
+M020-D reduced the historical net loss materially and reduced maximum drawdown,
+but it still ended **USD -677.647148799515** below the starting balance.
+
+### Stability by calendar entry period
+
+Every inspected period improved versus the immutable control:
+
+| Entry period | Control P/L | M020-D P/L | Delta |
+|---|---:|---:|---:|
+| Jun 23–30 | USD -170.1225 | USD -111.0866 | **USD +59.0359** |
+| July | USD -637.4844 | USD -190.1891 | **USD +447.2952** |
+| August | USD -674.9506 | USD -449.8757 | **USD +225.0749** |
+| Sep 1–24 | USD -234.0501 | USD +73.5043 | **USD +307.5544** |
+
+Only September became profitable. June, July, and August remained negative.
+These periods were already inspected during M019/M020 and are not independent
+holdouts.
+
+### Stability by symbol
+
+Every symbol improved versus control:
+
+| Symbol | Control P/L | M020-D P/L | Delta |
+|---|---:|---:|---:|
+| EURJPY | USD +113.6933 | USD +288.8987 | **USD +175.2053** |
+| EURUSD | USD -301.5929 | USD -270.4786 | **USD +31.1143** |
+| GBPJPY | USD -930.0207 | USD -347.8757 | **USD +582.1449** |
+| GBPUSD | USD -423.3857 | USD -321.7500 | **USD +101.6357** |
+| USDJPY | USD -175.3017 | USD -26.4415 | **USD +148.8602** |
+
+GBPJPY contributes about **56.03%** of the total P/L improvement, so the effect
+is concentrated there to a meaningful degree. It is not dependent on GBPJPY,
+however: all four other symbols also improve, together contributing about
+**USD +456.82**.
+
+Four of five symbols remain loss-making under treatment.
+
+### Stability by side
+
+Both sides improved:
+
+| Side | Control P/L | M020-D P/L | Delta |
+|---|---:|---:|---:|
+| BUY | USD -762.8501 | USD -233.3490 | **USD +529.5011** |
+| SELL | USD -953.7575 | USD -444.2982 | **USD +509.4594** |
+
+Both sides remain loss-making. The result does not justify a side filter.
+
+### M020-D classification
+
+**PROMISING**
+
+Reason:
+
+- execution is deterministic across both treatment runs;
+- the treatment gate is causal and enforced exactly at the predeclared
+  **>10-point** decision-time boundary;
+- aggregate P/L and maximum drawdown improve materially;
+- all four inspected calendar periods improve;
+- all five symbols improve;
+- both BUY and SELL improve;
+- safety invariants remain clean;
+- the benefit is concentrated in GBPJPY but not dependent on it.
+
+The evidence is not sufficient for promotion because:
+
+- the June–September dataset was already inspected while developing M020;
+- the treatment remains materially loss-making overall;
+- three of four calendar periods remain negative;
+- four of five symbols remain negative;
+- both BUY and SELL remain negative;
+- actual broker commission/slippage/swap remain unproven or unmodeled.
+
+M020-D is therefore an **in-sample experimental candidate only**.
+
+It is **not promoted to live trading**.
+
+Do not stack M020-D automatically with M020-A. Do not search other spread
+thresholds from this dataset.
+
+## M020 closeout
+
+Milestone 020 is **CLOSED**.
+
+No M020-E is justified. Additional threshold or parameter exploration on this
+already-inspected dataset would turn the milestone into parameter optimization
+rather than controlled scientific iteration.
+
+The next milestone must use a prospectively frozen protocol and genuinely later
+paper/forward evidence before any experimental behavior can move toward live
+risk.
