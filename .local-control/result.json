@@ -1,23 +1,71 @@
 {
   "version": 1,
-  "command_id": "mamba2-m021-full-native-20260926-1104",
-  "completed_at": "2026-09-26T08:05:01.589802+00:00",
+  "command_id": "mamba2-m021-full-wine-20260926-1106",
+  "completed_at": "2026-09-26T08:05:58.662721+00:00",
   "ok": true,
-  "action": "test_full_native",
+  "action": "test_full_wine",
   "data": {
     "ok": true,
     "run": {
       "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
+        "/usr/bin/wine",
+        "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
         "-m",
         "pytest"
       ],
       "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 206 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  1%]\ntests/test_backtest_account_currency.py ............                     [  7%]\ntests/test_backtest_baseline_reporting.py ....                           [  9%]\ntests/test_backtest_diagnostics.py ....                                  [ 11%]\ntests/test_backtest_execution.py .........                               [ 16%]\ntests/test_backtest_execution_costs.py ............                      [ 21%]\ntests/test_backtest_experiments.py .....                                 [ 24%]\ntests/test_backtest_foundation.py ..........                             [ 29%]\ntests/test_backtest_native_runtime.py ....                               [ 31%]\ntests/test_backtest_portfolio_runner.py .........                        [ 35%]\ntests/test_backtest_spread_execution.py ........                         [ 39%]\ntests/test_backtest_strategy_integration.py ..                           [ 40%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 42%]\ntests/test_cache_manager_security.py .........                           [ 47%]\ntests/test_config_security.py ...                                        [ 48%]\ntests/test_detect_trend.py ...                                           [ 50%]\ntests/test_m020_decision_spread.py ...                                   [ 51%]\ntests/test_m020_diagnostics.py ....                                      [ 53%]\ntests/test_m020_spread_treatment.py ...                                  [ 54%]\ntests/test_m021_forward_validation.py ...........                        [ 60%]\ntests/test_mt5__broker.py ......                                         [ 63%]\ntests/test_mt5_dataset.py ............                                   [ 68%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 79%]\n.                                                                        [ 80%]\ntests/test_rates.py .......                                              [ 83%]\ntests/test_replay_indicator_cache.py ..                                  [ 84%]\ntests/test_stochastic_indicator.py ....                                  [ 86%]\ntests/test_trend_line.py ..                                              [ 87%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================= 206 passed, 2 skipped in 17.70s ========================\n",
-      "stderr": ""
+      "stdout": "============================= test session starts =============================\nplatform win32 -- Python 3.10.11, pytest-9.1.1, pluggy-1.6.0\nrootdir: Z:\\home\\joel\\Dev\\mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.4.0, mock-3.15.1\nasyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 206 items / 2 skipped\n\ntests\\test_atr_manager.py ....                                           [  1%]\ntests\\test_backtest_account_currency.py ............                     [  7%]\ntests\\test_backtest_baseline_reporting.py ....                           [  9%]\ntests\\test_backtest_diagnostics.py ....                                  [ 11%]\ntests\\test_backtest_execution.py .........                               [ 16%]\ntests\\test_backtest_execution_costs.py ............                      [ 21%]\ntests\\test_backtest_experiments.py .....                                 [ 24%]\ntests\\test_backtest_foundation.py ..........                             [ 29%]\ntests\\test_backtest_native_runtime.py ....                               [ 31%]\ntests\\test_backtest_portfolio_runner.py .........                        [ 35%]\ntests\\test_backtest_spread_execution.py ........                         [ 39%]\ntests\\test_backtest_strategy_integration.py ..                           [ 40%]\ntests\\test_backtest_strategy_lifecycle.py .....                          [ 42%]\ntests\\test_cache_manager_security.py .........                           [ 47%]\ntests\\test_config_security.py ...                                        [ 48%]\ntests\\test_detect_trend.py ...                                           [ 50%]\ntests\\test_m020_decision_spread.py ...                                   [ 51%]\ntests\\test_m020_diagnostics.py ....                                      [ 53%]\ntests\\test_m020_spread_treatment.py ...                                  [ 54%]\ntests\\test_m021_forward_validation.py ...........                        [ 60%]\ntests\\test_mt5__broker.py ......                                         [ 63%]\ntests\\test_mt5_dataset.py ............                                   [ 68%]\ntests\\test_position_manager_trailing_semantics.py ...................... [ 79%]\n.                                                                        [ 80%]\ntests\\test_rates.py .......                                              [ 83%]\ntests\\test_replay_indicator_cache.py ..                                  [ 84%]\ntests\\test_stochastic_indicator.py ....                                  [ 86%]\ntests\\test_trend_line.py ..                                              [ 87%]\ntests\\test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================= 206 passed, 2 skipped in 7.89s ========================\n",
+      "stderr": "",
+      "wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+      "discovery": {
+        "ok": true,
+        "native": {
+          "command": [
+            "/home/joel/.local/bin/uv",
+            "run",
+            "--locked",
+            "python",
+            "-c",
+            "import json,platform,numpy,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'pytest':pytest.__version__}))"
+          ],
+          "exit_code": 0,
+          "stdout": "{\"python\": \"3.10.19\", \"machine\": \"x86_64\", \"numpy\": \"2.2.6\", \"pytest\": \"8.4.0\"}\n",
+          "stderr": ""
+        },
+        "wine_candidates": [
+          {
+            "label": "base",
+            "python": "C:\\Python310\\python.exe",
+            "probe": {
+              "command": [
+                "/usr/bin/wine",
+                "C:\\Python310\\python.exe",
+                "-c",
+                "import json,platform,numpy,MetaTrader5 as mt5,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'metatrader5':mt5.__version__,'pytest':pytest.__version__}))"
+              ],
+              "exit_code": 1,
+              "stdout": "",
+              "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\nModuleNotFoundError: No module named 'numpy'\n"
+            }
+          },
+          {
+            "label": ".venv-wine",
+            "python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+            "probe": {
+              "command": [
+                "/usr/bin/wine",
+                "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+                "-c",
+                "import json,platform,numpy,MetaTrader5 as mt5,pytest;print(json.dumps({'python':platform.python_version(),'machine':platform.machine(),'numpy':numpy.__version__,'metatrader5':mt5.__version__,'pytest':pytest.__version__}))"
+              ],
+              "exit_code": 0,
+              "stdout": "{\"python\": \"3.10.11\", \"machine\": \"AMD64\", \"numpy\": \"2.2.1\", \"metatrader5\": \"5.0.6180\", \"pytest\": \"9.1.1\"}\n",
+              "stderr": ""
+            }
+          }
+        ],
+        "selected_wine_python": "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe"
+      }
     }
   }
 }
