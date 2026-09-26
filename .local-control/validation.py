@@ -132,6 +132,7 @@ M022_PHASE1_REG_CONTROL_DIAGNOSTIC = M022_PHASE1_REGRESSION_DIR / "control-diagn
 M022_PHASE1_REG_M020D_BASELINE = M022_PHASE1_REGRESSION_DIR / "m020d-baseline.json"
 M022_PHASE1_REG_M020D_DIAGNOSTIC = M022_PHASE1_REGRESSION_DIR / "m020d-diagnostic.json"
 M022_PHASE1_REG_M020D_EVIDENCE = M022_PHASE1_REGRESSION_DIR / "m020d-evidence.json"
+M022_PHASE1_REFERENCE_DIR = REPO / "backtest_data" / "m022-phase1-development" / "reference-v1"
 
 
 def _safe_env(wine=False):
@@ -3295,6 +3296,121 @@ def m021_primary_pair():
 
 
 
+def m022_phase1_reference_pair():
+    """Run the frozen M022 reference on development only, twice."""
+
+    feature_sha = _require_m022_branch()
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+    if not manifest.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 native-M1 manifest is unavailable",
+            "feature_sha": feature_sha,
+        }
+
+    output_dir = _ensure_baseline_path(M022_PHASE1_REFERENCE_DIR)
+    if output_dir.exists():
+        return {
+            "ok": False,
+            "reason": "M022 reference output directory already exists",
+            "feature_sha": feature_sha,
+            "path": str(output_dir.relative_to(REPO)),
+        }
+
+    run = _run(
+        _native_command(
+            "-m",
+            "mamba2.backtest.parameter_research",
+            "--manifest",
+            str(manifest.relative_to(REPO)),
+            "--output-dir",
+            str(output_dir.relative_to(REPO)),
+            "--family",
+            "reference",
+            "--starting-balance",
+            "10000",
+        ),
+        env=_safe_env(),
+    )
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M022 development reference pair failed",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+
+    try:
+        payload = json.loads(run["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError):
+        return {
+            "ok": False,
+            "reason": "unable to parse M022 reference result",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+
+    summary = payload.get("summary") or {}
+    partition = summary.get("partition") or {}
+    tp_safety = summary.get("tp_safety") or {}
+    aggregate = summary.get("aggregate") or {}
+
+    partition_ok = (
+        payload.get("partition") == "development"
+        and partition.get("partition") == "development"
+        and partition.get("source_manifest_sha256")
+        == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+        and partition.get("common_trading_dates_sha256")
+        == "2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5"
+        and partition.get("start_utc") == "2025-08-25T00:00:00Z"
+        and partition.get("end_exclusive_utc") == "2026-04-21T00:00:00Z"
+        and int(partition.get("common_trading_dates", 0)) == 169
+    )
+    safety_ok = (
+        int(tp_safety.get("negative_pl_take_profit_exits", -1)) == 0
+        and int(tp_safety.get("wrong_side_initial_tp", -1)) == 0
+        and int(aggregate.get("remaining_open_positions", -1)) >= 0
+    )
+    deterministic = bool(payload.get("deterministic"))
+    ok = bool(payload.get("ok") and deterministic and partition_ok and safety_ok)
+
+    return {
+        "ok": ok,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "experiment_id": payload.get("experiment_id"),
+        "family": payload.get("family"),
+        "value_label": payload.get("value_label"),
+        "parameters": payload.get("parameters"),
+        "partition": partition,
+        "deterministic": deterministic,
+        "baseline_sha256": payload.get("baseline_sha256"),
+        "diagnostic_sha256": payload.get("diagnostic_sha256"),
+        "summary_sha256": payload.get("summary_sha256"),
+        "aggregate": aggregate,
+        "per_symbol": summary.get("per_symbol"),
+        "by_side": summary.get("by_side"),
+        "by_entry_utc_bucket": summary.get("by_entry_utc_bucket"),
+        "protection": summary.get("protection"),
+        "rejections": summary.get("rejections"),
+        "tp_safety": tp_safety,
+        "remaining_positions": summary.get("remaining_positions"),
+        "partition_ok": partition_ok,
+        "safety_ok": safety_ok,
+        "cost_contract": summary.get("cost_contract"),
+        "safety": {
+            "economic_replay_run": True,
+            "economic_partition": "development",
+            "validation_economic_data_used": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+        "run_exit_code": run["exit_code"],
+    }
+
+
 def m022_phase1_default_regression():
     """Hash-only regression of unchanged M019/M020-D executable semantics."""
 
@@ -5586,6 +5702,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_phase1_reference_pair": m022_phase1_reference_pair,
     "m022_phase1_default_regression": m022_phase1_default_regression,
     "m022_phase1_tests": m022_phase1_tests,
     "m022_inventory_tests": m022_inventory_tests,
