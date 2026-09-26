@@ -86,24 +86,73 @@ The replacement depth probe is bounded:
 4. report source/broker/runtime metadata;
 5. run no strategy replay and compute no economic result.
 
-### Next inventory acceptance gate
+### Inventory evidence and mechanical protocol correction — 2026-09-26
 
-Before freezing M022 data partitions:
+The bounded history checkpoint search established synchronized Bid/Ask ticks plus native M5/M15 for all five symbols through **2025-08-25**. The next tested checkpoint, **2025-07-28**, failed common synchronized Bid/Ask tick coverage because EURJPY had no qualifying tick rows there. Therefore the conservative common candidate start remains **2025-08-25**.
 
-1. obtain/review the pending first-inventory result;
-2. synchronize the Dell checkout to the latest feature SHA;
-3. run the feature tests, including the opt-in tick-derived-M1 exporter tests;
-4. run the bounded M022 depth probe;
-5. if older tick coverage exists, export a fixed candidate history using:
-   - tick-derived synchronized Bid/Ask M1;
-   - broker-native M5/M15;
-6. prove overlap against the accepted M019 dataset using the predeclared acceptance rule:
-   - M1 Bid overlap indexes must be identical and OHLC must differ by no more than **0.5 symbol point**;
-   - Ask M1 overlap indexes must be identical and OHLC must differ by no more than **0.5 symbol point**;
-   - candidate Bid M1 and Ask M1 indexes must be identical with zero missing/extra Ask rows;
-   - native M5/M15 overlap frames must remain exactly identical;
-   - the M1 manifest source must identify `copy_ticks_range_bid_aggregation`;
-7. only then declare a longest common trustworthy range and freeze development / validation / untouched historical-holdout partitions.
+A full tick-derived-M1 candidate export from 2025-08-25 through the frozen cutoff 2026-09-25 completed successfully, but it **failed the already-frozen accepted-M019 overlap rule**. The failure was specific to tick-derived **Bid M1**:
+
+- EURJPY: maximum Bid OHLC delta **1 point**;
+- EURUSD: maximum Bid OHLC delta **1 point**;
+- GBPUSD: maximum Bid OHLC delta **5 points**;
+- USDJPY: maximum Bid OHLC delta **2 points**;
+- GBPJPY: exact Bid overlap.
+
+In the same candidate:
+
+- Ask M1 overlap was exact for all five symbols;
+- Bid/Ask overlap indexes matched;
+- native M5/M15 overlap frames were exact;
+- no parameter/economic result was inspected.
+
+The frozen 0.5-point tolerance is **not relaxed**.
+
+The failure demonstrated a mechanical incompatibility between reconstructing historical Bid M1 from `COPY_TICKS_ALL` and the broker-native M1 bars used by the accepted M019 replay. Before parameter outcomes were inspected, M022 therefore exercised the protocol's allowed mechanical-impossibility correction.
+
+The terminal history-capacity investigation found:
+
+- MT5 `common.ini`: `MaxBars=100000`;
+- original config backup SHA-256:
+  `c04f195618eea41d7300a2459f0e9aa914967a90c534c449c6bbcf4fcebfbae0`;
+- revised config: `MaxBars=500000`;
+- revised config SHA-256:
+  `22032bc12c27fbb642f9c151f3d2256a733d8ac442772c736dfe7149a9b0fc91`;
+- runtime verification: `terminal_info().maxbars == 500000`;
+- broker/account: `MetaQuotes-Demo`, USD;
+- runtime: MT5 package 5.0.6180 / terminal build 6215 / Python 3.10.11;
+- native M1 on 2025-08-25 was exposed for every symbol:
+  - EURUSD 1,436 rows;
+  - EURJPY 1,437 rows;
+  - GBPUSD 1,437 rows;
+  - GBPJPY 1,437 rows;
+  - USDJPY 1,437 rows.
+
+No real-order API was called, no economic replay ran, and no M021 post-cutoff data was used.
+
+### Replacement inventory acceptance gate — frozen before parameter outcomes
+
+The replacement candidate must preserve accepted replay semantics rather than substitute tick-derived Bid M1:
+
+1. candidate range: conservative start **2025-08-25**, end-exclusive **2026-09-25T00:00:00Z**;
+2. **Bid M1:** broker-native MT5 M1;
+3. **Ask M1:** observable `COPY_TICKS_ALL` Ask aggregated/aligned to the native M1 index;
+4. **M5/M15:** broker-native;
+5. M15 remains compatibility/export data only and is never an M022 signal input.
+
+Accepted-M019 overlap must satisfy, for every symbol:
+
+- native Bid M1 overlap index identical to accepted M019;
+- native Bid M1 overlap frame exactly identical;
+- Ask M1 overlap index identical to accepted M019 and OHLC delta no more than **0.5 symbol point**;
+- candidate Ask M1 has zero missing/extra rows versus candidate native Bid M1 over the accepted common replay range;
+- native M5 and M15 overlap frames exactly identical;
+- Ask manifest source remains `copy_ticks_range`;
+- broker/server/account/runtime metadata are recorded;
+- candidate manifest and file hashes are recorded.
+
+This replacement gate is a source-parity correction only. It does not weaken the frozen price tolerance, inspect strategy performance, or change any parameter family.
+
+Only after this gate passes may M022 declare the longest common trustworthy range and materialize the already-frozen 60% / 20% / 20% chronological development / validation / untouched-holdout split.
 
 No Phase-1 parameter arm is authorized before that gate passes.
 
