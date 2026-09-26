@@ -49,6 +49,8 @@ m021_historical_regression
 m021_primary_export
 m021_primary_pair
 m022_history_depth_probe
+m022_tick_inventory_cleanup
+m022_tick_inventory
 m022_history_inventory_cleanup
 m022_history_inventory
 ```
