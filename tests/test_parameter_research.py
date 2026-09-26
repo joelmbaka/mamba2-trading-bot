@@ -72,29 +72,18 @@ def test_reference_arm_is_frozen_current_configuration():
     assert arm.parameters.block_00_04_utc is False
 
 
-def test_strategy_default_constructor_matches_explicit_reference():
+def test_strategy_default_constructor_matches_current_config():
+    from config import config
     from mamba2.strategy.triple_cross import StochasticTripleTFStrategy
 
     default = StochasticTripleTFStrategy("EURUSD")
-    explicit = StochasticTripleTFStrategy(
-        "EURUSD",
-        stochastic_k_period=21,
-        stochastic_d_period=7,
-        stochastic_slowing=7,
-        oversold_level=20,
-        overbought_level=80,
-        ema_period=7,
-    )
 
-    for name in (
-        "stochastic_k_period",
-        "stochastic_d_period",
-        "stochastic_slowing",
-        "oversold_level",
-        "overbought_level",
-        "ema_period",
-    ):
-        assert getattr(default, name) == getattr(explicit, name)
+    assert default.stochastic_k_period == int(config.stochastic_k_period)
+    assert default.stochastic_d_period == int(config.stochastic_d_period)
+    assert default.stochastic_slowing == int(config.stochastic_slowing)
+    assert default.oversold_level == 20.0
+    assert default.overbought_level == 80.0
+    assert default.ema_period == 7
 
 
 @pytest.mark.asyncio
@@ -118,7 +107,8 @@ async def test_strategy_boundary_and_ema_overrides_are_used(monkeypatch):
     )
     monkeypatch.setattr(triple_cross, "config", cfg)
 
-    def fake_stochastic(_symbol, timeframe, _fetcher, **_kwargs):
+    def fake_stochastic(*, symbol, timeframe, rate_fetcher, **_kwargs):
+        del symbol, rate_fetcher
         if timeframe == "M5":
             k, d = [50.0, 60.0], [50.0, 50.0]
         elif timeframe == "M1":
