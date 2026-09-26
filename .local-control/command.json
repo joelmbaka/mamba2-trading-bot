@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-tick-inventory-v2-20260926-1411",
-  "action": "m022_tick_inventory",
+  "id": "mamba2-m022-native-history-capacity-20260926-1418",
+  "action": "m022_terminal_history_capacity_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
