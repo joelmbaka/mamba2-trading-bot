@@ -390,6 +390,49 @@ For every arm record at minimum:
 
 Do not select an arm solely by highest P/L.
 
+## Frozen stochastic-family screening rubric — before results
+
+Before inspecting any stochastic-family development result, the following
+shortlist rubric is frozen for the nine predeclared tuples.
+
+Mandatory gates for every arm:
+
+- deterministic A/B hashes must match;
+- TP/safety invariants must remain clean;
+- development partition/hash must match the frozen M022 partition;
+- validation and historical holdout must remain unopened;
+- closed-trade count must be at least **70% of the reference arm** so an
+  apparent improvement cannot come mainly from suppressing activity.
+
+Among arms that pass those gates, shortlist construction is multi-objective,
+not a single-score ranking:
+
+1. compare **net realized P/L** (higher is better);
+2. compare **maximum equity drawdown USD** (lower is better);
+3. compare **non-flat win rate** (higher is better);
+4. retain the **Pareto-nondominated** eligible tuples plus the reference tuple;
+5. do not promote an isolated development spike directly to Phase 2.
+
+Breadth / concentration checks for any arm whose net realized P/L improves
+over reference:
+
+- the positive P/L improvement must appear in at least **two symbols**;
+- the positive P/L improvement must appear in at least **two fixed 4-hour UTC
+  entry buckets**;
+- no single symbol may contribute more than **70%** of the sum of positive
+  symbol-level P/L deltas versus reference;
+- no single BUY/SELL side may contribute more than **80%** of the sum of
+  positive side-level P/L deltas versus reference.
+
+An otherwise Pareto-eligible tuple that fails breadth is labeled
+`FRAGILE / CONCENTRATED` and is not promoted to Phase 2 unless a neighboring
+tuple later shows the same broad direction. This rule does not authorize new
+neighboring runs after results are seen; any extra tuple still requires a
+separately documented pre-run addition under the existing milestone rule.
+
+No stochastic tuple is selected merely because it has the highest development
+P/L. Validation remains closed while this stochastic shortlist is constructed.
+
 ## Phase 2 — bounded combinations
 
 Only parameter values/regions that show useful and reasonably stable Phase 1 behavior may enter Phase 2.
