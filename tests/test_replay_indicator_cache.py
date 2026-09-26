@@ -5,6 +5,7 @@ import pandas as pd
 
 from mamba2.backtest.feed import ReplayFeed
 from mamba2.indicators.atr import get_atr
+from mamba2.indicators.moving_average import get_moving_average
 from mamba2.indicators.stochastic import get_stochastic
 
 
@@ -137,6 +138,22 @@ def test_replay_cached_indicators_match_visible_only_legacy_path_exactly():
         )
         _assert_stochastic_equal(cached_m5, legacy_m5)
 
+        cached_ema = get_moving_average(
+            symbol="EURUSD",
+            timeframe="M1",
+            ma_period=7,
+            ma_method="ema",
+            rate_fetcher=feed,
+        )
+        legacy_ema = get_moving_average(
+            symbol="EURUSD",
+            timeframe="M1",
+            ma_period=7,
+            ma_method="ema",
+            rate_fetcher=legacy,
+        )
+        assert cached_ema == legacy_ema
+
         cached_atr = get_atr(
             symbol="EURUSD",
             timeframe="M5",
@@ -164,6 +181,8 @@ def test_replay_cached_indicators_match_visible_only_legacy_path_exactly():
                 assert cached_k_id == first_cached_k_id
 
     assert first_cached_k_id is not None
+    ema_key = ("moving_average", "EURUSD", "M1", 7, "ema")
+    assert ema_key in feed._replay_indicator_cache
 
 
 def test_static_indicator_hook_does_not_precompute_derived_timeframes():
