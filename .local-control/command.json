@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-native-inventory-v3-20260926-1546",
-  "action": "m022_native_inventory",
+  "id": "mamba2-m022-v3-existing-probe-20260926-1549",
+  "action": "m022_native_inventory_existing_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
