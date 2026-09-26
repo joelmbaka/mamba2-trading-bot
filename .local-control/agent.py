@@ -425,7 +425,11 @@ def process_current_command_once(force=False):
         f"processed once {command_id}: {payload.get('ok')}",
         flush=True,
     )
-    return 0 if payload.get("ok") else 2
+    # A validation/business result may legitimately be ok=false while the
+    # worker itself completed successfully and published deterministic
+    # evidence. Keep systemd healthy; reserve non-zero exit for worker/runtime
+    # failures that prevent command processing/publication.
+    return 0
 
 
 def main():
