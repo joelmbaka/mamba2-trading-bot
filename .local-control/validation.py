@@ -4201,6 +4201,178 @@ def m022_tick_inventory_cleanup():
     }
 
 
+def m022_partition_freeze():
+    """Materialize the frozen 60/20/20 M022 trading-date partition rule."""
+
+    feature_sha = _require_m022_branch()
+    if not M022_NATIVE_INVENTORY_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted native-M1 v3 manifest is unavailable",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "required_manifest": str(
+                M022_NATIVE_INVENTORY_MANIFEST.relative_to(REPO)
+            ),
+        }
+
+    code = r'''
+import hashlib
+import json
+import math
+from pathlib import Path
+
+from mamba2.backtest.mt5_dataset import load_mt5_dataset
+
+manifest_path = Path(
+    "backtest_data/m022-history-inventory-native-m1-v3/manifest.json"
+)
+dataset = load_mt5_dataset(manifest_path)
+symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+
+common_dates = None
+for symbol in symbols:
+    m1 = dataset.m1_bars[symbol]
+    ask = dataset.ask_m1_bars[symbol]
+    m5 = dataset.native_timeframe_bars[symbol]["M5"]
+
+    dates = set(m1.index.normalize())
+    dates &= set(ask.index.normalize())
+    dates &= set(m5.index.normalize())
+    common_dates = dates if common_dates is None else common_dates & dates
+
+ordered = sorted(common_dates or [])
+n = len(ordered)
+dev_n = math.floor(n * 0.60)
+val_n = math.floor(n * 0.20)
+hold_n = n - dev_n - val_n
+
+def day_iso(ts):
+    return ts.isoformat().replace("+00:00", "Z")
+
+def boundary_iso(ts):
+    return ts.normalize().isoformat().replace("+00:00", "Z")
+
+if n:
+    development_start = ordered[0].normalize()
+    validation_start = ordered[dev_n].normalize() if dev_n < n else None
+    holdout_start = (
+        ordered[dev_n + val_n].normalize()
+        if (dev_n + val_n) < n
+        else None
+    )
+else:
+    development_start = validation_start = holdout_start = None
+
+cutoff = "2026-09-25T00:00:00Z"
+date_payload = "\n".join(day_iso(ts) for ts in ordered).encode("utf-8")
+date_sha = hashlib.sha256(date_payload).hexdigest()
+manifest_sha = hashlib.sha256(manifest_path.read_bytes()).hexdigest()
+
+partitions = {
+    "development": {
+        "trading_dates": dev_n,
+        "start_utc": (
+            boundary_iso(development_start)
+            if development_start is not None else None
+        ),
+        "end_exclusive_utc": (
+            boundary_iso(validation_start)
+            if validation_start is not None else None
+        ),
+        "first_trading_date": (
+            day_iso(ordered[0]) if dev_n else None
+        ),
+        "last_trading_date": (
+            day_iso(ordered[dev_n - 1]) if dev_n else None
+        ),
+    },
+    "validation": {
+        "trading_dates": val_n,
+        "start_utc": (
+            boundary_iso(validation_start)
+            if validation_start is not None else None
+        ),
+        "end_exclusive_utc": (
+            boundary_iso(holdout_start)
+            if holdout_start is not None else None
+        ),
+        "first_trading_date": (
+            day_iso(ordered[dev_n]) if val_n else None
+        ),
+        "last_trading_date": (
+            day_iso(ordered[dev_n + val_n - 1]) if val_n else None
+        ),
+    },
+    "historical_holdout": {
+        "trading_dates": hold_n,
+        "start_utc": (
+            boundary_iso(holdout_start)
+            if holdout_start is not None else None
+        ),
+        "end_exclusive_utc": cutoff,
+        "first_trading_date": (
+            day_iso(ordered[dev_n + val_n]) if hold_n else None
+        ),
+        "last_trading_date": (
+            day_iso(ordered[-1]) if hold_n else None
+        ),
+    },
+}
+
+minimum_ok = min(dev_n, val_n, hold_n) >= 20
+
+print(json.dumps({
+    "manifest_path": str(manifest_path),
+    "manifest_sha256": manifest_sha,
+    "common_trading_date_count": n,
+    "common_trading_dates_sha256": date_sha,
+    "first_common_trading_date": day_iso(ordered[0]) if ordered else None,
+    "last_common_trading_date": day_iso(ordered[-1]) if ordered else None,
+    "rule": {
+        "development_fraction": 0.60,
+        "validation_fraction": 0.20,
+        "holdout_fraction": 0.20,
+        "rounding": "floor first two; remainder to holdout",
+        "whole_utc_trading_dates": True,
+        "minimum_trading_dates_each": 20,
+    },
+    "partitions": partitions,
+    "minimum_partition_size_ok": minimum_ok,
+}, sort_keys=True))
+'''
+
+    run = _run(_native_command("-c", code), env=_safe_env())
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M022 partition computation failed",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+
+    try:
+        payload = json.loads(run["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError) as exc:
+        raise RuntimeError("unable to parse M022 partition result") from exc
+
+    return {
+        "ok": bool(payload.get("minimum_partition_size_ok")),
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "partition_freeze": payload,
+        "safety": {
+            "market_data_read_only": True,
+            "economic_replay_run": False,
+            "parameter_result_inspected": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+        "run": run,
+    }
+
+
 def m022_native_inventory():
     """Export native Bid M1 + tick Ask and prove accepted-M019 parity."""
 
@@ -5026,6 +5198,7 @@ ACTION_HANDLERS = {
     "m022_history_checkpoint_probe": m022_history_checkpoint_probe,
     "m022_history_depth_probe": m022_history_depth_probe,
     "m022_tick_inventory_cleanup": m022_tick_inventory_cleanup,
+    "m022_partition_freeze": m022_partition_freeze,
     "m022_native_inventory": m022_native_inventory,
     "m022_tick_inventory": m022_tick_inventory,
     "m022_history_inventory_cleanup": m022_history_inventory_cleanup,
