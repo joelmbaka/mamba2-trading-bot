@@ -364,3 +364,96 @@ economic outcomes are inspected.
 After the protocol commit exists, subsequent M021 work may implement only the
 data-export, replay, deterministic-reporting, and local-control machinery needed
 to execute this frozen protocol.
+
+
+## Machinery implementation acceptance — 2026-09-26
+
+The protocol above was frozen before this implementation work and before any
+post-cutoff economic outcome was inspected.
+
+Accepted M021 machinery implementation SHA:
+
+`f53d38b93434eb52b19f0f12a441e4439822e39e`
+
+Feature paths added/updated through that SHA:
+
+- `docs/NEXT_TASK.md`
+- `docs/milestones/021-prospective-forward-validation.md`
+- `mamba2/backtest/m021_forward_validation.py`
+- `tests/test_m021_forward_validation.py`
+
+The accepted M020-D implementation itself was not modified.
+
+Local-control M021 action implementation commit:
+
+`e8d992595146c168d0efd83f20f342415557bcc6`
+
+Validation:
+
+- repository gate:
+  `mamba2-m021-repo-checks-20260926-1103` — **PASS**, clean, divergence
+  `0/0`;
+- full native:
+  `mamba2-m021-full-native-20260926-1104` —
+  **206 passed, 2 skipped**;
+- full Wine:
+  `mamba2-m021-full-wine-20260926-1106` —
+  **206 passed, 2 skipped**;
+- historical byte-preservation:
+  `mamba2-m021-historical-regression-20260926-1108` — **PASS**;
+- readiness gate:
+  `mamba2-m021-readiness-20260926-1127` — **PASS**;
+- early primary export:
+  `mamba2-m021-primary-export-refusal-20260926-1128` —
+  **REFUSED AS REQUIRED**;
+- early primary paired replay:
+  `mamba2-m021-primary-pair-refusal-20260926-1129` —
+  **REFUSED AS REQUIRED**.
+
+Historical preservation reproduced all accepted bytes exactly:
+
+- M019 control baseline:
+  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
+- M019 control diagnostic:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
+- M020-D baseline:
+  `94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`;
+- M020-D diagnostic:
+  `45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`;
+- M020-D evidence:
+  `e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`.
+
+No new strategy artifact appeared during the historical regression.
+
+At `2026-09-26T08:27:43Z`, the readiness gate reported:
+
+- primary cutoff: `2026-10-23T00:00:00Z`;
+- ready: **false**;
+- economic results computed: **false**.
+
+The actual local-control export action then returned:
+
+- `ready=false`;
+- `refused_before_cutoff=true`;
+- `export_attempted=false`;
+- `economic_results_computed=false`.
+
+The actual local-control paired-replay action then returned:
+
+- `ready=false`;
+- `refused_before_cutoff=true`;
+- `pair_attempted=false`;
+- `economic_results_computed=false`.
+
+Therefore the M021 execution machinery is accepted, but **M021 itself remains
+open**. No prospective P/L, drawdown, symbol result, side result, period result,
+or classification result has been inspected.
+
+Current local-control-results evidence head after the refusal checks:
+
+`63c885900bb63cf2a79f47cd731ff17d30c7facc`
+
+The next authorized economic action is the frozen primary-window export only
+after `2026-10-23T00:00:00Z`. If the predeclared count thresholds are not met,
+the protocol's fixed seven-day extension schedule applies without looking at
+economic outcomes to choose the extension.
