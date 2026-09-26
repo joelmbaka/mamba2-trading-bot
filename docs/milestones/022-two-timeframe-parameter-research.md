@@ -489,6 +489,47 @@ Acceptance requirements for this performance change are frozen as:
 If any accepted hash changes, the cache is rejected and Phase 1 must not use
 its economic output.
 
+## Post-reference replay-cache optimization gate — frozen before stochastic results
+
+The accepted `reference-v3` run, once complete, remains tied to feature SHA
+`3136d2143f79e80ea0ce9688559b7e7aaaca7ef5` and is not restarted for the
+optimization below.
+
+Before any stochastic-family outcome is inspected, a later replay-only
+performance optimization may remove residual O(N) work from indicator cache
+validation:
+
+- ReplayFeed exposes the exact visible prefix length for static M1/native
+  higher-timeframe sources.
+- replay stochastic/ATR/EMA caches may use that exact length instead of
+  comparing the entire visible timestamp prefix on every boundary.
+- stochastic may cache the prefix fact "has a non-zero high/low range appeared
+  yet?" instead of scanning the entire high/low arrays with `np.all` every
+  boundary.
+
+This optimization is mechanical only. It must not:
+
+- alter source bars or replay boundaries;
+- alter indicator arithmetic;
+- alter production/non-replay fetchers;
+- forward-fill any price;
+- change strategy parameters or decision rules.
+
+Before the optimized path may be used for stochastic screening, require:
+
+1. replay cached-vs-legacy stochastic/ATR/EMA parity tests pass exactly;
+2. focused M022 tests pass;
+3. full native tests pass;
+4. accepted M019 control baseline/diagnostic hashes remain byte-exact;
+5. accepted M020-D baseline/diagnostic/evidence hashes remain byte-exact;
+6. the frozen stochastic **21/7/7** arm reproduces the accepted
+   `reference-v3` aggregate, per-symbol, side, UTC-bucket, TP/safety and
+   protection evidence exactly (artifact file hashes may differ only where the
+   experiment ID/family metadata intentionally differs).
+
+If any economic field differs, reject the optimization and run stochastic
+screening on the accepted reference-v3 executable path instead.
+
 ## Frozen stochastic-family screening rubric — before results
 
 Before inspecting any stochastic-family development result, the following
