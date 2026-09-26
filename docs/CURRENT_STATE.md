@@ -1,6 +1,6 @@
 # Current State
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ## Latest accepted implementation milestone
 
@@ -170,6 +170,66 @@ The deepest drawdown episode peaked at **USD 10,042.761998581507** on
 See `docs/milestones/019-broader-history-validation.md` for the complete
 acceptance record.
 
+## M020 progress — controlled experiments
+
+M020 implementation branch:
+
+`backtest-controlled-experiments`
+
+Current reviewed implementation HEAD before documentation:
+
+`3958b607ab12bf232c741fe520328b72dd9a23f2`
+
+M020-A tested one treatment only: suppress new strategy entry evaluation during
+`00:00:00 <= UTC < 04:00:00`. Existing positions remained managed normally.
+
+Real-data treatment pair:
+
+`mamba2-m020a-treatment-pair-20260926-0603`
+
+Treatment determinism and safety gates:
+
+- baseline A/B identical: **PASS**;
+- treatment baseline SHA-256:
+  `65e3fe214e8e923175144dc9749c3fef521da964a796286805ebed745df42658`;
+- diagnostic A/B identical: **PASS**;
+- treatment diagnostic SHA-256:
+  `c18c9fdda3fa9cb69cfd90f507d217897875248e5f8d745aa49cafe73925157e`;
+- blocked-session entries: **0**;
+- wrong-side initial TP violations: **0**;
+- negative-P/L take-profit exits: **0**;
+- new strategy artifacts: **0**.
+
+Control vs treatment:
+
+- trades: **4,922 -> 4,104**;
+- net realized P/L:
+  **USD -1,716.607632002333 -> USD -933.4296206208546**;
+- maximum equity drawdown:
+  **USD 1,929.6969567926317 -> USD 1,271.330847985335**;
+- maximum drawdown %:
+  **19.214803229083717% -> 12.659175316162072%**;
+- non-flat win rate:
+  **38.60540760317138% -> 40.03901487442087%**.
+
+The P/L delta was **USD +783.1780113814784**. All four calendar periods, all
+five symbols, and both BUY/SELL improved relative to control, although the
+largest symbol contribution came from GBPJPY.
+
+Classification:
+
+**PROMISING, NOT PROMOTED**
+
+The treatment remains loss-making and uses the already-inspected June–September
+dataset. It is not accepted for live risk.
+
+Next M020 step:
+
+**M020-B diagnostic confound separation** — quantify whether the harmful
+00:00–03:59 UTC population remains harmful at ordinary spreads or whether the
+effect is concentrated in extreme spread tails. M020-B is diagnostic only and
+must not introduce a spread cutoff or another strategy treatment.
+
 ## Durable handoff
 
 A fresh ChatGPT or Codex session must start with:
@@ -215,9 +275,9 @@ action is exposed, and no real MT5 order action is permitted.
 
 ## Next milestone
 
-**020 — Controlled experiments**
+**020 — Controlled experiments remains in progress**
 
-M020 must test one explicitly stated hypothesis at a time against the accepted
-M019 control. The first authorized hypothesis is a new-entry session filter for
-00:00–03:59 UTC; it must not be combined with a spread, symbol, side, ATR,
-trailing, or parameter change.
+M020-A is recorded as promising but not promoted. The next authorized task is
+M020-B diagnostic confound separation. A later genuinely forward/paper
+milestone is still required before any experimental strategy change can move
+toward live risk.
