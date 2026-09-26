@@ -3716,6 +3716,89 @@ def m022_phase1_stochastic_family():
         }
     reference = json.loads(reference_summary_path.read_text(encoding="utf-8"))
 
+    equivalence_files = {
+        "a_baseline": (
+            M022_PHASE1_STOCH_EQUIV_DIR
+            / "M022-P1-STOCH-21-7-7-a-baseline.json"
+        ),
+        "b_baseline": (
+            M022_PHASE1_STOCH_EQUIV_DIR
+            / "M022-P1-STOCH-21-7-7-b-baseline.json"
+        ),
+        "a_diagnostic": (
+            M022_PHASE1_STOCH_EQUIV_DIR
+            / "M022-P1-STOCH-21-7-7-a-diagnostic.json"
+        ),
+        "b_diagnostic": (
+            M022_PHASE1_STOCH_EQUIV_DIR
+            / "M022-P1-STOCH-21-7-7-b-diagnostic.json"
+        ),
+        "a_summary": (
+            M022_PHASE1_STOCH_EQUIV_DIR
+            / "M022-P1-STOCH-21-7-7-a-summary.json"
+        ),
+        "b_summary": (
+            M022_PHASE1_STOCH_EQUIV_DIR
+            / "M022-P1-STOCH-21-7-7-b-summary.json"
+        ),
+    }
+    missing_equivalence = [
+        name for name, path in equivalence_files.items()
+        if not path.is_file()
+    ]
+    if missing_equivalence:
+        return {
+            "ok": False,
+            "reason": (
+                "optimized 21/7/7 equivalence must complete before the "
+                "stochastic family"
+            ),
+            "feature_sha": feature_sha,
+            "missing_equivalence_files": missing_equivalence,
+        }
+
+    equivalence_deterministic = bool(
+        _sha256(equivalence_files["a_baseline"])
+        == _sha256(equivalence_files["b_baseline"])
+        and _sha256(equivalence_files["a_diagnostic"])
+        == _sha256(equivalence_files["b_diagnostic"])
+        and _sha256(equivalence_files["a_summary"])
+        == _sha256(equivalence_files["b_summary"])
+    )
+    equivalence_summary_path = equivalence_files["a_summary"]
+    equivalence_summary = json.loads(
+        equivalence_summary_path.read_text(encoding="utf-8")
+    )
+    reference_equivalence_keys = (
+        "partition",
+        "cost_contract",
+        "aggregate",
+        "per_symbol",
+        "by_side",
+        "by_entry_utc_bucket",
+        "protection",
+        "rejections",
+        "tp_safety",
+        "remaining_positions",
+    )
+    equivalence_matches_reference = all(
+        equivalence_summary.get(key) == reference.get(key)
+        for key in reference_equivalence_keys
+    )
+    if not equivalence_deterministic or not equivalence_matches_reference:
+        return {
+            "ok": False,
+            "reason": (
+                "optimized 21/7/7 equivalence is not accepted; refusing "
+                "all other stochastic tuples"
+            ),
+            "feature_sha": feature_sha,
+            "equivalence_deterministic": equivalence_deterministic,
+            "reference_v3_economic_equivalence": (
+                equivalence_matches_reference
+            ),
+        }
+
     output_root = _ensure_baseline_path(M022_PHASE1_STOCHASTIC_DIR)
     if output_root.exists():
         return {
@@ -3737,19 +3820,6 @@ def m022_phase1_stochastic_family():
         (21, 7, 7),
         (28, 7, 7),
     )
-    equivalence_summary_path = (
-        M022_PHASE1_STOCH_EQUIV_DIR
-        / "M022-P1-STOCH-21-7-7-a-summary.json"
-    )
-    if not equivalence_summary_path.is_file():
-        return {
-            "ok": False,
-            "reason": (
-                "optimized 21/7/7 equivalence must pass before the "
-                "stochastic family"
-            ),
-            "feature_sha": feature_sha,
-        }
 
     results = []
     for k, d, slowing in tuples:
