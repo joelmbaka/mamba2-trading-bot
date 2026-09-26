@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-inventory-tests-20260926-1246",
-  "action": "m022_inventory_tests",
+  "id": "mamba2-m022-history-depth-20260926-1247",
+  "action": "m022_history_depth_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
