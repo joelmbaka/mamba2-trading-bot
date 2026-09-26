@@ -3289,6 +3289,34 @@ def m021_primary_pair():
 
 
 
+def m022_phase1_tests():
+    """Run fixed native tests for M022 Phase-1 research machinery."""
+
+    feature_sha = _require_m022_branch()
+    tests = [
+        "tests/test_parameter_research.py",
+        "tests/test_triple_cross_condition_semantics.py",
+        "tests/test_backtest_baseline_reporting.py",
+        "tests/test_position_manager_trailing_semantics.py",
+        "tests/test_backtest_strategy_lifecycle.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "market_data_read_only": True,
+            "real_order_api_called": False,
+            "economic_replay_run": False,
+            "m021_post_cutoff_data_used": False,
+            "parameter_result_inspected": False,
+        },
+    }
+
+
 def m022_inventory_tests():
     """Run the fixed native test gate for M022 history infrastructure."""
 
@@ -5444,6 +5472,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_phase1_tests": m022_phase1_tests,
     "m022_inventory_tests": m022_inventory_tests,
     "m022_maxbars_recovery_probe": m022_maxbars_recovery_probe,
     "m022_raise_mt5_maxbars": m022_raise_mt5_maxbars,
