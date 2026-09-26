@@ -436,3 +436,148 @@ Do not filter or reject any order during M020-C.
 
 The accepted M019 baseline and diagnostic hashes must remain exactly unchanged
 on the ordinary control path.
+
+
+## M020-C result — decision-time spread observability
+
+Validation:
+
+- native suite: **191 passed, 2 skipped**;
+- Wine suite: **191 passed, 2 skipped**;
+- command:
+  `mamba2-m020c-decision-spread-pair-20260926-0702`;
+- accepted M019 baseline SHA-256 reproduced A/B exactly:
+  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
+- accepted M019 diagnostic SHA-256 reproduced A/B exactly:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
+- decision-spread A/B byte-identical: **PASS**;
+- decision-spread SHA-256:
+  `0bb6e878eacfce9982cba23b05e8c4c4e437731554fe8b5f913125429b8f6a4f`;
+- decision-spread rows: **4,922 / 4,922**;
+- missing decision-spread rows: **0**;
+- strategy behavior changed: **false**.
+
+Decision-time spread distribution:
+
+- p50: **2 points**;
+- p75: **5 points**;
+- p90: **10 points**;
+- p95: **14 points**;
+- p99: **107 points**;
+- maximum: **250 points**.
+
+Decision-time vs next-bar fill spread Pearson correlation:
+
+**0.9213069050932308**
+
+This confirms that the causal spread available at order submission strongly
+tracks the fill-time spread diagnosed in M020-B.
+
+### Fixed predeclared decision-time spread bands
+
+| Decision-time spread | Trades | Net P/L |
+|---|---:|---:|
+| <=2 | 2,918 | USD -170.7632 |
+| >2–5 | 842 | USD -97.7619 |
+| >5–10 | 718 | USD -328.7979 |
+| >10–20 | 289 | USD -374.7804 |
+| >20–50 | 47 | USD -110.2818 |
+| >50–100 | 54 | USD -197.6425 |
+| >100 | 54 | USD -436.5799 |
+
+Predeclared rollups:
+
+- <=10 points: 4,478 trades, **USD -597.3229788380668**;
+- >10 points: 444 trades, **USD -1,119.284653164277**;
+- >20 points: 155 trades, **USD -744.5042466887646**.
+
+The >10-point population is only about **9.02%** of all trades but accounts for
+about **65.20%** of the accepted M019 net loss.
+
+### Stability of >10-point decision-time spread
+
+Both sides were negative:
+
+- BUY: 186 trades, **USD -499.3611242643912**;
+- SELL: 258 trades, **USD -619.9235288998857**.
+
+Every calendar period was negative:
+
+- Jun 23–30: 46 trades, **USD -82.02126797324189**;
+- July: 162 trades, **USD -489.6043331609044**;
+- August: 131 trades, **USD -272.16769055194993**;
+- Sep 1–24: 105 trades, **USD -275.4913614781807**.
+
+Every symbol was negative:
+
+- EURJPY: **USD -200.59649447962207**;
+- EURUSD: **USD -41.42142857143316**;
+- GBPJPY: **USD -613.7359073337911**;
+- GBPUSD: **USD -103.88571428570528**;
+- USDJPY: **USD -159.64510849372516**.
+
+### M020-C interpretation
+
+The harmful wide-spread relationship persists using **causal information
+available at order submission time**. It is not an artifact of using the
+next-bar fill spread.
+
+The >10-point boundary is not selected by a parameter sweep:
+
+- it was a fixed predeclared M020-B/M020-C reporting boundary;
+- it is also the observed p90 of the decision-time spread distribution;
+- its harmful relationship is negative across all four calendar periods, all
+  five symbols, and both sides.
+
+This is sufficient to authorize one controlled treatment.
+
+## M020-D — authorized single-variable decision-time spread treatment
+
+### Hypothesis
+
+New entries submitted when the observable decision-time spread is **greater
+than 10 points** are a persistently harmful exposure.
+
+### Control
+
+Accepted M019 strategy unchanged.
+
+### Treatment
+
+Change exactly one behavior:
+
+- reject a new entry at order submission when the broker-observable bid/ask
+  spread is **>10 points**;
+- allow entries at **<=10 points**.
+
+The treatment must use only spread observable at the submission instant. It
+must not inspect the next-bar execution spread.
+
+### Isolation
+
+M020-D must be tested independently against the immutable M019 control.
+
+Do **not** stack:
+
+- the M020-A 00:00–03:59 UTC session filter;
+- symbol filters;
+- side filters;
+- ATR/SL/TP/trailing changes;
+- stochastic/EMA/RSI/trend changes;
+- any second spread threshold.
+
+### Acceptance evidence
+
+Before interpretation:
+
+1. run treatment twice and require byte-identical artifacts;
+2. preserve the ordinary M019 control hashes exactly;
+3. prove zero accepted treatment entries have decision-time spread >10 points;
+4. compare aggregate P/L and drawdown;
+5. compare symbol, side, and calendar-period effects;
+6. verify the result is not dependent on one symbol or one month;
+7. retain all existing TP-direction, negative-TP, and no-strategy-artifact
+   safety gates.
+
+Even if M020-D improves the historical result, it remains in-sample controlled
+evidence. A genuinely later paper/forward milestone remains mandatory.
