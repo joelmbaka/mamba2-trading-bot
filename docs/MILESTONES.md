@@ -103,6 +103,38 @@ Milestone 020 closed with:
 M020 is closed. No M020-E is authorized. The next milestone is prospective
 paper/forward validation on genuinely later data.
 
+## Milestone 021 active state — not closed
+
+Milestone 021 is a prospective paper/forward validation and is **not yet an
+accepted closed milestone**, so it is intentionally not added to the accepted
+ledger table above.
+
+Protocol-freeze commit:
+
+`471892e247942ed91c0bbd9adae46e4a990c5db6`
+
+Accepted execution-machinery implementation SHA:
+
+`f53d38b93434eb52b19f0f12a441e4439822e39e`
+
+Machinery acceptance:
+
+- full native: **206 passed, 2 skipped**;
+- full Wine: **206 passed, 2 skipped**;
+- exact M019 baseline/diagnostic byte preservation: **PASS**;
+- exact M020-D baseline/diagnostic/evidence byte preservation: **PASS**;
+- pre-cutoff export refusal: **PASS**;
+- pre-cutoff paired economic replay refusal: **PASS**;
+- later economic outcomes inspected: **NO**;
+- production/live strategy changed: **NO**.
+
+Primary prospective cutoff:
+
+`2026-10-23T00:00:00Z`
+
+M021 remains open until the frozen prospective protocol reaches a valid
+classification endpoint.
+
 ## Closeout format for future milestones
 
 Record:
