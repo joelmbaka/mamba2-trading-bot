@@ -2,21 +2,46 @@
 
 ## Milestone 021 — prospective paper/forward validation
 
-Milestone 020 is **CLOSED**.
+M020 is **CLOSED**.
 
 Accepted M020 implementation SHA:
 
 `0d85b82278ae08a88f8b5b942fb23ec000b11411`
 
-Accepted M020-D classification:
+Frozen M021 protocol commit:
 
-**PROMISING**
+`471892e247942ed91c0bbd9adae46e4a990c5db6`
 
-M020-D is not promoted to production/live trading.
+Frozen protocol:
 
-## Frozen candidate
+`docs/milestones/021-prospective-forward-validation.md`
 
-The only candidate carried forward is the independent M020-D rule:
+Branch:
+
+`prospective-forward-validation`
+
+## Current authorized phase
+
+Implement only the machinery needed to execute the frozen M021 protocol.
+
+Do **not** inspect, summarize, compare, classify, or otherwise interpret
+post-`2026-09-25T00:00:00Z` economic outcomes before the predeclared minimum
+window is complete.
+
+The primary window ends:
+
+`2026-10-23T00:00:00Z`
+
+The exact minimum evidence and extension rules are frozen in the M021 milestone
+document and must not be changed based on outcomes.
+
+## Frozen arms
+
+Control:
+
+- accepted M019 strategy behavior unchanged.
+
+Candidate:
 
 - reject a new order only when observable decision-time spread is **>10
   points**;
@@ -30,58 +55,91 @@ Do not change the threshold.
 Do not add symbol, side, time, ATR, SL, TP, trailing, stochastic, EMA, RSI,
 trend, position-size, or execution-cost treatments.
 
-## Purpose of M021
+## Implementation scope
 
-Obtain genuinely later paper/forward evidence without reusing the inspected
-June–September history as if it were a holdout.
+Prepare deterministic M021 execution support for the frozen protocol.
 
-The first M021 task is to **predeclare the forward-validation protocol before
-inspecting forward outcomes**.
+Allowed work:
 
-The protocol must define at minimum:
+1. add protocol constants/metadata needed by the forward-validation harness;
+2. support the exact prospective start and fixed cutoff schedule from the
+   milestone document;
+3. support read-only MT5 export of prospective M1 Bid, Ask M1, M5, and M15 data
+   into a dataset isolated from M019/M020;
+4. record deterministic manifest metadata and SHA-256 hashes for all source
+   artifacts;
+5. add paired control/candidate replay support for a supplied **completed**
+   M021 window;
+6. add the required fixed symbol, BUY/SELL, seven-day-period, spread-boundary,
+   safety, P/L, and drawdown reporting fields;
+7. add A/B artifact determinism checks;
+8. add a readiness gate that refuses economic M021 execution before the
+   applicable frozen cutoff is complete;
+9. add fixed local-control actions needed for M021 export/validation;
+10. add synthetic/unit coverage for the frozen date, threshold, readiness, and
+    reporting rules.
 
-1. the exact prospective observation start/cutoff;
-2. the minimum observation horizon and/or trade-count requirement;
-3. the frozen control and frozen M020-D candidate;
-4. deterministic reporting fields and hashes;
-5. aggregate P/L and maximum drawdown;
-6. per-symbol, BUY/SELL, and calendar-period stability;
-7. rejected-order counts and spread-boundary enforcement;
-8. the existing wrong-side TP, negative-TP, remaining-position, and
-   no-strategy-artifact safety gates;
-9. explicit treatment of commission/slippage/swap assumptions;
-10. a classification rule written before results are inspected.
+## Required regression gates
 
-## Data isolation
+Before any future M021 economic result is interpreted, preserve exactly:
 
-The accepted M019/M020 dataset ends at:
+M019 baseline:
 
-`2026-09-25T00:00:00Z`
+`114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`
 
-M021 evidence used for classification must be genuinely later than the
-already-inspected dataset and must not be backfilled with previously inspected
-June–September observations.
+M019 diagnostic:
 
-Do not call a tiny later sample decisive merely because it is new. The minimum
-horizon/trade-count rule must be fixed before interpreting results.
+`84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`
+
+If executable code changes, also preserve the accepted M020-D treatment
+artifacts exactly:
+
+baseline:
+
+`94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`
+
+diagnostic:
+
+`45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`
+
+evidence:
+
+`e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`
+
+## Cost contract
+
+Keep exactly:
+
+`SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`
+
+Do not invent actual broker commission, slippage, or swap.
 
 ## Safety
 
-Historical or market-data MT5 access remains read-only.
+Historical/market-data MT5 access remains read-only.
 
 Never:
 
 - enable real MT5 trading;
 - place, modify, or close a real MT5 order;
-- promote M020-D directly into production strategy behavior;
-- tune the >10 threshold from M021 results;
-- stack M020-A automatically;
-- invent actual commission, slippage, or swap costs.
+- promote M020-D into production/live strategy behavior;
+- inspect early M021 P/L as a basis for changing the protocol;
+- tune the >10 threshold from M021 data;
+- stack M020-A;
+- rewrite accepted replay semantics silently.
 
-## Milestone boundary
+## Acceptance for this implementation phase
 
-M020-E is not authorized.
+This machinery phase is acceptable when:
 
-M021 must remain a prospective paper/forward validation milestone. Any eventual
-move toward live risk requires separate review and explicit authorization after
-the forward evidence is complete.
+- native and Wine suites pass;
+- synthetic M021 protocol/readiness/reporting tests pass;
+- immutable M019 control hashes remain exact;
+- accepted M020-D historical treatment hashes remain exact if executable code
+  changed;
+- a pre-cutoff M021 economic action is proven to refuse execution;
+- no post-cutoff economic outcome has been interpreted;
+- no production/live strategy behavior changed.
+
+After that, M021 waits for the first frozen observation cutoff that satisfies
+the protocol.
