@@ -1,135 +1,104 @@
 # Next Authorized Task
 
-## Milestone 021 — wait for the frozen primary cutoff
-
-M020 is **CLOSED**.
-
-M021 is **OPEN — PROTOCOL AND EXECUTION MACHINERY FROZEN**.
+## Milestone 022 — two-timeframe parameter research
 
 Branch:
 
+`strategy-parameter-research`
+
+M022 protocol:
+
+`docs/milestones/022-two-timeframe-parameter-research.md`
+
+M021 remains independently frozen on:
+
 `prospective-forward-validation`
 
-Protocol-freeze commit:
+Do not modify, retune, rebase, or inspect M021 early.
 
-`471892e247942ed91c0bbd9adae46e4a990c5db6`
+## Objective
 
-Accepted M021 machinery implementation SHA:
+Systematically validate the human-selected parameters of the existing **M5 + M1** strategy while preserving its basic entry structure.
 
-`f53d38b93434eb52b19f0f12a441e4439822e39e`
+Do not add M15/three-timeframe confirmation in M022.
 
-Frozen protocol:
+## First required gate — history inventory
 
-`docs/milestones/021-prospective-forward-validation.md`
+Before broad parameter results are inspected, establish the maximum trustworthy common read-only MT5 history available for all five symbols:
 
-## Current state
+- EURUSD
+- EURJPY
+- GBPUSD
+- GBPJPY
+- USDJPY
 
-The machinery phase is accepted.
+Required market data:
 
-Validation completed on 2026-09-26:
+- M1 Bid;
+- Ask M1 / sufficient tick-derived Ask data for truthful spread-aware replay;
+- M5;
+- M15 only where existing exporter/replay compatibility requires it, never as an M022 signal input.
 
-- native: **206 passed, 2 skipped**;
-- Wine: **206 passed, 2 skipped**;
-- M019 baseline preserved exactly:
-  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
-- M019 diagnostic preserved exactly:
-  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
-- M020-D baseline preserved exactly:
-  `94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`;
-- M020-D diagnostic preserved exactly:
-  `45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`;
-- M020-D evidence preserved exactly:
-  `e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`;
-- pre-cutoff readiness: **not ready**;
-- pre-cutoff primary export: **refused, no export attempted**;
-- pre-cutoff paired replay: **refused, no economic results computed**.
+Record exact UTC ranges, row counts, missing-data diagnostics, artifact hashes, broker/source metadata, and runtime versions.
 
-No post-cutoff economic outcome has been inspected.
+If enough trustworthy history exists, predeclare chronological **development / validation / untouched historical holdout** partitions before optimization outcomes are interpreted.
 
-## Do not run the economic validation early
+If history is too short for meaningful separation, stop and document that limitation rather than brute-force the already-inspected sample.
 
-The primary source-data window is:
+## Phase 1
 
-`[2026-09-25T00:00:00Z, 2026-10-23T00:00:00Z)`
+Implement experiment-only parameter overrides and deterministic reporting, preserving production defaults.
 
-Do not run or bypass the economic replay before:
+Screen one family at a time using the bounded grid frozen in the M022 milestone document:
 
-`2026-10-23T00:00:00Z`
+- stochastic tuples;
+- symmetric oversold/overbought boundaries;
+- EMA period;
+- decision-time spread threshold;
+- ATR SL/TP protection;
+- all-hours vs the already-documented 00:00–03:59 UTC exclusion.
 
-The local-control actions already enforce this gate.
+Do not brute-force the full Cartesian product.
 
-Do not inspect a partial-window P/L, drawdown, symbol result, side result,
-calendar-period result, or treatment classification.
+## Phase 2
 
-## First authorized action at or after the primary cutoff
+Only after Phase 1 evidence is reviewed:
 
-At or after `2026-10-23T00:00:00Z`:
+- freeze a shortlist;
+- freeze a bounded combination matrix;
+- then run combinations.
 
-1. verify the feature branch is clean and matches origin;
-2. record exact native/Wine/runtime versions;
-3. run `m021_historical_regression` and require all accepted M019/M020-D
-   hashes to remain exact;
-4. run the read-only `m021_primary_export`;
-5. validate the manifest, requested range, row counts, Ask coverage, artifact
-   SHA-256 values, and runtime/source metadata;
-6. run `m021_primary_pair`;
-7. require byte-identical A/B artifacts for control and candidate;
-8. apply all treatment-boundary and safety gates;
-9. check the **predeclared count thresholds before interpreting economic
-   outcomes**.
+Do not select solely by maximum historical P/L. Require robustness across symbols, BUY/SELL, calendar buckets, drawdown, trade count, and nearby parameter values.
 
-## Count-gate decision
+## Local execution
 
-The primary cutoff can be classified only if all are met:
+Use `local-control` and `local-control-results` for Dell/MT5 work.
 
-- control closed trades >= **1,000**;
-- candidate closed trades >= **900**;
-- candidate closed trades >= **100 per symbol**;
-- candidate BUY closed trades >= **300**;
-- candidate SELL closed trades >= **300**.
+Installed service:
 
-If any threshold is unmet, do not interpret P/L or drawdown. Extend the window
-only to the next frozen cutoff:
+`chatgpt-mamba2-local-agent.service`
 
-- 2026-10-30T00:00:00Z
-- 2026-11-06T00:00:00Z
-- 2026-11-13T00:00:00Z
-- 2026-11-20T00:00:00Z
+Prefer cloud execution/review for work that does not require the Dell. For Dell-only operations, use existing fixed allowlisted actions or add narrowly scoped fixed actions. Never expose arbitrary shell execution and never expose a real-order action.
 
-Use the first cutoff that satisfies all count thresholds.
+Each local result must identify the exact feature SHA and return deterministic evidence.
 
-If the eight-week cutoff is reached without all count thresholds, classify
-**INSUFFICIENT FOR CLASSIFICATION** and close M021 without tuning.
-
-## Frozen candidate
-
-Candidate remains exactly:
-
-- reject a new order only when observable decision-time spread is **>10
-  points**;
-- allow **<=10 points**;
-- use only bid/ask observable at submission time.
+## Safety / boundaries
 
 Never:
 
-- stack M020-A;
-- change the threshold;
-- add symbol, side, session, ATR, SL, TP, trailing, stochastic, EMA, RSI,
-  trend, position-size, or execution-cost treatments;
-- invent commission, slippage, or swap;
-- enable real MT5 trading;
-- place, modify, or close a real MT5 order;
-- promote M020-D directly to production/live behavior.
+- modify M021 frozen behavior/protocol;
+- use post-Sep-25 M021 outcomes to tune M022;
+- add M15 as a signal timeframe;
+- change production defaults silently;
+- merge to main;
+- deploy;
+- enable/place/modify/close real MT5 trades from research tooling;
+- invent commission/slippage/swap costs.
 
-Cost contract remains exactly:
+The accepted M019/M020 regression artifacts must remain protected as specified in the M022 milestone.
 
-`SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`
+## Start here
 
-## Classification
+Read the durable handoff docs and the M022 milestone first. Then verify branch/HEAD/worktree assumptions and begin with the history-inventory + experiment-machinery phase.
 
-Use only the classification rule already frozen in the milestone document.
-
-Do not change the rule after seeing the prospective result.
-
-Even **FORWARD-SUPPORTED** does not authorize live trading. Any live-risk step
-requires a separate later review and explicit authorization.
+Do not interpret parameter winners until the data partitions and reporting/selection rules are documented.
