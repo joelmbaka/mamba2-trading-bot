@@ -3410,24 +3410,27 @@ try:
                 continue
             seen.add(key)
             try:
-                text = path.read_text(
-                    encoding="utf-16",
-                    errors="ignore",
-                )
-                if "maxbars" not in text.lower():
-                    text = path.read_text(
-                        encoding="utf-8",
-                        errors="ignore",
-                    )
+                raw = path.read_bytes()
             except OSError:
                 continue
-            for line in text.splitlines():
-                normalized = line.strip()
-                if "maxbars" in normalized.lower():
-                    output["config_hits"].append({
-                        "path": str(path),
-                        "line": normalized[:200],
-                    })
+
+            decoded = []
+            for encoding in ("utf-8", "utf-16le", "utf-16be"):
+                try:
+                    decoded.append(raw.decode(encoding, errors="ignore"))
+                except UnicodeError:
+                    pass
+
+            for text in decoded:
+                for line in text.splitlines():
+                    normalized = line.strip()
+                    if "maxbars" in normalized.lower():
+                        hit = {
+                            "path": str(path),
+                            "line": normalized[:200],
+                        }
+                        if hit not in output["config_hits"]:
+                            output["config_hits"].append(hit)
 
     print(json.dumps(output, sort_keys=True), flush=True)
 finally:
