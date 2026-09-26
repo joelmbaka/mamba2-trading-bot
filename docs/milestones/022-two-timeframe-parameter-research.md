@@ -390,6 +390,56 @@ For every arm record at minimum:
 
 Do not select an arm solely by highest P/L.
 
+## Phase-1 mechanical replay-clock correction — before accepted results
+
+The first development reference attempt
+(`mamba2-m022-phase1-reference-20260926-1708`) was **not accepted**. It
+terminated with `AccountCurrencyConversionError` at
+`2025-09-17T00:01:00Z` when a JPY-denominated exit required JPY→USD
+conversion but USDJPY had no completed M1 bar on that exact portfolio
+boundary.
+
+This exposed a mechanical property of the accepted extended dataset:
+
+- Bid/Ask M1 indexes are exact **within each symbol**;
+- the five symbols do not share every individual M1 timestamp;
+- the accepted broker intentionally requires same-boundary historical
+  conversion and does not carry an older conversion quote forward.
+
+The conversion rule is **not changed**. In particular M022 will not:
+
+- forward-fill a missing USDJPY conversion bar;
+- use a future conversion bar;
+- weaken same-boundary conversion semantics;
+- treat the failed partial run as parameter evidence.
+
+Before any accepted Phase-1 economic result, the research-only partition view
+is therefore corrected to the **strict intersection of M1 opens present for
+all five symbols and their Ask series**. Native M5/M15 histories remain
+unchanged. This guarantees that every replay boundary used for scoring has
+same-boundary conversion data while preserving the source dataset and
+production replay semantics.
+
+Every accepted Phase-1 artifact must record:
+
+- `strict_common_m1 = true`;
+- exact strict-common M1 row count;
+- first and last common M1 open;
+- SHA-256 of the ordered strict-common M1 timestamp list.
+
+The original `reference-v1` directory is preserved as failed mechanical
+evidence and is never overwritten. The next reference attempt must use a new
+versioned directory.
+
+The accepted v3 source dataset begins at the development partition start, so
+no pre-partition warm-up history exists inside the accepted artifact. Phase 1
+therefore starts flat and allows indicators/ATR to become ready causally from
+the partition's own bars. This rule is identical across all arms and is frozen
+before successful economic results.
+
+No validation data, historical holdout outcome, M021 prospective outcome, or
+partial reference P/L was inspected to make this correction.
+
 ## Frozen stochastic-family screening rubric — before results
 
 Before inspecting any stochastic-family development result, the following
