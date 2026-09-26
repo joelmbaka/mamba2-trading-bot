@@ -132,7 +132,7 @@ M022_PHASE1_REG_CONTROL_DIAGNOSTIC = M022_PHASE1_REGRESSION_DIR / "control-diagn
 M022_PHASE1_REG_M020D_BASELINE = M022_PHASE1_REGRESSION_DIR / "m020d-baseline.json"
 M022_PHASE1_REG_M020D_DIAGNOSTIC = M022_PHASE1_REGRESSION_DIR / "m020d-diagnostic.json"
 M022_PHASE1_REG_M020D_EVIDENCE = M022_PHASE1_REGRESSION_DIR / "m020d-evidence.json"
-M022_PHASE1_REFERENCE_DIR = REPO / "backtest_data" / "m022-phase1-development" / "reference-v2"
+M022_PHASE1_REFERENCE_DIR = REPO / "backtest_data" / "m022-phase1-development" / "reference-v3"
 M022_PHASE1_STOCHASTIC_DIR = REPO / "backtest_data" / "m022-phase1-development" / "stochastic-v1"
 
 
@@ -3395,8 +3395,10 @@ def m022_phase1_stochastic_assessment():
             and partition.get("partition") == "development"
             and partition.get("source_manifest_sha256")
             == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
-            and partition.get("strict_common_m1") is True
-            and bool(partition.get("common_m1_index_sha256"))
+            and partition.get("strict_common_boundary_clock") is True
+            and partition.get("full_symbol_m1_preserved") is True
+        and int(partition.get("replay_boundary_count", 0)) > 0
+        and bool(partition.get("replay_boundary_sha256"))
         )
 
         net_pl = float(aggregate.get("net_realized_pl", 0.0))
@@ -3788,9 +3790,11 @@ def m022_phase1_reference_pair():
         and partition.get("start_utc") == "2025-08-25T00:00:00Z"
         and partition.get("end_exclusive_utc") == "2026-04-21T00:00:00Z"
         and int(partition.get("common_trading_dates", 0)) == 169
-        and partition.get("strict_common_m1") is True
+        and partition.get("strict_common_boundary_clock") is True
         and int(partition.get("common_m1_rows", 0)) > 0
-        and bool(partition.get("common_m1_index_sha256"))
+        and partition.get("full_symbol_m1_preserved") is True
+        and int(partition.get("replay_boundary_count", 0)) > 0
+        and bool(partition.get("replay_boundary_sha256"))
     )
     safety_ok = (
         int(tp_safety.get("negative_pl_take_profit_exits", -1)) == 0
