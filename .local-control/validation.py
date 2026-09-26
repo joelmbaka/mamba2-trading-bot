@@ -3214,6 +3214,28 @@ def m021_primary_pair():
 
 
 
+def m022_inventory_tests():
+    """Run the fixed native test gate for M022 history infrastructure."""
+
+    feature_sha = _require_m022_branch()
+    result = _pytest_native([
+        "tests/test_mt5_dataset.py",
+    ])
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "tests": ["tests/test_mt5_dataset.py"],
+        "run": result,
+        "safety": {
+            "market_data_read_only": True,
+            "real_order_api_called": False,
+            "economic_replay_run": False,
+            "m021_post_cutoff_data_used": False,
+        },
+    }
+
+
 def m022_history_depth_probe():
     """Probe native timeframe depth and tick coverage at the native common start."""
 
@@ -3864,6 +3886,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_inventory_tests": m022_inventory_tests,
     "m022_history_depth_probe": m022_history_depth_probe,
     "m022_tick_inventory_cleanup": m022_tick_inventory_cleanup,
     "m022_tick_inventory": m022_tick_inventory,
