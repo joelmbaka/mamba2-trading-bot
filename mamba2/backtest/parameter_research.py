@@ -384,7 +384,10 @@ def _tp_safety(diagnostic_report: Mapping[str, Any]) -> dict[str, int]:
         if not protection:
             continue
         entry = float(row["entry_price"])
-        tp = float(protection["tp"])
+        tp_value = protection.get("applied_tp", protection.get("new_tp"))
+        if tp_value is None:
+            continue
+        tp = float(tp_value)
         side = str(row["side"]).upper()
         if (side == "BUY" and tp <= entry) or (side == "SELL" and tp >= entry):
             wrong_side_initial_targets += 1
