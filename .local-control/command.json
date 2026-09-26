@@ -1,7 +1,9 @@
 {
   "version": 1,
-  "id": "mamba2-m020d-authoritative-treatment-pair-20260926-1014",
-  "action": "controlled_experiment_m020d_pair",
-  "args": {},
+  "id": "mamba2-m021-switch-prospective-forward-20260926-1055",
+  "action": "switch_branch",
+  "args": {
+    "branch": "prospective-forward-validation"
+  },
   "requested_by": "chatgpt"
 }
