@@ -29,24 +29,27 @@ git show origin/local-control:.local-control/agent.py > "$AGENT"
 git show origin/local-control:.local-control/validation.py > "$VALIDATION"
 chmod 700 "$AGENT" "$VALIDATION"
 
-if ! grep -Fq '"defect_review_diagnostic_run_pair"' "$AGENT"; then
-  echo "ERROR: installed agent.py does not contain the M018 action."
+# agent.py intentionally dispatches fixed validation actions generically via
+# validation.ACTION_HANDLERS. Verify the dispatcher contract in agent.py and
+# verify representative historical actions in validation.py itself.
+if ! grep -Fq 'VALIDATION_ACTIONS = frozenset(validation.ACTION_HANDLERS)' "$AGENT"; then
+  echo "ERROR: installed agent.py does not expose validation.ACTION_HANDLERS."
   exit 1
 fi
-if ! grep -Fq '"defect_review_diagnostic_run_pair"' "$VALIDATION"; then
+if ! grep -Fq '"defect_review_diagnostic_run_pair": defect_review_diagnostic_run_pair' "$VALIDATION"; then
   echo "ERROR: installed validation.py does not contain the M018 action."
   exit 1
 fi
-if ! grep -Fq '"broader_history_run_pair"' "$AGENT"; then
-  echo "ERROR: installed agent.py does not contain the M019 actions."
+if ! grep -Fq '"broader_history_run_pair": broader_history_run_pair' "$VALIDATION"; then
+  echo "ERROR: installed validation.py does not contain the M019 action."
   exit 1
 fi
-if ! grep -Fq '"broader_history_run_pair"' "$VALIDATION"; then
-  echo "ERROR: installed validation.py does not contain the M019 actions."
+if ! grep -Fq '"m022_history_checkpoint_probe": m022_history_checkpoint_probe' "$VALIDATION"; then
+  echo "ERROR: installed validation.py does not contain the M022 checkpoint action."
   exit 1
 fi
 
-echo "Installed control files verified for M018 and M019 actions."
+echo "Installed control dispatcher and M018/M019/M022 actions verified."
 
 if ! /usr/bin/python3 -m py_compile "$AGENT" "$VALIDATION"; then
   echo "ERROR: installed local-control Python files do not compile."
