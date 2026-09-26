@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m021-historical-regression-20260926-1108",
-  "action": "m021_historical_regression",
+  "id": "mamba2-m021-readiness-20260926-1127",
+  "action": "m021_forward_readiness",
   "args": {},
   "requested_by": "chatgpt"
 }
