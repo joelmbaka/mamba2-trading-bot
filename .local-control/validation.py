@@ -3211,6 +3211,187 @@ def m021_primary_pair():
 
 
 
+
+def m022_history_depth_probe():
+    """Probe raw MT5 depth without exporting or replaying economic outcomes."""
+
+    feature_sha = _require_m022_branch()
+    wine_python, discovery = _select_wine_python()
+    wine = _wine()
+    probe_code = r'''
+import json
+import platform
+from datetime import datetime, timezone
+
+import MetaTrader5 as mt5
+import numpy as np
+
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+floor = datetime.fromisoformat("2010-01-01T00:00:00+00:00")
+cutoff = datetime.fromisoformat("2026-09-25T00:00:00+00:00")
+timeframes = {
+    "M1": mt5.TIMEFRAME_M1,
+    "M5": mt5.TIMEFRAME_M5,
+    "M15": mt5.TIMEFRAME_M15,
+}
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed for read-only M022 depth probe")
+
+def iso_epoch(seconds):
+    return datetime.fromtimestamp(
+        int(seconds), timezone.utc
+    ).isoformat().replace("+00:00", "Z")
+
+try:
+    account = mt5.account_info()
+    terminal = mt5.terminal_info()
+    output = {}
+    for symbol in symbols:
+        if not mt5.symbol_select(symbol, True):
+            raise RuntimeError(f"MT5 could not select {symbol}")
+
+        ticks = mt5.copy_ticks_from(
+            symbol,
+            floor,
+            1024,
+            mt5.COPY_TICKS_ALL,
+        )
+        first_tick = None
+        last_probe_tick = None
+        valid_tick_rows = 0
+        if ticks is not None:
+            names = ticks.dtype.names or ()
+            for row in ticks:
+                bid = float(row["bid"])
+                ask = float(row["ask"])
+                if bid <= 0 or ask <= 0 or ask < bid:
+                    continue
+                raw_time = (
+                    int(row["time_msc"]) / 1000.0
+                    if "time_msc" in names
+                    else float(row["time"])
+                )
+                timestamp = datetime.fromtimestamp(raw_time, timezone.utc)
+                if timestamp >= cutoff:
+                    continue
+                valid_tick_rows += 1
+                if first_tick is None:
+                    first_tick = timestamp
+                last_probe_tick = timestamp
+
+        native = {}
+        for label, timeframe in timeframes.items():
+            rates = mt5.copy_rates_from_pos(
+                symbol,
+                timeframe,
+                0,
+                200000,
+            )
+            if rates is None or len(rates) == 0:
+                native[label] = {
+                    "rows_returned": 0,
+                    "first_bar_open_utc": None,
+                    "last_bar_open_utc": None,
+                }
+                continue
+            times = [int(row["time"]) for row in rates]
+            native[label] = {
+                "rows_returned": int(len(rates)),
+                "first_bar_open_utc": iso_epoch(min(times)),
+                "last_bar_open_utc": iso_epoch(max(times)),
+            }
+
+        output[symbol] = {
+            "first_synchronized_bid_ask_tick_utc": (
+                first_tick.isoformat().replace("+00:00", "Z")
+                if first_tick is not None
+                else None
+            ),
+            "initial_tick_probe_valid_rows": valid_tick_rows,
+            "initial_tick_probe_last_utc": (
+                last_probe_tick.isoformat().replace("+00:00", "Z")
+                if last_probe_tick is not None
+                else None
+            ),
+            "native": native,
+        }
+
+    starts = []
+    for symbol in symbols:
+        row = output[symbol]
+        tick = row["first_synchronized_bid_ask_tick_utc"]
+        m5 = row["native"]["M5"]["first_bar_open_utc"]
+        m15 = row["native"]["M15"]["first_bar_open_utc"]
+        if not tick or not m5 or not m15:
+            continue
+        starts.extend([tick, m5, m15])
+
+    common_start = max(starts) if len(starts) == len(symbols) * 3 else None
+    print(json.dumps({
+        "probe_floor_utc": "2010-01-01T00:00:00Z",
+        "cutoff_utc": "2026-09-25T00:00:00Z",
+        "symbols": output,
+        "candidate_tick_m1_native_m5_m15_common_start_utc": common_start,
+        "broker_server": getattr(account, "server", None),
+        "account_currency": getattr(account, "currency", None),
+        "terminal_maxbars": getattr(terminal, "maxbars", None),
+        "runtime": {
+            "python": platform.python_version(),
+            "numpy": np.__version__,
+            "metatrader5_package": getattr(mt5, "__version__", None),
+            "terminal_version": (
+                list(mt5.version()) if hasattr(mt5, "version") else None
+            ),
+        },
+    }, sort_keys=True))
+finally:
+    mt5.shutdown()
+'''
+    run = _run(
+        [wine, wine_python, "-c", probe_code],
+        env=_safe_env(wine=True),
+    )
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "read-only M022 history-depth probe failed",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "run": run,
+            "wine_python": wine_python,
+            "discovery": discovery,
+        }
+
+    try:
+        payload = json.loads(run["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError) as exc:
+        raise RuntimeError("unable to parse M022 depth probe") from exc
+
+    complete = (
+        payload.get("candidate_tick_m1_native_m5_m15_common_start_utc")
+        is not None
+    )
+    return {
+        "ok": complete,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "probe": payload,
+        "wine_python": wine_python,
+        "discovery": discovery,
+        "safety": {
+            "market_data_read_only": True,
+            "real_order_api_called": False,
+            "economic_replay_run": False,
+            "m021_post_cutoff_data_used": False,
+        },
+        "run": run,
+    }
+
+
 def m022_history_inventory_cleanup():
     """Remove only the fixed raw M022 history-inventory export directory."""
 
@@ -3670,6 +3851,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_history_depth_probe": m022_history_depth_probe,
     "m022_history_inventory_cleanup": m022_history_inventory_cleanup,
     "m022_history_inventory": m022_history_inventory,
 }
