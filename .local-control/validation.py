@@ -3317,7 +3317,17 @@ def m022_history_checkpoint_probe():
     """Probe bounded historical checkpoints with a hard per-date kill limit."""
 
     feature_sha = _require_m022_branch()
-    wine_python, discovery = _select_wine_python()
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    if not dedicated.is_file():
+        raise RuntimeError("established M022 Wine runtime is missing: .venv-wine")
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M022 Wine runtime to a Windows path")
+    discovery = {
+        "selection": "established-dedicated-wine-runtime",
+        "host_path": str(dedicated),
+        "wine_python": wine_python,
+    }
     wine = _wine()
 
     checkpoints = [
@@ -3600,7 +3610,17 @@ def m022_tick_inventory():
             "depth": depth,
         }
 
-    wine_python, discovery = _select_wine_python()
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    if not dedicated.is_file():
+        raise RuntimeError("established M022 Wine runtime is missing: .venv-wine")
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M022 Wine runtime to a Windows path")
+    discovery = {
+        "selection": "established-dedicated-wine-runtime",
+        "host_path": str(dedicated),
+        "wine_python": wine_python,
+    }
     wine = _wine()
     export = _run(
         [
