@@ -1,72 +1,90 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-partition-freeze-20260926-1552",
-  "completed_at": "2026-09-26T13:13:31.435465+00:00",
+  "command_id": "mamba2-m022-phase1-sync-20260926-1558",
+  "completed_at": "2026-09-26T13:24:41.047471+00:00",
   "ok": true,
-  "action": "m022_partition_freeze",
+  "action": "sync",
   "data": {
-    "ok": true,
-    "feature_branch": "strategy-parameter-research",
-    "feature_sha": "50adee960bc3ed1bc2c3fe1cecda509e2446cd08",
-    "partition_freeze": {
-      "common_trading_date_count": 282,
-      "common_trading_dates_sha256": "2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5",
-      "first_common_trading_date": "2025-08-25T00:00:00Z",
-      "last_common_trading_date": "2026-09-24T00:00:00Z",
-      "manifest_path": "backtest_data/m022-history-inventory-native-m1-v3/manifest.json",
-      "manifest_sha256": "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558",
-      "minimum_partition_size_ok": true,
-      "partitions": {
-        "development": {
-          "end_exclusive_utc": "2026-04-21T00:00:00Z",
-          "first_trading_date": "2025-08-25T00:00:00Z",
-          "last_trading_date": "2026-04-20T00:00:00Z",
-          "start_utc": "2025-08-25T00:00:00Z",
-          "trading_dates": 169
-        },
-        "historical_holdout": {
-          "end_exclusive_utc": "2026-09-25T00:00:00Z",
-          "first_trading_date": "2026-07-08T00:00:00Z",
-          "last_trading_date": "2026-09-24T00:00:00Z",
-          "start_utc": "2026-07-08T00:00:00Z",
-          "trading_dates": 57
-        },
-        "validation": {
-          "end_exclusive_utc": "2026-07-08T00:00:00Z",
-          "first_trading_date": "2026-04-21T00:00:00Z",
-          "last_trading_date": "2026-07-07T00:00:00Z",
-          "start_utc": "2026-04-21T00:00:00Z",
-          "trading_dates": 56
-        }
+    "branch": "strategy-parameter-research",
+    "before_sha": "1b6132094b961f2b5c66e9a413ee29ad5b921dbb",
+    "after_sha": "1b6132094b961f2b5c66e9a413ee29ad5b921dbb",
+    "reason": null,
+    "commands": [
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "1b6132094b961f2b5c66e9a413ee29ad5b921dbb\n",
+        "stderr": ""
       },
-      "rule": {
-        "development_fraction": 0.6,
-        "holdout_fraction": 0.2,
-        "minimum_trading_dates_each": 20,
-        "rounding": "floor first two; remainder to holdout",
-        "validation_fraction": 0.2,
-        "whole_utc_trading_dates": true
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "strategy-parameter-research\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin",
+          "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "1b6132094b961f2b5c66e9a413ee29ad5b921dbb\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "0\t0\n",
+        "stderr": ""
       }
-    },
-    "safety": {
-      "market_data_read_only": true,
-      "economic_replay_run": false,
-      "parameter_result_inspected": false,
-      "m021_post_cutoff_data_used": false,
-      "real_order_api_called": false
-    },
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-c",
-        "\nimport hashlib\nimport json\nimport math\nfrom pathlib import Path\n\nfrom mamba2.backtest.mt5_dataset import load_mt5_dataset\n\nmanifest_path = Path(\n    \"backtest_data/m022-history-inventory-native-m1-v3/manifest.json\"\n)\ndataset = load_mt5_dataset(manifest_path)\nsymbols = [\"EURUSD\", \"EURJPY\", \"GBPUSD\", \"GBPJPY\", \"USDJPY\"]\n\ncommon_dates = None\nfor symbol in symbols:\n    m1 = dataset.m1_bars[symbol]\n    ask = dataset.ask_m1_bars[symbol]\n    m5 = dataset.native_timeframe_bars[symbol][\"M5\"]\n\n    dates = set(m1.index.normalize())\n    dates &= set(ask.index.normalize())\n    dates &= set(m5.index.normalize())\n    common_dates = dates if common_dates is None else common_dates & dates\n\nordered = sorted(common_dates or [])\nn = len(ordered)\ndev_n = math.floor(n * 0.60)\nval_n = math.floor(n * 0.20)\nhold_n = n - dev_n - val_n\n\ndef day_iso(ts):\n    return ts.isoformat().replace(\"+00:00\", \"Z\")\n\ndef boundary_iso(ts):\n    return ts.normalize().isoformat().replace(\"+00:00\", \"Z\")\n\nif n:\n    development_start = ordered[0].normalize()\n    validation_start = ordered[dev_n].normalize() if dev_n < n else None\n    holdout_start = (\n        ordered[dev_n + val_n].normalize()\n        if (dev_n + val_n) < n\n        else None\n    )\nelse:\n    development_start = validation_start = holdout_start = None\n\ncutoff = \"2026-09-25T00:00:00Z\"\ndate_payload = \"\\n\".join(day_iso(ts) for ts in ordered).encode(\"utf-8\")\ndate_sha = hashlib.sha256(date_payload).hexdigest()\nmanifest_sha = hashlib.sha256(manifest_path.read_bytes()).hexdigest()\n\npartitions = {\n    \"development\": {\n        \"trading_dates\": dev_n,\n        \"start_utc\": (\n            boundary_iso(development_start)\n            if development_start is not None else None\n        ),\n        \"end_exclusive_utc\": (\n            boundary_iso(validation_start)\n            if validation_start is not None else None\n        ),\n        \"first_trading_date\": (\n            day_iso(ordered[0]) if dev_n else None\n        ),\n        \"last_trading_date\": (\n            day_iso(ordered[dev_n - 1]) if dev_n else None\n        ),\n    },\n    \"validation\": {\n        \"trading_dates\": val_n,\n        \"start_utc\": (\n            boundary_iso(validation_start)\n            if validation_start is not None else None\n        ),\n        \"end_exclusive_utc\": (\n            boundary_iso(holdout_start)\n            if holdout_start is not None else None\n        ),\n        \"first_trading_date\": (\n            day_iso(ordered[dev_n]) if val_n else None\n        ),\n        \"last_trading_date\": (\n            day_iso(ordered[dev_n + val_n - 1]) if val_n else None\n        ),\n    },\n    \"historical_holdout\": {\n        \"trading_dates\": hold_n,\n        \"start_utc\": (\n            boundary_iso(holdout_start)\n            if holdout_start is not None else None\n        ),\n        \"end_exclusive_utc\": cutoff,\n        \"first_trading_date\": (\n            day_iso(ordered[dev_n + val_n]) if hold_n else None\n        ),\n        \"last_trading_date\": (\n            day_iso(ordered[-1]) if hold_n else None\n        ),\n    },\n}\n\nminimum_ok = min(dev_n, val_n, hold_n) >= 20\n\nprint(json.dumps({\n    \"manifest_path\": str(manifest_path),\n    \"manifest_sha256\": manifest_sha,\n    \"common_trading_date_count\": n,\n    \"common_trading_dates_sha256\": date_sha,\n    \"first_common_trading_date\": day_iso(ordered[0]) if ordered else None,\n    \"last_common_trading_date\": day_iso(ordered[-1]) if ordered else None,\n    \"rule\": {\n        \"development_fraction\": 0.60,\n        \"validation_fraction\": 0.20,\n        \"holdout_fraction\": 0.20,\n        \"rounding\": \"floor first two; remainder to holdout\",\n        \"whole_utc_trading_dates\": True,\n        \"minimum_trading_dates_each\": 20,\n    },\n    \"partitions\": partitions,\n    \"minimum_partition_size_ok\": minimum_ok,\n}, sort_keys=True))\n"
-      ],
-      "exit_code": 0,
-      "stdout": "{\"common_trading_date_count\": 282, \"common_trading_dates_sha256\": \"2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5\", \"first_common_trading_date\": \"2025-08-25T00:00:00Z\", \"last_common_trading_date\": \"2026-09-24T00:00:00Z\", \"manifest_path\": \"backtest_data/m022-history-inventory-native-m1-v3/manifest.json\", \"manifest_sha256\": \"143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558\", \"minimum_partition_size_ok\": true, \"partitions\": {\"development\": {\"end_exclusive_utc\": \"2026-04-21T00:00:00Z\", \"first_trading_date\": \"2025-08-25T00:00:00Z\", \"last_trading_date\": \"2026-04-20T00:00:00Z\", \"start_utc\": \"2025-08-25T00:00:00Z\", \"trading_dates\": 169}, \"historical_holdout\": {\"end_exclusive_utc\": \"2026-09-25T00:00:00Z\", \"first_trading_date\": \"2026-07-08T00:00:00Z\", \"last_trading_date\": \"2026-09-24T00:00:00Z\", \"start_utc\": \"2026-07-08T00:00:00Z\", \"trading_dates\": 57}, \"validation\": {\"end_exclusive_utc\": \"2026-07-08T00:00:00Z\", \"first_trading_date\": \"2026-04-21T00:00:00Z\", \"last_trading_date\": \"2026-07-07T00:00:00Z\", \"start_utc\": \"2026-04-21T00:00:00Z\", \"trading_dates\": 56}}, \"rule\": {\"development_fraction\": 0.6, \"holdout_fraction\": 0.2, \"minimum_trading_dates_each\": 20, \"rounding\": \"floor first two; remainder to holdout\", \"validation_fraction\": 0.2, \"whole_utc_trading_dates\": true}}\n",
-      "stderr": ""
-    }
+    ]
   }
 }
