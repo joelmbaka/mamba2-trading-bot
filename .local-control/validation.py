@@ -384,7 +384,10 @@ def _wine_python_candidates():
 
 
 def _probe_wine_python(path):
-    return _run(
+    # Runtime discovery is part of the M022 preflight and must be bounded too;
+    # otherwise a stuck Wine interpreter can hang before the checkpoint probe
+    # reaches its own timeout boundary.
+    return _run_process_group_bounded(
         [
             _wine(),
             path,
@@ -397,6 +400,7 @@ def _probe_wine_python(path):
             ),
         ],
         env=_safe_env(wine=True),
+        timeout_seconds=15,
     )
 
 
