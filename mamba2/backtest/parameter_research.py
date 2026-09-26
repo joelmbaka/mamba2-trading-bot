@@ -257,6 +257,84 @@ def _datetime_index_sha256(index: pd.DatetimeIndex) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _strict_common_boundary_clock(
+    m1_bars: Mapping[str, pd.DataFrame],
+    ask_m1_bars: Mapping[str, pd.DataFrame],
+    *,
+    end_exclusive: pd.Timestamp,
+) -> pd.DatetimeIndex:
+    """Return replay boundaries with same-boundary data for every symbol.
+
+    Each interior boundary T requires both the completed M1 open T-1 and the
+    execution M1 open T to exist for every Bid/Ask symbol. The partition-close
+    boundary is retained when T-1 is common so the final scored M1 bar can be
+    processed without introducing an out-of-partition execution bar.
+    """
+
+    common_opens: pd.DatetimeIndex | None = None
+    for symbol in sorted(m1_bars):
+        if symbol not in ask_m1_bars:
+            raise ValueError(f"missing Ask M1 history for {symbol}")
+        symbol_opens = m1_bars[symbol].index.intersection(
+            ask_m1_bars[symbol].index
+        )
+        common_opens = (
+            symbol_opens
+            if common_opens is None
+            else common_opens.intersection(symbol_opens)
+        )
+
+    if common_opens is None or common_opens.empty:
+        raise ValueError("M022 partition has no common Bid/Ask M1 opens")
+    common_opens = common_opens.sort_values()
+
+    one_minute = pd.Timedelta(minutes=1)
+    interior = common_opens.intersection(common_opens + one_minute)
+    boundary_clock = interior.sort_values()
+
+    final_completed_open = end_exclusive - one_minute
+    if final_completed_open in common_opens:
+        boundary_clock = boundary_clock.union(
+            pd.DatetimeIndex([end_exclusive])
+        ).sort_values()
+
+    if boundary_clock.empty:
+        raise ValueError("M022 partition has no strict common replay boundaries")
+    return boundary_clock
+
+
+class ResearchBoundaryReplayFeed(ReplayFeed):
+    """Replay full symbol histories on a prevalidated research boundary clock."""
+
+    def __init__(
+        self,
+        bars: Mapping[str, pd.DataFrame],
+        *,
+        native_timeframe_bars: Mapping[
+            str, Mapping[str | int, pd.DataFrame]
+        ] | None,
+        ask_m1_bars: Mapping[str, pd.DataFrame],
+        boundary_clock: pd.DatetimeIndex,
+    ):
+        super().__init__(
+            bars,
+            native_timeframe_bars=native_timeframe_bars,
+            ask_m1_bars=ask_m1_bars,
+        )
+        clock = pd.DatetimeIndex(
+            pd.to_datetime(boundary_clock, utc=True),
+            name="time",
+        )
+        if clock.empty:
+            raise ValueError("research boundary clock cannot be empty")
+        if clock.has_duplicates or not clock.is_monotonic_increasing:
+            raise ValueError(
+                "research boundary clock must be unique and chronological"
+            )
+        self._timeline = clock
+        self._position = -1
+
+
 def _slice_frame(
     frame: pd.DataFrame,
     *,
@@ -306,32 +384,15 @@ def slice_dataset(
                 f"partition Bid/Ask M1 index mismatch for {symbol}"
             )
 
-    # Portfolio P/L conversion is intentionally same-boundary only. The
-    # accepted v3 source has sparse symbol-specific M1 gaps, so a union clock
-    # can reach a JPY exit boundary where no USDJPY conversion bar exists.
-    # M022 research therefore uses only M1 opens observable for every symbol.
-    # This is a research-view restriction; source files and production replay
-    # semantics remain unchanged.
-    common_m1_index = None
-    for symbol in sorted(m1):
-        symbol_index = m1[symbol].index.intersection(ask[symbol].index)
-        common_m1_index = (
-            symbol_index
-            if common_m1_index is None
-            else common_m1_index.intersection(symbol_index)
-        )
-    if common_m1_index is None or common_m1_index.empty:
-        raise ValueError("M022 partition has no strict common M1 timestamps")
-    common_m1_index = common_m1_index.sort_values()
-
-    m1 = {
-        symbol: frame.loc[common_m1_index].copy()
-        for symbol, frame in m1.items()
-    }
-    ask = {
-        symbol: frame.loc[common_m1_index].copy()
-        for symbol, frame in ask.items()
-    }
+    # Preserve every genuine per-symbol M1 bar for stochastic/EMA/ATR state.
+    # Only the portfolio replay clock is synchronized. This keeps the accepted
+    # same-boundary currency-conversion rule without forward-filling sparse
+    # conversion data or deleting legitimate signal-history bars.
+    boundary_clock = _strict_common_boundary_clock(
+        m1,
+        ask,
+        end_exclusive=end,
+    )
 
     manifest = dict(dataset.manifest)
     manifest["requested_range"] = {
@@ -340,12 +401,13 @@ def slice_dataset(
     }
     manifest["m022_partition"] = partition
     manifest["m022_source_manifest_sha256"] = M022_SOURCE_MANIFEST_SHA256
-    manifest["m022_strict_common_m1"] = True
-    manifest["m022_common_m1_rows"] = int(len(common_m1_index))
-    manifest["m022_common_m1_first_open_utc"] = _iso(common_m1_index[0])
-    manifest["m022_common_m1_last_open_utc"] = _iso(common_m1_index[-1])
-    manifest["m022_common_m1_index_sha256"] = _datetime_index_sha256(
-        common_m1_index
+    manifest["m022_strict_common_boundary_clock"] = True
+    manifest["m022_full_symbol_m1_preserved"] = True
+    manifest["m022_replay_boundary_count"] = int(len(boundary_clock))
+    manifest["m022_replay_boundary_first_utc"] = _iso(boundary_clock[0])
+    manifest["m022_replay_boundary_last_utc"] = _iso(boundary_clock[-1])
+    manifest["m022_replay_boundary_sha256"] = _datetime_index_sha256(
+        boundary_clock
     )
 
     return LoadedHistoricalDataset(
@@ -404,20 +466,23 @@ def _partition_metadata(
         "start_utc": start,
         "end_exclusive_utc": end,
         "common_trading_dates": count,
-        "strict_common_m1": bool(
-            dataset.manifest.get("m022_strict_common_m1")
+        "strict_common_boundary_clock": bool(
+            dataset.manifest.get("m022_strict_common_boundary_clock")
         ),
-        "common_m1_rows": int(
-            dataset.manifest.get("m022_common_m1_rows", 0)
+        "full_symbol_m1_preserved": bool(
+            dataset.manifest.get("m022_full_symbol_m1_preserved")
         ),
-        "common_m1_first_open_utc": dataset.manifest.get(
-            "m022_common_m1_first_open_utc"
+        "replay_boundary_count": int(
+            dataset.manifest.get("m022_replay_boundary_count", 0)
         ),
-        "common_m1_last_open_utc": dataset.manifest.get(
-            "m022_common_m1_last_open_utc"
+        "replay_boundary_first_utc": dataset.manifest.get(
+            "m022_replay_boundary_first_utc"
         ),
-        "common_m1_index_sha256": dataset.manifest.get(
-            "m022_common_m1_index_sha256"
+        "replay_boundary_last_utc": dataset.manifest.get(
+            "m022_replay_boundary_last_utc"
+        ),
+        "replay_boundary_sha256": dataset.manifest.get(
+            "m022_replay_boundary_sha256"
         ),
     }
     return {
@@ -512,10 +577,22 @@ def run_phase1_arm(
 
     wrappers: list[ResearchStrategyWrapper] = []
     with _temporary_research_config(arm.parameters):
-        feed = ReplayFeed(
+        end_exclusive = _utc(M022_PARTITIONS[partition][1])
+        boundary_clock = _strict_common_boundary_clock(
+            dataset.m1_bars,
+            dataset.ask_m1_bars,
+            end_exclusive=end_exclusive,
+        )
+        if (
+            _datetime_index_sha256(boundary_clock)
+            != partition_meta["replay_boundary_sha256"]
+        ):
+            raise ValueError("M022 replay boundary clock hash changed")
+        feed = ResearchBoundaryReplayFeed(
             dataset.m1_bars,
             native_timeframe_bars=dataset.native_timeframe_bars,
             ask_m1_bars=dataset.ask_m1_bars,
+            boundary_clock=boundary_clock,
         )
         execution_costs = {
             symbol: ExecutionCostModel(
