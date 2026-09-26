@@ -3213,7 +3213,7 @@ def m021_primary_pair():
 
 
 def m022_history_depth_probe():
-    """Probe raw MT5 depth without exporting or replaying economic outcomes."""
+    """Probe native timeframe depth and tick coverage at the native common start."""
 
     feature_sha = _require_m022_branch()
     wine_python, discovery = _select_wine_python()
@@ -3230,7 +3230,6 @@ from config import mt5 as mt5_config
 from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
 
 symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
-floor = datetime.fromisoformat("2010-01-01T00:00:00+00:00")
 cutoff = datetime.fromisoformat("2026-09-25T00:00:00+00:00")
 timeframes = {
     "M1": mt5.TIMEFRAME_M1,
@@ -3250,38 +3249,11 @@ try:
     account = mt5.account_info()
     terminal = mt5.terminal_info()
     output = {}
+    native_starts = []
+
     for symbol in symbols:
         if not mt5.symbol_select(symbol, True):
             raise RuntimeError(f"MT5 could not select {symbol}")
-
-        ticks = mt5.copy_ticks_from(
-            symbol,
-            floor,
-            1024,
-            mt5.COPY_TICKS_ALL,
-        )
-        first_tick = None
-        last_probe_tick = None
-        valid_tick_rows = 0
-        if ticks is not None:
-            names = ticks.dtype.names or ()
-            for row in ticks:
-                bid = float(row["bid"])
-                ask = float(row["ask"])
-                if bid <= 0 or ask <= 0 or ask < bid:
-                    continue
-                raw_time = (
-                    int(row["time_msc"]) / 1000.0
-                    if "time_msc" in names
-                    else float(row["time"])
-                )
-                timestamp = datetime.fromtimestamp(raw_time, timezone.utc)
-                if timestamp >= cutoff:
-                    continue
-                valid_tick_rows += 1
-                if first_tick is None:
-                    first_tick = timestamp
-                last_probe_tick = timestamp
 
         native = {}
         for label, timeframe in timeframes.items():
@@ -3299,43 +3271,81 @@ try:
                 }
                 continue
             times = [int(row["time"]) for row in rates]
+            first = iso_epoch(min(times))
+            last = iso_epoch(max(times))
             native[label] = {
                 "rows_returned": int(len(rates)),
-                "first_bar_open_utc": iso_epoch(min(times)),
-                "last_bar_open_utc": iso_epoch(max(times)),
+                "first_bar_open_utc": first,
+                "last_bar_open_utc": last,
             }
+            if label in ("M5", "M15"):
+                native_starts.append(first)
 
-        output[symbol] = {
-            "first_synchronized_bid_ask_tick_utc": (
+        output[symbol] = {"native": native}
+
+    native_common = (
+        max(native_starts)
+        if len(native_starts) == len(symbols) * 2
+        else None
+    )
+
+    first_ticks = []
+    if native_common is not None:
+        native_common_dt = datetime.fromisoformat(
+            native_common.replace("Z", "+00:00")
+        )
+        for symbol in symbols:
+            ticks = mt5.copy_ticks_from(
+                symbol,
+                native_common_dt,
+                1024,
+                mt5.COPY_TICKS_ALL,
+            )
+            first_tick = None
+            valid_tick_rows = 0
+            if ticks is not None:
+                names = ticks.dtype.names or ()
+                for row in ticks:
+                    bid = float(row["bid"])
+                    ask = float(row["ask"])
+                    if bid <= 0 or ask <= 0 or ask < bid:
+                        continue
+                    raw_time = (
+                        int(row["time_msc"]) / 1000.0
+                        if "time_msc" in names
+                        else float(row["time"])
+                    )
+                    timestamp = datetime.fromtimestamp(raw_time, timezone.utc)
+                    if timestamp >= cutoff:
+                        continue
+                    valid_tick_rows += 1
+                    if first_tick is None:
+                        first_tick = timestamp
+
+            value = (
                 first_tick.isoformat().replace("+00:00", "Z")
                 if first_tick is not None
                 else None
-            ),
-            "initial_tick_probe_valid_rows": valid_tick_rows,
-            "initial_tick_probe_last_utc": (
-                last_probe_tick.isoformat().replace("+00:00", "Z")
-                if last_probe_tick is not None
-                else None
-            ),
-            "native": native,
-        }
+            )
+            output[symbol]["tick_at_native_common"] = {
+                "requested_from_utc": native_common,
+                "first_synchronized_bid_ask_tick_utc": value,
+                "valid_probe_rows": valid_tick_rows,
+            }
+            if value:
+                first_ticks.append(value)
 
-    starts = []
-    for symbol in symbols:
-        row = output[symbol]
-        tick = row["first_synchronized_bid_ask_tick_utc"]
-        m5 = row["native"]["M5"]["first_bar_open_utc"]
-        m15 = row["native"]["M15"]["first_bar_open_utc"]
-        if not tick or not m5 or not m15:
-            continue
-        starts.extend([tick, m5, m15])
+    strict_common = (
+        max([native_common, *first_ticks])
+        if native_common is not None and len(first_ticks) == len(symbols)
+        else None
+    )
 
-    common_start = max(starts) if len(starts) == len(symbols) * 3 else None
     print(json.dumps({
-        "probe_floor_utc": "2010-01-01T00:00:00Z",
         "cutoff_utc": "2026-09-25T00:00:00Z",
         "symbols": output,
-        "candidate_tick_m1_native_m5_m15_common_start_utc": common_start,
+        "native_m5_m15_common_start_utc": native_common,
+        "candidate_tick_m1_native_m5_m15_common_start_utc": strict_common,
         "broker_server": getattr(account, "server", None),
         "account_currency": getattr(account, "currency", None),
         "terminal_maxbars": getattr(terminal, "maxbars", None),
@@ -3390,7 +3400,6 @@ finally:
         },
         "run": run,
     }
-
 
 def m022_history_inventory_cleanup():
     """Remove only the fixed raw M022 history-inventory export directory."""
