@@ -3625,10 +3625,10 @@ def m022_native_m1_file_probe():
     """Probe runtime MaxBars + Aug-2025 native M1 without Wine PIPE waits."""
 
     feature_sha = _require_m022_branch()
-    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
-    wine_python = _wine_windows_path(dedicated)
-    if not wine_python:
-        raise RuntimeError("cannot map established M022 Wine runtime")
+    dedicated = (REPO / ".venv-wine" / "Scripts" / "python.exe").resolve()
+    if not dedicated.is_file():
+        raise RuntimeError("established M022 Wine runtime is missing")
+    wine_python = "Z:" + str(dedicated).replace("/", "\\")
     wine = _wine()
     wineserver = shutil.which("wineserver") or "/usr/bin/wineserver"
 
@@ -3637,9 +3637,7 @@ def m022_native_m1_file_probe():
         result_path.unlink()
     except FileNotFoundError:
         pass
-    windows_result = _wine_windows_path(result_path)
-    if not windows_result:
-        raise RuntimeError("cannot map M022 probe result path into Wine")
+    windows_result = "Z:" + str(result_path.resolve()).replace("/", "\\")
 
     probe_code = r'''
 import json
