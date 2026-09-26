@@ -1,13 +1,40 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-raise-maxbars-20260926-1426",
-  "completed_at": "2026-09-26T11:24:21.811672+00:00",
-  "ok": false,
-  "action": "m022_raise_mt5_maxbars",
+  "command_id": "mamba2-m022-maxbars-recovery-20260926-1435",
+  "completed_at": "2026-09-26T11:36:49.430166+00:00",
+  "ok": true,
+  "action": "m022_maxbars_recovery_probe",
   "data": {
-    "ok": false,
-    "reason": "MT5 common.ini not found at fixed Wine path",
+    "ok": true,
+    "feature_branch": "strategy-parameter-research",
     "feature_sha": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46",
-    "path": "/home/joel/.mamba2-mt5/drive_c/Program Files/MetaTrader 5/config/common.ini"
+    "probe": {
+      "backup_exists": true,
+      "backup_sha256": "c04f195618eea41d7300a2459f0e9aa914967a90c534c449c6bbcf4fcebfbae0",
+      "maxbars_markers": [
+        500000
+      ],
+      "sha256": "22032bc12c27fbb642f9c151f3d2256a733d8ac442772c736dfe7149a9b0fc91",
+      "target": "C:\\Program Files\\MetaTrader 5\\config\\common.ini"
+    },
+    "run": {
+      "command": [
+        "/usr/bin/wine",
+        "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+        "-c",
+        "\nimport hashlib\nimport json\nfrom pathlib import Path\n\ntarget = Path(r\"C:\\Program Files\\MetaTrader 5\\config\\common.ini\")\nbackup = target.with_name(\"common.ini.m022-maxbars-100000.backup\")\nif not target.is_file():\n    raise RuntimeError(f\"common.ini is missing: {target}\")\n\nraw = target.read_bytes()\nvalues = []\nfor value in (100000, 500000):\n    markers = [\n        f\"MaxBars={value}\".encode(\"utf-8\"),\n        f\"MaxBars={value}\".encode(\"utf-16le\"),\n        f\"MaxBars={value}\".encode(\"utf-16be\"),\n    ]\n    if any(marker in raw for marker in markers):\n        values.append(value)\n\nprint(json.dumps({\n    \"target\": str(target),\n    \"sha256\": hashlib.sha256(raw).hexdigest(),\n    \"maxbars_markers\": values,\n    \"backup_exists\": backup.is_file(),\n    \"backup_sha256\": (\n        hashlib.sha256(backup.read_bytes()).hexdigest()\n        if backup.is_file()\n        else None\n    ),\n}, sort_keys=True), flush=True)\n"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "stdout": "{\"backup_exists\": true, \"backup_sha256\": \"c04f195618eea41d7300a2459f0e9aa914967a90c534c449c6bbcf4fcebfbae0\", \"maxbars_markers\": [500000], \"sha256\": \"22032bc12c27fbb642f9c151f3d2256a733d8ac442772c736dfe7149a9b0fc91\", \"target\": \"C:\\\\Program Files\\\\MetaTrader 5\\\\config\\\\common.ini\"}\n",
+      "stderr": ""
+    },
+    "safety": {
+      "read_only": true,
+      "terminal_initialized": false,
+      "terminal_configuration_modified": false,
+      "real_order_api_called": false,
+      "economic_replay_run": false
+    }
   }
 }
