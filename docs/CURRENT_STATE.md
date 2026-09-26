@@ -223,12 +223,20 @@ Classification:
 The treatment remains loss-making and uses the already-inspected June–September
 dataset. It is not accepted for live risk.
 
-Next M020 step:
+M020-B diagnostic is complete.
 
-**M020-B diagnostic confound separation** — quantify whether the harmful
-00:00–03:59 UTC population remains harmful at ordinary spreads or whether the
-effect is concentrated in extreme spread tails. M020-B is diagnostic only and
-must not introduce a spread cutoff or another strategy treatment.
+Its deterministic output shows the broad time filter is over-inclusive:
+
+- <=5 points inside 00:00–03:59 UTC:
+  **USD +141.85132131550108**;
+- >10 points inside 00:00–03:59 UTC:
+  **USD -910.8776340034257**;
+- >10-point losses persisted across all four calendar periods, both sides, and
+  all five symbols.
+
+Because M020-B used next-bar fill spread, the next authorized step is **M020-C
+decision-time spread observability audit**. It must measure only spread that was
+available when the strategy submitted the order and must not filter trades.
 
 ## Durable handoff
 
@@ -277,7 +285,6 @@ action is exposed, and no real MT5 order action is permitted.
 
 **020 — Controlled experiments remains in progress**
 
-M020-A is recorded as promising but not promoted. The next authorized task is
-M020-B diagnostic confound separation. A later genuinely forward/paper
-milestone is still required before any experimental strategy change can move
-toward live risk.
+M020-C is the next authorized task. It is diagnostic only and must preserve the
+accepted M019 ordinary control hashes exactly. No spread threshold is yet
+authorized.
