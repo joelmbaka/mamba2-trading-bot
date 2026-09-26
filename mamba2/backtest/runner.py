@@ -29,13 +29,14 @@ class BacktestBrokerAdapter:
         response = self.broker.order_send(request)
         if response.get("retcode") == 10008:
             response = {**response, "retcode": 0, "comment": "accepted; pending next M1 candle"}
-        self.accepted_responses.append(response.copy())
-        self.accepted_order_records.append(
-            {
-                "symbol": request.get("symbol"),
-                "response": response.copy(),
-            }
-        )
+        if response.get("retcode") == 0:
+            self.accepted_responses.append(response.copy())
+            self.accepted_order_records.append(
+                {
+                    "symbol": request.get("symbol"),
+                    "response": response.copy(),
+                }
+            )
         return response
 
     def __getattr__(self, name: str):
