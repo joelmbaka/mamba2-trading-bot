@@ -1,14 +1,90 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-tick-inventory-20260926-1402",
-  "completed_at": "2026-09-26T11:03:16.996410+00:00",
-  "ok": false,
-  "action": "m022_tick_inventory",
+  "command_id": "mamba2-m022-sync-v2-20260926-1408",
+  "completed_at": "2026-09-26T11:07:42.231867+00:00",
+  "ok": true,
+  "action": "sync",
   "data": {
-    "ok": false,
-    "reason": "M022 tick inventory directory already exists; run m022_tick_inventory_cleanup explicitly before re-export",
-    "feature_branch": "strategy-parameter-research",
-    "feature_sha": "d06ffcc7d5025eb0bf1f0a60799738e64e86635f",
-    "path": "backtest_data/m022-history-inventory-tick-m1"
+    "branch": "strategy-parameter-research",
+    "before_sha": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46",
+    "after_sha": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46",
+    "reason": null,
+    "commands": [
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "strategy-parameter-research\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin",
+          "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...refs/remotes/origin/strategy-parameter-research"
+        ],
+        "exit_code": 0,
+        "stdout": "0\t0\n",
+        "stderr": ""
+      }
+    ]
   }
 }
