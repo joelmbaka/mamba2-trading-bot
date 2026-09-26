@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-native-m1-file-probe-20260926-1537",
-  "action": "m022_native_m1_file_probe",
+  "id": "mamba2-m022-sync-native-v3-20260926-1543",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
