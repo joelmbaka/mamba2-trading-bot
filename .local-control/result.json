@@ -1,25 +1,99 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-native-history-capacity-20260926-1418",
-  "completed_at": "2026-09-26T11:20:52.879511+00:00",
-  "ok": false,
+  "command_id": "mamba2-m022-native-history-capacity-20260926-1422",
+  "completed_at": "2026-09-26T11:21:49.525433+00:00",
+  "ok": true,
   "action": "m022_terminal_history_capacity_probe",
   "data": {
-    "ok": false,
+    "ok": true,
     "feature_branch": "strategy-parameter-research",
     "feature_sha": "0da93c9a5ecb84dd61e5ad7bf3b9e6a714daad46",
-    "probe": null,
+    "probe": {
+      "account": {
+        "currency": "USD",
+        "server": "MetaQuotes-Demo"
+      },
+      "config_hits": [
+        {
+          "line": "MaxBars=100000",
+          "path": "C:\\Program Files\\MetaTrader 5\\config\\common.ini"
+        }
+      ],
+      "native_m1": {
+        "EURJPY": {
+          "aug_25_2025_rows": 1,
+          "first_bar_open_utc": null,
+          "last_bar_open_utc": null,
+          "last_error": [
+            1,
+            "Success"
+          ],
+          "rows_returned": 0
+        },
+        "EURUSD": {
+          "aug_25_2025_rows": 1,
+          "first_bar_open_utc": null,
+          "last_bar_open_utc": null,
+          "last_error": [
+            1,
+            "Success"
+          ],
+          "rows_returned": 0
+        },
+        "GBPJPY": {
+          "aug_25_2025_rows": 1,
+          "first_bar_open_utc": null,
+          "last_bar_open_utc": null,
+          "last_error": [
+            1,
+            "Success"
+          ],
+          "rows_returned": 0
+        },
+        "GBPUSD": {
+          "aug_25_2025_rows": 1,
+          "first_bar_open_utc": null,
+          "last_bar_open_utc": null,
+          "last_error": [
+            1,
+            "Success"
+          ],
+          "rows_returned": 0
+        },
+        "USDJPY": {
+          "aug_25_2025_rows": 1,
+          "first_bar_open_utc": null,
+          "last_bar_open_utc": null,
+          "last_error": [
+            1,
+            "Success"
+          ],
+          "rows_returned": 0
+        }
+      },
+      "terminal": {
+        "build": [
+          500,
+          6215,
+          "25 Sep 2026"
+        ],
+        "commondata_path": "C:\\users\\joel\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common",
+        "data_path": "C:\\Program Files\\MetaTrader 5",
+        "maxbars": 100000,
+        "path": "C:\\Program Files\\MetaTrader 5"
+      }
+    },
     "run": {
       "command": [
         "/usr/bin/wine",
         "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
         "-c",
-        "\nimport json\nfrom pathlib import Path\nfrom datetime import datetime, timezone\n\nimport MetaTrader5 as mt5\n\nfrom config import mt5 as mt5_config\nfrom mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs\n\nsymbols = [\"EURUSD\", \"EURJPY\", \"GBPUSD\", \"GBPJPY\", \"USDJPY\"]\n\nif not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):\n    raise RuntimeError(\"MT5 initialize failed for M022 capacity probe\")\n\ntry:\n    terminal = mt5.terminal_info()\n    account = mt5.account_info()\n    output = {\n        \"terminal\": {\n            \"path\": getattr(terminal, \"path\", None),\n            \"data_path\": getattr(terminal, \"data_path\", None),\n            \"commondata_path\": getattr(terminal, \"commondata_path\", None),\n            \"maxbars\": getattr(terminal, \"maxbars\", None),\n            \"build\": list(mt5.version()) if hasattr(mt5, \"version\") else None,\n        },\n        \"account\": {\n            \"server\": getattr(account, \"server\", None),\n            \"currency\": getattr(account, \"currency\", None),\n        },\n        \"native_m1\": {},\n        \"config_hits\": [],\n    }\n\n    for symbol in symbols:\n        if not mt5.symbol_select(symbol, True):\n            raise RuntimeError(f\"could not select {symbol}\")\n        rates = mt5.copy_rates_from_pos(\n            symbol,\n            mt5.TIMEFRAME_M1,\n            0,\n            int(getattr(terminal, \"maxbars\", 100000)) + 5000,\n        )\n        rows = 0 if rates is None else int(len(rates))\n        first = None\n        last = None\n        if rows:\n            first = datetime.fromtimestamp(\n                int(rates[0][\"time\"]), timezone.utc\n            ).isoformat().replace(\"+00:00\", \"Z\")\n            last = datetime.fromtimestamp(\n                int(rates[-1][\"time\"]), timezone.utc\n            ).isoformat().replace(\"+00:00\", \"Z\")\n        old_day = mt5.copy_rates_range(\n            symbol,\n            mt5.TIMEFRAME_M1,\n            datetime(2025, 8, 25, tzinfo=timezone.utc),\n            datetime(2025, 8, 26, tzinfo=timezone.utc),\n        )\n        output[\"native_m1\"][symbol] = {\n            \"rows_returned\": rows,\n            \"first_bar_open_utc\": first,\n            \"last_bar_open_utc\": last,\n            \"aug_25_2025_rows\": 0 if old_day is None else int(len(old_day)),\n            \"last_error\": list(mt5.last_error()),\n        }\n\n    roots = []\n    for raw in (\n        getattr(terminal, \"path\", None),\n        getattr(terminal, \"data_path\", None),\n    ):\n        if raw:\n            roots.append(Path(raw))\n\n    seen = set()\n    for root in roots:\n        candidates = []\n        for name in (\"terminal.ini\", \"common.ini\", \"metaeditor.ini\"):\n            candidates.extend(root.glob(name))\n            candidates.extend((root / \"config\").glob(name))\n        candidates.extend((root / \"config\").glob(\"*.ini\"))\n\n        for path in candidates:\n            key = str(path).lower()\n            if key in seen or not path.is_file():\n                continue\n            seen.add(key)\n            try:\n                text = path.read_text(\n                    encoding=\"utf-16\",\n                    errors=\"ignore\",\n                )\n                if \"maxbars\" not in text.lower():\n                    text = path.read_text(\n                        encoding=\"utf-8\",\n                        errors=\"ignore\",\n                    )\n            except OSError:\n                continue\n            for line in text.splitlines():\n                normalized = line.strip()\n                if \"maxbars\" in normalized.lower():\n                    output[\"config_hits\"].append({\n                        \"path\": str(path),\n                        \"line\": normalized[:200],\n                    })\n\n    print(json.dumps(output, sort_keys=True), flush=True)\nfinally:\n    mt5.shutdown()\n"
+        "\nimport json\nfrom pathlib import Path\nfrom datetime import datetime, timezone\n\nimport MetaTrader5 as mt5\n\nfrom config import mt5 as mt5_config\nfrom mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs\n\nsymbols = [\"EURUSD\", \"EURJPY\", \"GBPUSD\", \"GBPJPY\", \"USDJPY\"]\n\nif not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):\n    raise RuntimeError(\"MT5 initialize failed for M022 capacity probe\")\n\ntry:\n    terminal = mt5.terminal_info()\n    account = mt5.account_info()\n    output = {\n        \"terminal\": {\n            \"path\": getattr(terminal, \"path\", None),\n            \"data_path\": getattr(terminal, \"data_path\", None),\n            \"commondata_path\": getattr(terminal, \"commondata_path\", None),\n            \"maxbars\": getattr(terminal, \"maxbars\", None),\n            \"build\": list(mt5.version()) if hasattr(mt5, \"version\") else None,\n        },\n        \"account\": {\n            \"server\": getattr(account, \"server\", None),\n            \"currency\": getattr(account, \"currency\", None),\n        },\n        \"native_m1\": {},\n        \"config_hits\": [],\n    }\n\n    for symbol in symbols:\n        if not mt5.symbol_select(symbol, True):\n            raise RuntimeError(f\"could not select {symbol}\")\n        rates = mt5.copy_rates_from_pos(\n            symbol,\n            mt5.TIMEFRAME_M1,\n            0,\n            int(getattr(terminal, \"maxbars\", 100000)) + 5000,\n        )\n        rows = 0 if rates is None else int(len(rates))\n        first = None\n        last = None\n        if rows:\n            first = datetime.fromtimestamp(\n                int(rates[0][\"time\"]), timezone.utc\n            ).isoformat().replace(\"+00:00\", \"Z\")\n            last = datetime.fromtimestamp(\n                int(rates[-1][\"time\"]), timezone.utc\n            ).isoformat().replace(\"+00:00\", \"Z\")\n        old_day = mt5.copy_rates_range(\n            symbol,\n            mt5.TIMEFRAME_M1,\n            datetime(2025, 8, 25, tzinfo=timezone.utc),\n            datetime(2025, 8, 26, tzinfo=timezone.utc),\n        )\n        output[\"native_m1\"][symbol] = {\n            \"rows_returned\": rows,\n            \"first_bar_open_utc\": first,\n            \"last_bar_open_utc\": last,\n            \"aug_25_2025_rows\": 0 if old_day is None else int(len(old_day)),\n            \"last_error\": list(mt5.last_error()),\n        }\n\n    roots = []\n    for raw in (\n        getattr(terminal, \"path\", None),\n        getattr(terminal, \"data_path\", None),\n    ):\n        if raw:\n            roots.append(Path(raw))\n\n    seen = set()\n    for root in roots:\n        candidates = []\n        for name in (\"terminal.ini\", \"common.ini\", \"metaeditor.ini\"):\n            candidates.extend(root.glob(name))\n            candidates.extend((root / \"config\").glob(name))\n        candidates.extend((root / \"config\").glob(\"*.ini\"))\n\n        for path in candidates:\n            key = str(path).lower()\n            if key in seen or not path.is_file():\n                continue\n            seen.add(key)\n            try:\n                raw = path.read_bytes()\n            except OSError:\n                continue\n\n            decoded = []\n            for encoding in (\"utf-8\", \"utf-16le\", \"utf-16be\"):\n                try:\n                    decoded.append(raw.decode(encoding, errors=\"ignore\"))\n                except UnicodeError:\n                    pass\n\n            for text in decoded:\n                for line in text.splitlines():\n                    normalized = line.strip()\n                    if \"maxbars\" in normalized.lower():\n                        hit = {\n                            \"path\": str(path),\n                            \"line\": normalized[:200],\n                        }\n                        if hit not in output[\"config_hits\"]:\n                            output[\"config_hits\"].append(hit)\n\n    print(json.dumps(output, sort_keys=True), flush=True)\nfinally:\n    mt5.shutdown()\n"
       ],
-      "exit_code": 1,
+      "exit_code": 0,
       "timed_out": false,
-      "stdout": "",
-      "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 90, in <module>\n  File \"C:\\Python310\\lib\\pathlib.py\", line 1135, in read_text\n    return f.read()\n  File \"C:\\Python310\\lib\\codecs.py\", line 322, in decode\n    (result, consumed) = self._buffer_decode(data, self.errors, final)\n  File \"C:\\Python310\\lib\\encodings\\utf_16.py\", line 67, in _buffer_decode\n    raise UnicodeError(\"UTF-16 stream does not start with BOM\")\nUnicodeError: UTF-16 stream does not start with BOM\n"
+      "stdout": "{\"account\": {\"currency\": \"USD\", \"server\": \"MetaQuotes-Demo\"}, \"config_hits\": [{\"line\": \"MaxBars=100000\", \"path\": \"C:\\\\Program Files\\\\MetaTrader 5\\\\config\\\\common.ini\"}], \"native_m1\": {\"EURJPY\": {\"aug_25_2025_rows\": 1, \"first_bar_open_utc\": null, \"last_bar_open_utc\": null, \"last_error\": [1, \"Success\"], \"rows_returned\": 0}, \"EURUSD\": {\"aug_25_2025_rows\": 1, \"first_bar_open_utc\": null, \"last_bar_open_utc\": null, \"last_error\": [1, \"Success\"], \"rows_returned\": 0}, \"GBPJPY\": {\"aug_25_2025_rows\": 1, \"first_bar_open_utc\": null, \"last_bar_open_utc\": null, \"last_error\": [1, \"Success\"], \"rows_returned\": 0}, \"GBPUSD\": {\"aug_25_2025_rows\": 1, \"first_bar_open_utc\": null, \"last_bar_open_utc\": null, \"last_error\": [1, \"Success\"], \"rows_returned\": 0}, \"USDJPY\": {\"aug_25_2025_rows\": 1, \"first_bar_open_utc\": null, \"last_bar_open_utc\": null, \"last_error\": [1, \"Success\"], \"rows_returned\": 0}}, \"terminal\": {\"build\": [500, 6215, \"25 Sep 2026\"], \"commondata_path\": \"C:\\\\users\\\\joel\\\\AppData\\\\Roaming\\\\MetaQuotes\\\\Terminal\\\\Common\", \"data_path\": \"C:\\\\Program Files\\\\MetaTrader 5\", \"maxbars\": 100000, \"path\": \"C:\\\\Program Files\\\\MetaTrader 5\"}}\n",
+      "stderr": ""
     },
     "safety": {
       "market_data_read_only": true,
