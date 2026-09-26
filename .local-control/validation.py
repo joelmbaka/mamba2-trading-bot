@@ -126,7 +126,7 @@ M022_TICK_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-tick-
 M022_TICK_INVENTORY_MANIFEST = M022_TICK_INVENTORY_DIR / "manifest.json"
 M022_NATIVE_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-native-m1-v3"
 M022_NATIVE_INVENTORY_MANIFEST = M022_NATIVE_INVENTORY_DIR / "manifest.json"
-M022_PHASE1_REGRESSION_DIR = REPO / "backtest_data" / "m022-phase1-regression-v2"
+M022_PHASE1_REGRESSION_DIR = REPO / "backtest_data" / "m022-phase1-regression-v3"
 M022_PHASE1_REG_CONTROL_BASELINE = M022_PHASE1_REGRESSION_DIR / "control-baseline.json"
 M022_PHASE1_REG_CONTROL_DIAGNOSTIC = M022_PHASE1_REGRESSION_DIR / "control-diagnostic.json"
 M022_PHASE1_REG_M020D_BASELINE = M022_PHASE1_REGRESSION_DIR / "m020d-baseline.json"
@@ -134,6 +134,7 @@ M022_PHASE1_REG_M020D_DIAGNOSTIC = M022_PHASE1_REGRESSION_DIR / "m020d-diagnosti
 M022_PHASE1_REG_M020D_EVIDENCE = M022_PHASE1_REGRESSION_DIR / "m020d-evidence.json"
 M022_PHASE1_REFERENCE_DIR = REPO / "backtest_data" / "m022-phase1-development" / "reference-v3"
 M022_PHASE1_STOCHASTIC_DIR = REPO / "backtest_data" / "m022-phase1-development" / "stochastic-v1"
+M022_PHASE1_STOCH_EQUIV_DIR = REPO / "backtest_data" / "m022-phase1-development" / "stochastic-21-7-7-equivalence-v1"
 
 
 def _safe_env(wine=False):
@@ -3547,6 +3548,145 @@ def m022_phase1_stochastic_assessment():
     }
 
 
+def m022_phase1_stochastic_reference_equivalence():
+    """Prove optimized stochastic 21/7/7 matches accepted reference-v3."""
+
+    feature_sha = _require_m022_branch()
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+    reference_summary_path = (
+        M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-a-summary.json"
+    )
+    if not manifest.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 native-M1 manifest is unavailable",
+            "feature_sha": feature_sha,
+        }
+    if not reference_summary_path.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted reference-v3 summary is unavailable",
+            "feature_sha": feature_sha,
+        }
+
+    output_dir = _ensure_baseline_path(M022_PHASE1_STOCH_EQUIV_DIR)
+    if output_dir.exists():
+        return {
+            "ok": False,
+            "reason": "M022 stochastic 21/7/7 equivalence directory already exists",
+            "feature_sha": feature_sha,
+            "path": str(output_dir.relative_to(REPO)),
+        }
+
+    run = _run(
+        _native_command(
+            "-m",
+            "mamba2.backtest.parameter_research",
+            "--manifest",
+            str(manifest.relative_to(REPO)),
+            "--output-dir",
+            str(output_dir.relative_to(REPO)),
+            "--family",
+            "stochastic",
+            "--value",
+            "21/7/7",
+            "--starting-balance",
+            "10000",
+        ),
+        env=_safe_env(),
+    )
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "optimized stochastic 21/7/7 equivalence run failed",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+
+    try:
+        payload = json.loads(run["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError):
+        return {
+            "ok": False,
+            "reason": "unable to parse optimized stochastic 21/7/7 result",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+
+    reference = json.loads(
+        reference_summary_path.read_text(encoding="utf-8")
+    )
+    candidate = payload.get("summary") or {}
+
+    comparison_keys = (
+        "partition",
+        "cost_contract",
+        "aggregate",
+        "per_symbol",
+        "by_side",
+        "by_entry_utc_bucket",
+        "protection",
+        "rejections",
+        "tp_safety",
+        "remaining_positions",
+    )
+    comparisons = {
+        key: candidate.get(key) == reference.get(key)
+        for key in comparison_keys
+    }
+    economics_equal = all(comparisons.values())
+
+    partition = candidate.get("partition") or {}
+    tp = candidate.get("tp_safety") or {}
+    invariants_ok = bool(
+        payload.get("ok")
+        and payload.get("deterministic")
+        and payload.get("partition") == "development"
+        and partition.get("source_manifest_sha256")
+        == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+        and partition.get("start_utc") == "2025-08-25T00:00:00Z"
+        and partition.get("end_exclusive_utc") == "2026-04-21T00:00:00Z"
+        and partition.get("strict_common_boundary_clock") is True
+        and partition.get("full_symbol_m1_preserved") is True
+        and int(partition.get("replay_boundary_count", 0)) > 0
+        and bool(partition.get("replay_boundary_sha256"))
+        and int(tp.get("negative_pl_take_profit_exits", -1)) == 0
+        and int(tp.get("wrong_side_initial_tp", -1)) == 0
+    )
+
+    return {
+        "ok": bool(invariants_ok and economics_equal),
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "experiment_id": payload.get("experiment_id"),
+        "deterministic": payload.get("deterministic"),
+        "invariants_ok": invariants_ok,
+        "reference_v3_economic_equivalence": economics_equal,
+        "comparisons": comparisons,
+        "candidate": {
+            "baseline_sha256": payload.get("baseline_sha256"),
+            "diagnostic_sha256": payload.get("diagnostic_sha256"),
+            "summary_sha256": payload.get("summary_sha256"),
+            "aggregate": candidate.get("aggregate"),
+            "partition": partition,
+            "tp_safety": tp,
+        },
+        "reference": {
+            "aggregate": reference.get("aggregate"),
+            "partition": reference.get("partition"),
+            "tp_safety": reference.get("tp_safety"),
+        },
+        "safety": {
+            "economic_replay_run": True,
+            "economic_partition": "development",
+            "validation_economic_data_used": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def m022_phase1_stochastic_family():
     """Run the frozen nine-arm stochastic family on development only."""
 
@@ -3957,6 +4097,7 @@ def m022_phase1_tests():
     feature_sha = _require_m022_branch()
     tests = [
         "tests/test_parameter_research.py",
+        "tests/test_replay_indicator_cache.py",
         "tests/test_triple_cross_condition_semantics.py",
         "tests/test_backtest_baseline_reporting.py",
         "tests/test_position_manager_trailing_semantics.py",
@@ -6135,6 +6276,7 @@ ACTION_HANDLERS = {
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
     "m022_phase1_stochastic_assessment": m022_phase1_stochastic_assessment,
+    "m022_phase1_stochastic_reference_equivalence": m022_phase1_stochastic_reference_equivalence,
     "m022_phase1_stochastic_family": m022_phase1_stochastic_family,
     "m022_phase1_reference_pair": m022_phase1_reference_pair,
     "m022_phase1_default_regression": m022_phase1_default_regression,
