@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-optimized-cache-hash-regression-20260926-2031",
-  "action": "m022_phase1_default_regression",
+  "id": "mamba2-m022-optimized-21-7-7-equivalence-20260926-2049",
+  "action": "m022_phase1_stochastic_reference_equivalence",
   "args": {},
   "requested_by": "chatgpt"
 }
