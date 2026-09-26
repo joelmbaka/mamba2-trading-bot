@@ -124,6 +124,8 @@ M022_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-raw"
 M022_INVENTORY_MANIFEST = M022_INVENTORY_DIR / "manifest.json"
 M022_TICK_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-tick-m1-v2"
 M022_TICK_INVENTORY_MANIFEST = M022_TICK_INVENTORY_DIR / "manifest.json"
+M022_NATIVE_INVENTORY_DIR = REPO / "backtest_data" / "m022-history-inventory-native-m1-v3"
+M022_NATIVE_INVENTORY_MANIFEST = M022_NATIVE_INVENTORY_DIR / "manifest.json"
 
 
 def _safe_env(wine=False):
@@ -4199,6 +4201,375 @@ def m022_tick_inventory_cleanup():
     }
 
 
+def m022_native_inventory():
+    """Export native Bid M1 + tick Ask and prove accepted-M019 parity."""
+
+    feature_sha = _require_m022_branch()
+    candidate_start_utc = "2025-08-25T00:00:00Z"
+    output_dir = _ensure_baseline_path(M022_NATIVE_INVENTORY_DIR)
+
+    if output_dir.exists():
+        return {
+            "ok": False,
+            "reason": (
+                "M022 native inventory directory already exists; refusing "
+                "overwrite of versioned evidence"
+            ),
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "path": str(output_dir.relative_to(REPO)),
+        }
+
+    if not M019_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M019 manifest is unavailable for overlap proof",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "required_manifest": str(M019_MANIFEST.relative_to(REPO)),
+        }
+
+    dedicated = (REPO / ".venv-wine" / "Scripts" / "python.exe").resolve()
+    if not dedicated.is_file():
+        raise RuntimeError("established M022 Wine runtime is missing: .venv-wine")
+    wine_python = "Z:" + str(dedicated).replace("/", "\\")
+    wine = _wine()
+
+    export = _run(
+        [
+            shutil.which("timeout") or "/usr/bin/timeout",
+            "--signal=KILL",
+            "15m",
+            wine,
+            wine_python,
+            "-m",
+            "mamba2.backtest.mt5_dataset",
+            "--symbols",
+            *M022_SYMBOLS,
+            "--timeframes",
+            "M1",
+            "M5",
+            "M15",
+            "--from-utc",
+            candidate_start_utc,
+            "--to-utc",
+            M022_CUTOFF_UTC,
+            "--output-dir",
+            str(M022_NATIVE_INVENTORY_DIR.relative_to(REPO)),
+            "--include-tick-ask",
+            "--tick-chunk-minutes",
+            "1440",
+            "--rate-chunk-days",
+            "7",
+        ],
+        env=_safe_env(wine=True),
+    )
+    if export["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M022 native-M1 historical inventory export failed",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "candidate_start_utc": candidate_start_utc,
+            "export": export,
+            "wine_python": wine_python,
+        }
+
+    if not M022_NATIVE_INVENTORY_MANIFEST.is_file():
+        return {
+            "ok": False,
+            "reason": "M022 native inventory completed without manifest.json",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "candidate_start_utc": candidate_start_utc,
+            "export": export,
+        }
+
+    inspect_code = r'''
+import hashlib
+import json
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+from mamba2.backtest.mt5_dataset import load_mt5_dataset
+
+candidate_path = Path(
+    "backtest_data/m022-history-inventory-native-m1-v3/manifest.json"
+)
+accepted_path = Path(
+    "backtest_data/broader-history-20260623-20260925/manifest.json"
+)
+candidate = load_mt5_dataset(candidate_path)
+accepted = load_mt5_dataset(accepted_path)
+symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+price_columns = ["open", "high", "low", "close"]
+overlap_start = pd.Timestamp("2026-06-23T00:00:00Z")
+overlap_end = pd.Timestamp("2026-09-25T00:00:00Z")
+
+def iso(value):
+    ts = pd.Timestamp(value)
+    if ts.tzinfo is None:
+        ts = ts.tz_localize("UTC")
+    else:
+        ts = ts.tz_convert("UTC")
+    return ts.isoformat().replace("+00:00", "Z")
+
+def compare_prices(left, right, point):
+    same_index = left.index.equals(right.index)
+    if not same_index:
+        return {
+            "same_index": False,
+            "left_rows": int(len(left)),
+            "right_rows": int(len(right)),
+            "max_abs_delta": None,
+            "max_delta_points": None,
+            "within_half_point": False,
+            "identical_frame": False,
+        }
+    lv = left[price_columns].to_numpy(dtype=float)
+    rv = right[price_columns].to_numpy(dtype=float)
+    delta = np.abs(lv - rv)
+    max_abs = float(delta.max()) if delta.size else 0.0
+    max_points = max_abs / point if point > 0 else None
+    return {
+        "same_index": True,
+        "left_rows": int(len(left)),
+        "right_rows": int(len(right)),
+        "max_abs_delta": max_abs,
+        "max_delta_points": max_points,
+        "within_half_point": bool(
+            max_points is not None and max_points <= 0.5
+        ),
+        "identical_frame": bool(left.equals(right)),
+    }
+
+def gap_summary(frame, minutes):
+    diffs = frame.index.to_series().diff().dropna()
+    expected = pd.Timedelta(minutes=minutes)
+    gaps = diffs[diffs > expected]
+    largest = gaps.max() if not gaps.empty else None
+    return {
+        "interval_gap_count": int(len(gaps)),
+        "largest_interval_gap_minutes": (
+            float(largest / pd.Timedelta(minutes=1))
+            if largest is not None else None
+        ),
+    }
+
+per_symbol = {}
+overlap_ok = True
+common_dates = None
+
+for symbol in symbols:
+    metadata = candidate.symbol_metadata[symbol]
+    point = float(metadata.point_size)
+    m1 = candidate.m1_bars[symbol]
+    ask = candidate.ask_m1_bars[symbol]
+    native = candidate.native_timeframe_bars[symbol]
+    missing_ask = m1.index.difference(ask.index)
+    ask_extra = ask.index.difference(m1.index)
+
+    candidate_m1_overlap = m1.loc[
+        (m1.index >= overlap_start) & (m1.index < overlap_end)
+    ]
+    accepted_m1_overlap = accepted.m1_bars[symbol].loc[
+        (accepted.m1_bars[symbol].index >= overlap_start)
+        & (accepted.m1_bars[symbol].index < overlap_end)
+    ]
+    candidate_ask_overlap = ask.loc[
+        (ask.index >= overlap_start) & (ask.index < overlap_end)
+    ]
+    accepted_ask_overlap = accepted.ask_m1_bars[symbol].loc[
+        (accepted.ask_m1_bars[symbol].index >= overlap_start)
+        & (accepted.ask_m1_bars[symbol].index < overlap_end)
+    ]
+
+    bid_overlap = compare_prices(
+        candidate_m1_overlap,
+        accepted_m1_overlap,
+        point,
+    )
+    ask_overlap = compare_prices(
+        candidate_ask_overlap,
+        accepted_ask_overlap,
+        point,
+    )
+
+    native_overlap = {}
+    for timeframe in ("M5", "M15"):
+        left = native[timeframe].loc[
+            (native[timeframe].index >= overlap_start)
+            & (native[timeframe].index < overlap_end)
+        ]
+        right_source = accepted.native_timeframe_bars[symbol][timeframe]
+        right = right_source.loc[
+            (right_source.index >= overlap_start)
+            & (right_source.index < overlap_end)
+        ]
+        native_overlap[timeframe] = {
+            "same_index": bool(left.index.equals(right.index)),
+            "identical_frame": bool(left.equals(right)),
+            "candidate_rows": int(len(left)),
+            "accepted_rows": int(len(right)),
+        }
+
+    ask_meta = candidate.manifest["symbols"][symbol].get("ask_m1", {})
+    symbol_ok = (
+        len(missing_ask) == 0
+        and len(ask_extra) == 0
+        and m1.index.equals(ask.index)
+        and bid_overlap["identical_frame"]
+        and ask_overlap["within_half_point"]
+        and ask_meta.get("source") == "copy_ticks_range"
+        and all(
+            native_overlap[tf]["identical_frame"]
+            for tf in ("M5", "M15")
+        )
+    )
+    overlap_ok = overlap_ok and symbol_ok
+
+    symbol_dates = set(m1.index.normalize())
+    symbol_dates &= set(ask.index.normalize())
+    symbol_dates &= set(native["M5"].index.normalize())
+    common_dates = (
+        symbol_dates
+        if common_dates is None
+        else common_dates & symbol_dates
+    )
+
+    files = candidate.manifest["symbols"][symbol]["files"]
+    per_symbol[symbol] = {
+        "point": point,
+        "m1": {
+            "rows": int(len(m1)),
+            "first_bar_open_utc": iso(m1.index[0]),
+            "last_bar_open_utc": iso(m1.index[-1]),
+            "sha256": files["M1"]["sha256"],
+            "source": "native_mt5_rates",
+            **gap_summary(m1, 1),
+        },
+        "ask_m1": {
+            "rows": int(len(ask)),
+            "first_bar_open_utc": iso(ask.index[0]),
+            "last_bar_open_utc": iso(ask.index[-1]),
+            "sha256": ask_meta["sha256"],
+            "source": ask_meta.get("source"),
+            "missing_vs_bid_m1_rows": int(len(missing_ask)),
+            "extra_vs_bid_m1_rows": int(len(ask_extra)),
+            "valid_ticks": ask_meta.get("valid_ticks"),
+            "spread_points_min": ask_meta.get("spread_points_min"),
+            "spread_points_max": ask_meta.get("spread_points_max"),
+            "zero_spread_ticks": ask_meta.get("zero_spread_ticks"),
+        },
+        "m5": {
+            "rows": int(len(native["M5"])),
+            "first_bar_open_utc": iso(native["M5"].index[0]),
+            "last_bar_open_utc": iso(native["M5"].index[-1]),
+            "sha256": files["M5"]["sha256"],
+            **gap_summary(native["M5"], 5),
+        },
+        "m15": {
+            "rows": int(len(native["M15"])),
+            "first_bar_open_utc": iso(native["M15"].index[0]),
+            "last_bar_open_utc": iso(native["M15"].index[-1]),
+            "sha256": files["M15"]["sha256"],
+            **gap_summary(native["M15"], 15),
+        },
+        "overlap": {
+            "bid_m1": bid_overlap,
+            "ask_m1": ask_overlap,
+            "native": native_overlap,
+            "accepted": bool(symbol_ok),
+        },
+    }
+
+manifest_sha = hashlib.sha256(candidate_path.read_bytes()).hexdigest()
+accepted_manifest_sha = hashlib.sha256(
+    accepted_path.read_bytes()
+).hexdigest()
+
+starts = []
+for symbol in symbols:
+    starts.extend([
+        candidate.m1_bars[symbol].index[0],
+        candidate.ask_m1_bars[symbol].index[0],
+        candidate.native_timeframe_bars[symbol]["M5"].index[0],
+        candidate.native_timeframe_bars[symbol]["M15"].index[0],
+    ])
+strict_common_start = max(starts)
+ordered_dates = sorted(common_dates or [])
+
+print(json.dumps({
+    "manifest_path": str(candidate_path),
+    "manifest_sha256": manifest_sha,
+    "accepted_m019_manifest_path": str(accepted_path),
+    "accepted_m019_manifest_sha256": accepted_manifest_sha,
+    "source": candidate.manifest.get("source"),
+    "broker_server": candidate.manifest.get("broker_server"),
+    "account_currency": candidate.manifest.get("account_currency"),
+    "terminal_version": candidate.manifest.get("terminal_version"),
+    "requested_range": candidate.manifest.get("requested_range"),
+    "strict_common_start_utc": iso(strict_common_start),
+    "strict_common_end_exclusive_utc": "2026-09-25T00:00:00Z",
+    "accepted_overlap_start_utc": "2026-06-23T00:00:00Z",
+    "accepted_overlap_end_exclusive_utc": "2026-09-25T00:00:00Z",
+    "ask_price_overlap_tolerance_points": 0.5,
+    "native_bid_overlap_requires_exact_frame": True,
+    "overlap_ok": bool(overlap_ok),
+    "common_trading_date_count": int(len(ordered_dates)),
+    "first_common_trading_date": (
+        iso(ordered_dates[0]) if ordered_dates else None
+    ),
+    "last_common_trading_date": (
+        iso(ordered_dates[-1]) if ordered_dates else None
+    ),
+    "per_symbol": per_symbol,
+}, sort_keys=True))
+'''
+
+    inspect = _run(
+        _native_command("-c", inspect_code),
+        env=_safe_env(),
+    )
+    if inspect["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M022 native inventory overlap inspection failed",
+            "feature_branch": "strategy-parameter-research",
+            "feature_sha": feature_sha,
+            "candidate_start_utc": candidate_start_utc,
+            "export": export,
+            "inspect": inspect,
+        }
+
+    try:
+        summary = json.loads(inspect["stdout"].strip().splitlines()[-1])
+    except (json.JSONDecodeError, IndexError) as exc:
+        raise RuntimeError(
+            "unable to parse M022 native inventory inspection"
+        ) from exc
+
+    return {
+        "ok": bool(summary.get("overlap_ok")),
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "candidate_start_utc": candidate_start_utc,
+        "cutoff_utc": M022_CUTOFF_UTC,
+        "inventory": summary,
+        "wine_python": wine_python,
+        "safety": {
+            "market_data_read_only": True,
+            "real_order_api_called": False,
+            "economic_replay_run": False,
+            "m021_post_cutoff_data_used": False,
+        },
+        "export": export,
+        "inspect": inspect,
+    }
+
+
 def m022_tick_inventory():
     """Export a tick-derived M1 candidate and prove overlap with accepted M019."""
 
@@ -4655,6 +5026,7 @@ ACTION_HANDLERS = {
     "m022_history_checkpoint_probe": m022_history_checkpoint_probe,
     "m022_history_depth_probe": m022_history_depth_probe,
     "m022_tick_inventory_cleanup": m022_tick_inventory_cleanup,
+    "m022_native_inventory": m022_native_inventory,
     "m022_tick_inventory": m022_tick_inventory,
     "m022_history_inventory_cleanup": m022_history_inventory_cleanup,
     "m022_history_inventory": m022_history_inventory,
