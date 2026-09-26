@@ -1,137 +1,35 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-repo-gate-latest-20260926-1245",
-  "completed_at": "2026-09-26T09:45:19.643657+00:00",
+  "command_id": "mamba2-m022-inventory-tests-20260926-1246",
+  "completed_at": "2026-09-26T09:46:00.600984+00:00",
   "ok": true,
-  "action": "repo_checks",
+  "action": "m022_inventory_tests",
   "data": {
     "ok": true,
-    "clean": true,
-    "branch": "strategy-parameter-research",
-    "divergence": "0\t0",
-    "bot_cache_tracked": false,
-    "icon_tracked": true,
-    "icon_changed": false,
-    "commands": [
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "812f1d30a8645fa5c93c0ce27c98bf79916ac1db\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "strategy-parameter-research\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "diff",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "/home/joel/.local/bin/uv",
-          "lock",
-          "--check"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": "Resolved 58 packages in 0.59ms\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "bot_cache.json"
-        ],
-        "exit_code": 1,
-        "stdout": "",
-        "stderr": "error: pathspec 'bot_cache.json' did not match any file(s) known to git\nDid you forget to 'git add'?\n"
-      },
-      {
-        "command": [
-          "git",
-          "ls-files",
-          "--error-unmatch",
-          "icon.png"
-        ],
-        "exit_code": 0,
-        "stdout": "icon.png\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--short",
-          "--",
-          "icon.png"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin",
-          "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "--verify",
-          "refs/remotes/origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "812f1d30a8645fa5c93c0ce27c98bf79916ac1db\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-list",
-          "--left-right",
-          "--count",
-          "HEAD...origin/strategy-parameter-research"
-        ],
-        "exit_code": 0,
-        "stdout": "0\t0\n",
-        "stderr": ""
-      }
-    ]
+    "feature_branch": "strategy-parameter-research",
+    "feature_sha": "812f1d30a8645fa5c93c0ce27c98bf79916ac1db",
+    "tests": [
+      "tests/test_mt5_dataset.py"
+    ],
+    "run": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_mt5_dataset.py"
+      ],
+      "exit_code": 0,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 14 items\n\ntests/test_mt5_dataset.py ..............                                 [100%]\n\n============================== 14 passed in 0.62s ==============================\n",
+      "stderr": ""
+    },
+    "safety": {
+      "market_data_read_only": true,
+      "real_order_api_called": false,
+      "economic_replay_run": false,
+      "m021_post_cutoff_data_used": false
+    }
   }
 }
