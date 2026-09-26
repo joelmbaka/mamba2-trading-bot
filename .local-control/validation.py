@@ -3309,6 +3309,222 @@ def m022_inventory_tests():
     }
 
 
+def m022_raise_mt5_maxbars():
+    """Raise only MT5 MaxBars, with backup, verification, and rollback."""
+
+    feature_sha = _require_m022_branch()
+    target = (
+        WINEPREFIX
+        / "drive_c"
+        / "Program Files"
+        / "MetaTrader 5"
+        / "config"
+        / "common.ini"
+    )
+    if not target.is_file():
+        return {
+            "ok": False,
+            "reason": "MT5 common.ini not found at fixed Wine path",
+            "feature_sha": feature_sha,
+            "path": str(target),
+        }
+
+    backup_dir = _ensure_baseline_path(
+        REPO / "backtest_data" / "m022-terminal-config-backup"
+    )
+    backup_dir.mkdir(parents=True, exist_ok=True)
+    backup = backup_dir / "common.ini.maxbars-100000.backup"
+
+    raw = target.read_bytes()
+    replacements = [
+        (b"MaxBars=100000", b"MaxBars=500000", "single-byte"),
+        (
+            "MaxBars=100000".encode("utf-16le"),
+            "MaxBars=500000".encode("utf-16le"),
+            "utf-16le",
+        ),
+        (
+            "MaxBars=100000".encode("utf-16be"),
+            "MaxBars=500000".encode("utf-16be"),
+            "utf-16be",
+        ),
+    ]
+    selected = None
+    for old, new, encoding in replacements:
+        if old in raw:
+            selected = (old, new, encoding)
+            break
+
+    already_500k = (
+        b"MaxBars=500000" in raw
+        or "MaxBars=500000".encode("utf-16le") in raw
+        or "MaxBars=500000".encode("utf-16be") in raw
+    )
+    if selected is None and not already_500k:
+        return {
+            "ok": False,
+            "reason": "fixed MaxBars=100000 marker not found; refusing edit",
+            "feature_sha": feature_sha,
+            "path": str(target),
+        }
+
+    before_sha = hashlib.sha256(raw).hexdigest()
+    if not backup.exists():
+        backup.write_bytes(raw)
+
+    wine = _wine()
+    kill_runs = []
+    for image in ("terminal64.exe", "terminal.exe"):
+        kill_runs.append(
+            _run_process_group_bounded(
+                [wine, "taskkill", "/F", "/IM", image],
+                env=_safe_env(wine=True),
+                timeout_seconds=15,
+            )
+        )
+    time.sleep(2)
+
+    modified = False
+    encoding = "already-500000"
+    if selected is not None:
+        old, new, encoding = selected
+        updated = raw.replace(old, new, 1)
+        if updated == raw:
+            raise RuntimeError("MaxBars replacement produced no change")
+        temp = target.with_name("common.ini.m022.tmp")
+        temp.write_bytes(updated)
+        os.replace(temp, target)
+        modified = True
+
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M022 Wine runtime")
+
+    verify_code = r'''
+import json
+import time
+from datetime import datetime, timezone
+
+import MetaTrader5 as mt5
+
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+symbols = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed after MaxBars update")
+
+try:
+    terminal = mt5.terminal_info()
+    account = mt5.account_info()
+    result = {
+        "maxbars": getattr(terminal, "maxbars", None),
+        "server": getattr(account, "server", None),
+        "currency": getattr(account, "currency", None),
+        "native_m1_aug_25": {},
+        "runtime": list(mt5.version()) if hasattr(mt5, "version") else None,
+    }
+    for symbol in symbols:
+        if not mt5.symbol_select(symbol, True):
+            raise RuntimeError(f"could not select {symbol}")
+        rows = None
+        for _attempt in range(6):
+            rows = mt5.copy_rates_range(
+                symbol,
+                mt5.TIMEFRAME_M1,
+                datetime(2025, 8, 25, tzinfo=timezone.utc),
+                datetime(2025, 8, 26, tzinfo=timezone.utc),
+            )
+            if rows is not None and len(rows) >= 1000:
+                break
+            time.sleep(2)
+        result["native_m1_aug_25"][symbol] = {
+            "rows": 0 if rows is None else int(len(rows)),
+            "first_bar_open_utc": (
+                None
+                if rows is None or len(rows) == 0
+                else datetime.fromtimestamp(
+                    int(rows[0]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z")
+            ),
+            "last_bar_open_utc": (
+                None
+                if rows is None or len(rows) == 0
+                else datetime.fromtimestamp(
+                    int(rows[-1]["time"]), timezone.utc
+                ).isoformat().replace("+00:00", "Z")
+            ),
+            "last_error": list(mt5.last_error()),
+        }
+    print(json.dumps(result, sort_keys=True), flush=True)
+finally:
+    mt5.shutdown()
+'''
+
+    verify = _run_process_group_bounded(
+        [wine, wine_python, "-c", verify_code],
+        env=_safe_env(wine=True),
+        timeout_seconds=120,
+    )
+    payload = None
+    if verify["exit_code"] == 0 and verify["stdout"].strip():
+        payload = json.loads(verify["stdout"].strip().splitlines()[-1])
+
+    verified = bool(
+        payload
+        and payload.get("maxbars") == 500000
+        and payload.get("server") == "MetaQuotes-Demo"
+    )
+
+    rollback = None
+    if not verified:
+        rollback_bytes = backup.read_bytes()
+        temp = target.with_name("common.ini.m022.rollback.tmp")
+        temp.write_bytes(rollback_bytes)
+        os.replace(temp, target)
+        rollback_runs = []
+        for image in ("terminal64.exe", "terminal.exe"):
+            rollback_runs.append(
+                _run_process_group_bounded(
+                    [wine, "taskkill", "/F", "/IM", image],
+                    env=_safe_env(wine=True),
+                    timeout_seconds=15,
+                )
+            )
+        rollback = {
+            "restored_backup": True,
+            "kill_runs": rollback_runs,
+        }
+
+    after_raw = target.read_bytes()
+    after_sha = hashlib.sha256(after_raw).hexdigest()
+
+    return {
+        "ok": verified,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "config_path": str(target),
+        "backup_path": str(backup.relative_to(REPO)),
+        "encoding_match": encoding,
+        "modified": modified,
+        "before_sha256": before_sha,
+        "after_sha256": after_sha,
+        "kill_runs": kill_runs,
+        "verification": payload,
+        "verify_run": verify,
+        "rollback": rollback,
+        "safety": {
+            "account_required": "MetaQuotes-Demo",
+            "configuration_change": "MaxBars only",
+            "real_order_api_called": False,
+            "economic_replay_run": False,
+            "m021_post_cutoff_data_used": False,
+        },
+    }
+
+
 def m022_terminal_history_capacity_probe():
     """Read-only probe of MT5 native-M1 capacity and max-bars configuration."""
 
@@ -4168,6 +4384,7 @@ ACTION_HANDLERS = {
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
     "m022_inventory_tests": m022_inventory_tests,
+    "m022_raise_mt5_maxbars": m022_raise_mt5_maxbars,
     "m022_terminal_history_capacity_probe": m022_terminal_history_capacity_probe,
     "m022_history_checkpoint_probe": m022_history_checkpoint_probe,
     "m022_history_depth_probe": m022_history_depth_probe,
