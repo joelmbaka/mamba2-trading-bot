@@ -1,590 +1,90 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-stochastic-assessment-20260927",
-  "completed_at": "2026-09-27T06:22:43.903152+00:00",
+  "command_id": "mamba2-m022-boundary-protocol-sync-20260927-0932",
+  "completed_at": "2026-09-27T06:33:56.563879+00:00",
   "ok": true,
-  "action": "m022_phase1_stochastic_assessment",
+  "action": "sync",
   "data": {
-    "ok": true,
-    "feature_branch": "strategy-parameter-research",
-    "feature_sha": "db88bcc145754c50b6d7ad87a9ddef071ed2d9c5",
-    "family": "stochastic",
-    "rubric": {
-      "activity_floor_fraction": 0.7,
-      "objectives": {
-        "net_realized_pl": "maximize",
-        "maximum_equity_drawdown": "minimize",
-        "win_rate_nonflat_pct": "maximize"
-      },
-      "symbol_positive_delta_min_count": 2,
-      "calendar_bucket_positive_delta_min_count": 2,
-      "max_symbol_positive_delta_share": 0.7,
-      "max_side_positive_delta_share": 0.8,
-      "reference_always_retained": true
-    },
-    "shortlist": [
-      "14/7/7",
-      "21/7/7",
-      "28/7/7"
-    ],
-    "arms": [
+    "branch": "strategy-parameter-research",
+    "before_sha": "82200e294aea93782dd62944dd0074febe35ca55",
+    "after_sha": "82200e294aea93782dd62944dd0074febe35ca55",
+    "reason": null,
+    "commands": [
       {
-        "tuple": [
-          9,
-          3,
-          3
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
         ],
-        "label": "9/3/3",
-        "is_reference": false,
-        "mandatory_ok": true,
-        "activity": {
-          "closed_trades": 23673,
-          "reference_closed_trades": 12006,
-          "minimum_closed_trades": 8404.199999999999,
-          "ratio_to_reference": 1.9717641179410295
-        },
-        "objectives": {
-          "net_realized_pl": -30216.360782143325,
-          "maximum_equity_drawdown": 30239.87533557514,
-          "win_rate_nonflat_pct": 32.65262979874852
-        },
-        "net_pl_improves_reference": false,
-        "breadth": {
-          "passes": true,
-          "symbol": {
-            "deltas": {
-              "EURJPY": -3779.7808509130846,
-              "EURUSD": -1680.6928571429175,
-              "GBPJPY": -6284.615637809177,
-              "GBPUSD": -1601.5214285714233,
-              "USDJPY": -1370.388910929942
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "side": {
-            "deltas": {
-              "BUY": -7023.007329614885,
-              "SELL": -7693.992355751603
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "entry_utc_bucket": {
-            "deltas": {
-              "00:00-03:59 UTC": -5134.99934064207,
-              "04:00-07:59 UTC": -1288.0380754210596,
-              "08:00-11:59 UTC": -1829.165496678739,
-              "12:00-15:59 UTC": -1925.336921312518,
-              "16:00-19:59 UTC": -1055.0266509242592,
-              "20:00-23:59 UTC": -3484.4332003879017
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          }
-        },
-        "pareto_nondominated": false,
-        "screening_status": "DOMINATED"
+        "exit_code": 0,
+        "stdout": "82200e294aea93782dd62944dd0074febe35ca55\n",
+        "stderr": ""
       },
       {
-        "tuple": [
-          10,
-          4,
-          4
+        "command": [
+          "git",
+          "fetch",
+          "origin"
         ],
-        "label": "10/4/4",
-        "is_reference": false,
-        "mandatory_ok": true,
-        "activity": {
-          "closed_trades": 20183,
-          "reference_closed_trades": 12006,
-          "minimum_closed_trades": 8404.199999999999,
-          "ratio_to_reference": 1.6810761286023654
-        },
-        "objectives": {
-          "net_realized_pl": -26175.609396989392,
-          "maximum_equity_drawdown": 26208.21685719356,
-          "win_rate_nonflat_pct": 32.48227653562045
-        },
-        "net_pl_improves_reference": false,
-        "breadth": {
-          "passes": true,
-          "symbol": {
-            "deltas": {
-              "EURJPY": -2217.8106115280225,
-              "EURUSD": -1616.3785714286464,
-              "GBPJPY": -3866.723144453107,
-              "GBPUSD": -2233.2928571426614,
-              "USDJPY": -742.0431156601285
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "side": {
-            "deltas": {
-              "BUY": -4988.001871237112,
-              "SELL": -5688.246428975446
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "entry_utc_bucket": {
-            "deltas": {
-              "00:00-03:59 UTC": -3928.966565464283,
-              "04:00-07:59 UTC": -1100.5836359813725,
-              "08:00-11:59 UTC": -1065.6904462590508,
-              "12:00-15:59 UTC": -1252.6502452641234,
-              "16:00-19:59 UTC": -652.6221586840088,
-              "20:00-23:59 UTC": -2675.7352485597085
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          }
-        },
-        "pareto_nondominated": false,
-        "screening_status": "DOMINATED"
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
       },
       {
-        "tuple": [
-          10,
-          6,
-          6
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
         ],
-        "label": "10/6/6",
-        "is_reference": false,
-        "mandatory_ok": true,
-        "activity": {
-          "closed_trades": 16410,
-          "reference_closed_trades": 12006,
-          "minimum_closed_trades": 8404.199999999999,
-          "ratio_to_reference": 1.366816591704148
-        },
-        "objectives": {
-          "net_realized_pl": -21228.753428576114,
-          "maximum_equity_drawdown": 21230.31810571802,
-          "win_rate_nonflat_pct": 32.85984271169908
-        },
-        "net_pl_improves_reference": false,
-        "breadth": {
-          "passes": true,
-          "symbol": {
-            "deltas": {
-              "EURJPY": -755.9054778184518,
-              "EURUSD": -859.6142857143495,
-              "GBPJPY": -2436.4311767755107,
-              "GBPUSD": -1191.2785714284591,
-              "USDJPY": -486.16282006253437
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "side": {
-            "deltas": {
-              "BUY": -2828.951766204119,
-              "SELL": -2900.440565595147
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "entry_utc_bucket": {
-            "deltas": {
-              "00:00-03:59 UTC": -2264.4896579785045,
-              "04:00-07:59 UTC": -536.0983570453573,
-              "08:00-11:59 UTC": -723.4022878845115,
-              "12:00-15:59 UTC": -223.01546891368093,
-              "16:00-19:59 UTC": -633.1851211303201,
-              "20:00-23:59 UTC": -1349.2014388469497
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          }
-        },
-        "pareto_nondominated": false,
-        "screening_status": "DOMINATED"
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
       },
       {
-        "tuple": [
-          14,
-          3,
-          3
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
         ],
-        "label": "14/3/3",
-        "is_reference": false,
-        "mandatory_ok": true,
-        "activity": {
-          "closed_trades": 21580,
-          "reference_closed_trades": 12006,
-          "minimum_closed_trades": 8404.199999999999,
-          "ratio_to_reference": 1.7974346160253207
-        },
-        "objectives": {
-          "net_realized_pl": -26169.01248029918,
-          "maximum_equity_drawdown": 26188.340698750853,
-          "win_rate_nonflat_pct": 32.90822241803089
-        },
-        "net_pl_improves_reference": false,
-        "breadth": {
-          "passes": true,
-          "symbol": {
-            "deltas": {
-              "EURJPY": -1961.389917026836,
-              "EURUSD": -1613.4000000001333,
-              "GBPJPY": -4995.655751240239,
-              "GBPUSD": -1164.5071428570877,
-              "USDJPY": -934.6985723981002
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "side": {
-            "deltas": {
-              "BUY": -5407.907524695104,
-              "SELL": -5261.743858827245
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "entry_utc_bucket": {
-            "deltas": {
-              "00:00-03:59 UTC": -4496.405498961446,
-              "04:00-07:59 UTC": -1027.691654889205,
-              "08:00-11:59 UTC": -482.14594536620484,
-              "12:00-15:59 UTC": -2054.40077302006,
-              "16:00-19:59 UTC": -188.9419435616594,
-              "20:00-23:59 UTC": -2420.065567723803
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          }
-        },
-        "pareto_nondominated": false,
-        "screening_status": "DOMINATED"
+        "exit_code": 0,
+        "stdout": "strategy-parameter-research\n",
+        "stderr": ""
       },
       {
-        "tuple": [
-          14,
-          5,
-          5
+        "command": [
+          "git",
+          "fetch",
+          "origin",
+          "strategy-parameter-research:refs/remotes/origin/strategy-parameter-research"
         ],
-        "label": "14/5/5",
-        "is_reference": false,
-        "mandatory_ok": true,
-        "activity": {
-          "closed_trades": 16485,
-          "reference_closed_trades": 12006,
-          "minimum_closed_trades": 8404.199999999999,
-          "ratio_to_reference": 1.3730634682658671
-        },
-        "objectives": {
-          "net_realized_pl": -21640.734152698238,
-          "maximum_equity_drawdown": 21691.125431050423,
-          "win_rate_nonflat_pct": 32.740731751714094
-        },
-        "net_pl_improves_reference": false,
-        "breadth": {
-          "passes": true,
-          "symbol": {
-            "deltas": {
-              "EURJPY": -992.8118401805978,
-              "EURUSD": -1018.8000000000197,
-              "GBPJPY": -2424.3576784170846,
-              "GBPUSD": -1429.4714285713903,
-              "USDJPY": -275.9321087523674
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "side": {
-            "deltas": {
-              "BUY": -2915.550387501439,
-              "SELL": -3225.8226684199653
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "entry_utc_bucket": {
-            "deltas": {
-              "00:00-03:59 UTC": -2520.1199688311935,
-              "04:00-07:59 UTC": -702.4858740369468,
-              "08:00-11:59 UTC": -410.6544654825145,
-              "12:00-15:59 UTC": -632.9438019300046,
-              "16:00-19:59 UTC": -237.71205030945248,
-              "20:00-23:59 UTC": -1637.4568953313583
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          }
-        },
-        "pareto_nondominated": false,
-        "screening_status": "DOMINATED"
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
       },
       {
-        "tuple": [
-          14,
-          7,
-          7
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/strategy-parameter-research"
         ],
-        "label": "14/7/7",
-        "is_reference": false,
-        "mandatory_ok": true,
-        "activity": {
-          "closed_trades": 14067,
-          "reference_closed_trades": 12006,
-          "minimum_closed_trades": 8404.199999999999,
-          "ratio_to_reference": 1.171664167916042
-        },
-        "objectives": {
-          "net_realized_pl": -17566.558154526083,
-          "maximum_equity_drawdown": 17585.099350836008,
-          "win_rate_nonflat_pct": 32.95147289028035
-        },
-        "net_pl_improves_reference": false,
-        "breadth": {
-          "passes": true,
-          "symbol": {
-            "deltas": {
-              "EURJPY": 141.43595133700273,
-              "EURUSD": -446.86428571435204,
-              "GBPJPY": -1105.8158590295507,
-              "GBPUSD": -669.9142857143243,
-              "USDJPY": 13.961421371978759
-            },
-            "positive_count": 2,
-            "positive_sum": 155.3973727089815,
-            "max_positive_share": 0.9101566446806997
-          },
-          "side": {
-            "deltas": {
-              "BUY": -1045.5958195216108,
-              "SELL": -1021.601238227624
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "entry_utc_bucket": {
-            "deltas": {
-              "00:00-03:59 UTC": -446.2380728966755,
-              "04:00-07:59 UTC": -246.72286760473162,
-              "08:00-11:59 UTC": -330.4319422314031,
-              "12:00-15:59 UTC": -382.25609169425684,
-              "16:00-19:59 UTC": -14.480367747494256,
-              "20:00-23:59 UTC": -647.0677155746935
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          }
-        },
-        "pareto_nondominated": true,
-        "screening_status": "SHORTLIST"
+        "exit_code": 0,
+        "stdout": "82200e294aea93782dd62944dd0074febe35ca55\n",
+        "stderr": ""
       },
       {
-        "tuple": [
-          21,
-          5,
-          5
+        "command": [
+          "git",
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...refs/remotes/origin/strategy-parameter-research"
         ],
-        "label": "21/5/5",
-        "is_reference": false,
-        "mandatory_ok": true,
-        "activity": {
-          "closed_trades": 13435,
-          "reference_closed_trades": 12006,
-          "minimum_closed_trades": 8404.199999999999,
-          "ratio_to_reference": 1.119023821422622
-        },
-        "objectives": {
-          "net_realized_pl": -17370.400892621903,
-          "maximum_equity_drawdown": 17408.021203260196,
-          "win_rate_nonflat_pct": 32.62585641942211
-        },
-        "net_pl_improves_reference": false,
-        "breadth": {
-          "passes": true,
-          "symbol": {
-            "deltas": {
-              "EURJPY": 198.28948611338274,
-              "EURUSD": -852.8428571429567,
-              "GBPJPY": -803.1817980252808,
-              "GBPUSD": -314.0000000000914,
-              "USDJPY": -99.30462679023731
-            },
-            "positive_count": 1,
-            "positive_sum": 198.28948611338274,
-            "max_positive_share": 1.0
-          },
-          "side": {
-            "deltas": {
-              "BUY": -1044.271150178617,
-              "SELL": -826.7686456665379
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "entry_utc_bucket": {
-            "deltas": {
-              "00:00-03:59 UTC": -1052.0646586386001,
-              "04:00-07:59 UTC": -617.5336315709151,
-              "08:00-11:59 UTC": 249.50169517269296,
-              "12:00-15:59 UTC": -246.07549666199543,
-              "16:00-19:59 UTC": -188.27727126484228,
-              "20:00-23:59 UTC": -16.590432881494962
-            },
-            "positive_count": 1,
-            "positive_sum": 249.50169517269296,
-            "max_positive_share": 1.0
-          }
-        },
-        "pareto_nondominated": false,
-        "screening_status": "DOMINATED"
-      },
-      {
-        "tuple": [
-          21,
-          7,
-          7
-        ],
-        "label": "21/7/7",
-        "is_reference": true,
-        "mandatory_ok": true,
-        "activity": {
-          "closed_trades": 12006,
-          "reference_closed_trades": 12006,
-          "minimum_closed_trades": 8404.199999999999,
-          "ratio_to_reference": 1.0
-        },
-        "objectives": {
-          "net_realized_pl": -15499.36109677685,
-          "maximum_equity_drawdown": 15501.914245353408,
-          "win_rate_nonflat_pct": 32.86666666666667
-        },
-        "net_pl_improves_reference": false,
-        "breadth": {
-          "passes": true,
-          "symbol": {
-            "deltas": {
-              "EURJPY": 0.0,
-              "EURUSD": 0.0,
-              "GBPJPY": 0.0,
-              "GBPUSD": 0.0,
-              "USDJPY": 0.0
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "side": {
-            "deltas": {
-              "BUY": 0.0,
-              "SELL": 0.0
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          },
-          "entry_utc_bucket": {
-            "deltas": {
-              "00:00-03:59 UTC": 0.0,
-              "04:00-07:59 UTC": 0.0,
-              "08:00-11:59 UTC": 0.0,
-              "12:00-15:59 UTC": 0.0,
-              "16:00-19:59 UTC": 0.0,
-              "20:00-23:59 UTC": 0.0
-            },
-            "positive_count": 0,
-            "positive_sum": 0,
-            "max_positive_share": null
-          }
-        },
-        "pareto_nondominated": true,
-        "screening_status": "REFERENCE"
-      },
-      {
-        "tuple": [
-          28,
-          7,
-          7
-        ],
-        "label": "28/7/7",
-        "is_reference": false,
-        "mandatory_ok": true,
-        "activity": {
-          "closed_trades": 9798,
-          "reference_closed_trades": 12006,
-          "minimum_closed_trades": 8404.199999999999,
-          "ratio_to_reference": 0.8160919540229885
-        },
-        "objectives": {
-          "net_realized_pl": -12788.255287005128,
-          "maximum_equity_drawdown": 12808.786333101194,
-          "win_rate_nonflat_pct": 32.73766976411723
-        },
-        "net_pl_improves_reference": true,
-        "breadth": {
-          "passes": true,
-          "symbol": {
-            "deltas": {
-              "EURJPY": 1205.5360106711723,
-              "EURUSD": 376.1214285713329,
-              "GBPJPY": 562.9707916593889,
-              "GBPUSD": 307.88571428574505,
-              "USDJPY": 258.59186458402644
-            },
-            "positive_count": 5,
-            "positive_sum": 2711.1058097716655,
-            "max_positive_share": 0.44466579147373997
-          },
-          "side": {
-            "deltas": {
-              "BUY": 1520.7045204270544,
-              "SELL": 1190.401289344657
-            },
-            "positive_count": 2,
-            "positive_sum": 2711.1058097717114,
-            "max_positive_share": 0.5609166986201491
-          },
-          "entry_utc_bucket": {
-            "deltas": {
-              "00:00-03:59 UTC": 724.1744552939535,
-              "04:00-07:59 UTC": 330.71412574708006,
-              "08:00-11:59 UTC": 164.80804401637647,
-              "12:00-15:59 UTC": 168.19669683729353,
-              "16:00-19:59 UTC": 422.6385342201004,
-              "20:00-23:59 UTC": 900.573953656864
-            },
-            "positive_count": 6,
-            "positive_sum": 2711.1058097716677,
-            "max_positive_share": 0.33217956688039085
-          }
-        },
-        "pareto_nondominated": true,
-        "screening_status": "SHORTLIST"
+        "exit_code": 0,
+        "stdout": "0\t0\n",
+        "stderr": ""
       }
-    ],
-    "safety": {
-      "economic_replay_run": false,
-      "reads_existing_development_results_only": true,
-      "validation_economic_data_used": false,
-      "historical_holdout_economic_data_used": false,
-      "m021_post_cutoff_data_used": false,
-      "real_order_api_called": false
-    }
+    ]
   }
 }
