@@ -181,3 +181,8 @@ M022 fixed Phase-1 spread actions:
 
 - `m022_phase1_spread_family`
 - `m022_phase1_spread_assessment`
+
+M022 fixed Phase-1 ATR-SL actions:
+
+- `m022_phase1_atr_sl_family`
+- `m022_phase1_atr_sl_assessment`
