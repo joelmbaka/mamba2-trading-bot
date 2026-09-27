@@ -163,8 +163,8 @@ Reference artifact hashes:
 
 ### Current authorized gate
 
-The stochastic, boundary, EMA, and decision-time-spread Phase-1 families are
-complete.
+The stochastic, boundary, EMA, decision-time-spread, and ATR-SL Phase-1
+families are complete.
 
 Accepted Phase-1 shortlists so far:
 
@@ -180,54 +180,61 @@ Accepted Phase-1 shortlists so far:
   - **12**;
 - decision-time spread:
   - **none** — reference;
-  - **<=12 points**.
+  - **<=12 points**;
+- ATR-SL:
+  - **1.00x reference**;
+  - **1.50x**.
 
-Accepted spread execution:
+Accepted ATR-SL execution:
 
 - family command:
-  `mamba2-m022-spread-family-20260927-1317`;
+  `mamba2-m022-atr-sl-family-v1`;
 - mechanical assessment:
-  `mamba2-m022-spread-assessment-20260927-1541`;
+  `mamba2-m022-atr-sl-assessment-v1`;
 - reviewed feature SHA:
-  `823a761c93d3f6df1162a5bb934190e461daf1de`.
+  `723fe47ca83584d3619517bb9c811cf4386a4bc4`.
 
-Spread assessment details:
+ATR-SL assessment:
 
-- <=5: **INELIGIBLE**, 54.37% activity;
-- <=8: **INELIGIBLE**, 59.05% activity;
-- <=10: **INELIGIBLE**, 67.87% activity;
-- <=12: **SHORTLIST**, 72.93% activity, broad improvement across all five
-  symbols, both sides, and all six UTC buckets;
-- <=15: **DOMINATED**.
+- 0.75x: **DOMINATED**, 110.98% activity;
+- 1.00x: **REFERENCE**;
+- 1.25x: **DOMINATED**, 90.78% activity;
+- 1.50x: **SHORTLIST**, 82.35% activity, improved four of five symbols,
+  both sides, and all six UTC buckets while passing concentration limits.
 
-The next authorized Phase-1 family is **ATR-SL only**:
+Safety remained clean: deterministic A/B passed, TP safety clean,
+development only, validation unopened, historical holdout unopened, M021
+unused, and no real-order API called.
 
-- **0.75x**;
-- **1.00x** reference;
-- **1.25x**;
-- **1.50x**.
+The next authorized Phase-1 family is **ATR-TP only**:
+
+- **1.00x**;
+- **1.50x**;
+- **2.00x reference**;
+- **2.50x**;
+- **3.00x**.
 
 The fixed reference remains stochastic 21/7/7, boundaries 20/80, EMA7,
-no experimental spread gate, ATR SL 1.0x / TP 2.0x, all hours.
+no experimental spread gate, ATR SL **1.00x** / TP **2.00x**, all hours.
 
-The ATR-SL execution/assessment protocol is frozen in the M022 milestone
-before outcomes:
+The ATR-TP protocol is frozen in the M022 milestone before outcomes:
 
-- TP fixed at 2.0x;
-- reuse accepted reference-v3 evidence;
-- deterministic A/B for 0.75x, 1.25x, and 1.50x;
+- ATR SL fixed at **1.00x** for every arm;
+- reuse accepted TP2.00x reference-v3 evidence;
+- deterministic A/B for TP1.00x, TP1.50x, TP2.50x, and TP3.00x;
 - maximum two concurrent independent non-reference arms;
 - development only;
 - 70% reference trade-count floor;
 - Pareto objectives: net P/L, max drawdown USD, non-flat win rate;
-- same symbol/calendar/side breadth limits for improving arms.
+- same symbol/calendar/side breadth and concentration limits;
+- report remaining open positions and exact artifact hashes.
 
-ATR-TP is not yet authorized. Do not combine Phase-1 candidates yet.
+Do not use SL1.50x during ATR-TP Phase 1. Do not combine Phase-1 candidates yet.
 
 ## Start here
 
 Read the durable handoff docs and the M022 milestone. Resume from the
-ATR-SL implementation/sync/run/assessment sequence above.
+ATR-TP implementation/sync/run/assessment sequence above.
 
 Do not start Phase 2, validation, historical holdout, M15 research, merge,
 deployment, or live trading.

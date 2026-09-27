@@ -1322,6 +1322,191 @@ ATR-TP screening is **not yet authorized to execute**. It remains a separate
 one-dimensional family with SL fixed at 1.00x and will be frozen/authorized
 only after the ATR-SL result and mechanical assessment are accepted.
 
+
+## Accepted Phase-1 ATR-SL screening — 2026-09-27
+
+The frozen ATR-SL development screening and mechanical assessment completed
+successfully.
+
+Execution command:
+
+`mamba2-m022-atr-sl-family-v1`
+
+Mechanical assessment command:
+
+`mamba2-m022-atr-sl-assessment-v1`
+
+Reviewed feature SHA:
+
+`723fe47ca83584d3619517bb9c811cf4386a4bc4`
+
+The TP multiplier remained fixed at **2.0x** for the full family.
+
+Mechanical result:
+
+- **0.75x**
+  - closed trades: **13,324** (**110.98%** of reference);
+  - net realized P/L: **-$16,171.2740**;
+  - maximum equity drawdown: **$16,174.2265**;
+  - non-flat win rate: **32.6903%**;
+  - remaining open positions: **2**;
+  - classification: **DOMINATED**.
+- **1.00x**
+  - fixed reference, always retained;
+  - closed trades: **12,006**;
+  - net realized P/L: **-$15,499.3611**;
+  - maximum equity drawdown: **$15,501.9142**;
+  - non-flat win rate: **32.8667%**;
+  - remaining open positions: **3**;
+  - classification: **REFERENCE**.
+- **1.25x**
+  - closed trades: **10,899** (**90.78%** of reference);
+  - net realized P/L: **-$14,267.8014**;
+  - maximum equity drawdown: **$14,301.0039**;
+  - non-flat win rate: **29.5440%**;
+  - remaining open positions: **3**;
+  - improved all five symbols and both sides, with positive delta in five of
+    six fixed UTC buckets;
+  - largest positive-symbol share: **51.26%**;
+  - largest positive-side share: **55.86%**;
+  - classification: **DOMINATED**.
+- **1.50x**
+  - closed trades: **9,887** (**82.35%** of reference);
+  - net realized P/L: **-$13,580.1591**;
+  - maximum equity drawdown: **$13,610.9903**;
+  - non-flat win rate: **32.4734%**;
+  - remaining open positions: **3**;
+  - improved four of five symbols;
+  - improved BUY and SELL;
+  - improved all six fixed UTC buckets;
+  - largest positive-symbol share: **43.00%**;
+  - largest positive-side share: **59.78%**;
+  - largest positive UTC-bucket share: **40.40%**;
+  - classification: **SHORTLIST**.
+
+ATR-SL shortlist:
+
+- **1.00x reference**;
+- **1.50x**.
+
+Deterministic artifact hashes:
+
+- **0.75x**
+  - baseline:
+    `65e97ff019ef51c9ea0f737da144ed9e6b951bc6c97beb88cba7d2b331a94055`;
+  - diagnostic:
+    `49fc4d534917b9f1ed1907277c4e772ffeb1339a0cd853633e261c052f4f5a67`;
+  - summary:
+    `a7f87691a96f194cf5a48e3836141a2025e2f62e5df4f06c520c992c09ac5a4c`.
+- **1.00x reference**
+  - baseline:
+    `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+  - diagnostic:
+    `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+  - summary:
+    `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+- **1.25x**
+  - baseline:
+    `25a4890f9fb045af0fbd54e19f2b8f13de11bfbc327b8cba6acc95c7762e6acf`;
+  - diagnostic:
+    `2fe50cea57c959797550dfd782e10a4a26fa87ea8f5fbe53a43ef415694ae222`;
+  - summary:
+    `25f80fd842a208b74c8440bd2ceba5732d312721b3e11c417ecf22dfce0fa3ec`.
+- **1.50x**
+  - baseline:
+    `8059f8d44536739ab4b65ccd8f283907d32338b9466b40542ddb7330a6b9170f`;
+  - diagnostic:
+    `e9d2d3675e1ad092bb321a0a15aeedbe3e631c020ee0f27cb2ea1b8828d33be6`;
+  - summary:
+    `803bcaac50f124b30ee16df83b39efcc845fb102e090d5ae6ca8c202a3a1ba41`.
+
+Safety remained clean:
+
+- deterministic A/B evidence passed;
+- TP/safety invariants remained clean;
+- development only;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+The 1.50x SL value is retained only as a Phase-1 candidate. It must not be
+combined with alternate TP values or other shortlisted family values yet.
+
+## Frozen ATR-TP family protocol — before ATR-TP results
+
+The next Phase-1 protection family changes **only the ATR take-profit
+multiplier**. ATR SL is deliberately reset to and held at the fixed reference
+**1.00x** for every ATR-TP arm.
+
+The fixed Phase-1 reference remains unchanged:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.00x**;
+- ATR TP **2.00x**;
+- all hours;
+- existing directional trailing semantics.
+
+ATR-TP values:
+
+- **1.00x**;
+- **1.50x**;
+- **2.00x** — reference;
+- **2.50x**;
+- **3.00x**.
+
+Do not use ATR-SL 1.50x during this screen. Do not combine any ATR-TP arm with
+stochastic, EMA, spread, or ATR-SL shortlist values.
+
+Execution scheduling is frozen before outcomes:
+
+- reuse accepted reference-v3 evidence for TP2.00x;
+- run TP1.00x, TP1.50x, TP2.50x, and TP3.00x as complete deterministic A/B
+  pairs;
+- keep ATR SL exactly **1.00x** for every arm;
+- execute at most **2 independent non-reference arms concurrently**;
+- each arm writes to a unique immutable output directory;
+- completed deterministic arm artifacts may be resumed but never overwritten;
+- no adaptive or neighboring TP values are authorized;
+- development only;
+- validation, historical holdout, and M021 remain inaccessible.
+
+Mandatory gates:
+
+- deterministic A/B hashes match;
+- TP/safety invariants remain clean;
+- development partition/hash matches the frozen M022 partition;
+- parameter metadata matches the exact declared TP multiplier and fixed
+  ATR SL 1.00x;
+- closed trades are at least **70% of the reference**;
+- remaining open positions are reported;
+- validation and historical holdout remain unopened.
+
+Eligible ATR-TP arms are compared on the same three Phase-1 objectives:
+
+1. net realized P/L — higher is better;
+2. maximum equity drawdown USD — lower is better;
+3. non-flat win rate — higher is better.
+
+Retain Pareto-nondominated eligible ATR-TP values plus the TP2.00x reference.
+
+For any non-reference ATR-TP arm whose net realized P/L improves versus
+reference, require the same frozen breadth checks:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving TP value that fails breadth is
+`FRAGILE / CONCENTRATED` and is not carried forward.
+
+No ATR-TP winner may be selected manually. The fixed mechanical assessment
+must produce the classification before the family is accepted.
+
 ## Phase 2 — bounded combinations
 
 Only parameter values/regions that show useful and reasonably stable Phase 1 behavior may enter Phase 2.
