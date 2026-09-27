@@ -163,35 +163,57 @@ Reference artifact hashes:
 
 ### Current authorized gate
 
-Before any non-reference stochastic tuple is allowed, validate the
-post-reference replay-cache optimization frozen in the M022 milestone:
+The stochastic Phase-1 family is complete.
 
-1. sync optimized feature code;
-2. exact cached-vs-legacy stochastic/ATR/EMA parity tests;
-3. focused M022 tests;
-4. full native tests;
-5. fresh exact M019/M020-D hash regression;
-6. optimized stochastic **21/7/7** deterministic A/B run;
-7. require exact economic equivalence to reference-v3 across:
-   - partition/cost contract;
-   - aggregate;
-   - per-symbol;
-   - BUY/SELL;
-   - fixed UTC buckets;
-   - protection;
-   - rejection counts;
-   - TP/safety;
-   - remaining positions.
+Accepted stochastic execution:
 
-Only if all seven gates pass may the remaining eight stochastic tuples run.
+- family command:
+  `mamba2-m022-stochastic-family-20260927-0552`;
+- mechanical assessment:
+  `mamba2-m022-stochastic-assessment-20260927`;
+- reviewed feature SHA:
+  `db88bcc145754c50b6d7ad87a9ddef071ed2d9c5`;
+- shortlist:
+  - **14 / 7 / 7**;
+  - **21 / 7 / 7** reference;
+  - **28 / 7 / 7**.
 
-After the stochastic family completes, apply the predeclared Pareto/activity/
-concentration rubric mechanically before beginning the next Phase-1 family.
+28/7/7 improved net P/L and drawdown versus reference while retaining
+**81.61%** of reference closed trades and passing all frozen breadth/
+concentration checks. 14/7/7 remained Pareto-nondominated because of its
+higher non-flat win rate. All other stochastic tuples were dominated.
 
-Do not inspect validation or holdout. Do not use M021 outcomes.
+The next authorized Phase-1 family is the frozen **M1 oversold/overbought
+boundary** screen only:
+
+- 15 / 85;
+- 20 / 80 reference;
+- 25 / 75.
+
+The fixed Phase-1 reference remains stochastic 21/7/7, boundaries 20/80,
+EMA7, no experimental spread gate, ATR 1.0x/2.0x, all hours. Do **not**
+combine stochastic shortlist values with boundary variants yet; interactions
+belong to Phase 2.
+
+The boundary execution/assessment protocol is frozen in the M022 milestone
+before outcomes:
+
+- reuse accepted 20/80 reference-v3 evidence;
+- deterministic A/B for 15/85 and 25/75;
+- maximum two concurrent independent arms;
+- development only;
+- 70% reference trade-count floor;
+- Pareto objectives: net P/L, max drawdown USD, non-flat win rate;
+- same symbol/calendar/side breadth limits for improving arms.
+
+After boundary-family evidence and its mechanical assessment are accepted,
+continue to the next still-frozen Phase-1 family. Do not open validation or
+historical holdout and do not use M021 outcomes.
 
 ## Start here
 
-Read the durable handoff docs and M022 milestone, then resume from the exact sequence above.
+Read the durable handoff docs and the M022 milestone. Resume from the
+boundary-family sync/run/assessment sequence above.
 
-Do not interpret parameter winners until the historical inventory, partitions, reporting rules, and selection rules are frozen.
+Do not start Phase 2, validation, historical holdout, M15 research, merge,
+deployment, or live trading.
