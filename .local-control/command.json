@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-stochastic-assessment-20260927",
-  "action": "m022_phase1_stochastic_assessment",
+  "id": "mamba2-m022-boundary-protocol-sync-20260927-0932",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
