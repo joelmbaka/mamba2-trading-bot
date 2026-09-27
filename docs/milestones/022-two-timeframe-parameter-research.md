@@ -694,6 +694,126 @@ separately documented pre-run addition under the existing milestone rule.
 No stochastic tuple is selected merely because it has the highest development
 P/L. Validation remains closed while this stochastic shortlist is constructed.
 
+## Accepted Phase-1 stochastic-family screening — 2026-09-27
+
+The frozen stochastic development screening completed successfully.
+
+Execution command:
+
+`mamba2-m022-stochastic-family-20260927-0552`
+
+Mechanical assessment command:
+
+`mamba2-m022-stochastic-assessment-20260927`
+
+Feature SHA:
+
+`db88bcc145754c50b6d7ad87a9ddef071ed2d9c5`
+
+All nine frozen tuples passed the mandatory deterministic/safety/partition
+gates. The accepted stochastic shortlist is:
+
+- **14 / 7 / 7** — Pareto-nondominated;
+- **21 / 7 / 7** — retained reference;
+- **28 / 7 / 7** — Pareto-nondominated and passed the frozen
+  breadth/concentration checks.
+
+The strongest broad improvement versus the 21/7/7 reference was 28/7/7:
+
+- net realized P/L: **-$12,788.2553** versus **-$15,499.3611**;
+- maximum equity drawdown: **$12,808.7863** versus **$15,501.9142**;
+- closed trades: **9,798** versus **12,006** (**81.61%** of reference and
+  above the frozen 70% activity floor);
+- non-flat win rate: **32.7377%** versus **32.8667%**;
+- positive P/L delta in **all five symbols**;
+- positive P/L delta in **all six fixed 4-hour UTC buckets**;
+- positive P/L delta on both BUY and SELL;
+- largest positive-symbol contribution share: **44.47%**;
+- largest positive-side contribution share: **56.09%**.
+
+14/7/7 remains on the Pareto frontier because its non-flat win rate
+(**32.9515%**) is higher, while its P/L and drawdown are worse than the
+reference. All other stochastic tuples were mechanically classified
+`DOMINATED`.
+
+Safety remained clean:
+
+- development only;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+The stochastic shortlist is evidence for later Phase 2 only. It does **not**
+change the fixed Phase-1 reference configuration for the remaining one-family
+screens.
+
+## Frozen boundary-family protocol — before boundary results
+
+The next Phase-1 family is the M1 oversold/overbought boundary family.
+
+To preserve one-family-at-a-time interpretation, the fixed reference remains:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.0x** / TP **2.0x**;
+- all hours;
+- existing directional trailing semantics.
+
+The boundary family changes **only** the symmetric M1 stochastic boundaries:
+
+- **15 / 85**;
+- **20 / 80** — reference;
+- **25 / 75**.
+
+Do not combine 14/7/7 or 28/7/7 with a boundary variant during this Phase-1
+screen. Such interactions belong only in the later predeclared Phase-2 matrix.
+
+Execution scheduling is frozen as follows:
+
+- reuse the accepted 20/80 reference-v3 evidence rather than replaying it;
+- run 15/85 and 25/75 as complete deterministic A/B pairs;
+- the two non-reference arms may execute concurrently with maximum concurrency
+  fixed at **2**;
+- each arm writes to a unique immutable output directory;
+- no result from one arm may alter the other arm;
+- no adaptive boundary values are authorized;
+- validation, historical holdout, and M021 remain inaccessible.
+
+The boundary-family screening rubric is also frozen before results.
+
+Mandatory gates:
+
+- deterministic A/B hashes must match;
+- TP/safety invariants must remain clean;
+- development partition/hash must match the frozen M022 partition;
+- closed trades must be at least **70% of the 20/80 reference**;
+- validation and historical holdout must remain unopened.
+
+Eligible arms are compared on the same three Phase-1 objectives:
+
+1. maximize net realized P/L;
+2. minimize maximum equity drawdown USD;
+3. maximize non-flat win rate.
+
+Retain the Pareto-nondominated eligible boundary pairs plus the 20/80
+reference.
+
+For any non-reference boundary pair whose net realized P/L improves versus
+20/80, require the same predeclared breadth checks used for stochastic
+screening:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving pair that fails breadth is labeled
+`FRAGILE / CONCENTRATED` and is not carried forward. No boundary pair is
+selected merely because it has the highest development P/L.
+
 ## Phase 2 — bounded combinations
 
 Only parameter values/regions that show useful and reasonably stable Phase 1 behavior may enter Phase 2.
