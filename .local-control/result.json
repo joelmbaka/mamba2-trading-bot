@@ -1,1002 +1,215 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-boundary-family-20260927-0937",
-  "completed_at": "2026-09-27T07:23:44.938985+00:00",
+  "command_id": "mamba2-m022-boundary-assessment-20260927-1024",
+  "completed_at": "2026-09-27T07:34:04.056643+00:00",
   "ok": true,
-  "action": "m022_phase1_boundary_family",
+  "action": "m022_phase1_boundary_assessment",
   "data": {
     "ok": true,
     "feature_branch": "strategy-parameter-research",
     "feature_sha": "f0a45cc1aa285e6e0ad778b8d725ee45c3b125fe",
     "family": "boundaries",
-    "execution": {
-      "maximum_concurrent_arms": 2,
-      "independent_arm_processes": true,
-      "reference_20_80_reused": true
+    "rubric": {
+      "activity_floor_fraction": 0.7,
+      "objectives": {
+        "net_realized_pl": "maximize",
+        "maximum_equity_drawdown": "minimize",
+        "win_rate_nonflat_pct": "maximize"
+      },
+      "symbol_positive_delta_min_count": 2,
+      "calendar_bucket_positive_delta_min_count": 2,
+      "max_symbol_positive_delta_share": 0.7,
+      "max_side_positive_delta_share": 0.8,
+      "reference_always_retained": true
     },
-    "partition": {
-      "name": "development",
-      "start_utc": "2025-08-25T00:00:00Z",
-      "end_exclusive_utc": "2026-04-21T00:00:00Z",
-      "trading_dates": 169
-    },
+    "shortlist": [
+      "20/80"
+    ],
     "arms": [
       {
         "pair": [
           15,
           85
         ],
-        "experiment_id": "M022-P1-BOUND-15-85",
-        "baseline_sha256": "85ed83de094cc1687040448a63137373b779b7d14879a846e619fee55cf192a0",
-        "diagnostic_sha256": "87431d9ea393b9495bf803b355336d2278f1cf78880437be9505ca697470809b",
-        "summary_sha256": "2401eb6e270f5f0ae3f9f933cbb94add822570ccb77a28c30675464ea6038641",
-        "aggregate": {
-          "accepted_orders": 8074,
+        "label": "15/85",
+        "is_reference": false,
+        "mandatory_ok": false,
+        "activity": {
           "closed_trades": 8071,
-          "commission": 0.0,
-          "ending_equity": -129.51448836960165,
-          "ending_realized_balance": -129.68819867243235,
-          "ending_unrealized_pl": 0.17371030283069389,
-          "flat_closed_trades": 5,
-          "global_replay_boundaries": 241474,
-          "gross_realized_pl": -10129.688198672451,
-          "largest_closed_trade_gain": 75.39397236849693,
-          "largest_closed_trade_loss": -60.79999999999864,
-          "losing_closed_trades": 5415,
-          "maximum_equity_drawdown": 10134.49979073953,
-          "maximum_equity_drawdown_pct": 101.33602821310446,
+          "reference_closed_trades": 12006,
+          "minimum_closed_trades": 8404.199999999999,
+          "ratio_to_reference": 0.6722472097284691
+        },
+        "objectives": {
           "net_realized_pl": -10129.688198672433,
-          "remaining_open_positions": 3,
-          "starting_balance": 10000.0,
-          "win_rate_nonflat_pct": 32.86635259112323,
-          "winning_closed_trades": 2651
+          "maximum_equity_drawdown": 10134.49979073953,
+          "win_rate_nonflat_pct": 32.86635259112323
         },
-        "per_symbol": {
-          "EURJPY": {
-            "accepted_orders": 1495,
-            "closed_trades": 1494,
-            "losses": 1107,
-            "net_realized_pl": -3022.266610209429,
-            "remaining_open_positions": 1,
-            "wins": 386
+        "net_pl_improves_reference": true,
+        "breadth": {
+          "passes": true,
+          "symbol": {
+            "deltas": {
+              "EURJPY": 1659.9592322634571,
+              "EURUSD": 424.95714285708743,
+              "GBPJPY": 1992.3049915409529,
+              "GBPUSD": 818.6142857143107,
+              "USDJPY": 473.83724572854635
+            },
+            "positive_count": 5,
+            "positive_sum": 5369.672898104354,
+            "max_positive_share": 0.3710291165490346
           },
-          "EURUSD": {
-            "accepted_orders": 1648,
-            "closed_trades": 1647,
-            "losses": 1047,
-            "net_realized_pl": -1022.1999999999922,
-            "remaining_open_positions": 1,
-            "wins": 599
+          "side": {
+            "deltas": {
+              "BUY": 2220.291464441251,
+              "SELL": 3149.3814336631367
+            },
+            "positive_count": 2,
+            "positive_sum": 5369.672898104387,
+            "max_positive_share": 0.5865127156581433
           },
-          "GBPJPY": {
-            "accepted_orders": 1416,
-            "closed_trades": 1416,
-            "losses": 1053,
-            "net_realized_pl": -3891.68460347136,
-            "remaining_open_positions": 0,
-            "wins": 363
-          },
-          "GBPUSD": {
-            "accepted_orders": 1636,
-            "closed_trades": 1636,
-            "losses": 1056,
-            "net_realized_pl": -1447.3500000000624,
-            "remaining_open_positions": 0,
-            "wins": 579
-          },
-          "USDJPY": {
-            "accepted_orders": 1879,
-            "closed_trades": 1878,
-            "losses": 1152,
-            "net_realized_pl": -746.1869849915856,
-            "remaining_open_positions": 1,
-            "wins": 724
+          "entry_utc_bucket": {
+            "deltas": {
+              "00:00-03:59 UTC": 1755.3571092859984,
+              "04:00-07:59 UTC": 606.5707419807477,
+              "08:00-11:59 UTC": 381.588384624177,
+              "12:00-15:59 UTC": 323.8729934646407,
+              "16:00-19:59 UTC": 780.2943096226425,
+              "20:00-23:59 UTC": 1521.989359126163
+            },
+            "positive_count": 6,
+            "positive_sum": 5369.672898104369,
+            "max_positive_share": 0.32690205578549936
           }
         },
-        "by_side": {
-          "BUY": {
-            "closed_trades": 3625,
-            "entry_spread_points": {
-              "count": 3625,
-              "maximum": 406.0,
-              "mean": 11.915586206896553,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 3,
-            "gross_realized_pl": -3992.1530832985504,
-            "initial_atr": {
-              "count": 3625,
-              "maximum": 0.39235714285714046,
-              "mean": 0.04035305280788172,
-              "median": 0.03864285714286301,
-              "minimum": 8.785714285714745e-05
-            },
-            "losses": 2400,
-            "net_realized_pl": -3992.1530832985504,
-            "trades_with_trailing": 1626,
-            "trailing_modifications": 2788,
-            "wins": 1222
-          },
-          "SELL": {
-            "closed_trades": 4446,
-            "entry_spread_points": {
-              "count": 4446,
-              "maximum": 568.0,
-              "mean": 13.08974358974359,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 2,
-            "gross_realized_pl": -6137.535115373879,
-            "initial_atr": {
-              "count": 4446,
-              "maximum": 0.4057857142857131,
-              "mean": 0.039354732183021594,
-              "median": 0.039892857142857806,
-              "minimum": 8.357142857140509e-05
-            },
-            "losses": 3015,
-            "net_realized_pl": -6137.535115373879,
-            "trades_with_trailing": 1821,
-            "trailing_modifications": 3009,
-            "wins": 1429
-          }
-        },
-        "by_entry_utc_bucket": {
-          "00:00-03:59 UTC": {
-            "closed_trades": 1260,
-            "entry_spread_points": {
-              "count": 1260,
-              "maximum": 568.0,
-              "mean": 30.252380952380953,
-              "median": 14.0,
-              "minimum": 0.0
-            },
-            "flats": 1,
-            "gross_realized_pl": -2504.64108245845,
-            "initial_atr": {
-              "count": 1260,
-              "maximum": 0.3071428571428539,
-              "mean": 0.040322789682539766,
-              "median": 0.039214285714285174,
-              "minimum": 8.357142857140509e-05
-            },
-            "losses": 896,
-            "net_realized_pl": -2504.64108245845,
-            "trades_with_trailing": 556,
-            "trailing_modifications": 947,
-            "wins": 363
-          },
-          "04:00-07:59 UTC": {
-            "closed_trades": 1351,
-            "entry_spread_points": {
-              "count": 1351,
-              "maximum": 37.0,
-              "mean": 9.857883049592894,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 1,
-            "gross_realized_pl": -1472.9817948341652,
-            "initial_atr": {
-              "count": 1351,
-              "maximum": 0.16542857142857365,
-              "mean": 0.036269481865284996,
-              "median": 0.03885714285714365,
-              "minimum": 0.00010000000000002071
-            },
-            "losses": 922,
-            "net_realized_pl": -1472.9817948341652,
-            "trades_with_trailing": 555,
-            "trailing_modifications": 956,
-            "wins": 428
-          },
-          "08:00-11:59 UTC": {
-            "closed_trades": 1429,
-            "entry_spread_points": {
-              "count": 1429,
-              "maximum": 42.0,
-              "mean": 6.983205038488453,
-              "median": 4.0,
-              "minimum": 0.0
-            },
-            "flats": 2,
-            "gross_realized_pl": -1342.0720741258237,
-            "initial_atr": {
-              "count": 1429,
-              "maximum": 0.4057857142857131,
-              "mean": 0.043031003698890354,
-              "median": 0.044499999999997285,
-              "minimum": 0.00011857142857139648
-            },
-            "losses": 936,
-            "net_realized_pl": -1342.0720741258237,
-            "trades_with_trailing": 619,
-            "trailing_modifications": 1022,
-            "wins": 491
-          },
-          "12:00-15:59 UTC": {
-            "closed_trades": 1453,
-            "entry_spread_points": {
-              "count": 1453,
-              "maximum": 86.0,
-              "mean": 6.1390227116311085,
-              "median": 4.0,
-              "minimum": 0.0
-            },
-            "flats": 0,
-            "gross_realized_pl": -920.2441661832946,
-            "initial_atr": {
-              "count": 1453,
-              "maximum": 0.3325000000000001,
-              "mean": 0.03925028709074811,
-              "median": 0.04128571428571247,
-              "minimum": 0.00020142857142855876
-            },
-            "losses": 920,
-            "net_realized_pl": -920.2441661832946,
-            "trades_with_trailing": 622,
-            "trailing_modifications": 1059,
-            "wins": 533
-          },
-          "16:00-19:59 UTC": {
-            "closed_trades": 1297,
-            "entry_spread_points": {
-              "count": 1297,
-              "maximum": 36.0,
-              "mean": 6.863531225905937,
-              "median": 4.0,
-              "minimum": 0.0
-            },
-            "flats": 0,
-            "gross_realized_pl": -1014.3721916317297,
-            "initial_atr": {
-              "count": 1297,
-              "maximum": 0.39235714285714046,
-              "mean": 0.050901508426038175,
-              "median": 0.05728571428571375,
-              "minimum": 0.00019928571428573516
-            },
-            "losses": 802,
-            "net_realized_pl": -1014.3721916317297,
-            "trades_with_trailing": 583,
-            "trailing_modifications": 1004,
-            "wins": 495
-          },
-          "20:00-23:59 UTC": {
-            "closed_trades": 1281,
-            "entry_spread_points": {
-              "count": 1281,
-              "maximum": 300.0,
-              "mean": 17.294301327088213,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 1,
-            "gross_realized_pl": -2875.3768894389664,
-            "initial_atr": {
-              "count": 1281,
-              "maximum": 0.2714285714285763,
-              "mean": 0.028807917921266815,
-              "median": 0.029142857142854188,
-              "minimum": 8.785714285714745e-05
-            },
-            "losses": 939,
-            "net_realized_pl": -2875.3768894389664,
-            "trades_with_trailing": 512,
-            "trailing_modifications": 809,
-            "wins": 341
-          }
-        },
-        "protection": {
-          "total_trailing_modifications": 5797,
-          "trades_with_initial_protection": 8071,
-          "trades_with_trailing": 3447,
-          "trailing_modifications_by_outcome": {
-            "flat": 6,
-            "loss": 921,
-            "win": 4870
-          }
-        },
-        "rejections": {
-          "decision_spread": 0,
-          "session_evaluation_boundaries": 0
-        },
-        "tp_safety": {
-          "negative_pl_take_profit_exits": 0,
-          "wrong_side_initial_tp": 0
-        },
-        "remaining_positions": [
-          {
-            "current_price": 1.17882,
-            "open_price": 1.17868,
-            "open_time_utc": "2026-04-20T23:59:00Z",
-            "side": "sell",
-            "sl": 1.1789357142857144,
-            "symbol": "EURUSD",
-            "tp": 1.1783185714285715,
-            "unrealized_pl": -1.40000000000029,
-            "volume": 0.1
-          },
-          {
-            "current_price": 187.258,
-            "open_price": 187.255,
-            "open_time_utc": "2026-04-20T23:46:00Z",
-            "side": "sell",
-            "sl": 187.26500000000001,
-            "symbol": "EURJPY",
-            "tp": 187.17200000000003,
-            "unrealized_pl": -0.18891449729942475,
-            "volume": 0.1
-          },
-          {
-            "current_price": 158.854,
-            "open_price": 158.882,
-            "open_time_utc": "2026-04-20T23:48:00Z",
-            "side": "sell",
-            "sl": 158.86785714285713,
-            "symbol": "USDJPY",
-            "tp": 158.7932857142857,
-            "unrealized_pl": 1.7626248001304086,
-            "volume": 0.1
-          }
-        ],
-        "reused_reference_evidence": false,
-        "reused_complete_artifacts": false
+        "pareto_nondominated": false,
+        "screening_status": "INELIGIBLE"
       },
       {
         "pair": [
           20,
           80
         ],
-        "experiment_id": "M022-P1-REFERENCE",
-        "baseline_sha256": "55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530",
-        "diagnostic_sha256": "ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7",
-        "summary_sha256": "4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6",
-        "aggregate": {
-          "accepted_orders": 12009,
+        "label": "20/80",
+        "is_reference": true,
+        "mandatory_ok": true,
+        "activity": {
           "closed_trades": 12006,
-          "commission": 0.0,
-          "ending_equity": -5499.18738647402,
-          "ending_realized_balance": -5499.361096776851,
-          "ending_unrealized_pl": 0.17371030283069389,
-          "flat_closed_trades": 6,
-          "global_replay_boundaries": 241474,
-          "gross_realized_pl": -15499.361096776802,
-          "largest_closed_trade_gain": 75.39397236849693,
-          "largest_closed_trade_loss": -60.79999999999864,
-          "losing_closed_trades": 8056,
-          "maximum_equity_drawdown": 15501.914245353408,
-          "maximum_equity_drawdown_pct": 155.0054222468564,
+          "reference_closed_trades": 12006,
+          "minimum_closed_trades": 8404.199999999999,
+          "ratio_to_reference": 1.0
+        },
+        "objectives": {
           "net_realized_pl": -15499.36109677685,
-          "remaining_open_positions": 3,
-          "starting_balance": 10000.0,
-          "win_rate_nonflat_pct": 32.86666666666667,
-          "winning_closed_trades": 3944
+          "maximum_equity_drawdown": 15501.914245353408,
+          "win_rate_nonflat_pct": 32.86666666666667
         },
-        "per_symbol": {
-          "EURJPY": {
-            "accepted_orders": 2343,
-            "closed_trades": 2342,
-            "losses": 1734,
-            "net_realized_pl": -4682.225842472886,
-            "remaining_open_positions": 1,
-            "wins": 607
+        "net_pl_improves_reference": false,
+        "breadth": {
+          "passes": true,
+          "symbol": {
+            "deltas": {
+              "EURJPY": 0.0,
+              "EURUSD": 0.0,
+              "GBPJPY": 0.0,
+              "GBPUSD": 0.0,
+              "USDJPY": 0.0
+            },
+            "positive_count": 0,
+            "positive_sum": 0,
+            "max_positive_share": null
           },
-          "EURUSD": {
-            "accepted_orders": 2422,
-            "closed_trades": 2421,
-            "losses": 1531,
-            "net_realized_pl": -1447.1571428570796,
-            "remaining_open_positions": 1,
-            "wins": 889
+          "side": {
+            "deltas": {
+              "BUY": 0.0,
+              "SELL": 0.0
+            },
+            "positive_count": 0,
+            "positive_sum": 0,
+            "max_positive_share": null
           },
-          "GBPJPY": {
-            "accepted_orders": 2229,
-            "closed_trades": 2229,
-            "losses": 1637,
-            "net_realized_pl": -5883.989595012313,
-            "remaining_open_positions": 0,
-            "wins": 592
-          },
-          "GBPUSD": {
-            "accepted_orders": 2431,
-            "closed_trades": 2431,
-            "losses": 1572,
-            "net_realized_pl": -2265.964285714373,
-            "remaining_open_positions": 0,
-            "wins": 858
-          },
-          "USDJPY": {
-            "accepted_orders": 2584,
-            "closed_trades": 2583,
-            "losses": 1582,
-            "net_realized_pl": -1220.024230720132,
-            "remaining_open_positions": 1,
-            "wins": 998
+          "entry_utc_bucket": {
+            "deltas": {
+              "00:00-03:59 UTC": 0.0,
+              "04:00-07:59 UTC": 0.0,
+              "08:00-11:59 UTC": 0.0,
+              "12:00-15:59 UTC": 0.0,
+              "16:00-19:59 UTC": 0.0,
+              "20:00-23:59 UTC": 0.0
+            },
+            "positive_count": 0,
+            "positive_sum": 0,
+            "max_positive_share": null
           }
         },
-        "by_side": {
-          "BUY": {
-            "closed_trades": 5505,
-            "entry_spread_points": {
-              "count": 5505,
-              "maximum": 406.0,
-              "mean": 12.284650317892824,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 4,
-            "gross_realized_pl": -6212.444547739801,
-            "initial_atr": {
-              "count": 5505,
-              "maximum": 0.395857142857145,
-              "mean": 0.04039701660827813,
-              "median": 0.03928571428571104,
-              "minimum": 8.785714285714745e-05
-            },
-            "losses": 3648,
-            "net_realized_pl": -6212.444547739801,
-            "trades_with_trailing": 2425,
-            "trailing_modifications": 4221,
-            "wins": 1853
-          },
-          "SELL": {
-            "closed_trades": 6501,
-            "entry_spread_points": {
-              "count": 6501,
-              "maximum": 568.0,
-              "mean": 14.561144439317028,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 2,
-            "gross_realized_pl": -9286.916549037016,
-            "initial_atr": {
-              "count": 6501,
-              "maximum": 0.4057857142857131,
-              "mean": 0.039905454325707926,
-              "median": 0.04049999999999646,
-              "minimum": 8.357142857140509e-05
-            },
-            "losses": 4408,
-            "net_realized_pl": -9286.916549037016,
-            "trades_with_trailing": 2665,
-            "trailing_modifications": 4412,
-            "wins": 2091
-          }
-        },
-        "by_entry_utc_bucket": {
-          "00:00-03:59 UTC": {
-            "closed_trades": 1898,
-            "entry_spread_points": {
-              "count": 1898,
-              "maximum": 568.0,
-              "mean": 34.863013698630134,
-              "median": 17.0,
-              "minimum": 0.0
-            },
-            "flats": 1,
-            "gross_realized_pl": -4259.998191744448,
-            "initial_atr": {
-              "count": 1898,
-              "maximum": 0.3071428571428539,
-              "mean": 0.04112728285413226,
-              "median": 0.039607142857140135,
-              "minimum": 8.357142857140509e-05
-            },
-            "losses": 1350,
-            "net_realized_pl": -4259.998191744448,
-            "trades_with_trailing": 823,
-            "trailing_modifications": 1404,
-            "wins": 547
-          },
-          "04:00-07:59 UTC": {
-            "closed_trades": 1990,
-            "entry_spread_points": {
-              "count": 1990,
-              "maximum": 38.0,
-              "mean": 10.14572864321608,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 1,
-            "gross_realized_pl": -2079.552536814913,
-            "initial_atr": {
-              "count": 1990,
-              "maximum": 0.16728571428571318,
-              "mean": 0.036488865398420535,
-              "median": 0.03896428571428398,
-              "minimum": 0.00010000000000002071
-            },
-            "losses": 1357,
-            "net_realized_pl": -2079.552536814913,
-            "trades_with_trailing": 811,
-            "trailing_modifications": 1438,
-            "wins": 632
-          },
-          "08:00-11:59 UTC": {
-            "closed_trades": 2169,
-            "entry_spread_points": {
-              "count": 2169,
-              "maximum": 42.0,
-              "mean": 7.0548639926233285,
-              "median": 4.0,
-              "minimum": 0.0
-            },
-            "flats": 2,
-            "gross_realized_pl": -1723.6604587500008,
-            "initial_atr": {
-              "count": 2169,
-              "maximum": 0.4057857142857131,
-              "mean": 0.04302678060989259,
-              "median": 0.04450000000000135,
-              "minimum": 0.00011857142857139648
-            },
-            "losses": 1404,
-            "net_realized_pl": -1723.6604587500008,
-            "trades_with_trailing": 963,
-            "trailing_modifications": 1610,
-            "wins": 763
-          },
-          "12:00-15:59 UTC": {
-            "closed_trades": 2145,
-            "entry_spread_points": {
-              "count": 2145,
-              "maximum": 86.0,
-              "mean": 6.218181818181818,
-              "median": 4.0,
-              "minimum": 0.0
-            },
-            "flats": 0,
-            "gross_realized_pl": -1244.1171596479353,
-            "initial_atr": {
-              "count": 2145,
-              "maximum": 0.3325000000000001,
-              "mean": 0.03944849550449551,
-              "median": 0.04192857142857065,
-              "minimum": 0.00019500000000000867
-            },
-            "losses": 1356,
-            "net_realized_pl": -1244.1171596479353,
-            "trades_with_trailing": 919,
-            "trailing_modifications": 1588,
-            "wins": 789
-          },
-          "16:00-19:59 UTC": {
-            "closed_trades": 1927,
-            "entry_spread_points": {
-              "count": 1927,
-              "maximum": 40.0,
-              "mean": 6.949143746756617,
-              "median": 4.0,
-              "minimum": 0.0
-            },
-            "flats": 0,
-            "gross_realized_pl": -1794.6665012543722,
-            "initial_atr": {
-              "count": 1927,
-              "maximum": 0.395857142857145,
-              "mean": 0.05053653013566612,
-              "median": 0.05671428571428448,
-              "minimum": 0.00019928571428573516
-            },
-            "losses": 1209,
-            "net_realized_pl": -1794.6665012543722,
-            "trades_with_trailing": 841,
-            "trailing_modifications": 1445,
-            "wins": 718
-          },
-          "20:00-23:59 UTC": {
-            "closed_trades": 1877,
-            "entry_spread_points": {
-              "count": 1877,
-              "maximum": 300.0,
-              "mean": 18.05966968566862,
-              "median": 6.0,
-              "minimum": 0.0
-            },
-            "flats": 2,
-            "gross_realized_pl": -4397.366248565129,
-            "initial_atr": {
-              "count": 1877,
-              "maximum": 0.2714285714285763,
-              "mean": 0.029734952812238376,
-              "median": 0.029857142857147374,
-              "minimum": 8.785714285714745e-05
-            },
-            "losses": 1380,
-            "net_realized_pl": -4397.366248565129,
-            "trades_with_trailing": 733,
-            "trailing_modifications": 1148,
-            "wins": 495
-          }
-        },
-        "protection": {
-          "total_trailing_modifications": 8633,
-          "trades_with_initial_protection": 12006,
-          "trades_with_trailing": 5090,
-          "trailing_modifications_by_outcome": {
-            "flat": 7,
-            "loss": 1358,
-            "win": 7268
-          }
-        },
-        "rejections": {
-          "decision_spread": 0,
-          "session_evaluation_boundaries": 0
-        },
-        "tp_safety": {
-          "negative_pl_take_profit_exits": 0,
-          "wrong_side_initial_tp": 0
-        },
-        "remaining_positions": [
-          {
-            "current_price": 1.17882,
-            "open_price": 1.17868,
-            "open_time_utc": "2026-04-20T23:59:00Z",
-            "side": "sell",
-            "sl": 1.1789357142857144,
-            "symbol": "EURUSD",
-            "tp": 1.1783185714285715,
-            "unrealized_pl": -1.40000000000029,
-            "volume": 0.1
-          },
-          {
-            "current_price": 187.258,
-            "open_price": 187.255,
-            "open_time_utc": "2026-04-20T23:46:00Z",
-            "side": "sell",
-            "sl": 187.26500000000001,
-            "symbol": "EURJPY",
-            "tp": 187.17200000000003,
-            "unrealized_pl": -0.18891449729942475,
-            "volume": 0.1
-          },
-          {
-            "current_price": 158.854,
-            "open_price": 158.882,
-            "open_time_utc": "2026-04-20T23:48:00Z",
-            "side": "sell",
-            "sl": 158.86785714285713,
-            "symbol": "USDJPY",
-            "tp": 158.7932857142857,
-            "unrealized_pl": 1.7626248001304086,
-            "volume": 0.1
-          }
-        ],
-        "reused_reference_evidence": true,
-        "reused_complete_artifacts": false
+        "pareto_nondominated": true,
+        "screening_status": "REFERENCE"
       },
       {
         "pair": [
           25,
           75
         ],
-        "experiment_id": "M022-P1-BOUND-25-75",
-        "baseline_sha256": "8098d7357fd9a06d5edd4b9dfb5e9e9924031bb11c558d673078e73ede988908",
-        "diagnostic_sha256": "bb01d6291200f59c89764c59e984f5857f36925e71eb3dc3a4a6adecf7a9fb9d",
-        "summary_sha256": "ac0920033d4730858279634f483926b1863bd387ce1aeb9a9d6e6be77969592d",
-        "aggregate": {
-          "accepted_orders": 15244,
+        "label": "25/75",
+        "is_reference": false,
+        "mandatory_ok": true,
+        "activity": {
           "closed_trades": 15240,
-          "commission": 0.0,
-          "ending_equity": -9689.20052021407,
-          "ending_realized_balance": -9689.3742305169,
-          "ending_unrealized_pl": 0.17371030283069389,
-          "flat_closed_trades": 7,
-          "global_replay_boundaries": 241474,
-          "gross_realized_pl": -19689.374230516743,
-          "largest_closed_trade_gain": 75.39397236849693,
-          "largest_closed_trade_loss": -60.79999999999864,
-          "losing_closed_trades": 10252,
-          "maximum_equity_drawdown": 19696.75974896746,
-          "maximum_equity_drawdown_pct": 196.95016457072282,
+          "reference_closed_trades": 12006,
+          "minimum_closed_trades": 8404.199999999999,
+          "ratio_to_reference": 1.2693653173413293
+        },
+        "objectives": {
           "net_realized_pl": -19689.3742305169,
-          "remaining_open_positions": 3,
-          "starting_balance": 10000.0,
-          "win_rate_nonflat_pct": 32.69874614324165,
-          "winning_closed_trades": 4981
+          "maximum_equity_drawdown": 19696.75974896746,
+          "win_rate_nonflat_pct": 32.69874614324165
         },
-        "per_symbol": {
-          "EURJPY": {
-            "accepted_orders": 3006,
-            "closed_trades": 3005,
-            "losses": 2216,
-            "net_realized_pl": -5986.8302495700555,
-            "remaining_open_positions": 1,
-            "wins": 787
+        "net_pl_improves_reference": false,
+        "breadth": {
+          "passes": true,
+          "symbol": {
+            "deltas": {
+              "EURJPY": -1304.6044070971693,
+              "EURUSD": -642.2428571428454,
+              "GBPJPY": -1789.4408966904075,
+              "GBPUSD": -67.39285714290008,
+              "USDJPY": -386.33211566670593
+            },
+            "positive_count": 0,
+            "positive_sum": 0,
+            "max_positive_share": null
           },
-          "EURUSD": {
-            "accepted_orders": 3050,
-            "closed_trades": 3049,
-            "losses": 1948,
-            "net_realized_pl": -2089.399999999925,
-            "remaining_open_positions": 1,
-            "wins": 1099
+          "side": {
+            "deltas": {
+              "BUY": -1917.4023446536876,
+              "SELL": -2272.610789086384
+            },
+            "positive_count": 0,
+            "positive_sum": 0,
+            "max_positive_share": null
           },
-          "GBPJPY": {
-            "accepted_orders": 2900,
-            "closed_trades": 2899,
-            "losses": 2141,
-            "net_realized_pl": -7673.43049170272,
-            "remaining_open_positions": 0,
-            "wins": 758
-          },
-          "GBPUSD": {
-            "accepted_orders": 3086,
-            "closed_trades": 3086,
-            "losses": 1975,
-            "net_realized_pl": -2333.357142857273,
-            "remaining_open_positions": 0,
-            "wins": 1110
-          },
-          "USDJPY": {
-            "accepted_orders": 3202,
-            "closed_trades": 3201,
-            "losses": 1972,
-            "net_realized_pl": -1606.356346386838,
-            "remaining_open_positions": 1,
-            "wins": 1227
+          "entry_utc_bucket": {
+            "deltas": {
+              "00:00-03:59 UTC": -1500.7725651559003,
+              "04:00-07:59 UTC": -305.4331107062253,
+              "08:00-11:59 UTC": -435.33537294476196,
+              "12:00-15:59 UTC": -462.2692371201249,
+              "16:00-19:59 UTC": -409.3201750954613,
+              "20:00-23:59 UTC": -1076.8826727175838
+            },
+            "positive_count": 0,
+            "positive_sum": 0,
+            "max_positive_share": null
           }
         },
-        "by_side": {
-          "BUY": {
-            "closed_trades": 7057,
-            "entry_spread_points": {
-              "count": 7057,
-              "maximum": 406.0,
-              "mean": 12.868357659061925,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 4,
-            "gross_realized_pl": -8129.846892393489,
-            "initial_atr": {
-              "count": 7057,
-              "maximum": 0.39235714285714046,
-              "mean": 0.040314647867365695,
-              "median": 0.039214285714284154,
-              "minimum": 7.714285714290257e-05
-            },
-            "losses": 4690,
-            "net_realized_pl": -8129.846892393489,
-            "trades_with_trailing": 3103,
-            "trailing_modifications": 5365,
-            "wins": 2363
-          },
-          "SELL": {
-            "closed_trades": 8183,
-            "entry_spread_points": {
-              "count": 8183,
-              "maximum": 568.0,
-              "mean": 14.620065990468044,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 3,
-            "gross_realized_pl": -11559.5273381234,
-            "initial_atr": {
-              "count": 8183,
-              "maximum": 0.4057857142857131,
-              "mean": 0.040448149910092324,
-              "median": 0.04114285714285464,
-              "minimum": 8.357142857140509e-05
-            },
-            "losses": 5562,
-            "net_realized_pl": -11559.5273381234,
-            "trades_with_trailing": 3347,
-            "trailing_modifications": 5524,
-            "wins": 2618
-          }
-        },
-        "by_entry_utc_bucket": {
-          "00:00-03:59 UTC": {
-            "closed_trades": 2398,
-            "entry_spread_points": {
-              "count": 2398,
-              "maximum": 568.0,
-              "mean": 36.18682235195997,
-              "median": 17.0,
-              "minimum": 0.0
-            },
-            "flats": 1,
-            "gross_realized_pl": -5760.770756900349,
-            "initial_atr": {
-              "count": 2398,
-              "maximum": 0.3071428571428539,
-              "mean": 0.041990472119623506,
-              "median": 0.04096428571428439,
-              "minimum": 8.357142857140509e-05
-            },
-            "losses": 1718,
-            "net_realized_pl": -5760.770756900349,
-            "trades_with_trailing": 1013,
-            "trailing_modifications": 1695,
-            "wins": 679
-          },
-          "04:00-07:59 UTC": {
-            "closed_trades": 2498,
-            "entry_spread_points": {
-              "count": 2498,
-              "maximum": 37.0,
-              "mean": 10.138911128903123,
-              "median": 5.0,
-              "minimum": 0.0
-            },
-            "flats": 2,
-            "gross_realized_pl": -2384.985647521138,
-            "initial_atr": {
-              "count": 2498,
-              "maximum": 0.16728571428571318,
-              "mean": 0.03591013725265923,
-              "median": 0.038321428571431886,
-              "minimum": 0.00010000000000002071
-            },
-            "losses": 1689,
-            "net_realized_pl": -2384.985647521138,
-            "trades_with_trailing": 1041,
-            "trailing_modifications": 1824,
-            "wins": 807
-          },
-          "08:00-11:59 UTC": {
-            "closed_trades": 2799,
-            "entry_spread_points": {
-              "count": 2799,
-              "maximum": 42.0,
-              "mean": 7.177920685959271,
-              "median": 4.0,
-              "minimum": 0.0
-            },
-            "flats": 2,
-            "gross_realized_pl": -2158.9958316947627,
-            "initial_atr": {
-              "count": 2799,
-              "maximum": 0.4057857142857131,
-              "mean": 0.04307469708569382,
-              "median": 0.04478571428571294,
-              "minimum": 0.00011857142857139648
-            },
-            "losses": 1811,
-            "net_realized_pl": -2158.9958316947627,
-            "trades_with_trailing": 1220,
-            "trailing_modifications": 2074,
-            "wins": 986
-          },
-          "12:00-15:59 UTC": {
-            "closed_trades": 2740,
-            "entry_spread_points": {
-              "count": 2740,
-              "maximum": 86.0,
-              "mean": 6.262773722627737,
-              "median": 4.0,
-              "minimum": 0.0
-            },
-            "flats": 0,
-            "gross_realized_pl": -1706.3863967680602,
-            "initial_atr": {
-              "count": 2740,
-              "maximum": 0.3325000000000001,
-              "mean": 0.03941303727841503,
-              "median": 0.04185714285714072,
-              "minimum": 0.00019500000000000867
-            },
-            "losses": 1741,
-            "net_realized_pl": -1706.3863967680602,
-            "trades_with_trailing": 1176,
-            "trailing_modifications": 2025,
-            "wins": 999
-          },
-          "16:00-19:59 UTC": {
-            "closed_trades": 2457,
-            "entry_spread_points": {
-              "count": 2457,
-              "maximum": 40.0,
-              "mean": 6.989010989010989,
-              "median": 4.0,
-              "minimum": 0.0
-            },
-            "flats": 0,
-            "gross_realized_pl": -2203.9866763498335,
-            "initial_atr": {
-              "count": 2457,
-              "maximum": 0.39235714285714046,
-              "mean": 0.05119730827373677,
-              "median": 0.05671428571428448,
-              "minimum": 0.00019928571428573516
-            },
-            "losses": 1549,
-            "net_realized_pl": -2203.9866763498335,
-            "trades_with_trailing": 1074,
-            "trailing_modifications": 1818,
-            "wins": 908
-          },
-          "20:00-23:59 UTC": {
-            "closed_trades": 2348,
-            "entry_spread_points": {
-              "count": 2348,
-              "maximum": 300.0,
-              "mean": 18.706132879045995,
-              "median": 6.0,
-              "minimum": 0.0
-            },
-            "flats": 2,
-            "gross_realized_pl": -5474.248921282713,
-            "initial_atr": {
-              "count": 2348,
-              "maximum": 0.2714285714285763,
-              "mean": 0.030128373083475178,
-              "median": 0.029928571428571207,
-              "minimum": 7.714285714290257e-05
-            },
-            "losses": 1744,
-            "net_realized_pl": -5474.248921282713,
-            "trades_with_trailing": 926,
-            "trailing_modifications": 1453,
-            "wins": 602
-          }
-        },
-        "protection": {
-          "total_trailing_modifications": 10889,
-          "trades_with_initial_protection": 15240,
-          "trades_with_trailing": 6450,
-          "trailing_modifications_by_outcome": {
-            "flat": 8,
-            "loss": 1725,
-            "win": 9156
-          }
-        },
-        "rejections": {
-          "decision_spread": 0,
-          "session_evaluation_boundaries": 0
-        },
-        "tp_safety": {
-          "negative_pl_take_profit_exits": 0,
-          "wrong_side_initial_tp": 0
-        },
-        "remaining_positions": [
-          {
-            "current_price": 1.17882,
-            "open_price": 1.17868,
-            "open_time_utc": "2026-04-20T23:59:00Z",
-            "side": "sell",
-            "sl": 1.1789357142857144,
-            "symbol": "EURUSD",
-            "tp": 1.1783185714285715,
-            "unrealized_pl": -1.40000000000029,
-            "volume": 0.1
-          },
-          {
-            "current_price": 187.258,
-            "open_price": 187.255,
-            "open_time_utc": "2026-04-20T23:46:00Z",
-            "side": "sell",
-            "sl": 187.26500000000001,
-            "symbol": "EURJPY",
-            "tp": 187.17200000000003,
-            "unrealized_pl": -0.18891449729942475,
-            "volume": 0.1
-          },
-          {
-            "current_price": 158.854,
-            "open_price": 158.882,
-            "open_time_utc": "2026-04-20T23:48:00Z",
-            "side": "sell",
-            "sl": 158.86785714285713,
-            "symbol": "USDJPY",
-            "tp": 158.7932857142857,
-            "unrealized_pl": 1.7626248001304086,
-            "volume": 0.1
-          }
-        ],
-        "reused_reference_evidence": false,
-        "reused_complete_artifacts": false
+        "pareto_nondominated": false,
+        "screening_status": "DOMINATED"
       }
     ],
     "safety": {
-      "economic_replay_run": true,
-      "economic_partition": "development",
+      "economic_replay_run": false,
+      "reads_existing_development_results_only": true,
       "validation_economic_data_used": false,
       "historical_holdout_economic_data_used": false,
       "m021_post_cutoff_data_used": false,
