@@ -965,6 +965,184 @@ An otherwise Pareto-eligible improving arm that fails breadth is
 `FRAGILE / CONCENTRATED` and is not carried forward. No EMA arm is selected
 solely because it has the highest development P/L.
 
+
+## Accepted Phase-1 EMA-family screening — 2026-09-27
+
+The frozen EMA development screening and mechanical assessment completed
+successfully.
+
+Execution command:
+
+`mamba2-m022-ema-family-20260927-1041`
+
+Mechanical assessment command:
+
+`mamba2-m022-ema-assessment-20260927-1309`
+
+Reviewed feature SHA:
+
+`bb6a774dc42a54e2a6be3fdd4a6a27bd1fcb3f05`
+
+Deterministic artifact hashes:
+
+- **EMA5**
+  - baseline:
+    `cc49db5aaeeb10857305a282e19b8e43cc2096ca267e3ffd782eff6e1ca32437`;
+  - diagnostic:
+    `3efbf993e8ad68a23267f6ad266075cedfe11c6819fb3bb04bfe46ac10c74196`;
+  - summary:
+    `af974c4fb2282f7eb55ee0155c7de5ec07efccd14649b658e621011bea86c52f`.
+- **EMA7 reference**
+  - baseline:
+    `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+  - diagnostic:
+    `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+  - summary:
+    `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+- **EMA9**
+  - baseline:
+    `395086c75eee519a3e67ad7c7872c6671977d1859926ea65a22e03d9a909245e`;
+  - diagnostic:
+    `dbce5e95b6d6c040925e31bf5f297d2e99d1f252922e1db94b2e935e9df4b8a7`;
+  - summary:
+    `03e8fc7978e1d68f4a55db6b0f93134afd7c32418dd8d821a94b6728b233deaf`.
+- **EMA12**
+  - baseline:
+    `1aac878006fa979f1e95883df7da56a53da01f37afbf3738e1e99124cae1c21f`;
+  - diagnostic:
+    `aad1ef0b677f6b22c38e46b0c836feb5989238d0dd57197f1200cf4a4f10a49f`;
+  - summary:
+    `d2ae477a7a037fa35c19936712b427dfa8c4ab8816935174b02dcd77ab07b1c9`.
+
+Mechanical result:
+
+- **EMA5**
+  - closed trades: **12,212** (**101.72%** of reference);
+  - net realized P/L: **-$15,351.7123**;
+  - maximum equity drawdown: **$15,354.6655**;
+  - non-flat win rate: **33.0629%**;
+  - Pareto-nondominated;
+  - positive P/L delta in three symbols and four UTC buckets;
+  - BUY delta was negative while SELL supplied all positive side contribution,
+    making positive-side concentration **100%**;
+  - classification: **FRAGILE / CONCENTRATED** because the frozen 80%
+    positive-side concentration cap was exceeded.
+- **EMA7**
+  - reference, always retained.
+- **EMA9**
+  - closed trades: **11,692** (**97.38%** of reference);
+  - net realized P/L: **-$15,253.9824**;
+  - maximum equity drawdown: **$15,256.5355**;
+  - non-flat win rate: **32.7542%**;
+  - positive P/L delta in four symbols and four UTC buckets;
+  - largest positive-symbol share: **43.21%**;
+  - largest positive-side share: **74.14%**;
+  - classification: **SHORTLIST**.
+- **EMA12**
+  - closed trades: **11,241** (**93.63%** of reference);
+  - net realized P/L: **-$14,731.4602**;
+  - maximum equity drawdown: **$14,739.2239**;
+  - non-flat win rate: **32.6805%**;
+  - positive P/L delta in four symbols and five UTC buckets;
+  - largest positive-symbol share: **51.11%**;
+  - largest positive-side share: **73.24%**;
+  - classification: **SHORTLIST**.
+
+EMA shortlist:
+
+- **7 reference**;
+- **9**;
+- **12**.
+
+Safety remained clean:
+
+- development only;
+- deterministic A/B evidence passed;
+- TP/safety invariants remained clean;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+EMA5 is retained only as descriptive evidence of the development response
+surface. It is not eligible for Phase 2 under the frozen concentration rule.
+
+## Frozen decision-time-spread family protocol — before spread results
+
+The next Phase-1 family is the decision-time maximum-spread threshold.
+
+The fixed Phase-1 reference remains unchanged:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- **no experimental decision-spread rejection**;
+- ATR SL **1.0x** / TP **2.0x**;
+- all hours;
+- existing directional trailing semantics.
+
+The spread family changes **only** the decision-time maximum spread:
+
+- **none** — fixed Phase-1 reference;
+- **<= 5 points**;
+- **<= 8 points**;
+- **<= 10 points**;
+- **<= 12 points**;
+- **<= 15 points**.
+
+The <=10-point arm is included because it corresponds to the previously
+documented M020-D threshold, but it is **not** the M022 Phase-1 reference.
+The M022 reference remains the accepted no-experimental-rejection reference-v3.
+
+Spread decisions must use only the Bid/Ask observable at submission time.
+Future/fill spread must never decide entry. The research proxy's rejection
+count must be reported for every thresholded arm.
+
+Execution scheduling is frozen before outcomes:
+
+- reuse the accepted no-spread-gate reference-v3 evidence;
+- run 5, 8, 10, 12, and 15-point arms as complete deterministic A/B pairs;
+- execute at most **2 independent non-reference arms concurrently**;
+- each arm writes to a unique immutable output directory;
+- completed deterministic arm artifacts may be resumed but never overwritten;
+- no adaptive or neighboring spread thresholds are authorized;
+- development only;
+- validation, historical holdout, and M021 remain inaccessible.
+
+The spread-family screening rubric is frozen before outcomes.
+
+Mandatory gates:
+
+- deterministic A/B hashes match;
+- TP/safety invariants remain clean;
+- development partition/hash matches the frozen M022 partition;
+- parameter metadata matches the exact declared threshold and all other fixed
+  reference parameters;
+- closed trades are at least **70% of the no-spread-gate reference**;
+- decision-spread rejection accounting is present for thresholded arms;
+- validation and historical holdout remain unopened.
+
+Eligible arms are compared on the same Phase-1 objectives:
+
+1. net realized P/L — higher is better;
+2. maximum equity drawdown USD — lower is better;
+3. non-flat win rate — higher is better.
+
+Retain Pareto-nondominated eligible thresholds plus the no-spread-gate
+reference.
+
+For any thresholded arm whose net realized P/L improves versus reference,
+require the same frozen breadth checks:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving threshold that fails breadth is
+`FRAGILE / CONCENTRATED` and is not carried forward. No spread threshold is
+selected merely because it maximizes development P/L.
+
 ## Phase 2 — bounded combinations
 
 Only parameter values/regions that show useful and reasonably stable Phase 1 behavior may enter Phase 2.
