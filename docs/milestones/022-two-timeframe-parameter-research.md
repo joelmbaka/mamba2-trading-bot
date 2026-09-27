@@ -814,6 +814,157 @@ An otherwise Pareto-eligible improving pair that fails breadth is labeled
 `FRAGILE / CONCENTRATED` and is not carried forward. No boundary pair is
 selected merely because it has the highest development P/L.
 
+
+## Accepted Phase-1 boundary-family screening — 2026-09-27
+
+The frozen boundary development screening completed successfully.
+
+Execution command:
+
+`mamba2-m022-boundary-family-20260927-0937`
+
+Mechanical assessment command:
+
+`mamba2-m022-boundary-assessment-20260927-1024`
+
+Reviewed feature SHA:
+
+`f0a45cc1aa285e6e0ad778b8d725ee45c3b125fe`
+
+Deterministic artifacts:
+
+- **15 / 85**
+  - baseline SHA-256:
+    `85ed83de094cc1687040448a63137373b779b7d14879a846e619fee55cf192a0`;
+  - diagnostic SHA-256:
+    `87431d9ea393b9495bf803b355336d2278f1cf78880437be9505ca697470809b`;
+  - summary SHA-256:
+    `2401eb6e270f5f0ae3f9f933cbb94add822570ccb77a28c30675464ea6038641`.
+- **20 / 80 reference**
+  - baseline SHA-256:
+    `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+  - diagnostic SHA-256:
+    `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+  - summary SHA-256:
+    `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+- **25 / 75**
+  - baseline SHA-256:
+    `8098d7357fd9a06d5edd4b9dfb5e9e9924031bb11c558d673078e73ede988908`;
+  - diagnostic SHA-256:
+    `bb01d6291200f59c89764c59e984f5857f36925e71eb3dc3a4a6adecf7a9fb9d`;
+  - summary SHA-256:
+    `ac0920033d4730858279634f483926b1863bd387ce1aeb9a9d6e6be77969592d`.
+
+Mechanical result:
+
+- **20 / 80** is the only retained boundary value.
+- **15 / 85**:
+  - closed trades: **8,071**;
+  - reference closed trades: **12,006**;
+  - trade retention: **67.22%**;
+  - frozen minimum: **70%** / **8,404.2** trades;
+  - net realized P/L: **-$10,129.6882**;
+  - maximum equity drawdown: **$10,134.4998**;
+  - non-flat win rate: **32.8664%**;
+  - improved P/L in all five symbols, both BUY/SELL sides, and all six
+    fixed UTC buckets;
+  - largest positive-symbol contribution share: **37.10%**;
+  - largest positive-side contribution share: **58.65%**;
+  - classification: **INELIGIBLE** because it failed the frozen activity
+    floor. Its broad economic improvement does not override that predeclared
+    gate.
+- **25 / 75**:
+  - closed trades: **15,240** (**126.94%** of reference);
+  - net realized P/L: **-$19,689.3742**;
+  - maximum equity drawdown: **$19,696.7597**;
+  - non-flat win rate: **32.6987%**;
+  - worse P/L in all five symbols, both sides, and all six fixed UTC buckets;
+  - classification: **DOMINATED** by the retained reference.
+
+Boundary shortlist:
+
+- **20 / 80 reference only**.
+
+Safety remained clean:
+
+- development only;
+- deterministic A/B evidence passed;
+- TP/safety invariants remained clean;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+The 15/85 result is useful descriptive evidence for later research design, but
+it is not eligible for Phase 2 under the frozen M022 rule because it suppressed
+activity below the predeclared floor.
+
+## Frozen EMA-family protocol — before EMA results
+
+The next Phase-1 family is the EMA confirmation period.
+
+The fixed Phase-1 reference remains unchanged:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.0x** / TP **2.0x**;
+- all hours;
+- existing directional trailing semantics.
+
+The EMA family changes **only** the EMA confirmation period:
+
+- **5**;
+- **7** — reference;
+- **9**;
+- **12**.
+
+Do not combine stochastic shortlist values or the ineligible 15/85 boundary
+with an EMA variant during this Phase-1 screen.
+
+Execution scheduling is frozen before outcomes as follows:
+
+- reuse the accepted EMA7 reference-v3 evidence rather than replaying it;
+- run EMA5, EMA9, and EMA12 as complete deterministic A/B pairs;
+- execute at most **2 independent non-reference arms concurrently**;
+- each arm writes to a unique immutable output directory;
+- completed deterministic arm artifacts may be resumed but never overwritten;
+- no adaptive EMA periods are authorized;
+- development only;
+- validation, historical holdout, and M021 remain inaccessible.
+
+The EMA-family screening rubric is frozen before outcomes and is identical to
+the already accepted Phase-1 family rubric.
+
+Mandatory gates:
+
+- deterministic A/B hashes match;
+- TP/safety invariants remain clean;
+- development partition/hash matches the frozen M022 partition;
+- closed trades are at least **70% of the EMA7 reference**;
+- validation and historical holdout remain unopened.
+
+Eligible arms are compared on:
+
+1. net realized P/L — higher is better;
+2. maximum equity drawdown USD — lower is better;
+3. non-flat win rate — higher is better.
+
+Retain Pareto-nondominated eligible EMA periods plus the EMA7 reference.
+
+For any non-reference EMA period whose net realized P/L improves versus EMA7,
+require the same frozen breadth checks:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving arm that fails breadth is
+`FRAGILE / CONCENTRATED` and is not carried forward. No EMA arm is selected
+solely because it has the highest development P/L.
+
 ## Phase 2 — bounded combinations
 
 Only parameter values/regions that show useful and reasonably stable Phase 1 behavior may enter Phase 2.

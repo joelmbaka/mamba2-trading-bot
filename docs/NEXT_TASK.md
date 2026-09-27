@@ -163,57 +163,68 @@ Reference artifact hashes:
 
 ### Current authorized gate
 
-The stochastic Phase-1 family is complete.
+The stochastic and boundary Phase-1 families are complete.
 
-Accepted stochastic execution:
+Accepted stochastic shortlist:
+
+- **14 / 7 / 7**;
+- **21 / 7 / 7** reference;
+- **28 / 7 / 7**.
+
+Accepted boundary execution:
 
 - family command:
-  `mamba2-m022-stochastic-family-20260927-0552`;
+  `mamba2-m022-boundary-family-20260927-0937`;
 - mechanical assessment:
-  `mamba2-m022-stochastic-assessment-20260927`;
+  `mamba2-m022-boundary-assessment-20260927-1024`;
 - reviewed feature SHA:
-  `db88bcc145754c50b6d7ad87a9ddef071ed2d9c5`;
-- shortlist:
-  - **14 / 7 / 7**;
-  - **21 / 7 / 7** reference;
-  - **28 / 7 / 7**.
+  `f0a45cc1aa285e6e0ad778b8d725ee45c3b125fe`;
+- boundary shortlist:
+  - **20 / 80 reference only**.
 
-28/7/7 improved net P/L and drawdown versus reference while retaining
-**81.61%** of reference closed trades and passing all frozen breadth/
-concentration checks. 14/7/7 remained Pareto-nondominated because of its
-higher non-flat win rate. All other stochastic tuples were dominated.
+Boundary assessment details:
 
-The next authorized Phase-1 family is the frozen **M1 oversold/overbought
-boundary** screen only:
+- **15 / 85** improved P/L/drawdown broadly across all five symbols, both
+  sides, and all six UTC buckets, but retained only **67.22%** of reference
+  closed trades and therefore failed the frozen **70%** activity floor;
+  classification: **INELIGIBLE**.
+- **25 / 75** retained **126.94%** of reference trades but was worse than
+  20/80 on net P/L, max drawdown, and non-flat win rate;
+  classification: **DOMINATED**.
 
-- 15 / 85;
-- 20 / 80 reference;
-- 25 / 75.
+Safety remained clean: development only, validation unopened, historical
+holdout unopened, M021 unused, and no real-order API called.
 
-The fixed Phase-1 reference remains stochastic 21/7/7, boundaries 20/80,
-EMA7, no experimental spread gate, ATR 1.0x/2.0x, all hours. Do **not**
-combine stochastic shortlist values with boundary variants yet; interactions
-belong to Phase 2.
+The next authorized Phase-1 family is the frozen **EMA confirmation period**
+screen only:
 
-The boundary execution/assessment protocol is frozen in the M022 milestone
-before outcomes:
+- **5**;
+- **7** reference;
+- **9**;
+- **12**.
 
-- reuse accepted 20/80 reference-v3 evidence;
-- deterministic A/B for 15/85 and 25/75;
-- maximum two concurrent independent arms;
+The fixed reference remains stochastic 21/7/7, boundaries 20/80, EMA7,
+no experimental spread gate, ATR 1.0x/2.0x, all hours.
+
+The EMA execution/assessment protocol is frozen in the M022 milestone before
+outcomes:
+
+- reuse accepted EMA7 reference-v3 evidence;
+- deterministic A/B for EMA5, EMA9, and EMA12;
+- maximum two concurrent independent non-reference arms;
 - development only;
 - 70% reference trade-count floor;
 - Pareto objectives: net P/L, max drawdown USD, non-flat win rate;
 - same symbol/calendar/side breadth limits for improving arms.
 
-After boundary-family evidence and its mechanical assessment are accepted,
-continue to the next still-frozen Phase-1 family. Do not open validation or
-historical holdout and do not use M021 outcomes.
+Do not combine Phase-1 family candidates yet. After EMA-family evidence and
+its mechanical assessment are accepted, continue to the next still-frozen
+Phase-1 family.
 
 ## Start here
 
 Read the durable handoff docs and the M022 milestone. Resume from the
-boundary-family sync/run/assessment sequence above.
+EMA-family implementation/sync/run/assessment sequence above.
 
 Do not start Phase 2, validation, historical holdout, M15 research, merge,
 deployment, or live trading.
