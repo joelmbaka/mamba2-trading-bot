@@ -163,79 +163,71 @@ Reference artifact hashes:
 
 ### Current authorized gate
 
-The stochastic, boundary, and EMA Phase-1 families are complete.
+The stochastic, boundary, EMA, and decision-time-spread Phase-1 families are
+complete.
 
-Accepted stochastic shortlist:
+Accepted Phase-1 shortlists so far:
 
-- **14 / 7 / 7**;
-- **21 / 7 / 7** reference;
-- **28 / 7 / 7**.
-
-Accepted boundary shortlist:
-
-- **20 / 80 reference only**.
-
-Accepted EMA execution:
-
-- family command:
-  `mamba2-m022-ema-family-20260927-1041`;
-- mechanical assessment:
-  `mamba2-m022-ema-assessment-20260927-1309`;
-- reviewed feature SHA:
-  `bb6a774dc42a54e2a6be3fdd4a6a27bd1fcb3f05`;
-- EMA shortlist:
+- stochastic:
+  - **14 / 7 / 7**;
+  - **21 / 7 / 7** reference;
+  - **28 / 7 / 7**;
+- boundary:
+  - **20 / 80 reference only**;
+- EMA:
   - **7 reference**;
   - **9**;
-  - **12**.
+  - **12**;
+- decision-time spread:
+  - **none** — reference;
+  - **<=12 points**.
 
-EMA assessment details:
+Accepted spread execution:
 
-- **EMA5** passed activity and was Pareto-nondominated, but its improvement
-  was fully concentrated on SELL while BUY worsened; positive-side
-  concentration was **100%**, above the frozen **80%** cap, so it is
-  **FRAGILE / CONCENTRATED** and not carried forward.
-- **EMA9** retained **97.38%** of reference trades and passed breadth and
-  concentration checks; **SHORTLIST**.
-- **EMA12** retained **93.63%** of reference trades, had the strongest P/L and
-  drawdown of the tested EMA family, and passed breadth/concentration checks;
-  **SHORTLIST**.
+- family command:
+  `mamba2-m022-spread-family-20260927-1317`;
+- mechanical assessment:
+  `mamba2-m022-spread-assessment-20260927-1541`;
+- reviewed feature SHA:
+  `823a761c93d3f6df1162a5bb934190e461daf1de`.
 
-Safety remained clean: development only, validation unopened, historical
-holdout unopened, M021 unused, and no real-order API called.
+Spread assessment details:
 
-The next authorized Phase-1 family is the frozen **decision-time maximum
-spread** screen only:
+- <=5: **INELIGIBLE**, 54.37% activity;
+- <=8: **INELIGIBLE**, 59.05% activity;
+- <=10: **INELIGIBLE**, 67.87% activity;
+- <=12: **SHORTLIST**, 72.93% activity, broad improvement across all five
+  symbols, both sides, and all six UTC buckets;
+- <=15: **DOMINATED**.
 
-- no experimental rejection — reference;
-- <= **5** points;
-- <= **8** points;
-- <= **10** points;
-- <= **12** points;
-- <= **15** points.
+The next authorized Phase-1 family is **ATR-SL only**:
+
+- **0.75x**;
+- **1.00x** reference;
+- **1.25x**;
+- **1.50x**.
 
 The fixed reference remains stochastic 21/7/7, boundaries 20/80, EMA7,
-no experimental spread gate, ATR 1.0x/2.0x, all hours.
+no experimental spread gate, ATR SL 1.0x / TP 2.0x, all hours.
 
-The spread execution/assessment protocol is frozen in the M022 milestone
+The ATR-SL execution/assessment protocol is frozen in the M022 milestone
 before outcomes:
 
-- use submission-time observable Bid/Ask only;
-- reuse accepted no-spread-gate reference-v3 evidence;
-- deterministic A/B for 5/8/10/12/15-point thresholds;
+- TP fixed at 2.0x;
+- reuse accepted reference-v3 evidence;
+- deterministic A/B for 0.75x, 1.25x, and 1.50x;
 - maximum two concurrent independent non-reference arms;
 - development only;
 - 70% reference trade-count floor;
-- report decision-spread rejection counts;
 - Pareto objectives: net P/L, max drawdown USD, non-flat win rate;
 - same symbol/calendar/side breadth limits for improving arms.
 
-Do not combine Phase-1 family candidates yet. After spread-family evidence and
-its mechanical assessment are accepted, continue to ATR protection screening.
+ATR-TP is not yet authorized. Do not combine Phase-1 candidates yet.
 
 ## Start here
 
 Read the durable handoff docs and the M022 milestone. Resume from the
-spread-family implementation/sync/run/assessment sequence above.
+ATR-SL implementation/sync/run/assessment sequence above.
 
 Do not start Phase 2, validation, historical holdout, M15 research, merge,
 deployment, or live trading.

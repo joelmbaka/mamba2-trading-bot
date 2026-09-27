@@ -1143,6 +1143,185 @@ An otherwise Pareto-eligible improving threshold that fails breadth is
 `FRAGILE / CONCENTRATED` and is not carried forward. No spread threshold is
 selected merely because it maximizes development P/L.
 
+
+## Accepted Phase-1 decision-time-spread screening — 2026-09-27
+
+The frozen spread development screening and mechanical assessment completed
+successfully.
+
+Execution command:
+
+`mamba2-m022-spread-family-20260927-1317`
+
+Mechanical assessment command:
+
+`mamba2-m022-spread-assessment-20260927-1541`
+
+Reviewed feature SHA:
+
+`823a761c93d3f6df1162a5bb934190e461daf1de`
+
+Mechanical result:
+
+- **none** — fixed Phase-1 reference; retained.
+- **<= 5 points**
+  - closed trades: **6,528** (**54.37%** of reference);
+  - net realized P/L: **-$2,496.5414**;
+  - maximum equity drawdown: **$2,575.0294**;
+  - non-flat win rate: **38.7492%**;
+  - decision-spread rejections: **19,995**;
+  - improved all five symbols, both BUY/SELL sides, and all six UTC buckets;
+  - classification: **INELIGIBLE** because it failed the frozen 70% activity
+    floor.
+- **<= 8 points**
+  - closed trades: **7,090** (**59.05%** of reference);
+  - net realized P/L: **-$2,657.5905**;
+  - maximum equity drawdown: **$2,745.6295**;
+  - non-flat win rate: **38.5690%**;
+  - decision-spread rejections: **17,877**;
+  - improved all five symbols, both sides, and all six UTC buckets;
+  - classification: **INELIGIBLE** because it failed the frozen 70% activity
+    floor.
+- **<= 10 points**
+  - closed trades: **8,148** (**67.87%** of reference);
+  - net realized P/L: **-$4,441.3713**;
+  - maximum equity drawdown: **$4,473.1749**;
+  - non-flat win rate: **37.4632%**;
+  - decision-spread rejections: **14,131**;
+  - improved all five symbols, both sides, and all six UTC buckets;
+  - classification: **INELIGIBLE** because it failed the frozen 70% activity
+    floor.
+- **<= 12 points**
+  - closed trades: **8,756** (**72.93%** of reference);
+  - net realized P/L: **-$5,021.3198**;
+  - maximum equity drawdown: **$5,027.5412**;
+  - non-flat win rate: **37.1801%**;
+  - decision-spread rejections: **11,759**;
+  - improved all five symbols, both sides, and all six UTC buckets;
+  - largest positive-symbol share: **48.28%**;
+  - largest positive-side share: **58.53%**;
+  - classification: **SHORTLIST**.
+- **<= 15 points**
+  - closed trades: **9,139** (**76.12%** of reference);
+  - net realized P/L: **-$5,615.8667**;
+  - maximum equity drawdown: **$5,617.5347**;
+  - non-flat win rate: **36.8035%**;
+  - decision-spread rejections: **10,392**;
+  - classification: **DOMINATED** by <=12 among eligible non-reference arms.
+
+Spread shortlist:
+
+- **none** — retained reference;
+- **<= 12 points**.
+
+Deterministic artifact hashes:
+
+- **<=5**:
+  baseline `34683be4b3150d59811ae7d5bcd86f33f48600fd65781298c38839aafeeef2ce`,
+  diagnostic `c43706c8d928ecfe452ee857396d3e1587959a54d51382dbb207e7e13fbddd7e`,
+  summary `af3f95b6560ed99df9e7c2a416dd8a03f66eacc4a4ffaedffb45734fb1216aed`.
+- **<=8**:
+  baseline `d74452d1f4103579c25fc4b3e733c26aca917886a1dda8a9c9a4bfc15e9d8fd4`,
+  diagnostic `315016da4de97ded20eb3caa605073f30093e30ec04528c9a66b4a83814492c0`,
+  summary `a56084918b8f0283b8c3d65f27bb33aaedac8ecaa21b63a3d1e75ce4e100d39e`.
+- **<=10**:
+  baseline `82af3a702ea4f5cc4b93f4c898bd79968c446878edaab64c44841126c83c09a1`,
+  diagnostic `f52589089abaff61794cc5072921548439b43d584e01da3c4d427b710a5e8c0a`,
+  summary `fa485cf19957d96e9526bb34bdba803b675b0f9be8dd35a834b46bf2f16b26c5`.
+- **<=12**:
+  baseline `d9e3259424baeb1c3aedf0447fc8f14fc7e8f093bac87db572b824fc5f075c4c`,
+  diagnostic `ca531b4dda443954a94d869ed77cb8a18070e97c95840aad9c754bc802b0a759`,
+  summary `acdf3889f4b1395e8c7753149e8cf3bf9ae8a9de844bc68df677bde0728437b2`.
+- **<=15**:
+  baseline `41ff154d7aa2b6d598c37a9c93bdf80f69808fa84ef5c47e1d03615b3dc9469d`,
+  diagnostic `dc6e74d3a2debf13f5bf9ad1c67c0e0333cbe98f5d720f46f34f700d7156d79b`,
+  summary `bdb7cacf8d39d284a8eb9b15beceae53df2dcf0816aca23beff68f349bf1e6f8`.
+
+Safety remained clean:
+
+- development only;
+- deterministic A/B evidence passed;
+- submission-time Bid/Ask spread decision semantics preserved;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+The large spread effect is important descriptive development evidence, but the
+predeclared activity rule remains binding: <=5, <=8, and <=10 are not promoted
+despite their stronger development economics.
+
+## Frozen ATR-SL family protocol — before ATR-SL results
+
+ATR protection is screened sequentially to avoid an unfrozen SL x TP Cartesian
+search. The first protection family changes **only the ATR stop-loss
+multiplier** while TP remains fixed at the reference **2.0x**.
+
+The fixed Phase-1 reference remains unchanged:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.0x**;
+- ATR TP **2.0x**;
+- all hours;
+- existing directional trailing semantics.
+
+ATR-SL values:
+
+- **0.75x**;
+- **1.00x** — reference;
+- **1.25x**;
+- **1.50x**.
+
+Do not combine ATR-SL variants with stochastic 28/7/7, EMA12, spread <=12,
+or any other Phase-1 shortlist value during this screen.
+
+Execution scheduling is frozen before outcomes:
+
+- reuse the accepted 1.00x SL / 2.00x TP reference-v3 evidence;
+- run 0.75x, 1.25x, and 1.50x SL arms as complete deterministic A/B pairs;
+- TP remains exactly 2.00x in every ATR-SL arm;
+- execute at most **2 independent non-reference arms concurrently**;
+- each arm writes to a unique immutable output directory;
+- completed deterministic arm artifacts may be resumed but never overwritten;
+- no adaptive or neighboring SL values are authorized;
+- development only;
+- validation, historical holdout, and M021 remain inaccessible.
+
+Mandatory gates:
+
+- deterministic A/B hashes match;
+- TP/safety invariants remain clean;
+- development partition/hash matches the frozen M022 partition;
+- parameter metadata matches the exact declared SL multiplier and fixed TP 2.0x;
+- closed trades are at least **70% of the reference**;
+- validation and historical holdout remain unopened.
+
+Eligible ATR-SL arms are compared on the same three Phase-1 objectives:
+
+1. net realized P/L — higher is better;
+2. maximum equity drawdown USD — lower is better;
+3. non-flat win rate — higher is better.
+
+Retain Pareto-nondominated eligible ATR-SL values plus the 1.00x reference.
+
+For any non-reference ATR-SL arm whose net realized P/L improves versus
+reference, require the same frozen breadth checks:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving SL value that fails breadth is
+`FRAGILE / CONCENTRATED` and is not carried forward.
+
+ATR-TP screening is **not yet authorized to execute**. It remains a separate
+one-dimensional family with SL fixed at 1.00x and will be frozen/authorized
+only after the ATR-SL result and mechanical assessment are accepted.
+
 ## Phase 2 — bounded combinations
 
 Only parameter values/regions that show useful and reasonably stable Phase 1 behavior may enter Phase 2.
