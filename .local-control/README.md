@@ -176,3 +176,8 @@ to reproduce the accepted M019 baseline and diagnostic hashes exactly, requires
 the new decision-spread artifacts to be byte-identical, and refuses missing
 decision-spread rows or any new strategy-reporting artifact. It is historical,
 read-only, and never filters or rejects an order.
+
+M022 fixed Phase-1 spread actions:
+
+- `m022_phase1_spread_family`
+- `m022_phase1_spread_assessment`

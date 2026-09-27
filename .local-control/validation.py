@@ -138,6 +138,7 @@ M022_PHASE1_STOCHASTIC_DIR = REPO / "backtest_data" / "m022-phase1-development" 
 M022_PHASE1_STOCH_EQUIV_DIR = REPO / "backtest_data" / "m022-phase1-development" / "stochastic-21-7-7-equivalence-v1"
 M022_PHASE1_BOUNDARY_DIR = REPO / "backtest_data" / "m022-phase1-development" / "boundaries-v1"
 M022_PHASE1_EMA_DIR = REPO / "backtest_data" / "m022-phase1-development" / "ema-v1"
+M022_PHASE1_SPREAD_DIR = REPO / "backtest_data" / "m022-phase1-development" / "spread-v1"
 
 
 def _safe_env(wine=False):
@@ -3301,6 +3302,595 @@ def m021_primary_pair():
 
 
 
+
+
+
+def m022_phase1_spread_assessment():
+    """Apply the frozen decision-time-spread shortlist rubric mechanically."""
+
+    feature_sha = _require_m022_branch()
+    reference_path = (
+        M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-a-summary.json"
+    )
+    if not reference_path.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 reference summary is unavailable",
+            "feature_sha": feature_sha,
+        }
+    if not M022_PHASE1_SPREAD_DIR.is_dir():
+        return {
+            "ok": False,
+            "reason": "M022 spread family outputs are unavailable",
+            "feature_sha": feature_sha,
+        }
+
+    reference = json.loads(reference_path.read_text(encoding="utf-8"))
+
+    def numeric(mapping, key):
+        value = (mapping or {}).get(key)
+        return None if value is None else float(value)
+
+    def delta_breakdown(candidate, baseline, key):
+        names = sorted(set(candidate or {}) | set(baseline or {}))
+        rows = {}
+        positive = []
+        for name in names:
+            cand = numeric((candidate or {}).get(name), key)
+            ref = numeric((baseline or {}).get(name), key)
+            if cand is None or ref is None:
+                continue
+            delta = cand - ref
+            rows[name] = delta
+            if delta > 0:
+                positive.append((name, delta))
+        positive_sum = sum(value for _name, value in positive)
+        max_share = (
+            max(value for _name, value in positive) / positive_sum
+            if positive_sum > 0
+            else None
+        )
+        return {
+            "deltas": rows,
+            "positive_count": len(positive),
+            "positive_sum": positive_sum,
+            "max_positive_share": max_share,
+        }
+
+    ref_agg = reference.get("aggregate") or {}
+    ref_closed = int(ref_agg.get("closed_trades", 0))
+    activity_floor = ref_closed * 0.70
+    ref_symbols = reference.get("per_symbol") or {}
+    ref_sides = reference.get("by_side") or {}
+    ref_buckets = reference.get("by_entry_utc_bucket") or {}
+
+    thresholds = (None, 5, 8, 10, 12, 15)
+    arms = []
+    for threshold in thresholds:
+        label = "none" if threshold is None else str(threshold)
+        if threshold is None:
+            summary = reference
+            summary_path = reference_path
+        else:
+            summary_path = (
+                M022_PHASE1_SPREAD_DIR
+                / label
+                / f"M022-P1-SPREAD-{label}-a-summary.json"
+            )
+            if not summary_path.is_file():
+                return {
+                    "ok": False,
+                    "reason": f"spread summary missing for {label}",
+                    "feature_sha": feature_sha,
+                    "path": str(summary_path.relative_to(REPO)),
+                }
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+
+        aggregate = summary.get("aggregate") or {}
+        closed = int(aggregate.get("closed_trades", 0))
+        tp = summary.get("tp_safety") or {}
+        partition = summary.get("partition") or {}
+        rejections = summary.get("rejections") or {}
+        rejection_accounting_ok = (
+            threshold is None
+            or (
+                "decision_spread" in rejections
+                and int(rejections.get("decision_spread", -1)) >= 0
+            )
+        )
+
+        mandatory_ok = bool(
+            closed >= activity_floor
+            and int(tp.get("negative_pl_take_profit_exits", -1)) == 0
+            and int(tp.get("wrong_side_initial_tp", -1)) == 0
+            and rejection_accounting_ok
+            and partition.get("partition") == "development"
+            and partition.get("source_manifest_sha256")
+            == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+            and partition.get("strict_common_boundary_clock") is True
+            and partition.get("full_symbol_m1_preserved") is True
+            and int(partition.get("replay_boundary_count", 0)) > 0
+            and bool(partition.get("replay_boundary_sha256"))
+        )
+
+        net_pl = float(aggregate.get("net_realized_pl", 0.0))
+        ref_net = float(ref_agg.get("net_realized_pl", 0.0))
+        improves_net = net_pl > ref_net
+
+        symbol_delta = delta_breakdown(
+            summary.get("per_symbol") or {},
+            ref_symbols,
+            "net_realized_pl",
+        )
+        side_delta = delta_breakdown(
+            summary.get("by_side") or {},
+            ref_sides,
+            "net_realized_pl",
+        )
+        bucket_delta = delta_breakdown(
+            summary.get("by_entry_utc_bucket") or {},
+            ref_buckets,
+            "net_realized_pl",
+        )
+
+        breadth_ok = True
+        if improves_net:
+            breadth_ok = bool(
+                symbol_delta["positive_count"] >= 2
+                and bucket_delta["positive_count"] >= 2
+                and (
+                    symbol_delta["max_positive_share"] is not None
+                    and symbol_delta["max_positive_share"] <= 0.70
+                )
+                and (
+                    side_delta["max_positive_share"] is not None
+                    and side_delta["max_positive_share"] <= 0.80
+                )
+            )
+
+        arms.append({
+            "threshold_points": threshold,
+            "label": label,
+            "is_reference": threshold is None,
+            "mandatory_ok": mandatory_ok,
+            "activity": {
+                "closed_trades": closed,
+                "reference_closed_trades": ref_closed,
+                "minimum_closed_trades": activity_floor,
+                "ratio_to_reference": (
+                    closed / ref_closed if ref_closed else None
+                ),
+            },
+            "decision_spread_rejections": int(
+                rejections.get("decision_spread", 0)
+            ),
+            "objectives": {
+                "net_realized_pl": net_pl,
+                "maximum_equity_drawdown": float(
+                    aggregate.get("maximum_equity_drawdown", 0.0)
+                ),
+                "win_rate_nonflat_pct": aggregate.get(
+                    "win_rate_nonflat_pct"
+                ),
+            },
+            "net_pl_improves_reference": improves_net,
+            "breadth": {
+                "passes": breadth_ok,
+                "symbol": symbol_delta,
+                "side": side_delta,
+                "entry_utc_bucket": bucket_delta,
+            },
+        })
+
+    eligible = [row for row in arms if row["mandatory_ok"]]
+
+    def dominates(left, right):
+        l = left["objectives"]
+        r = right["objectives"]
+        l_win = l["win_rate_nonflat_pct"]
+        r_win = r["win_rate_nonflat_pct"]
+        if l_win is None or r_win is None:
+            return False
+        weak = (
+            l["net_realized_pl"] >= r["net_realized_pl"]
+            and l["maximum_equity_drawdown"]
+            <= r["maximum_equity_drawdown"]
+            and float(l_win) >= float(r_win)
+        )
+        strict = (
+            l["net_realized_pl"] > r["net_realized_pl"]
+            or l["maximum_equity_drawdown"]
+            < r["maximum_equity_drawdown"]
+            or float(l_win) > float(r_win)
+        )
+        return bool(weak and strict)
+
+    nondominated = []
+    for row in eligible:
+        if not any(
+            other is not row and dominates(other, row)
+            for other in eligible
+        ):
+            nondominated.append(row)
+
+    nondominated_labels = {row["label"] for row in nondominated}
+    shortlist = []
+    for row in arms:
+        pareto = row["label"] in nondominated_labels
+        row["pareto_nondominated"] = pareto
+        if row["is_reference"]:
+            row["screening_status"] = "REFERENCE"
+            shortlist.append(row["label"])
+        elif not row["mandatory_ok"]:
+            row["screening_status"] = "INELIGIBLE"
+        elif not pareto:
+            row["screening_status"] = "DOMINATED"
+        elif row["breadth"]["passes"]:
+            row["screening_status"] = "SHORTLIST"
+            shortlist.append(row["label"])
+        else:
+            row["screening_status"] = "FRAGILE / CONCENTRATED"
+
+    return {
+        "ok": True,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "family": "spread",
+        "rubric": {
+            "activity_floor_fraction": 0.70,
+            "objectives": {
+                "net_realized_pl": "maximize",
+                "maximum_equity_drawdown": "minimize",
+                "win_rate_nonflat_pct": "maximize",
+            },
+            "symbol_positive_delta_min_count": 2,
+            "calendar_bucket_positive_delta_min_count": 2,
+            "max_symbol_positive_delta_share": 0.70,
+            "max_side_positive_delta_share": 0.80,
+            "reference_always_retained": True,
+            "decision_time_bid_ask_only": True,
+        },
+        "shortlist": shortlist,
+        "arms": arms,
+        "safety": {
+            "economic_replay_run": False,
+            "reads_existing_development_results_only": True,
+            "validation_economic_data_used": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m022_phase1_spread_family():
+    """Run frozen decision-time spread screening; reuse accepted reference."""
+
+    feature_sha = _require_m022_branch()
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+    if not manifest.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 native-M1 manifest is unavailable",
+            "feature_sha": feature_sha,
+        }
+
+    reference_files = {
+        "a_baseline": (
+            M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-a-baseline.json"
+        ),
+        "b_baseline": (
+            M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-b-baseline.json"
+        ),
+        "a_diagnostic": (
+            M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-a-diagnostic.json"
+        ),
+        "b_diagnostic": (
+            M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-b-diagnostic.json"
+        ),
+        "a_summary": (
+            M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-a-summary.json"
+        ),
+        "b_summary": (
+            M022_PHASE1_REFERENCE_DIR / "M022-P1-REFERENCE-b-summary.json"
+        ),
+    }
+    missing_reference = [
+        name for name, path in reference_files.items()
+        if not path.is_file()
+    ]
+    if missing_reference:
+        return {
+            "ok": False,
+            "reason": "accepted reference-v3 evidence is incomplete",
+            "feature_sha": feature_sha,
+            "missing_reference_files": missing_reference,
+        }
+
+    reference_deterministic = bool(
+        _sha256(reference_files["a_baseline"])
+        == _sha256(reference_files["b_baseline"])
+        and _sha256(reference_files["a_diagnostic"])
+        == _sha256(reference_files["b_diagnostic"])
+        and _sha256(reference_files["a_summary"])
+        == _sha256(reference_files["b_summary"])
+    )
+    if not reference_deterministic:
+        return {
+            "ok": False,
+            "reason": "accepted reference-v3 A/B artifacts are not deterministic",
+            "feature_sha": feature_sha,
+        }
+
+    reference_summary = json.loads(
+        reference_files["a_summary"].read_text(encoding="utf-8")
+    )
+    reference_params = reference_summary.get("parameters") or {}
+    if (
+        float(reference_params.get("oversold_level", -1.0)) != 20.0
+        or float(reference_params.get("overbought_level", -1.0)) != 80.0
+        or int(reference_params.get("stochastic_k_period", -1)) != 21
+        or int(reference_params.get("stochastic_d_period", -1)) != 7
+        or int(reference_params.get("stochastic_slowing", -1)) != 7
+        or int(reference_params.get("ema_period", -1)) != 7
+        or reference_params.get("decision_spread_max_points") is not None
+        or float(reference_params.get("atr_sl_multiplier", -1.0)) != 1.0
+        or float(reference_params.get("atr_tp_multiplier", -1.0)) != 2.0
+        or bool(reference_params.get("block_00_04_utc"))
+    ):
+        return {
+            "ok": False,
+            "reason": "reference-v3 is not the frozen no-spread-gate reference",
+            "feature_sha": feature_sha,
+        }
+
+    output_root = _ensure_baseline_path(M022_PHASE1_SPREAD_DIR)
+    output_root.mkdir(parents=True, exist_ok=True)
+    thresholds = (5, 8, 10, 12, 15)
+
+    def artifact_paths(threshold):
+        label = str(threshold)
+        prefix = f"M022-P1-SPREAD-{label}"
+        arm_dir = output_root / label
+        return arm_dir, {
+            "a_baseline": arm_dir / f"{prefix}-a-baseline.json",
+            "b_baseline": arm_dir / f"{prefix}-b-baseline.json",
+            "a_diagnostic": arm_dir / f"{prefix}-a-diagnostic.json",
+            "b_diagnostic": arm_dir / f"{prefix}-b-diagnostic.json",
+            "a_summary": arm_dir / f"{prefix}-a-summary.json",
+            "b_summary": arm_dir / f"{prefix}-b-summary.json",
+        }
+
+    def payload_from_complete_artifacts(threshold):
+        label = str(threshold)
+        arm_dir, paths = artifact_paths(threshold)
+        if not arm_dir.exists():
+            return None
+        missing = [name for name, path in paths.items() if not path.is_file()]
+        if missing:
+            raise RuntimeError(
+                f"partial spread arm directory {label}: " + ",".join(missing)
+            )
+        deterministic = bool(
+            _sha256(paths["a_baseline"]) == _sha256(paths["b_baseline"])
+            and _sha256(paths["a_diagnostic"]) == _sha256(paths["b_diagnostic"])
+            and _sha256(paths["a_summary"]) == _sha256(paths["b_summary"])
+        )
+        if not deterministic:
+            raise RuntimeError(
+                f"non-deterministic existing spread arm {label}"
+            )
+        summary = json.loads(paths["a_summary"].read_text(encoding="utf-8"))
+        return {
+            "ok": True,
+            "deterministic": True,
+            "partition": "development",
+            "experiment_id": f"M022-P1-SPREAD-{label}",
+            "baseline_sha256": _sha256(paths["a_baseline"]),
+            "diagnostic_sha256": _sha256(paths["a_diagnostic"]),
+            "summary_sha256": _sha256(paths["a_summary"]),
+            "summary": summary,
+            "reused_complete_artifacts": True,
+        }
+
+    def execute_arm(threshold):
+        existing = payload_from_complete_artifacts(threshold)
+        if existing is not None:
+            return threshold, existing, None
+
+        label = str(threshold)
+        arm_dir, _paths = artifact_paths(threshold)
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.parameter_research",
+                "--manifest",
+                str(manifest.relative_to(REPO)),
+                "--output-dir",
+                str(arm_dir.relative_to(REPO)),
+                "--family",
+                "spread",
+                "--value",
+                label,
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        if run["exit_code"] != 0:
+            return threshold, None, run
+        try:
+            payload = json.loads(run["stdout"].strip().splitlines()[-1])
+        except (json.JSONDecodeError, IndexError):
+            return threshold, None, {
+                "exit_code": run["exit_code"],
+                "stdout": run["stdout"],
+                "stderr": (
+                    run["stderr"]
+                    + "\nunable to parse final spread JSON payload"
+                ),
+            }
+        return threshold, payload, run
+
+    executed = {}
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            futures = {
+                executor.submit(execute_arm, threshold): threshold
+                for threshold in thresholds
+            }
+            for future in concurrent.futures.as_completed(futures):
+                threshold, payload, run = future.result()
+                if payload is None:
+                    return {
+                        "ok": False,
+                        "reason": f"M022 spread arm {threshold} failed",
+                        "feature_branch": "strategy-parameter-research",
+                        "feature_sha": feature_sha,
+                        "failed_run": {
+                            "threshold_points": threshold,
+                            "exit_code": (run or {}).get("exit_code"),
+                            "stdout": _bounded((run or {}).get("stdout")),
+                            "stderr": _bounded((run or {}).get("stderr")),
+                        },
+                    }
+                executed[threshold] = payload
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+            "safety": {
+                "completed_arm_artifacts_preserved": True,
+                "partial_artifacts_not_overwritten": True,
+            },
+        }
+
+    def arm_result(threshold, payload, *, reused_reference=False):
+        summary = payload.get("summary") or {}
+        tp = summary.get("tp_safety") or {}
+        partition = summary.get("partition") or {}
+        params = summary.get("parameters") or {}
+        rejections = summary.get("rejections") or {}
+        expected_spread = None if threshold is None else float(threshold)
+        actual_spread = params.get("decision_spread_max_points")
+        spread_matches = (
+            actual_spread is None
+            if expected_spread is None
+            else actual_spread is not None
+            and float(actual_spread) == expected_spread
+        )
+        rejection_accounting_ok = (
+            expected_spread is None
+            or (
+                "decision_spread" in rejections
+                and int(rejections.get("decision_spread", -1)) >= 0
+            )
+        )
+        arm_ok = bool(
+            payload.get("ok")
+            and payload.get("deterministic")
+            and payload.get("partition") == "development"
+            and partition.get("source_manifest_sha256")
+            == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+            and partition.get("start_utc") == "2025-08-25T00:00:00Z"
+            and partition.get("end_exclusive_utc") == "2026-04-21T00:00:00Z"
+            and partition.get("strict_common_boundary_clock") is True
+            and partition.get("full_symbol_m1_preserved") is True
+            and int(partition.get("replay_boundary_count", 0)) > 0
+            and bool(partition.get("replay_boundary_sha256"))
+            and int(tp.get("negative_pl_take_profit_exits", -1)) == 0
+            and int(tp.get("wrong_side_initial_tp", -1)) == 0
+            and float(params.get("oversold_level", -1.0)) == 20.0
+            and float(params.get("overbought_level", -1.0)) == 80.0
+            and int(params.get("stochastic_k_period", -1)) == 21
+            and int(params.get("stochastic_d_period", -1)) == 7
+            and int(params.get("stochastic_slowing", -1)) == 7
+            and int(params.get("ema_period", -1)) == 7
+            and spread_matches
+            and rejection_accounting_ok
+            and float(params.get("atr_sl_multiplier", -1.0)) == 1.0
+            and float(params.get("atr_tp_multiplier", -1.0)) == 2.0
+            and not bool(params.get("block_00_04_utc"))
+        )
+        if not arm_ok:
+            raise RuntimeError(
+                f"M022 spread arm {threshold} failed invariants"
+            )
+        return {
+            "threshold_points": threshold,
+            "experiment_id": payload.get("experiment_id"),
+            "baseline_sha256": payload.get("baseline_sha256"),
+            "diagnostic_sha256": payload.get("diagnostic_sha256"),
+            "summary_sha256": payload.get("summary_sha256"),
+            "aggregate": summary.get("aggregate"),
+            "per_symbol": summary.get("per_symbol"),
+            "by_side": summary.get("by_side"),
+            "by_entry_utc_bucket": summary.get("by_entry_utc_bucket"),
+            "protection": summary.get("protection"),
+            "rejections": rejections,
+            "tp_safety": tp,
+            "remaining_positions": summary.get("remaining_positions"),
+            "reused_reference_evidence": reused_reference,
+            "reused_complete_artifacts": bool(
+                payload.get("reused_complete_artifacts")
+            ),
+        }
+
+    reference_payload = {
+        "ok": True,
+        "deterministic": True,
+        "partition": "development",
+        "experiment_id": "M022-P1-REFERENCE",
+        "baseline_sha256": _sha256(reference_files["a_baseline"]),
+        "diagnostic_sha256": _sha256(reference_files["a_diagnostic"]),
+        "summary_sha256": _sha256(reference_files["a_summary"]),
+        "summary": reference_summary,
+    }
+
+    try:
+        results = [
+            arm_result(None, reference_payload, reused_reference=True),
+            arm_result(5, executed[5]),
+            arm_result(8, executed[8]),
+            arm_result(10, executed[10]),
+            arm_result(12, executed[12]),
+            arm_result(15, executed[15]),
+        ]
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "family": "spread",
+        "execution": {
+            "maximum_concurrent_arms": 2,
+            "independent_arm_processes": True,
+            "reference_no_spread_gate_reused": True,
+            "decision_time_bid_ask_only": True,
+        },
+        "partition": {
+            "name": "development",
+            "start_utc": "2025-08-25T00:00:00Z",
+            "end_exclusive_utc": "2026-04-21T00:00:00Z",
+            "trading_dates": 169,
+        },
+        "arms": results,
+        "safety": {
+            "economic_replay_run": True,
+            "economic_partition": "development",
+            "validation_economic_data_used": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
 
 
 def m022_phase1_ema_assessment():
@@ -7551,6 +8141,8 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_phase1_spread_assessment": m022_phase1_spread_assessment,
+    "m022_phase1_spread_family": m022_phase1_spread_family,
     "m022_phase1_ema_assessment": m022_phase1_ema_assessment,
     "m022_phase1_ema_family": m022_phase1_ema_family,
     "m022_phase1_boundary_assessment": m022_phase1_boundary_assessment,
