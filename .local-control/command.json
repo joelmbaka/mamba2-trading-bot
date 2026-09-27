@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-ema-preflight-sync-20260927-1036",
-  "action": "sync",
+  "id": "mamba2-m022-ema-family-20260927-1041",
+  "action": "m022_phase1_ema_family",
   "args": {},
   "requested_by": "chatgpt"
 }
