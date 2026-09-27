@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-stochastic-family-sync-20260927-0443",
-  "action": "sync",
+  "id": "mamba2-m022-stochastic-family-20260927-0552",
+  "action": "m022_phase1_stochastic_family",
   "args": {},
   "requested_by": "chatgpt"
 }
