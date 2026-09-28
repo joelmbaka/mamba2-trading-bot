@@ -163,70 +163,85 @@ Reference artifact hashes:
 
 ### Current authorized gate
 
-**Phase 1 is COMPLETE.**
+**Phase 1 is COMPLETE. Phase-2 development is COMPLETE.**
 
-Final carry-forward values:
+Frozen Phase-2 development checkpoints:
 
-- stochastic: **14/7/7, 21/7/7 reference, 28/7/7**;
-- boundary: **20/80 only**;
-- EMA: **7 reference, 9, 12**;
-- decision-time spread: **none reference, <=12**;
-- ATR-SL: **1.0 reference, 1.5**;
-- ATR-TP: **2.0 reference, 2.5, 3.0**;
-- session: **all hours only**.
+- protocol freeze:
+  `7c6e15cbfcdc09750b6089c092e4ea1446b51e30`;
+- matrix implementation:
+  `890cf7a160d61be135ae945054498dbe7c70d17d`;
+- native gate:
+  **85 passed / 0 failed**;
+- development family result:
+  `535921dcdde0f2a7a87266d0f677758037bab8a3`;
+- assessment command:
+  `mamba2-m022-phase2-development-assessment-v1`;
+- assessment result:
+  `03329379e9ca4394e09e9ff11c51fe5972f0b8ee`.
 
-Final session assessment:
+Mechanical development classifications:
 
-- family command: `mamba2-m022-session-family-v1`;
-- assessment command: `mamba2-m022-session-assessment-v1`;
-- feature SHA:
-  `48dc49cd9f506aabdcb65b4e095a6a31e77290c1`;
-- published assessment result:
-  `978edf5696a798d80eb02e20d0b8688239130449`;
-- blocked 00:00–03:59 UTC arm:
-  **FRAGILE / CONCENTRATED**;
-- final session shortlist:
-  **all hours only**.
+- **REFERENCE**: P2-R;
+- **SHORTLIST / FINALISTS**: P2-01, P2-03, P2-08;
+- **DOMINATED**: P2-04;
+- **INELIGIBLE**:
+  P2-02, P2-05, P2-06, P2-07, P2-09, P2-10, P2-11, P2-12.
 
-The complete Phase-1 evidence and rejected/ineligible/fragile values are
-recorded in the M022 milestone document.
+Validation entrants are now frozen as exactly:
 
-**Phase-2 development protocol is now frozen before any Phase-2 result.**
+- **P2-R**;
+- **P2-01**;
+- **P2-03**;
+- **P2-08**.
 
-Exact matrix:
+No replacement arm, new combination, retuning, or sample-gate weakening is
+authorized.
 
-- P2-R reference;
-- P2-01 through P2-12 only.
+Validation partition:
 
-No additional development combination may be added after the first Phase-2
-economic result.
-
-Phase-2 development sample gate, deterministic/Pareto/breadth rules, finalist
-cap, future validation-opening procedure, validation support rules, and future
-historical-holdout opening/assessment rules are frozen in the M022 milestone.
+`2026-04-21T00:00:00Z` → `2026-07-08T00:00:00Z`,
+**56 trading dates**.
 
 The next authorized work is:
 
-1. implement only the fixed P2-R/P2-01…P2-12 research definitions and
-   deterministic reporting without changing production defaults;
-2. add tests for exact matrix definitions and development-only gating;
-3. add narrowly fixed local-control actions required for Phase-2 development
-   family execution and mechanical assessment;
-4. sync Dell to the exact feature SHA;
-5. verify clean worktree, 0/0 divergence, exact feature SHA;
-6. run Phase-2 **development only**, at most two independent non-reference arms
-   concurrently;
-7. review deterministic/safety evidence;
-8. run the frozen mechanical development assessment;
-9. durably record the <=3 mechanically selected development finalists.
+1. implement only narrowly fixed validation execution for P2-R, P2-01, P2-03,
+   and P2-08;
+2. implement the already-frozen validation mechanical assessment;
+3. keep historical holdout execution mechanically unavailable;
+4. run focused/native tests;
+5. sync Dell to the exact feature SHA;
+6. confirm clean worktree and 0/0 divergence;
+7. execute deterministic validation A/B for exactly the four frozen entrants,
+   with at most two independent non-reference arms concurrently;
+8. run the frozen validation assessment;
+9. durably record validation classifications and the mechanically determined
+   holdout entrant list before any historical-holdout execution.
 
-Validation and historical holdout remain CLOSED and are not yet authorized to
-execute.
+Frozen validation support requires all mandatory deterministic/safety/sample
+gates plus:
+
+- net P/L strictly better than validation P2-R;
+- maximum DD USD no worse than validation P2-R;
+- win rate no more than 1.0 percentage point below validation P2-R;
+- positive P/L delta in >=2 symbols;
+- positive P/L delta in >=2 fixed UTC buckets;
+- max positive-symbol contribution <=70%;
+- max positive-side contribution <=80%.
+
+At most **2 non-reference** entrants may advance to historical holdout.
+If none qualifies, historical holdout must remain unopened.
+
+Historical holdout remains CLOSED and is not authorized to execute yet.
 
 ## Start here
 
-Read the durable handoff docs and the M022 milestone. Resume from the
-frozen Phase-2 development implementation/execution sequence above.
+Read the durable handoff docs and the M022 milestone. Resume from the frozen
+validation entrant checkpoint above.
 
-Do not start Phase 2, validation, historical holdout, M15 research, merge,
-deployment, or live trading.
+Validation is now the next authorized economic gate, but only for P2-R,
+P2-01, P2-03, and P2-08 under the already-frozen validation rules.
+
+Do not open historical holdout, add or replace a finalist, weaken a gate,
+inspect M021 for M022 tuning, start M15 research, merge, deploy, or enable live
+trading.

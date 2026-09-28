@@ -1,6 +1,6 @@
 # Milestone 022 — Two-Timeframe Parameter Research
 
-Status: **PHASE 1 COMPLETE — PHASE 2 DEVELOPMENT PROTOCOL FROZEN; NO PHASE-2 RESULTS INSPECTED**
+Status: **PHASE 2 DEVELOPMENT COMPLETE — VALIDATION ENTRANTS FROZEN; VALIDATION NOT YET EXECUTED**
 
 Protocol date: 2026-09-26
 
@@ -2034,6 +2034,113 @@ Keep the top three. Exact ties are broken, in order, by:
 4. lexicographically smaller P2 arm ID.
 
 No alternative tie-breaker may be introduced after results.
+
+
+## Accepted Phase-2 development assessment — 2026-09-28
+
+Phase-2 development is complete under the predeclared bounded matrix and
+mechanical assessment.
+
+Protocol freeze checkpoint:
+
+`7c6e15cbfcdc09750b6089c092e4ea1446b51e30`
+
+Matrix implementation feature SHA:
+
+`890cf7a160d61be135ae945054498dbe7c70d17d`
+
+Native research gate:
+
+- **85 passed / 0 failed**;
+- economic replay during test gate: **no**;
+- M021 used: **no**;
+- real-order API called: **no**.
+
+Development family command:
+
+`mamba2-m022-phase2-development-family-v1`
+
+Development family result commit:
+
+`535921dcdde0f2a7a87266d0f677758037bab8a3`
+
+Mechanical assessment command:
+
+`mamba2-m022-phase2-development-assessment-v1`
+
+Assessment result commit:
+
+`03329379e9ca4394e09e9ff11c51fe5972f0b8ee`
+
+Exact feature SHA assessed:
+
+`890cf7a160d61be135ae945054498dbe7c70d17d`
+
+Development classifications:
+
+| Arm | Closed trades | Activity vs P2-R | Net P/L | Max DD | Win rate | Mechanical status |
+|---|---:|---:|---:|---:|---:|---|
+| P2-R | 12,006 | 100.00% | -$15,499.36 | $15,501.91 | 32.8667% | **REFERENCE** |
+| P2-01 | 9,181 | 76.47% | -$12,165.30 | $12,186.83 | 32.7302% | **SHORTLIST** |
+| P2-02 | 7,111 | 59.23% | -$4,182.13 | $4,201.66 | 37.2397% | **INELIGIBLE** |
+| P2-03 | 8,439 | 70.29% | -$11,229.83 | $11,261.21 | 32.3418% | **SHORTLIST** |
+| P2-04 | 9,035 | 75.25% | -$11,798.00 | $11,812.63 | 31.7986% | **DOMINATED** |
+| P2-05 | 8,170 | 68.05% | -$4,728.99 | $4,740.06 | 37.0897% | **INELIGIBLE** |
+| P2-06 | 7,298 | 60.79% | -$4,862.13 | $4,897.62 | 34.8911% | **INELIGIBLE** |
+| P2-07 | 7,854 | 65.42% | -$3,900.51 | $3,906.74 | 33.9827% | **INELIGIBLE** |
+| P2-08 | 8,620 | 71.80% | -$12,379.32 | $12,395.97 | 34.5172% | **SHORTLIST** |
+| P2-09 | 6,657 | 55.45% | -$3,894.14 | $3,919.00 | 37.2614% | **INELIGIBLE** |
+| P2-10 | 5,618 | 46.79% | -$3,445.34 | $3,457.62 | 38.3259% | **INELIGIBLE** |
+| P2-11 | 5,290 | 44.06% | -$3,237.39 | $3,249.68 | 38.2681% | **INELIGIBLE** |
+| P2-12 | 7,547 | 62.86% | -$4,770.13 | $4,904.33 | 32.1537% | **INELIGIBLE** |
+
+The frozen sample rule required every candidate to pass all representation
+gates, not only the aggregate trade-count floor:
+
+- total closed trades >=50% of P2-R;
+- every symbol >=40% of the corresponding P2-R symbol count;
+- BUY >=40%;
+- SELL >=40%;
+- every fixed 4-hour UTC bucket >=25%.
+
+Therefore the attractive raw economics of several spread-gated arms do not
+override their mechanical **INELIGIBLE** classification. In particular,
+P2-02, P2-05, P2-06, P2-07, P2-09, P2-10, P2-11, and P2-12 are not eligible
+for validation.
+
+The exactly three mechanically fixed development finalists are:
+
+- **P2-01** — stochastic 28/7/7, EMA12, no spread gate, ATR SL1.0, ATR TP2.0;
+- **P2-03** — stochastic 28/7/7, EMA7, no spread gate, ATR SL1.5, ATR TP2.0;
+- **P2-08** — stochastic 21/7/7, EMA7, no spread gate, ATR SL1.5, ATR TP3.0.
+
+Because exactly three non-reference arms are SHORTLIST, the predeclared max-3
+reduction procedure removes none of them. No manual replacement, reordering,
+or new arm is permitted.
+
+### Frozen validation entrants
+
+Validation entrants are now durably fixed as exactly:
+
+1. **P2-R** — fixed reference;
+2. **P2-01**;
+3. **P2-03**;
+4. **P2-08**.
+
+No other Phase-2 arm may enter validation.
+
+Development safety/isolation remained clean:
+
+- all non-reference arms completed deterministic A/B evidence;
+- development partition only;
+- validation economic data used: **no**;
+- historical holdout economic data used: **no**;
+- M021 post-cutoff data used: **no**;
+- real-order API called: **no**.
+
+Validation was unopened throughout development.
+
+Historical holdout remains sealed.
 
 ## Frozen future validation-opening protocol
 
