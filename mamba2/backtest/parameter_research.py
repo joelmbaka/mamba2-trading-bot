@@ -138,6 +138,8 @@ class Phase1Arm:
 
 
 
+PHASE2_VALIDATION_ENTRANTS = ("P2-R", "P2-01", "P2-03", "P2-08")
+
 PHASE2_DEVELOPMENT_MATRIX: Mapping[str, Phase1Parameters] = {
     "P2-R": Phase1Parameters(),
     "P2-01": Phase1Parameters(
@@ -627,22 +629,19 @@ def _research_metadata(
     }
 
 
-def run_phase1_arm(
+def _run_research_arm(
     manifest_path: str | Path,
     *,
     arm: Phase1Arm,
-    partition: str = "development",
+    partition: str,
     starting_balance: float = 10_000.0,
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
-    """Run one M022 arm on a strict partition.
+    """Run one internal M022 research arm on an authorized partition."""
 
-    Phase 1 is intentionally restricted to development.  Validation/holdout
-    execution requires a later, separately frozen shortlist workflow.
-    """
-
-    if partition != "development":
+    if partition not in {"development", "validation"}:
         raise ValueError(
-            "Phase-1 arm runner is development-only; validation/holdout remain closed"
+            "M022 research execution permits development/validation only; "
+            "historical holdout remains closed"
         )
     manifest_file = Path(manifest_path)
     full_dataset = load_mt5_dataset(manifest_file)
@@ -788,6 +787,50 @@ def run_phase1_arm(
     return baseline_report, diagnostic_report, summary
 
 
+
+def run_phase1_arm(
+    manifest_path: str | Path,
+    *,
+    arm: Phase1Arm,
+    partition: str = "development",
+    starting_balance: float = 10_000.0,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Run one M022 Phase-1/Phase-2-development arm.
+
+    This public development runner remains unable to open validation/holdout.
+    """
+
+    if partition != "development":
+        raise ValueError(
+            "development runner is development-only; validation/holdout require "
+            "their separately frozen workflow"
+        )
+    return _run_research_arm(
+        manifest_path,
+        arm=arm,
+        partition="development",
+        starting_balance=starting_balance,
+    )
+
+
+def run_validation_arm(
+    manifest_path: str | Path,
+    *,
+    entrant: str,
+    starting_balance: float = 10_000.0,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    """Run exactly one mechanically frozen Phase-2 validation entrant."""
+
+    if entrant not in PHASE2_VALIDATION_ENTRANTS:
+        raise ValueError("arm is outside the frozen M022 validation entrant list")
+    return _run_research_arm(
+        manifest_path,
+        arm=phase2_arm(entrant),
+        partition="validation",
+        starting_balance=starting_balance,
+    )
+
+
 def write_summary(report: Mapping[str, Any], path: str | Path) -> Path:
     output = Path(path)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -798,23 +841,29 @@ def write_summary(report: Mapping[str, Any], path: str | Path) -> Path:
     return output
 
 
-def run_phase1_pair(
+def _run_research_pair(
     manifest_path: str | Path,
     *,
     arm: Phase1Arm,
+    partition: str,
     output_dir: str | Path,
     starting_balance: float = 10_000.0,
 ) -> dict[str, Any]:
-    """Run deterministic A/B copies of one arm and require byte identity."""
+    """Run deterministic A/B copies on development or validation only."""
 
+    if partition not in {"development", "validation"}:
+        raise ValueError(
+            "M022 research pair permits development/validation only; "
+            "historical holdout remains closed"
+        )
     root = Path(output_dir)
     root.mkdir(parents=True, exist_ok=True)
     runs = []
     for label in ("a", "b"):
-        baseline, diagnostic, summary = run_phase1_arm(
+        baseline, diagnostic, summary = _run_research_arm(
             manifest_path,
             arm=arm,
-            partition="development",
+            partition=partition,
             starting_balance=starting_balance,
         )
         baseline_path = write_baseline_report(
@@ -858,11 +907,50 @@ def run_phase1_pair(
         "family": arm.family,
         "value_label": arm.value_label,
         "parameters": asdict(arm.parameters),
-        "partition": "development",
+        "partition": partition,
         "deterministic": deterministic,
         "a": runs[0],
         "b": runs[1],
     }
+
+
+
+def run_phase1_pair(
+    manifest_path: str | Path,
+    *,
+    arm: Phase1Arm,
+    output_dir: str | Path,
+    starting_balance: float = 10_000.0,
+) -> dict[str, Any]:
+    """Run deterministic A/B copies of one development arm."""
+
+    return _run_research_pair(
+        manifest_path,
+        arm=arm,
+        partition="development",
+        output_dir=output_dir,
+        starting_balance=starting_balance,
+    )
+
+
+def run_validation_pair(
+    manifest_path: str | Path,
+    *,
+    entrant: str,
+    output_dir: str | Path,
+    starting_balance: float = 10_000.0,
+) -> dict[str, Any]:
+    """Run deterministic A/B validation for one frozen entrant only."""
+
+    if entrant not in PHASE2_VALIDATION_ENTRANTS:
+        raise ValueError("arm is outside the frozen M022 validation entrant list")
+    return _run_research_pair(
+        manifest_path,
+        arm=phase2_arm(entrant),
+        partition="validation",
+        output_dir=output_dir,
+        starting_balance=starting_balance,
+    )
 
 
 def stochastic_arm(k: int, d: int, slowing: int) -> Phase1Arm:
@@ -1059,6 +1147,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "atr-tp",
             "session",
             "phase2",
+            "phase2-validation",
         ),
         required=True,
     )
@@ -1066,13 +1155,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--starting-balance", type=float, default=10_000.0)
     args = parser.parse_args(argv)
 
-    arm = _arm_from_cli(args)
-    result = run_phase1_pair(
-        args.manifest,
-        arm=arm,
-        output_dir=args.output_dir,
-        starting_balance=args.starting_balance,
-    )
+    if args.family == "phase2-validation":
+        entrant = _require_value(args, "P2-R|P2-01|P2-03|P2-08")
+        result = run_validation_pair(
+            args.manifest,
+            entrant=entrant,
+            output_dir=args.output_dir,
+            starting_balance=args.starting_balance,
+        )
+    else:
+        arm = _arm_from_cli(args)
+        result = run_phase1_pair(
+            args.manifest,
+            arm=arm,
+            output_dir=args.output_dir,
+            starting_balance=args.starting_balance,
+        )
     compact = {
         "ok": result["ok"],
         "experiment_id": result["experiment_id"],

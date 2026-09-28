@@ -14,6 +14,7 @@ from mamba2.backtest.parameter_research import (
     DecisionSpreadBrokerProxy,
     M022_PARTITIONS,
     PHASE2_DEVELOPMENT_MATRIX,
+    PHASE2_VALIDATION_ENTRANTS,
     Phase1Arm,
     Phase1Parameters,
     ResearchStrategyWrapper,
@@ -26,6 +27,8 @@ from mamba2.backtest.parameter_research import (
     phase2_arm,
     reference_arm,
     run_phase1_arm,
+    run_validation_arm,
+    run_validation_pair,
     session_arm,
     slice_dataset,
     spread_arm,
@@ -175,6 +178,42 @@ def test_phase2_factory_rejects_unfrozen_arm():
 
 
 def test_phase2_development_runner_refuses_validation_before_manifest_access():
+    with pytest.raises(ValueError, match="development-only"):
+        run_phase1_arm(
+            "/definitely/not/a/manifest.json",
+            arm=phase2_arm("P2-01"),
+            partition="validation",
+        )
+
+
+
+def test_phase2_validation_entrants_are_exactly_frozen():
+    assert PHASE2_VALIDATION_ENTRANTS == (
+        "P2-R",
+        "P2-01",
+        "P2-03",
+        "P2-08",
+    )
+
+
+def test_validation_arm_rejects_nonfinalist_before_manifest_access():
+    with pytest.raises(ValueError, match="frozen M022 validation entrant list"):
+        run_validation_arm(
+            "/definitely/not/a/manifest.json",
+            entrant="P2-07",
+        )
+
+
+def test_validation_pair_rejects_nonfinalist_before_output_or_manifest_access():
+    with pytest.raises(ValueError, match="frozen M022 validation entrant list"):
+        run_validation_pair(
+            "/definitely/not/a/manifest.json",
+            entrant="P2-09",
+            output_dir="/definitely/not/an/output",
+        )
+
+
+def test_development_runner_still_refuses_validation_partition():
     with pytest.raises(ValueError, match="development-only"):
         run_phase1_arm(
             "/definitely/not/a/manifest.json",
