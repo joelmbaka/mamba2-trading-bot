@@ -13,6 +13,7 @@ from mamba2.backtest.mt5_dataset import LoadedHistoricalDataset
 from mamba2.backtest.parameter_research import (
     DecisionSpreadBrokerProxy,
     M022_PARTITIONS,
+    PHASE2_DEVELOPMENT_MATRIX,
     Phase1Arm,
     Phase1Parameters,
     ResearchStrategyWrapper,
@@ -22,6 +23,7 @@ from mamba2.backtest.parameter_research import (
     atr_tp_arm,
     boundary_arm,
     ema_arm,
+    phase2_arm,
     reference_arm,
     run_phase1_arm,
     session_arm,
@@ -126,6 +128,59 @@ def test_frozen_family_factories_reject_out_of_grid_values(call, message):
     with pytest.raises(ValueError, match=message):
         call()
 
+
+
+
+def test_phase2_development_matrix_is_exactly_frozen():
+    expected = {
+        "P2-R": (21, 7, 7, 7, None, 1.0, 2.0),
+        "P2-01": (28, 7, 7, 12, None, 1.0, 2.0),
+        "P2-02": (28, 7, 7, 7, 12.0, 1.0, 2.0),
+        "P2-03": (28, 7, 7, 7, None, 1.5, 2.0),
+        "P2-04": (28, 7, 7, 7, None, 1.0, 3.0),
+        "P2-05": (21, 7, 7, 12, 12.0, 1.0, 2.0),
+        "P2-06": (21, 7, 7, 7, 12.0, 1.5, 2.0),
+        "P2-07": (21, 7, 7, 7, 12.0, 1.0, 3.0),
+        "P2-08": (21, 7, 7, 7, None, 1.5, 3.0),
+        "P2-09": (28, 7, 7, 12, 12.0, 1.0, 2.0),
+        "P2-10": (28, 7, 7, 7, 12.0, 1.5, 3.0),
+        "P2-11": (28, 7, 7, 12, 12.0, 1.5, 3.0),
+        "P2-12": (14, 7, 7, 9, 12.0, 1.5, 2.5),
+    }
+    assert tuple(PHASE2_DEVELOPMENT_MATRIX) == tuple(expected)
+
+    for label, values in expected.items():
+        arm = phase2_arm(label)
+        params = arm.parameters
+        assert arm.experiment_id == f"M022-{label}"
+        assert arm.family == "phase2"
+        assert arm.value_label == label
+        assert (
+            params.stochastic_k_period,
+            params.stochastic_d_period,
+            params.stochastic_slowing,
+            params.ema_period,
+            params.decision_spread_max_points,
+            params.atr_sl_multiplier,
+            params.atr_tp_multiplier,
+        ) == values
+        assert params.oversold_level == 20.0
+        assert params.overbought_level == 80.0
+        assert params.block_00_04_utc is False
+
+
+def test_phase2_factory_rejects_unfrozen_arm():
+    with pytest.raises(ValueError, match="frozen M022 development matrix"):
+        phase2_arm("P2-13")
+
+
+def test_phase2_development_runner_refuses_validation_before_manifest_access():
+    with pytest.raises(ValueError, match="development-only"):
+        run_phase1_arm(
+            "/definitely/not/a/manifest.json",
+            arm=phase2_arm("P2-01"),
+            partition="validation",
+        )
 
 def test_strategy_default_constructor_matches_reference_config(monkeypatch):
     from mamba2.strategy import triple_cross

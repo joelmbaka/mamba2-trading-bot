@@ -4,8 +4,9 @@ This module is research-only.  It reuses the accepted replay broker, position
 manager, diagnostics, and production strategy while keeping M022's chronological
 partitions and parameter grids explicit.
 
-Phase-1 callers must use the development partition only.  Validation and
-historical holdout remain mechanically unavailable through the Phase-1 CLI.
+Phase-1 and Phase-2 development callers use the development partition only.
+Validation and historical holdout remain mechanically unavailable through this
+development CLI.
 """
 
 from __future__ import annotations
@@ -135,6 +136,84 @@ class Phase1Arm:
     value_label: str
     parameters: Phase1Parameters
 
+
+
+PHASE2_DEVELOPMENT_MATRIX: Mapping[str, Phase1Parameters] = {
+    "P2-R": Phase1Parameters(),
+    "P2-01": Phase1Parameters(
+        stochastic_k_period=28,
+        stochastic_d_period=7,
+        stochastic_slowing=7,
+        ema_period=12,
+    ),
+    "P2-02": Phase1Parameters(
+        stochastic_k_period=28,
+        stochastic_d_period=7,
+        stochastic_slowing=7,
+        decision_spread_max_points=12.0,
+    ),
+    "P2-03": Phase1Parameters(
+        stochastic_k_period=28,
+        stochastic_d_period=7,
+        stochastic_slowing=7,
+        atr_sl_multiplier=1.5,
+    ),
+    "P2-04": Phase1Parameters(
+        stochastic_k_period=28,
+        stochastic_d_period=7,
+        stochastic_slowing=7,
+        atr_tp_multiplier=3.0,
+    ),
+    "P2-05": Phase1Parameters(
+        ema_period=12,
+        decision_spread_max_points=12.0,
+    ),
+    "P2-06": Phase1Parameters(
+        decision_spread_max_points=12.0,
+        atr_sl_multiplier=1.5,
+    ),
+    "P2-07": Phase1Parameters(
+        decision_spread_max_points=12.0,
+        atr_tp_multiplier=3.0,
+    ),
+    "P2-08": Phase1Parameters(
+        atr_sl_multiplier=1.5,
+        atr_tp_multiplier=3.0,
+    ),
+    "P2-09": Phase1Parameters(
+        stochastic_k_period=28,
+        stochastic_d_period=7,
+        stochastic_slowing=7,
+        ema_period=12,
+        decision_spread_max_points=12.0,
+    ),
+    "P2-10": Phase1Parameters(
+        stochastic_k_period=28,
+        stochastic_d_period=7,
+        stochastic_slowing=7,
+        decision_spread_max_points=12.0,
+        atr_sl_multiplier=1.5,
+        atr_tp_multiplier=3.0,
+    ),
+    "P2-11": Phase1Parameters(
+        stochastic_k_period=28,
+        stochastic_d_period=7,
+        stochastic_slowing=7,
+        ema_period=12,
+        decision_spread_max_points=12.0,
+        atr_sl_multiplier=1.5,
+        atr_tp_multiplier=3.0,
+    ),
+    "P2-12": Phase1Parameters(
+        stochastic_k_period=14,
+        stochastic_d_period=7,
+        stochastic_slowing=7,
+        ema_period=9,
+        decision_spread_max_points=12.0,
+        atr_sl_multiplier=1.5,
+        atr_tp_multiplier=2.5,
+    ),
+}
 
 class DecisionSpreadBrokerProxy:
     """Reject new orders using only decision-time observable Bid/Ask."""
@@ -526,7 +605,7 @@ def _research_metadata(
     parameter_payload = asdict(arm.parameters)
     return {
         "milestone": "M022",
-        "phase": 1,
+        "phase": 2 if arm.family == "phase2" else 1,
         "experiment_id": arm.experiment_id,
         "family": arm.family,
         "value_label": arm.value_label,
@@ -896,6 +975,24 @@ def session_arm(variant: str) -> Phase1Arm:
     )
 
 
+
+def phase2_arm(label: str) -> Phase1Arm:
+    """Return one exact predeclared Phase-2 development arm."""
+
+    try:
+        parameters = PHASE2_DEVELOPMENT_MATRIX[label]
+    except KeyError as exc:
+        raise ValueError(
+            "Phase-2 arm is outside the frozen M022 development matrix"
+        ) from exc
+    return Phase1Arm(
+        experiment_id=f"M022-{label}",
+        family="phase2",
+        value_label=label,
+        parameters=parameters,
+    )
+
+
 def _require_value(args: argparse.Namespace, description: str) -> str:
     if not args.value:
         raise ValueError(f"{args.family} family requires --value {description}")
@@ -938,12 +1035,15 @@ def _arm_from_cli(args: argparse.Namespace) -> Phase1Arm:
     if args.family == "session":
         return session_arm(_require_value(args, "VARIANT"))
 
-    raise ValueError(f"unsupported Phase-1 family: {args.family}")
+    if args.family == "phase2":
+        return phase2_arm(_require_value(args, "P2-ID"))
+
+    raise ValueError(f"unsupported M022 research family: {args.family}")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Run deterministic M022 Phase-1 development-only arm pairs."
+        description="Run deterministic M022 development-only research arm pairs."
     )
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--output-dir", required=True)
@@ -958,6 +1058,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "atr-sl",
             "atr-tp",
             "session",
+            "phase2",
         ),
         required=True,
     )
