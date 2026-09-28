@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-session-family-v1",
-  "action": "m022_phase1_session_family",
+  "id": "mamba2-m022-session-assessment-v1",
+  "action": "m022_phase1_session_assessment",
   "args": {},
   "requested_by": "chatgpt"
 }
