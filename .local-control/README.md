@@ -191,3 +191,8 @@ M022 fixed Phase-1 ATR-TP actions:
 
 - `m022_phase1_atr_tp_family`
 - `m022_phase1_atr_tp_assessment`
+
+M022 fixed Phase-1 session actions:
+
+- `m022_phase1_session_family`
+- `m022_phase1_session_assessment`
