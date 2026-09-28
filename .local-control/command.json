@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-phase2-validation-family-v1",
-  "action": "m022_phase2_validation_family",
+  "id": "mamba2-m022-phase2-validation-invariant-diagnostic-v1",
+  "action": "m022_phase2_validation_invariant_diagnostic",
   "args": {},
   "requested_by": "chatgpt"
 }
