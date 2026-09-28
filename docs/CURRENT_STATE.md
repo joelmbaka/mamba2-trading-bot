@@ -392,3 +392,7 @@ Deterministic artifact SHA-256:
 `0b306c2341befd7110ea2a6695ecd4fc473055fb2231849b5a3741a11251d9a2`
 
 The main finding is a strong time-of-day effect: EAT-ACTIVE 08:00–20:59 is consistently less negative than EAT-OFF-HOURS across P2-R, P2-03, and P2-08 and across all five chronological folds in mean trade P/L. The raw direction slices do not support jumping directly to SELL-only; BUY is less negative in 5 of 6 arm/partition comparisons. No filtered replay has run. Historical holdout and M021 remain untouched.
+
+## M023 Stage-A prospective freeze
+
+The M023 diagnostic gate is complete. The exact Stage-A causal direction protocol is now prospectively frozen before Stage-A economics. Stage A uses P2-08 on the already-seen 225-date research sample, with exactly D-R/BOTH, D-S/SELL-only, and D-B/BUY-only. The ordered 225-date list SHA-256 is `50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0`. Historical holdout and M021 remain sealed/uninspected. Stage B is not authorized.

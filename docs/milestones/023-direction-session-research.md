@@ -1,6 +1,6 @@
 # Milestone 023 — Direction and Session Research
 
-Status: **DIAGNOSTIC GATE COMPLETE — NEXT-STAGE DESIGN PUBLISHED; NO FILTERED M023 REPLAY AUTHORIZED**
+Status: **STAGE-A PROTOCOL FROZEN PROSPECTIVELY — IMPLEMENTATION AUTHORIZED; NO STAGE-A ECONOMICS YET**
 
 Branch:
 
@@ -701,3 +701,352 @@ Historical holdout remains completely sealed.
 M021 remains uninspected for M023 tuning.
 
 Production defaults and main remain unchanged.
+
+
+## Stage A protocol freeze — prospective causal direction screen
+
+Status: **FROZEN BEFORE STAGE-A ECONOMICS**
+
+This section supersedes the earlier "design only" Stage-A text for execution
+control. It was committed before any D-R/D-S/D-B economic replay.
+
+### Research anchor
+
+Use exact P2-08 parameters:
+
+- stochastic: **21 / 7 / 7**;
+- boundary: **20 / 80**;
+- EMA: **7**;
+- decision-time spread gate: **none**;
+- ATR SL: **1.5**;
+- ATR TP: **3.0**;
+- session: **ALL HOURS**;
+- directional trailing: **unchanged**;
+- M15: **disabled**;
+- position size: **0.1**.
+
+Cost contract remains:
+
+\`SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED\`
+
+### Exact Stage-A matrix
+
+Exactly three arms:
+
+| ID | New-entry direction eligibility |
+|---|---|
+| D-R | BOTH BUY + SELL |
+| D-S | SELL entries only; suppress new BUY entries |
+| D-B | BUY entries only; suppress new SELL entries |
+
+No weighting, no separate parameters by direction, no fourth arm, and no
+parameter retuning.
+
+The direction filter changes **new-entry eligibility only**. Do not change
+stochastic semantics, M5/M1 logic, EMA confirmation, ATR, stop/TP
+construction, trailing, exit handling, position management, spread behavior,
+account-currency conversion, or replay timing.
+
+Record direction-filter rejection counts explicitly.
+
+All arms start under identical flat/research-partition semantics.
+
+For D-S, accepted BUY entries must be **0**.
+
+For D-B, accepted SELL entries must be **0**.
+
+### Exact Stage-A seen-research partition
+
+M022 development and validation have already been inspected, so Stage A uses
+them as one continuous **seen research sample** only.
+
+Start:
+
+\`2025-08-25T00:00:00Z\`
+
+End-exclusive:
+
+\`2026-07-08T00:00:00Z\`
+
+Accepted ordered trading dates:
+
+**225**
+
+First date:
+
+\`2025-08-25\`
+
+Last date:
+
+\`2026-07-07\`
+
+Ordered 225-date list SHA-256, using UTF-8 ISO dates joined by newline and a
+final newline:
+
+\`50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0\`
+
+Do not include \`2026-07-08T00:00:00Z\` onward.
+
+Historical holdout remains sealed.
+
+Existing folds remain exact and may not be redrawn:
+
+| Fold | First date | Last date | Date-list SHA-256 |
+|---|---|---|---|
+| F1 | 2025-08-25 | 2025-10-24 | \`bccecd70357df71e85fbd7ce1d0f329fc6d866998c0fe3ad899290b6d0ed0f8e\` |
+| F2 | 2025-10-27 | 2025-12-29 | \`4f6344e3ae75c51e48d176d0b85c743666cf34c4cfe7b05731d7d40a58d17a8b\` |
+| F3 | 2025-12-30 | 2026-03-03 | \`6c51d75e0d585649821d3105e3e1d1b2c485fa34e70348041d1b137b26485d4f\` |
+| F4 | 2026-03-04 | 2026-05-05 | \`f0e758dfdf722747aacc277fdd9c09b0ab9035415978369aaec97b6f1ed807ec\` |
+| F5 | 2026-05-06 | 2026-07-07 | \`1df4395f28637370920957a3ae2af3eb5fc75b5d4255918e29d42fcd14073292\` |
+
+Each fold contains exactly **45** accepted trading dates.
+
+### Mandatory gates
+
+Every arm must pass all of:
+
+1. deterministic A/B baseline hash match;
+2. deterministic A/B diagnostic hash match;
+3. deterministic A/B summary hash match;
+4. exact Stage-A parameter metadata;
+5. exact 225-date research partition;
+6. exact source-manifest evidence;
+7. strict common replay-boundary clock;
+8. full per-symbol M1 preservation;
+9. unchanged cost contract;
+10. negative-P/L TP exits = **0**;
+11. wrong-side initial TP = **0**;
+12. historical holdout untouched;
+13. M021 unused;
+14. real-order API not called.
+
+Additional direction invariants:
+
+- D-S: BUY accepted entries = **0**;
+- D-B: SELL accepted entries = **0**.
+
+### Activity and representation gates
+
+Relative to D-R on the exact same 225-date research partition, D-S and D-B
+must satisfy all of:
+
+1. total closed trades >= **35%** of D-R total;
+2. every one of the five symbols >= **25%** of that symbol's D-R closed
+   trades;
+3. every one of the five fixed chronological folds >= **25%** of D-R closed
+   trades in that fold;
+4. candidate has closed trades in >= **80%** of ISO calendar weeks in which
+   D-R has at least one closed trade.
+
+These thresholds are prospective and may not be lowered after economics.
+
+### Stage-A support requirements
+
+A non-reference direction arm is **SUPPORTED** only if all of the following
+hold:
+
+1. mandatory gates pass;
+2. activity/representation gates pass;
+3. net realized P/L is strictly better than D-R;
+4. maximum equity drawdown USD is no worse than D-R;
+5. mean closed-trade P/L is strictly better than D-R;
+6. non-flat win rate is no more than **1.0 percentage point** below D-R;
+7. mean closed-trade P/L is better than D-R in at least **4 of 5** fixed
+   chronological folds;
+8. mean closed-trade P/L is better than D-R in at least **3 of 5** symbols;
+9. candidate mean closed-trade P/L is better than D-R during
+   **EAT-ACTIVE 08:00–20:59 Africa/Nairobi**;
+10. candidate mean closed-trade P/L is better than D-R in at least **55%** of
+    eligible ISO weeks.
+
+Weekly comparison rules:
+
+- use ISO weeks;
+- compare candidate versus D-R **mean closed-trade P/L**;
+- a week is eligible only when both arms contain at least **10** closed trades;
+- require at least **20** eligible weeks, otherwise weekly robustness fails;
+- do not substitute total weekly P/L for the mean-trade comparison.
+
+Net P/L alone is not sufficient.
+
+### Concentration gates
+
+For a single-direction arm with positive total P/L improvement versus D-R:
+
+**Symbol concentration**
+
+- compute positive symbol-level total-P/L deltas versus D-R;
+- no one symbol may contribute more than **70%** of their summed positive
+  deltas.
+
+**Fold concentration**
+
+- compute positive fold-level total-P/L deltas versus D-R;
+- no one fold may contribute more than **60%** of their summed positive
+  deltas.
+
+There is deliberately **no BUY/SELL concentration gate**, because direction
+specialization is the question under test.
+
+### Stage-A session-stability reporting
+
+Stage A remains **ALL HOURS**.
+
+Do not filter sessions.
+
+Each causal Stage-A arm must nevertheless report separately:
+
+- EAT-ACTIVE: **08:00–20:59 Africa/Nairobi**;
+- EAT-OFF-HOURS: **21:00–07:59 Africa/Nairobi**.
+
+For each report include:
+
+- closed trades;
+- net P/L;
+- mean trade P/L;
+- win rate;
+- per-symbol counts/P&L;
+- fold-level mean P/L.
+
+The Stage-A support gate requires only:
+
+\`candidate EAT-ACTIVE mean trade P/L > D-R EAT-ACTIVE mean trade P/L\`
+
+Do **not** require off-hours improvement. Off-hours are preserved for later
+Stage-B causal session testing.
+
+### Stage-A classifications
+
+- D-R: **REFERENCE**.
+- A non-reference arm failing a mandatory or representation gate:
+  **INELIGIBLE**.
+- An eligible non-reference arm failing one or more Stage-A support
+  requirements: **NOT SUPPORTED**.
+- A non-reference arm passing every Stage-A support requirement:
+  **SUPPORTED**.
+
+### Direction-fixing rule
+
+D-R is always retained as the reference direction.
+
+If neither D-S nor D-B is SUPPORTED:
+
+**FIX D-R / BOTH** for Stage B.
+
+If exactly one of D-S or D-B is SUPPORTED:
+
+**fix that supported direction** for Stage B.
+
+If both D-S and D-B are SUPPORTED, calculate for each:
+
+\`pl_gain_fraction = (candidate_net_pl - reference_net_pl) / abs(reference_net_pl)\`
+
+\`dd_improvement_fraction = (reference_dd - candidate_dd) / reference_dd\`
+
+\`mean_trade_gain_fraction = (candidate_mean_trade_pl - reference_mean_trade_pl) / abs(reference_mean_trade_pl)\`
+
+\`win_rate_gain_fraction = (candidate_win_rate - reference_win_rate) / reference_win_rate\`
+
+\`active_mean_gain_fraction = (candidate_active_mean_trade_pl - reference_active_mean_trade_pl) / abs(reference_active_mean_trade_pl)\`
+
+Then:
+
+\`robustness_maximin = minimum of those five values\`
+
+Choose the larger robustness_maximin.
+
+Exact tie-break order:
+
+1. more folds with better mean P/L than D-R;
+2. more symbols with better mean P/L than D-R;
+3. larger proportion of eligible weeks with better mean P/L;
+4. higher closed-trade activity ratio;
+5. lexicographically smaller arm ID.
+
+No post-result alternative tie-breaker is permitted.
+
+### Required reporting
+
+For every arm report at minimum:
+
+- exact direction;
+- exact parameters;
+- accepted orders;
+- closed trades;
+- wins/losses/flats;
+- non-flat win rate;
+- net realized P/L;
+- mean trade P/L;
+- median trade P/L;
+- ending balance;
+- ending equity;
+- max DD USD/%;
+- per-symbol counts/P&L/mean P&L;
+- five-fold counts/P&L/mean P&L;
+- ISO-week counts/P&L/mean P&L;
+- EAT-ACTIVE counts/P&L/mean P&L;
+- EAT-OFF-HOURS counts/P&L/mean P&L;
+- direction-filter rejection count;
+- entry-spread diagnostics;
+- exit-type diagnostics;
+- TP safety;
+- remaining positions;
+- deterministic artifact hashes;
+- source/date/replay-boundary hashes;
+- concentration diagnostics.
+
+### Authorized implementation sequence
+
+After this protocol-freeze commit exists:
+
+1. implement experiment-only direction overrides;
+2. leave production defaults unchanged;
+3. add exact tests for D-R, D-S, D-B, opposite-side refusal, exact P2-08
+   parameters, research-partition gating, holdout refusal, and deterministic
+   reporting;
+4. add only fixed local-control actions for:
+   - M023 Stage-A direction family;
+   - M023 Stage-A mechanical assessment;
+5. do not add Stage-B session execution;
+6. do not add historical-holdout execution;
+7. run fixed native M023 Stage-A tests;
+8. sync Dell to exact feature SHA;
+9. require clean worktree, divergence 0/0, and exact feature SHA;
+10. run D-R first;
+11. then D-S and D-B may run concurrently, with maximum two non-reference
+    arms concurrently;
+12. review deterministic/safety evidence;
+13. run frozen mechanical Stage-A assessment;
+14. mechanically fix exactly one Stage-B direction according to the rule above;
+15. durably record Stage-A results and the fixed direction;
+16. stop.
+
+### Stage B remains unauthorized
+
+Do not execute a session-filtered replay in Stage A.
+
+After Stage A mechanically fixes direction, stop. The next reviewer checkpoint
+must freeze the exact Stage-B session matrix.
+
+The future bounded candidate pool remains:
+
+- all-hours reference;
+- EAT-ACTIVE;
+- London-open transition;
+- EAT-MORNING;
+- EAT-MIDDAY;
+- EAT-AFTERNOON;
+- EAT-EVENING;
+- London/New-York overlap.
+
+No more than **four non-reference** session variants may later be frozen.
+
+Weekday conditioning remains deferred until direction + session are fixed.
+
+Historical holdout remains sealed:
+
+\`2026-07-08T00:00:00Z\` → \`2026-09-25T00:00:00Z\`
+
+No M023 holdout action may exist yet.
+
+M021 remains isolated and uninspected for M023 tuning.

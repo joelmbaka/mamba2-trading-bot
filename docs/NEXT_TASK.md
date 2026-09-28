@@ -1,87 +1,90 @@
 # Next Authorized Task
 
-## Milestone 023 — Direction and Session Research
+## Milestone 023 — Stage A causal direction screen
 
 Branch:
 
 `direction-session-research`
 
-Current diagnostic implementation/evidence SHA:
+Current required pre-Stage-A HEAD:
 
-`f925ae8121fb9ce4ee04c1c980e58720c2a611f3`
+`810981eba1f82ce051d319784bab1ba3879eda89`
 
-Protocol freeze:
+The complete Stage-A numeric protocol must be frozen in the milestone document
+before any D-R/D-S/D-B economic replay. After that freeze, implement and
+execute only Stage A.
 
-`099b947f630f26de07f65920c54e98c237dc45bd`
+### Frozen research partition
 
-Deterministic diagnostic result:
+- start: `2025-08-25T00:00:00Z`
+- end-exclusive: `2026-07-08T00:00:00Z`
+- accepted trading dates: **225**
+- ordered date-list SHA-256:
+  `50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0`
 
-`30712d1c55e1204fc4d849a38bfa96318155b54b`
+Historical holdout remains sealed from `2026-07-08T00:00:00Z` onward.
 
-Artifact SHA-256:
+### Exact P2-08 anchor
 
-`0b306c2341befd7110ea2a6695ecd4fc473055fb2231849b5a3741a11251d9a2`
+- stochastic 21/7/7;
+- boundary 20/80;
+- EMA7;
+- spread gate none;
+- ATR SL1.5;
+- ATR TP3.0;
+- all hours;
+- directional trailing unchanged;
+- M15 disabled;
+- position size 0.1;
+- costs:
+  SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED.
 
-## Current gate
+### Exact Stage-A matrix
 
-**M023 DIAGNOSTIC GATE IS COMPLETE.**
+- D-R — BOTH BUY + SELL;
+- D-S — SELL entries only;
+- D-B — BUY entries only.
 
-No filtered M023 strategy replay is currently authorized.
+Direction overrides alter new-entry eligibility only.
 
-Diagnostic conclusions:
+No session filtering. No weekday filtering. No parameter retuning.
 
-- SELL improvement concentration from M022 does not prove SELL-only is
-  intrinsically stronger;
-- BUY has the less-negative raw mean trade P/L in 5 of 6 P2-R/P2-03/P2-08
-  development/validation comparisons;
-- the strongest stable structure is time-of-day:
-  EAT-ACTIVE 08:00–20:59 is materially less negative than EAT-OFF-HOURS
-  across P2-R, P2-03, and P2-08;
-- EAT-ACTIVE mean trade P/L improves versus each arm's all-hours descriptive
-  fold in all 5 chronological folds;
-- P2-08 SELL London-open transition is a credible secondary session
-  hypothesis, but is not yet a strategy filter;
-- no weekday filter is supported at this diagnostic gate.
+### Implementation authorization
 
-## Proposed next-stage design
+After the docs-only Stage-A protocol freeze commit:
 
-Stage A should remain exactly:
+1. implement narrow experiment-only direction overrides;
+2. add exact Stage-A tests;
+3. add only fixed Stage-A family and mechanical-assessment local-control
+   actions;
+4. run native Stage-A tests;
+5. sync the Dell to exact feature SHA;
+6. execute D-R first, then D-S/D-B with max two non-reference arms
+   concurrently;
+7. mechanically assess using the frozen gates;
+8. fix exactly one Stage-B direction using the frozen rule;
+9. durably document the result;
+10. stop before Stage B.
 
-- D-R — BOTH;
-- D-S — SELL only;
-- D-B — BUY only;
+The complete numeric gates, concentration rules, weekly rules, reporting
+requirements, and deterministic reduction rule are authoritative in:
 
-on P2-08 as the primary causal research anchor.
+`docs/milestones/023-direction-session-research.md`
 
-**Do not execute Stage A yet.**
-
-Before any Stage-A replay, durably freeze numeric directional robustness gates
-appropriate to the new question.
-
-Only after Stage A fixes a direction may Stage B freeze up to four
-non-reference session variants plus all-hours reference from the existing
-bounded pool.
-
-EAT-ACTIVE has first diagnostic priority because it is the strongest
-cross-arm/cross-fold time structure. London-open transition is a secondary
-candidate, particularly if SELL survives Stage A.
-
-## Hard stop
+### Hard boundaries
 
 Do not:
 
-- execute D-R/D-S/D-B yet;
-- execute any session filter;
-- execute weekday filtering;
-- inspect the untouched historical holdout;
-- inspect M021 outcomes for M023 tuning;
-- reopen M022 economics;
+- alter M022 conclusions;
+- add a fourth direction arm;
+- test sessions during Stage A;
+- test weekdays;
+- inspect historical holdout;
+- inspect M021 outcomes for tuning;
 - add M15;
-- modify production defaults;
+- change production defaults;
 - merge to main;
 - deploy;
-- enable or touch real trading.
-
-The next reviewer decision is whether to prospectively freeze the Stage-A
-directional robustness protocol and authorize the three-arm causal direction
-screen.
+- enable live trading;
+- place/modify/close real MT5 orders;
+- expose arbitrary shell.
