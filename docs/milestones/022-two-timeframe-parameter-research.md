@@ -1507,6 +1507,227 @@ An otherwise Pareto-eligible improving TP value that fails breadth is
 No ATR-TP winner may be selected manually. The fixed mechanical assessment
 must produce the classification before the family is accepted.
 
+
+## Accepted Phase-1 ATR-TP screening — 2026-09-28
+
+The frozen ATR-TP development screening and mechanical assessment completed
+successfully.
+
+Execution command:
+
+`mamba2-m022-atr-tp-family-v1`
+
+Mechanical assessment command:
+
+`mamba2-m022-atr-tp-assessment-v1`
+
+Reviewed feature SHA:
+
+`01e7b73388ba15fe9da005575e551e6560acd336`
+
+ATR SL remained fixed at **1.00x** for the full family.
+
+Mechanical result:
+
+- **TP 1.00x**
+  - closed trades: **13,466** (**112.16%** of reference);
+  - net realized P/L: **-$16,680.9864**;
+  - maximum equity drawdown: **$16,685.1006**;
+  - non-flat win rate: **31.1251%**;
+  - remaining open positions: **2**;
+  - classification: **DOMINATED**.
+- **TP 1.50x**
+  - closed trades: **12,627** (**105.17%** of reference);
+  - net realized P/L: **-$15,512.8980**;
+  - maximum equity drawdown: **$15,517.6417**;
+  - non-flat win rate: **28.9980%**;
+  - remaining open positions: **2**;
+  - classification: **DOMINATED**.
+- **TP 2.00x**
+  - fixed reference, always retained;
+  - closed trades: **12,006**;
+  - net realized P/L: **-$15,499.3611**;
+  - maximum equity drawdown: **$15,501.9142**;
+  - non-flat win rate: **32.8667%**;
+  - remaining open positions: **3**;
+  - classification: **REFERENCE**.
+- **TP 2.50x**
+  - closed trades: **11,364** (**94.65%** of reference);
+  - net realized P/L: **-$14,828.5145**;
+  - maximum equity drawdown: **$14,833.2260**;
+  - non-flat win rate: **34.9349%**;
+  - remaining open positions: **1**;
+  - improved four of five symbols;
+  - improved BUY and SELL;
+  - improved four of six fixed UTC buckets;
+  - largest positive-symbol share: **37.02%**;
+  - largest positive-side share: **74.68%**;
+  - largest positive UTC-bucket share: **44.14%**;
+  - classification: **SHORTLIST**.
+- **TP 3.00x**
+  - closed trades: **10,733** (**89.40%** of reference);
+  - net realized P/L: **-$13,531.9346**;
+  - maximum equity drawdown: **$13,534.9374**;
+  - non-flat win rate: **31.8953%**;
+  - remaining open positions: **2**;
+  - improved all five symbols;
+  - improved BUY and SELL;
+  - improved all six fixed UTC buckets;
+  - largest positive-symbol share: **34.32%**;
+  - largest positive-side share: **52.61%**;
+  - largest positive UTC-bucket share: **27.24%**;
+  - classification: **SHORTLIST**.
+
+ATR-TP shortlist:
+
+- **2.00x reference**;
+- **2.50x**;
+- **3.00x**.
+
+Deterministic artifact hashes:
+
+- **TP 1.00x**
+  - baseline:
+    `28449c9211f06907c848cc3770e27beaef6580983747c06b371591e18ef6b4a4`;
+  - diagnostic:
+    `723073673e252c2cff01ad0ad470fbc755b229999f6c3a46278848d7521fd8b9`;
+  - summary:
+    `e4a7664d95260dc5b517abe1aefbf6d6a27ea52d41bfa7dff32ebf8d507b4969`.
+- **TP 1.50x**
+  - baseline:
+    `e1767cf696a01fe02127f9153b86abcef30f42d93eb7ca5a7da3e83d1b309262`;
+  - diagnostic:
+    `c2be5af7139152fcfc4b948aeff8155851db5d1ac5a86c32833ce0ce7830eb49`;
+  - summary:
+    `11f336c1f00efcfbc59793fa3da35ce21f8693e56d2316e3be29c62ffbc6d6da`.
+- **TP 2.00x reference**
+  - baseline:
+    `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+  - diagnostic:
+    `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+  - summary:
+    `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+- **TP 2.50x**
+  - baseline:
+    `896c09b15887ee860eea5f04d28492f2539d7bead7eb67fa34a24693391343e7`;
+  - diagnostic:
+    `517e2bd59df0965a2a85e6f3ce3d92a355038eca32bc19752685b5bf982feb37`;
+  - summary:
+    `f4ece5e3e5be3babce3fe672709eeeb678e8b749f70758a00253fa64a49c6641`.
+- **TP 3.00x**
+  - baseline:
+    `2b395323e5fb960c46e7d62eb68fcd24fe0be8884ce0a592716c6c123f8d903e`;
+  - diagnostic:
+    `aca8a3e1735dbeaa468ef3eb011eb9060706cf80331c0cb40874ceef55ca1115`;
+  - summary:
+    `82213e2293b3f84fa922122cfbca16210e5c5022b85c4066fec38b13f4a39647`.
+
+Safety remained clean:
+
+- deterministic A/B evidence passed;
+- TP/safety invariants remained clean;
+- development only;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+## Frozen session-family protocol — before session results
+
+The final Phase-1 family is the already-documented session hypothesis. Only
+two variants are authorized:
+
+- **all hours** — fixed Phase-1 reference;
+- **block new strategy evaluation during 00:00:00–03:59:59 UTC**.
+
+No other session window is authorized. This is the previously documented
+M020-A hypothesis, not an unrestricted hour-by-hour search.
+
+Every non-session parameter returns to the fixed Phase-1 reference:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.00x**;
+- ATR TP **2.00x**;
+- existing directional trailing semantics.
+
+Do not use stochastic 28/7/7, EMA12, spread <=12, ATR SL1.50x, TP2.50x, or
+TP3.00x in this session screen.
+
+Execution semantics are frozen before outcomes:
+
+- reuse accepted reference-v3 evidence for the all-hours arm;
+- run only the **block-00-04-utc** non-reference arm as a deterministic A/B
+  pair;
+- development partition only;
+- block strategy evaluation for new-entry decisions during UTC hours 00, 01,
+  02, and 03;
+- broker advancement, exits, marks, pending-order settlement, protection, and
+  existing-position trailing continue under the accepted replay semantics;
+- do not artificially close positions at 04:00 UTC or at any session boundary;
+- strict shared replay-boundary clock remains unchanged;
+- full per-symbol M1 histories remain preserved;
+- no future data;
+- accepted cost contract remains
+  `SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`;
+- each arm writes immutable deterministic evidence;
+- completed deterministic artifacts may be resumed but never overwritten;
+- validation, historical holdout, and M021 remain inaccessible.
+
+The blocked-session report must include at minimum:
+
+- exact feature SHA;
+- exact parameter metadata;
+- deterministic baseline/diagnostic/summary hashes;
+- exact development partition/hash and replay-boundary evidence;
+- closed trades;
+- net realized P/L;
+- ending balance/equity;
+- maximum drawdown USD and percent;
+- non-flat win rate;
+- per-symbol trade count and P/L;
+- BUY/SELL trade count and P/L;
+- fixed 4-hour UTC-bucket diagnostics;
+- `session_evaluation_boundaries` blocked by the research wrapper;
+- remaining open positions;
+- TP/safety invariants.
+
+The blocked evaluation-boundary count is a direct wrapper diagnostic and must
+not be relabeled as an observed rejected trade signal unless the artifact
+explicitly supports that interpretation.
+
+### Frozen session mechanical assessment
+
+The existing Phase-1 mechanical framework remains binding:
+
+- minimum activity: **70%** of reference closed trades;
+- objectives:
+  1. maximize net realized P/L;
+  2. minimize maximum equity drawdown USD;
+  3. maximize non-flat win rate;
+- all-hours reference is always retained;
+- eligible candidates are Pareto-assessed against the reference;
+- for any blocked-session arm whose net realized P/L improves versus reference,
+  require:
+  - positive P/L delta in at least **two symbols**;
+  - positive P/L delta in at least **two fixed 4-hour UTC buckets**;
+  - no single symbol above **70%** of summed positive symbol deltas;
+  - no BUY/SELL side above **80%** of summed positive side deltas.
+
+Classification remains mechanical:
+
+- reference: `REFERENCE`;
+- failed mandatory gate: `INELIGIBLE`;
+- eligible but Pareto-dominated: `DOMINATED`;
+- Pareto-eligible improving candidate that fails breadth:
+  `FRAGILE / CONCENTRATED`;
+- Pareto-eligible candidate passing breadth: `SHORTLIST`.
+
+No additional time window or session hypothesis may be introduced after
+inspecting this result.
+
 ## Phase 2 — bounded combinations
 
 Only parameter values/regions that show useful and reasonably stable Phase 1 behavior may enter Phase 2.

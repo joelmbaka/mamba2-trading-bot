@@ -163,78 +163,55 @@ Reference artifact hashes:
 
 ### Current authorized gate
 
-The stochastic, boundary, EMA, decision-time-spread, and ATR-SL Phase-1
-families are complete.
+The stochastic, boundary, EMA, decision-time-spread, ATR-SL, and ATR-TP
+Phase-1 families are complete.
 
 Accepted Phase-1 shortlists so far:
 
-- stochastic:
-  - **14 / 7 / 7**;
-  - **21 / 7 / 7** reference;
-  - **28 / 7 / 7**;
-- boundary:
-  - **20 / 80 reference only**;
-- EMA:
-  - **7 reference**;
-  - **9**;
-  - **12**;
-- decision-time spread:
-  - **none** — reference;
-  - **<=12 points**;
-- ATR-SL:
-  - **1.00x reference**;
-  - **1.50x**.
+- stochastic: **14/7/7, 21/7/7 reference, 28/7/7**;
+- boundary: **20/80 reference only**;
+- EMA: **7 reference, 9, 12**;
+- decision-time spread: **none reference, <=12 points**;
+- ATR-SL: **1.00x reference, 1.50x**;
+- ATR-TP: **2.00x reference, 2.50x, 3.00x**.
 
-Accepted ATR-SL execution:
+Accepted ATR-TP execution:
 
-- family command:
-  `mamba2-m022-atr-sl-family-v1`;
-- mechanical assessment:
-  `mamba2-m022-atr-sl-assessment-v1`;
+- family command: `mamba2-m022-atr-tp-family-v1`;
+- mechanical assessment: `mamba2-m022-atr-tp-assessment-v1`;
 - reviewed feature SHA:
-  `723fe47ca83584d3619517bb9c811cf4386a4bc4`.
+  `01e7b73388ba15fe9da005575e551e6560acd336`;
+- published assessment result commit:
+  `9e4e9a0a27ce87d3abe82216bc6c3e9098218dd9`.
 
-ATR-SL assessment:
+ATR-TP assessment:
 
-- 0.75x: **DOMINATED**, 110.98% activity;
-- 1.00x: **REFERENCE**;
-- 1.25x: **DOMINATED**, 90.78% activity;
-- 1.50x: **SHORTLIST**, 82.35% activity, improved four of five symbols,
-  both sides, and all six UTC buckets while passing concentration limits.
+- TP1.00x: **DOMINATED**, 112.16% activity;
+- TP1.50x: **DOMINATED**, 105.17% activity;
+- TP2.00x: **REFERENCE**;
+- TP2.50x: **SHORTLIST**, 94.65% activity;
+- TP3.00x: **SHORTLIST**, 89.40% activity and broad positive deltas across
+  all five symbols, both sides, and all six UTC buckets.
 
-Safety remained clean: deterministic A/B passed, TP safety clean,
-development only, validation unopened, historical holdout unopened, M021
-unused, and no real-order API called.
+Safety remained clean: deterministic A/B passed, TP safety clean, ATR SL was
+fixed at 1.00x, development only, validation unopened, historical holdout
+unopened, M021 unused, and no real-order API called.
 
-The next authorized Phase-1 family is **ATR-TP only**:
+The final authorized Phase-1 family is **SESSION** only:
 
-- **1.00x**;
-- **1.50x**;
-- **2.00x reference**;
-- **2.50x**;
-- **3.00x**.
+- **all hours** — reference;
+- **block 00:00–03:59 UTC** — sole non-reference hypothesis.
 
-The fixed reference remains stochastic 21/7/7, boundaries 20/80, EMA7,
-no experimental spread gate, ATR SL **1.00x** / TP **2.00x**, all hours.
+All other parameters return to the fixed reference: stochastic 21/7/7,
+boundaries 20/80, EMA7, no spread gate, ATR SL1.00x / TP2.00x.
 
-The ATR-TP protocol is frozen in the M022 milestone before outcomes:
-
-- ATR SL fixed at **1.00x** for every arm;
-- reuse accepted TP2.00x reference-v3 evidence;
-- deterministic A/B for TP1.00x, TP1.50x, TP2.50x, and TP3.00x;
-- maximum two concurrent independent non-reference arms;
-- development only;
-- 70% reference trade-count floor;
-- Pareto objectives: net P/L, max drawdown USD, non-flat win rate;
-- same symbol/calendar/side breadth and concentration limits;
-- report remaining open positions and exact artifact hashes.
-
-Do not use SL1.50x during ATR-TP Phase 1. Do not combine Phase-1 candidates yet.
+The session execution and mechanical-assessment protocol is frozen in the
+M022 milestone before outcomes. No other session windows are authorized.
 
 ## Start here
 
 Read the durable handoff docs and the M022 milestone. Resume from the
-ATR-TP implementation/sync/run/assessment sequence above.
+session-family implementation/sync/run/assessment sequence above.
 
 Do not start Phase 2, validation, historical holdout, M15 research, merge,
 deployment, or live trading.
