@@ -374,3 +374,21 @@ M023 — Direction and Session Research — is now **OPEN** on:
 `direction-session-research`
 
 The current M023 gate is diagnostic only. It may read existing M022 development + validation artifacts for P2-R, P2-03, and P2-08, derive timezone-aware direction/session/day/fold attribution, and publish deterministic diagnostic evidence. It may not run a fresh filtered strategy replay or inspect the untouched historical holdout.
+
+## M023 diagnostic gate result
+
+M023 diagnostic-only evidence completed deterministically on `direction-session-research` using existing accepted M022 JSON artifacts only.
+
+Diagnostic implementation SHA:
+
+`f925ae8121fb9ce4ee04c1c980e58720c2a611f3`
+
+Diagnostic result commit:
+
+`30712d1c55e1204fc4d849a38bfa96318155b54b`
+
+Deterministic artifact SHA-256:
+
+`0b306c2341befd7110ea2a6695ecd4fc473055fb2231849b5a3741a11251d9a2`
+
+The main finding is a strong time-of-day effect: EAT-ACTIVE 08:00–20:59 is consistently less negative than EAT-OFF-HOURS across P2-R, P2-03, and P2-08 and across all five chronological folds in mean trade P/L. The raw direction slices do not support jumping directly to SELL-only; BUY is less negative in 5 of 6 arm/partition comparisons. No filtered replay has run. Historical holdout and M021 remain untouched.
