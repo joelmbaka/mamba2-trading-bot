@@ -145,6 +145,7 @@ M022_PHASE1_SESSION_DIR = REPO / "backtest_data" / "m022-phase1-development" / "
 M022_PHASE2_DEV_DIR = REPO / "backtest_data" / "m022-phase2-development-v1"
 M022_PHASE2_VALIDATION_DIR = REPO / "backtest_data" / "m022-phase2-validation-v1"
 M023_DIRECTION_SESSION_DIR = REPO / "backtest_data" / "m023-direction-session-diagnostics-v1"
+M023_STAGE_A_DIRECTION_DIR = REPO / "backtest_data" / "m023-stage-a-direction-v1"
 
 
 def _safe_env(wine=False):
@@ -9107,6 +9108,779 @@ def m022_phase1_default_regression():
 
 
 
+
+def _m023_stage_a_paths(label):
+    arm_dir = M023_STAGE_A_DIRECTION_DIR / label
+    prefix = f"M023-A-{label}"
+    return {
+        "dir": arm_dir,
+        "a_baseline": arm_dir / f"{prefix}-a-baseline.json",
+        "b_baseline": arm_dir / f"{prefix}-b-baseline.json",
+        "a_diagnostic": arm_dir / f"{prefix}-a-diagnostic.json",
+        "b_diagnostic": arm_dir / f"{prefix}-b-diagnostic.json",
+        "a_summary": arm_dir / f"{prefix}-a-summary.json",
+        "b_summary": arm_dir / f"{prefix}-b-summary.json",
+    }
+
+
+def _m023_stage_a_expected():
+    return {
+        "D-R": "BOTH",
+        "D-S": "SELL",
+        "D-B": "BUY",
+    }
+
+
+def _m023_stage_a_validate_artifacts(label):
+    expected_direction = _m023_stage_a_expected()[label]
+    paths = _m023_stage_a_paths(label)
+    required = [
+        paths["a_baseline"],
+        paths["b_baseline"],
+        paths["a_diagnostic"],
+        paths["b_diagnostic"],
+        paths["a_summary"],
+        paths["b_summary"],
+    ]
+    exists = [path.is_file() for path in required]
+    if any(exists) and not all(exists):
+        raise RuntimeError(
+            f"M023 Stage-A {label} has partial immutable artifacts"
+        )
+    if not all(exists):
+        return None
+
+    hashes = {
+        "baseline_a": _sha256(paths["a_baseline"]),
+        "baseline_b": _sha256(paths["b_baseline"]),
+        "diagnostic_a": _sha256(paths["a_diagnostic"]),
+        "diagnostic_b": _sha256(paths["b_diagnostic"]),
+        "summary_a": _sha256(paths["a_summary"]),
+        "summary_b": _sha256(paths["b_summary"]),
+    }
+    deterministic = (
+        hashes["baseline_a"] == hashes["baseline_b"]
+        and hashes["diagnostic_a"] == hashes["diagnostic_b"]
+        and hashes["summary_a"] == hashes["summary_b"]
+    )
+    summary = json.loads(paths["a_summary"].read_text(encoding="utf-8"))
+    params = summary.get("parameters") or {}
+    partition = summary.get("partition") or {}
+    tp = summary.get("tp_safety") or {}
+    invariants = summary.get("direction_invariants") or {}
+    safety = summary.get("safety") or {}
+    expected_params = {
+        "stochastic_k_period": 21,
+        "stochastic_d_period": 7,
+        "stochastic_slowing": 7,
+        "oversold_level": 20.0,
+        "overbought_level": 80.0,
+        "ema_period": 7,
+        "decision_spread_max_points": None,
+        "atr_sl_multiplier": 1.5,
+        "atr_tp_multiplier": 3.0,
+        "block_00_04_utc": False,
+    }
+    wrong_side_ok = (
+        expected_direction == "BOTH"
+        or (
+            expected_direction == "SELL"
+            and int(invariants.get("buy_accepted_entries", -1)) == 0
+        )
+        or (
+            expected_direction == "BUY"
+            and int(invariants.get("sell_accepted_entries", -1)) == 0
+        )
+    )
+    checks = {
+        "deterministic": deterministic,
+        "milestone": summary.get("milestone") == "M023",
+        "stage": summary.get("stage") == "A",
+        "experiment_id": summary.get("experiment_id") == f"M023-A-{label}",
+        "arm_id": summary.get("arm_id") == label,
+        "direction": summary.get("direction") == expected_direction,
+        "parameters": params == expected_params,
+        "cost_contract": summary.get("cost_contract")
+        == (
+            "SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / "
+            "SWAP-UNMODELED"
+        ),
+        "source_manifest": partition.get("source_manifest_sha256")
+        == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558",
+        "start_utc": partition.get("start_utc")
+        == "2025-08-25T00:00:00Z",
+        "end_exclusive_utc": partition.get("end_exclusive_utc")
+        == "2026-07-08T00:00:00Z",
+        "trading_dates": int(partition.get("trading_dates", 0)) == 225,
+        "date_list_sha256": partition.get("date_list_sha256")
+        == "50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0",
+        "strict_common_boundary_clock": (
+            partition.get("strict_common_boundary_clock") is True
+        ),
+        "full_symbol_m1_preserved": (
+            partition.get("full_symbol_m1_preserved") is True
+        ),
+        "replay_boundary_count": int(
+            partition.get("replay_boundary_count", 0)
+        ) > 0,
+        "replay_boundary_sha256": bool(
+            partition.get("replay_boundary_sha256")
+        ),
+        "fold_count": len(partition.get("folds") or []) == 5,
+        "tp_negative_zero": int(
+            tp.get("negative_pl_take_profit_exits", -1)
+        ) == 0,
+        "tp_wrong_side_zero": int(tp.get("wrong_side_initial_tp", -1)) == 0,
+        "opposite_side_zero": wrong_side_ok,
+        "holdout_unused": (
+            safety.get("historical_holdout_economic_data_used") is False
+        ),
+        "m021_unused": safety.get("m021_post_cutoff_data_used") is False,
+        "real_order_unused": safety.get("real_order_api_called") is False,
+        "session_filter_absent": safety.get("session_filter_applied") is False,
+        "weekday_filter_absent": safety.get("weekday_filter_applied") is False,
+    }
+    if not all(checks.values()):
+        failed = [name for name, passed in checks.items() if not passed]
+        raise RuntimeError(
+            f"M023 Stage-A {label} failed frozen invariants: {failed}"
+        )
+
+    return {
+        "label": label,
+        "direction": expected_direction,
+        "hashes": hashes,
+        "summary": summary,
+        "checks": checks,
+    }
+
+
+def m023_stage_a_direction_family():
+    """Run exactly D-R, then D-S/D-B with max two non-reference processes."""
+
+    feature_sha = _require_m023_branch()
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+    if not manifest.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 source manifest is missing",
+            "feature_sha": feature_sha,
+        }
+    manifest_sha = _sha256(manifest)
+    if (
+        manifest_sha
+        != "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+    ):
+        return {
+            "ok": False,
+            "reason": "accepted M022 source manifest SHA changed",
+            "feature_sha": feature_sha,
+            "manifest_sha256": manifest_sha,
+        }
+
+    root = _ensure_baseline_path(M023_STAGE_A_DIRECTION_DIR)
+    root.mkdir(parents=True, exist_ok=True)
+
+    def run_arm(label):
+        existing = _m023_stage_a_validate_artifacts(label)
+        if existing is not None:
+            return {
+                "ok": True,
+                "label": label,
+                "reused_complete_artifacts": True,
+                "run": None,
+            }
+        paths = _m023_stage_a_paths(label)
+        paths["dir"].mkdir(parents=True, exist_ok=True)
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.m023_direction_research",
+                "--manifest",
+                str(manifest.relative_to(REPO)),
+                "--output-dir",
+                str(paths["dir"].relative_to(REPO)),
+                "--arm",
+                label,
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        return {
+            "ok": run["exit_code"] == 0,
+            "label": label,
+            "reused_complete_artifacts": False,
+            "run": run,
+        }
+
+    reference_run = run_arm("D-R")
+    if not reference_run["ok"]:
+        return {
+            "ok": False,
+            "reason": "M023 Stage-A D-R execution failed",
+            "feature_sha": feature_sha,
+            "execution": [reference_run],
+        }
+    try:
+        _m023_stage_a_validate_artifacts("D-R")
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+            "execution": [reference_run],
+        }
+
+    executed = {"D-R": reference_run}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+        futures = {
+            label: pool.submit(run_arm, label)
+            for label in ("D-S", "D-B")
+        }
+        for label in ("D-S", "D-B"):
+            executed[label] = futures[label].result()
+
+    failed_runs = [
+        label for label in ("D-S", "D-B")
+        if not executed[label]["ok"]
+    ]
+    if failed_runs:
+        return {
+            "ok": False,
+            "reason": f"M023 Stage-A arm execution failed: {failed_runs}",
+            "feature_sha": feature_sha,
+            "execution": executed,
+        }
+
+    validated = {}
+    try:
+        for label in ("D-R", "D-S", "D-B"):
+            validated[label] = _m023_stage_a_validate_artifacts(label)
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+            "execution": executed,
+        }
+
+    def compact(item):
+        summary = item["summary"]
+        aggregate = summary.get("aggregate") or {}
+        return {
+            "label": item["label"],
+            "direction": item["direction"],
+            "hashes": item["hashes"],
+            "aggregate": aggregate,
+            "per_symbol": summary.get("per_symbol"),
+            "folds": summary.get("folds"),
+            "iso_weeks": summary.get("iso_weeks"),
+            "eat_active": summary.get("eat_active"),
+            "eat_off_hours": summary.get("eat_off_hours"),
+            "direction_filter": summary.get("direction_filter"),
+            "direction_invariants": summary.get("direction_invariants"),
+            "tp_safety": summary.get("tp_safety"),
+            "remaining_positions": summary.get("remaining_positions"),
+            "source_date_replay_hashes": summary.get(
+                "source_date_replay_hashes"
+            ),
+            "checks": item["checks"],
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "direction-session-research",
+        "feature_sha": feature_sha,
+        "family": "m023-stage-a-direction",
+        "execution": {
+            "order": ["D-R", ["D-S", "D-B"]],
+            "maximum_concurrent_nonreference_arms": 2,
+            "runs": {
+                label: {
+                    "reused_complete_artifacts": executed[label][
+                        "reused_complete_artifacts"
+                    ],
+                    "exit_code": (
+                        None
+                        if executed[label]["run"] is None
+                        else executed[label]["run"]["exit_code"]
+                    ),
+                }
+                for label in ("D-R", "D-S", "D-B")
+            },
+        },
+        "partition": {
+            "start_utc": "2025-08-25T00:00:00Z",
+            "end_exclusive_utc": "2026-07-08T00:00:00Z",
+            "trading_dates": 225,
+            "date_list_sha256":
+                "50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0",
+        },
+        "arms": {
+            label: compact(validated[label])
+            for label in ("D-R", "D-S", "D-B")
+        },
+        "safety": {
+            "economic_replay_run": True,
+            "economic_partition": "seen-research-only",
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+            "session_filter_applied": False,
+            "weekday_filter_applied": False,
+        },
+    }
+
+
+def _m023_stage_a_fraction(numerator, denominator):
+    denominator = float(denominator)
+    if denominator == 0:
+        raise RuntimeError("M023 Stage-A robustness denominator is zero")
+    return float(numerator) / abs(denominator)
+
+
+def m023_stage_a_direction_assessment():
+    """Mechanically classify Stage-A arms and fix one Stage-B direction."""
+
+    feature_sha = _require_m023_branch()
+    try:
+        rows = {
+            label: _m023_stage_a_validate_artifacts(label)
+            for label in ("D-R", "D-S", "D-B")
+        }
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+            "safety": {
+                "economic_replay_run": False,
+                "historical_holdout_economic_data_used": False,
+                "m021_post_cutoff_data_used": False,
+                "real_order_api_called": False,
+            },
+        }
+    if any(value is None for value in rows.values()):
+        return {
+            "ok": False,
+            "reason": "M023 Stage-A artifacts are incomplete",
+            "feature_sha": feature_sha,
+        }
+
+    reference = rows["D-R"]["summary"]
+    ref_agg = reference["aggregate"]
+    ref_symbols = reference["per_symbol"]
+    ref_folds = reference["folds"]
+    ref_weeks = reference["iso_weeks"]
+    ref_active = reference["eat_active"]
+
+    def assess(label):
+        candidate = rows[label]["summary"]
+        agg = candidate["aggregate"]
+        symbols = candidate["per_symbol"]
+        folds = candidate["folds"]
+        weeks = candidate["iso_weeks"]
+        active = candidate["eat_active"]
+
+        mandatory = dict(rows[label]["checks"])
+        mandatory_ok = all(mandatory.values())
+
+        total_activity_ratio = (
+            float(agg["closed_trades"]) / float(ref_agg["closed_trades"])
+            if int(ref_agg["closed_trades"]) > 0 else 0.0
+        )
+        symbol_activity = {
+            symbol: (
+                float(symbols[symbol]["closed_trades"])
+                / float(ref_symbols[symbol]["closed_trades"])
+                if int(ref_symbols[symbol]["closed_trades"]) > 0
+                else 0.0
+            )
+            for symbol in sorted(ref_symbols)
+        }
+        fold_activity = {
+            fold: (
+                float(folds[fold]["closed_trades"])
+                / float(ref_folds[fold]["closed_trades"])
+                if int(ref_folds[fold]["closed_trades"]) > 0
+                else 0.0
+            )
+            for fold in sorted(ref_folds)
+        }
+        ref_trade_weeks = [
+            week
+            for week, row in ref_weeks.items()
+            if int(row["closed_trades"]) > 0
+        ]
+        represented_weeks = sum(
+            int((weeks.get(week) or {}).get("closed_trades", 0)) > 0
+            for week in ref_trade_weeks
+        )
+        week_presence_ratio = (
+            represented_weeks / len(ref_trade_weeks)
+            if ref_trade_weeks else 0.0
+        )
+        representation = {
+            "total_closed_ge_35pct": total_activity_ratio >= 0.35,
+            "every_symbol_ge_25pct": all(
+                ratio >= 0.25 for ratio in symbol_activity.values()
+            ),
+            "every_fold_ge_25pct": all(
+                ratio >= 0.25 for ratio in fold_activity.values()
+            ),
+            "weeks_ge_80pct": week_presence_ratio >= 0.80,
+        }
+        representation_ok = all(representation.values())
+
+        candidate_mean = candidate["folds"]
+        fold_better = sum(
+            candidate_mean[fold]["mean_trade_pl"] is not None
+            and ref_folds[fold]["mean_trade_pl"] is not None
+            and float(candidate_mean[fold]["mean_trade_pl"])
+                > float(ref_folds[fold]["mean_trade_pl"])
+            for fold in ref_folds
+        )
+        symbol_better = sum(
+            symbols[symbol]["mean_trade_pl"] is not None
+            and ref_symbols[symbol]["mean_trade_pl"] is not None
+            and float(symbols[symbol]["mean_trade_pl"])
+                > float(ref_symbols[symbol]["mean_trade_pl"])
+            for symbol in ref_symbols
+        )
+
+        eligible_weeks = []
+        better_weeks = []
+        for week in sorted(set(ref_weeks) | set(weeks)):
+            ref_row = ref_weeks.get(week)
+            cand_row = weeks.get(week)
+            if (
+                ref_row
+                and cand_row
+                and int(ref_row["closed_trades"]) >= 10
+                and int(cand_row["closed_trades"]) >= 10
+            ):
+                eligible_weeks.append(week)
+                if (
+                    cand_row["mean_trade_pl"] is not None
+                    and ref_row["mean_trade_pl"] is not None
+                    and float(cand_row["mean_trade_pl"])
+                        > float(ref_row["mean_trade_pl"])
+                ):
+                    better_weeks.append(week)
+        weekly_ratio = (
+            len(better_weeks) / len(eligible_weeks)
+            if eligible_weeks else 0.0
+        )
+        weekly_ok = (
+            len(eligible_weeks) >= 20
+            and weekly_ratio >= 0.55
+        )
+
+        positive_symbol_deltas = {
+            symbol: (
+                float(symbols[symbol]["net_realized_pl"])
+                - float(ref_symbols[symbol]["net_realized_pl"])
+            )
+            for symbol in ref_symbols
+            if (
+                float(symbols[symbol]["net_realized_pl"])
+                - float(ref_symbols[symbol]["net_realized_pl"])
+            ) > 0
+        }
+        symbol_positive_sum = sum(positive_symbol_deltas.values())
+        max_symbol_share = (
+            max(positive_symbol_deltas.values()) / symbol_positive_sum
+            if symbol_positive_sum > 0 else None
+        )
+
+        positive_fold_deltas = {
+            fold: (
+                float(folds[fold]["net_realized_pl"])
+                - float(ref_folds[fold]["net_realized_pl"])
+            )
+            for fold in ref_folds
+            if (
+                float(folds[fold]["net_realized_pl"])
+                - float(ref_folds[fold]["net_realized_pl"])
+            ) > 0
+        }
+        fold_positive_sum = sum(positive_fold_deltas.values())
+        max_fold_share = (
+            max(positive_fold_deltas.values()) / fold_positive_sum
+            if fold_positive_sum > 0 else None
+        )
+
+        net_gain = (
+            float(agg["net_realized_pl"])
+            - float(ref_agg["net_realized_pl"])
+        )
+        concentration = {
+            "positive_total_pl_improvement": net_gain > 0,
+            "positive_symbol_deltas": positive_symbol_deltas,
+            "max_positive_symbol_delta_share": max_symbol_share,
+            "symbol_share_le_70pct": (
+                max_symbol_share is not None and max_symbol_share <= 0.70
+            ),
+            "positive_fold_deltas": positive_fold_deltas,
+            "max_positive_fold_delta_share": max_fold_share,
+            "fold_share_le_60pct": (
+                max_fold_share is not None and max_fold_share <= 0.60
+            ),
+        }
+        concentration_ok = bool(
+            concentration["positive_total_pl_improvement"]
+            and concentration["symbol_share_le_70pct"]
+            and concentration["fold_share_le_60pct"]
+        )
+
+        support_checks = {
+            "net_pl_strictly_better": (
+                float(agg["net_realized_pl"])
+                > float(ref_agg["net_realized_pl"])
+            ),
+            "max_dd_usd_no_worse": (
+                float(agg["maximum_equity_drawdown"])
+                <= float(ref_agg["maximum_equity_drawdown"])
+            ),
+            "mean_trade_pl_strictly_better": (
+                float(candidate["folds"]["F1"]["closed_trades"]) >= 0
+                and float(candidate["eat_active"]["closed_trades"]) >= 0
+                and float(
+                    sum(
+                        row["net_realized_pl"]
+                        for row in candidate["folds"].values()
+                    )
+                    / sum(
+                        row["closed_trades"]
+                        for row in candidate["folds"].values()
+                    )
+                )
+                > float(
+                    sum(
+                        row["net_realized_pl"]
+                        for row in ref_folds.values()
+                    )
+                    / sum(
+                        row["closed_trades"]
+                        for row in ref_folds.values()
+                    )
+                )
+            ),
+            "win_rate_within_1pp": (
+                float(agg["win_rate_nonflat_pct"])
+                >= float(ref_agg["win_rate_nonflat_pct"]) - 1.0
+            ),
+            "fold_mean_better_ge_4": fold_better >= 4,
+            "symbol_mean_better_ge_3": symbol_better >= 3,
+            "eat_active_mean_better": (
+                active["mean_trade_pl"] is not None
+                and ref_active["mean_trade_pl"] is not None
+                and float(active["mean_trade_pl"])
+                    > float(ref_active["mean_trade_pl"])
+            ),
+            "weekly_mean_better_ge_55pct_with_ge20": weekly_ok,
+            "symbol_concentration_le_70pct": concentration_ok
+                and concentration["symbol_share_le_70pct"],
+            "fold_concentration_le_60pct": concentration_ok
+                and concentration["fold_share_le_60pct"],
+        }
+        support_ok = all(support_checks.values())
+
+        if not mandatory_ok or not representation_ok:
+            classification = "INELIGIBLE"
+        elif support_ok:
+            classification = "SUPPORTED"
+        else:
+            classification = "NOT SUPPORTED"
+
+        overall_closed = sum(
+            int(row["closed_trades"]) for row in folds.values()
+        )
+        overall_pl = sum(
+            float(row["net_realized_pl"]) for row in folds.values()
+        )
+        mean_trade_pl = (
+            overall_pl / overall_closed if overall_closed else None
+        )
+
+        return {
+            "label": label,
+            "direction": candidate["direction"],
+            "classification": classification,
+            "mandatory": mandatory,
+            "mandatory_ok": mandatory_ok,
+            "representation": {
+                **representation,
+                "ok": representation_ok,
+                "total_activity_ratio": total_activity_ratio,
+                "per_symbol_activity_ratio": symbol_activity,
+                "per_fold_activity_ratio": fold_activity,
+                "reference_trade_weeks": len(ref_trade_weeks),
+                "represented_trade_weeks": represented_weeks,
+                "week_presence_ratio": week_presence_ratio,
+            },
+            "support_checks": support_checks,
+            "support_ok": support_ok,
+            "economics": {
+                "net_realized_pl": agg["net_realized_pl"],
+                "maximum_equity_drawdown":
+                    agg["maximum_equity_drawdown"],
+                "maximum_equity_drawdown_pct":
+                    agg["maximum_equity_drawdown_pct"],
+                "mean_trade_pl": mean_trade_pl,
+                "win_rate_nonflat_pct": agg["win_rate_nonflat_pct"],
+                "eat_active_mean_trade_pl": active["mean_trade_pl"],
+            },
+            "robustness": {
+                "folds_mean_better": fold_better,
+                "symbols_mean_better": symbol_better,
+                "eligible_iso_weeks": len(eligible_weeks),
+                "better_iso_weeks": len(better_weeks),
+                "better_iso_week_ratio": weekly_ratio,
+                "concentration": concentration,
+            },
+            "activity_ratio": total_activity_ratio,
+        }
+
+    assessments = {
+        label: assess(label)
+        for label in ("D-S", "D-B")
+    }
+    supported = [
+        label
+        for label in ("D-S", "D-B")
+        if assessments[label]["classification"] == "SUPPORTED"
+    ]
+
+    selection_detail = {}
+    if not supported:
+        fixed_arm = "D-R"
+        fixed_direction = "BOTH"
+        selection_reason = "neither single-direction arm is SUPPORTED"
+    elif len(supported) == 1:
+        fixed_arm = supported[0]
+        fixed_direction = _m023_stage_a_expected()[fixed_arm]
+        selection_reason = "exactly one single-direction arm is SUPPORTED"
+    else:
+        scores = {}
+        for label in supported:
+            row = assessments[label]
+            econ = row["economics"]
+            scores[label] = {
+                "pl_gain_fraction": _m023_stage_a_fraction(
+                    float(econ["net_realized_pl"])
+                    - float(ref_agg["net_realized_pl"]),
+                    ref_agg["net_realized_pl"],
+                ),
+                "dd_improvement_fraction": _m023_stage_a_fraction(
+                    float(ref_agg["maximum_equity_drawdown"])
+                    - float(econ["maximum_equity_drawdown"]),
+                    ref_agg["maximum_equity_drawdown"],
+                ),
+                "mean_trade_gain_fraction": _m023_stage_a_fraction(
+                    float(econ["mean_trade_pl"])
+                    - (
+                        sum(
+                            float(x["net_realized_pl"])
+                            for x in ref_folds.values()
+                        )
+                        / sum(
+                            int(x["closed_trades"])
+                            for x in ref_folds.values()
+                        )
+                    ),
+                    (
+                        sum(
+                            float(x["net_realized_pl"])
+                            for x in ref_folds.values()
+                        )
+                        / sum(
+                            int(x["closed_trades"])
+                            for x in ref_folds.values()
+                        )
+                    ),
+                ),
+                "win_rate_gain_fraction": _m023_stage_a_fraction(
+                    float(econ["win_rate_nonflat_pct"])
+                    - float(ref_agg["win_rate_nonflat_pct"]),
+                    ref_agg["win_rate_nonflat_pct"],
+                ),
+                "active_mean_gain_fraction": _m023_stage_a_fraction(
+                    float(econ["eat_active_mean_trade_pl"])
+                    - float(ref_active["mean_trade_pl"]),
+                    ref_active["mean_trade_pl"],
+                ),
+            }
+            scores[label]["robustness_maximin"] = min(
+                scores[label].values()
+            )
+
+        def rank_key(label):
+            row = assessments[label]
+            return (
+                scores[label]["robustness_maximin"],
+                row["robustness"]["folds_mean_better"],
+                row["robustness"]["symbols_mean_better"],
+                row["robustness"]["better_iso_week_ratio"],
+                row["activity_ratio"],
+                -ord(label[-1]),
+            )
+
+        fixed_arm = max(supported, key=rank_key)
+        fixed_direction = _m023_stage_a_expected()[fixed_arm]
+        selection_reason = (
+            "both single-direction arms SUPPORTED; frozen maximin/tie-break "
+            "rule applied"
+        )
+        selection_detail = {"scores": scores}
+
+    return {
+        "ok": True,
+        "feature_branch": "direction-session-research",
+        "feature_sha": feature_sha,
+        "reference": {
+            "label": "D-R",
+            "direction": "BOTH",
+            "classification": "REFERENCE",
+            "aggregate": ref_agg,
+            "per_symbol": ref_symbols,
+            "folds": ref_folds,
+            "iso_weeks": ref_weeks,
+            "eat_active": ref_active,
+            "eat_off_hours": reference["eat_off_hours"],
+            "hashes": rows["D-R"]["hashes"],
+        },
+        "assessments": assessments,
+        "supported_nonreference": supported,
+        "stage_b_fixed_arm": fixed_arm,
+        "stage_b_fixed_direction": fixed_direction,
+        "selection_reason": selection_reason,
+        "selection_detail": selection_detail,
+        "frozen_gates": {
+            "total_activity_min_ratio": 0.35,
+            "per_symbol_activity_min_ratio": 0.25,
+            "per_fold_activity_min_ratio": 0.25,
+            "week_presence_min_ratio": 0.80,
+            "win_rate_max_deficit_pp": 1.0,
+            "fold_mean_better_min": 4,
+            "symbol_mean_better_min": 3,
+            "weekly_better_min_ratio": 0.55,
+            "eligible_week_min_count": 20,
+            "positive_symbol_delta_max_share": 0.70,
+            "positive_fold_delta_max_share": 0.60,
+        },
+        "safety": {
+            "economic_replay_run": False,
+            "existing_stage_a_artifacts_only": True,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+            "stage_b_session_replay_run": False,
+        },
+    }
+
+
 def m023_direction_session_review():
     """Read the accepted M023 artifact and publish compact partition/hour tables."""
 
@@ -9213,6 +9987,7 @@ def m023_direction_session_tests():
     feature_sha = _require_m023_branch()
     tests = [
         "tests/test_direction_session_diagnostics.py",
+        "tests/test_m023_direction_research.py",
         "tests/test_backtest_baseline_reporting.py",
     ]
     result = _pytest_native(tests)
@@ -11638,6 +12413,8 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m023_stage_a_direction_family": m023_stage_a_direction_family,
+    "m023_stage_a_direction_assessment": m023_stage_a_direction_assessment,
     "m023_direction_session_review": m023_direction_session_review,
     "m023_direction_session_tests": m023_direction_session_tests,
     "m023_direction_session_diagnostic": m023_direction_session_diagnostic,

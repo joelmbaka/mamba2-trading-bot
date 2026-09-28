@@ -217,3 +217,10 @@ These actions expose validation only for the frozen entrants P2-R, P2-01, P2-03,
 - `m023_direction_session_diagnostic` — reads only the six exact accepted M022 P2-R/P2-03/P2-08 development/validation diagnostic JSONs, verifies their hashes, builds the frozen EAT/London/New-York/day/fold attribution twice, and requires byte-identical artifacts.
 
 These actions do not run strategy replay, do not inspect historical holdout, do not inspect M021, and expose no real-order or arbitrary-shell capability.
+
+## M023 Stage-A direction actions
+
+- `m023_stage_a_direction_family` — exact P2-08 anchor on the fixed 225-date seen-research partition; D-R runs first, then D-S/D-B with at most two non-reference processes. Produces deterministic A/B baseline/diagnostic/summary artifacts and refuses partial artifacts or invariant drift.
+- `m023_stage_a_direction_assessment` — reads only the completed Stage-A artifacts, applies the prospectively frozen activity/quality/concentration/weekly gates, classifies D-S/D-B, and mechanically fixes exactly one Stage-B direction. It does not execute Stage B.
+
+No M023 holdout action, session execution action, weekday execution action, arbitrary shell action, or real-order action is exposed.
