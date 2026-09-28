@@ -554,6 +554,11 @@ def _run_stage_a_arm(
         raise ValueError("M023 Stage-A replay boundary clock hash changed")
 
     symbols = tuple(config.symbols)
+    if float(config.position_size) != 0.1:
+        raise ValueError("M023 Stage-A position size must remain exactly 0.1")
+    if bool(getattr(config, "use_higher_tf", False)):
+        raise ValueError("M023 Stage A requires M15/higher-TF signal disabled")
+
     with _temporary_research_config(arm.parameters):
         feed = ResearchBoundaryReplayFeed(
             dataset.m1_bars,
