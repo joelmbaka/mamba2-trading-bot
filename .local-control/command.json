@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-session-assessment-v1",
-  "action": "m022_phase1_session_assessment",
+  "id": "mamba2-m022-phase2-preflight-sync-v1",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
