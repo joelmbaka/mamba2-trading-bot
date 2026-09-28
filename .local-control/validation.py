@@ -144,6 +144,7 @@ M022_PHASE1_ATR_TP_DIR = REPO / "backtest_data" / "m022-phase1-development" / "a
 M022_PHASE1_SESSION_DIR = REPO / "backtest_data" / "m022-phase1-development" / "session-v1"
 M022_PHASE2_DEV_DIR = REPO / "backtest_data" / "m022-phase2-development-v1"
 M022_PHASE2_VALIDATION_DIR = REPO / "backtest_data" / "m022-phase2-validation-v1"
+M023_DIRECTION_SESSION_DIR = REPO / "backtest_data" / "m023-direction-session-diagnostics-v1"
 
 
 def _safe_env(wine=False):
@@ -833,6 +834,50 @@ def _require_m022_branch():
         raise RuntimeError(
             "M022 action requires local HEAD to match "
             "origin/strategy-parameter-research"
+        )
+    return head["stdout"].strip()
+
+
+
+def _require_m023_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "direction-session-research":
+        raise RuntimeError(
+            "M023 action requires branch direction-session-research"
+        )
+
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("M023 action refuses a dirty worktree")
+
+    refresh = _run([
+        "git",
+        "fetch",
+        "origin",
+        (
+            "direction-session-research:"
+            "refs/remotes/origin/direction-session-research"
+        ),
+    ])
+    if refresh["exit_code"] != 0:
+        raise RuntimeError("M023 action could not refresh remote branch")
+
+    head = _run(["git", "rev-parse", "HEAD"])
+    remote = _run([
+        "git",
+        "rev-parse",
+        "--verify",
+        "refs/remotes/origin/direction-session-research",
+    ])
+    if (
+        head["exit_code"] != 0
+        or remote["exit_code"] != 0
+        or head["stdout"].strip() != remote["stdout"].strip()
+    ):
+        raise RuntimeError(
+            "M023 action requires local HEAD to match "
+            "origin/direction-session-research"
         )
     return head["stdout"].strip()
 
@@ -9060,6 +9105,182 @@ def m022_phase1_default_regression():
     }
 
 
+
+def m023_direction_session_tests():
+    """Run the narrow native gate for M023 read-only diagnostics."""
+
+    feature_sha = _require_m023_branch()
+    tests = [
+        "tests/test_direction_session_diagnostics.py",
+        "tests/test_backtest_baseline_reporting.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "direction-session-research",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "market_data_read_only": True,
+            "existing_diagnostic_json_only": True,
+            "economic_replay_run": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m023_direction_session_diagnostic():
+    """Build deterministic M023 diagnostics from accepted M022 JSON only."""
+
+    feature_sha = _require_m023_branch()
+    output_dir = _ensure_baseline_path(M023_DIRECTION_SESSION_DIR)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_a = output_dir / "m023-direction-session-diagnostics-a.json"
+    output_b = output_dir / "m023-direction-session-diagnostics-b.json"
+
+    existing = [path.is_file() for path in (output_a, output_b)]
+    if any(existing) and not all(existing):
+        return {
+            "ok": False,
+            "reason": "partial M023 diagnostic artifact pair exists",
+            "feature_branch": "direction-session-research",
+            "feature_sha": feature_sha,
+            "safety": {
+                "economic_replay_run": False,
+                "historical_holdout_economic_data_used": False,
+                "m021_post_cutoff_data_used": False,
+                "real_order_api_called": False,
+            },
+        }
+
+    def run_one(path):
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.direction_session_diagnostics",
+                "--repo-root",
+                ".",
+                "--output",
+                str(path.relative_to(REPO)),
+            ),
+            env=_safe_env(),
+        )
+        if run["exit_code"] != 0:
+            return None, run
+        try:
+            payload = json.loads(run["stdout"].strip().splitlines()[-1])
+        except (json.JSONDecodeError, IndexError):
+            return None, {
+                **run,
+                "stderr": (
+                    run["stderr"]
+                    + "\nunable to parse M023 diagnostic payload"
+                ),
+            }
+        return payload, run
+
+    if all(existing):
+        sha_a = _sha256(output_a)
+        sha_b = _sha256(output_b)
+        if sha_a != sha_b:
+            return {
+                "ok": False,
+                "reason": "existing M023 diagnostic pair is non-deterministic",
+                "feature_branch": "direction-session-research",
+                "feature_sha": feature_sha,
+                "sha_a": sha_a,
+                "sha_b": sha_b,
+            }
+        report = json.loads(output_a.read_text(encoding="utf-8"))
+        # Rebuild compact payload from the immutable existing report without
+        # any strategy replay.
+        payload_a = {
+            "sources": report.get("sources"),
+            "timezone_runtime": report.get("timezone_runtime"),
+            "folds": report.get("folds"),
+            "headline": {
+                arm: {
+                    "development": {
+                        direction: report["arms"][arm]["development"][direction]["overall"]
+                        for direction in ("BOTH", "SELL", "BUY")
+                    },
+                    "validation": {
+                        direction: report["arms"][arm]["validation"][direction]["overall"]
+                        for direction in ("BOTH", "SELL", "BUY")
+                    },
+                    "combined": {
+                        direction: {
+                            "overall": report["arms"][arm]["combined"][direction]["overall"],
+                            "windows": report["arms"][arm]["combined"][direction]["windows"],
+                            "weekdays": report["arms"][arm]["combined"][direction]["weekdays"],
+                        }
+                        for direction in ("BOTH", "SELL", "BUY")
+                    },
+                    "fold_stability": report["arms"][arm]["fold_stability"],
+                }
+                for arm in ("P2-R", "P2-03", "P2-08")
+            },
+            "safety": report.get("safety"),
+        }
+        reused = True
+        runs = []
+    else:
+        payload_a, run_a = run_one(output_a)
+        if payload_a is None:
+            return {
+                "ok": False,
+                "reason": "first M023 diagnostic build failed",
+                "feature_branch": "direction-session-research",
+                "feature_sha": feature_sha,
+                "run": run_a,
+            }
+        payload_b, run_b = run_one(output_b)
+        if payload_b is None:
+            return {
+                "ok": False,
+                "reason": "second M023 diagnostic build failed",
+                "feature_branch": "direction-session-research",
+                "feature_sha": feature_sha,
+                "run": run_b,
+            }
+        sha_a = _sha256(output_a)
+        sha_b = _sha256(output_b)
+        reused = False
+        runs = [run_a, run_b]
+
+    deterministic = sha_a == sha_b
+    safety = payload_a.get("safety") or {}
+    safety_ok = bool(
+        safety.get("economic_replay_run") is False
+        and safety.get("existing_diagnostic_json_only") is True
+        and safety.get("historical_holdout_economic_data_used") is False
+        and safety.get("m021_post_cutoff_data_used") is False
+        and safety.get("real_order_api_called") is False
+    )
+    return {
+        "ok": bool(deterministic and safety_ok),
+        "feature_branch": "direction-session-research",
+        "feature_sha": feature_sha,
+        "artifact": {
+            "a_path": str(output_a.relative_to(REPO)),
+            "b_path": str(output_b.relative_to(REPO)),
+            "a_sha256": sha_a,
+            "b_sha256": sha_b,
+            "deterministic": deterministic,
+            "reused_complete_artifacts": reused,
+        },
+        "sources": payload_a.get("sources"),
+        "timezone_runtime": payload_a.get("timezone_runtime"),
+        "folds": payload_a.get("folds"),
+        "headline": payload_a.get("headline"),
+        "runs": runs,
+        "safety": safety,
+    }
+
+
 def m022_phase1_tests():
     """Run fixed native tests for M022 Phase-1 research machinery."""
 
@@ -11244,6 +11465,8 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m023_direction_session_tests": m023_direction_session_tests,
+    "m023_direction_session_diagnostic": m023_direction_session_diagnostic,
     "m022_phase2_validation_invariant_diagnostic": m022_phase2_validation_invariant_diagnostic,
     "m022_phase2_validation_assessment": m022_phase2_validation_assessment,
     "m022_phase2_validation_family": m022_phase2_validation_family,

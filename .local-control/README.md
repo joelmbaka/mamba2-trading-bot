@@ -210,3 +210,10 @@ M022 fixed Phase-2 validation actions:
 - `m022_phase2_validation_assessment`
 
 These actions expose validation only for the frozen entrants P2-R, P2-01, P2-03, and P2-08. Historical-holdout execution is not exposed. Arbitrary shell and real-order operations remain unavailable.
+
+## M023 fixed diagnostic actions
+
+- `m023_direction_session_tests` — narrow native tests for the read-only analyzer.
+- `m023_direction_session_diagnostic` — reads only the six exact accepted M022 P2-R/P2-03/P2-08 development/validation diagnostic JSONs, verifies their hashes, builds the frozen EAT/London/New-York/day/fold attribution twice, and requires byte-identical artifacts.
+
+These actions do not run strategy replay, do not inspect historical holdout, do not inspect M021, and expose no real-order or arbitrary-shell capability.
