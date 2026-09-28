@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m023-direction-session-diagnostic-v2",
-  "action": "m023_direction_session_diagnostic",
+  "id": "mamba2-m023-direction-session-review-v1",
+  "action": "m023_direction_session_review",
   "args": {},
   "requested_by": "chatgpt"
 }
