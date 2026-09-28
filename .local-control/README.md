@@ -196,3 +196,10 @@ M022 fixed Phase-1 session actions:
 
 - `m022_phase1_session_family`
 - `m022_phase1_session_assessment`
+
+M022 fixed Phase-2 development actions:
+
+- `m022_phase2_development_family`
+- `m022_phase2_development_assessment`
+
+These actions expose development-only execution for the pre-frozen P2-R/P2-01…P2-12 matrix. They do not expose validation, holdout, arbitrary shell, or real-order operations.
