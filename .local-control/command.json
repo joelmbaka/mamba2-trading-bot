@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-atr-tp-assessment-v1",
-  "action": "m022_phase1_atr_tp_assessment",
+  "id": "mamba2-m022-session-preflight-sync-v1",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
