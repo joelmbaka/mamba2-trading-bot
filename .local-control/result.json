@@ -1,12 +1,285 @@
 {
   "version": 1,
-  "command_id": "mamba2-m022-phase2-validation-family-v1",
-  "completed_at": "2026-09-28T12:33:58.636467+00:00",
-  "ok": false,
-  "action": "m022_phase2_validation_family",
+  "command_id": "mamba2-m022-phase2-validation-invariant-diagnostic-v1",
+  "completed_at": "2026-09-28T13:09:58.245878+00:00",
+  "ok": true,
+  "action": "m022_phase2_validation_invariant_diagnostic",
   "data": {
-    "ok": false,
-    "reason": "M022 validation arm P2-01 failed frozen invariants",
-    "feature_sha": "a409a5703e709feb0b45cbe870f4d8639189b6ba"
+    "ok": true,
+    "feature_branch": "strategy-parameter-research",
+    "feature_sha": "a409a5703e709feb0b45cbe870f4d8639189b6ba",
+    "entrants": [
+      "P2-R",
+      "P2-01",
+      "P2-03",
+      "P2-08"
+    ],
+    "rows": [
+      {
+        "label": "P2-R",
+        "complete_artifacts": true,
+        "checks": {
+          "deterministic_baseline": true,
+          "deterministic_diagnostic": true,
+          "deterministic_summary": true,
+          "experiment_id": true,
+          "family": true,
+          "value_label": true,
+          "parameters": true,
+          "cost_contract": true,
+          "source_manifest": true,
+          "partition_name": true,
+          "start_utc": true,
+          "end_exclusive_utc": true,
+          "strict_common_boundary_clock": true,
+          "full_symbol_m1_preserved": true,
+          "replay_boundary_count": true,
+          "replay_boundary_sha256": true,
+          "tp_negative_pl_zero": true,
+          "tp_wrong_side_zero": true
+        },
+        "failed_checks": [],
+        "observed": {
+          "experiment_id": "M022-P2-R",
+          "family": "phase2",
+          "value_label": "P2-R",
+          "parameters": {
+            "atr_sl_multiplier": 1.0,
+            "atr_tp_multiplier": 2.0,
+            "block_00_04_utc": false,
+            "decision_spread_max_points": null,
+            "ema_period": 7,
+            "overbought_level": 80.0,
+            "oversold_level": 20.0,
+            "stochastic_d_period": 7,
+            "stochastic_k_period": 21,
+            "stochastic_slowing": 7
+          },
+          "partition": {
+            "common_trading_dates": 56,
+            "common_trading_dates_sha256": "2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5",
+            "end_exclusive_utc": "2026-07-08T00:00:00Z",
+            "full_symbol_m1_preserved": true,
+            "partition": "validation",
+            "partition_spec_sha256": "342891a247122ce44f9c3927ae003969044e9aa3923f87fb06586613368a50da",
+            "replay_boundary_count": 80599,
+            "replay_boundary_first_utc": "2026-04-21T00:01:00Z",
+            "replay_boundary_last_utc": "2026-07-08T00:00:00Z",
+            "replay_boundary_sha256": "9e46ab331f9107dcf6fb5cf2313a44eef0e336b418e276b692f5a069c2b4613f",
+            "source_manifest_sha256": "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558",
+            "start_utc": "2026-04-21T00:00:00Z",
+            "strict_common_boundary_clock": true
+          },
+          "tp_safety": {
+            "negative_pl_take_profit_exits": 0,
+            "wrong_side_initial_tp": 0
+          },
+          "baseline_sha256": "b0103541cc843109a41c7f6df34c01fa912ae74351324cb6233de3df2090c1c6",
+          "diagnostic_sha256": "7a470bfebfa4434793f2f25bfcb416f4342187b5b08ca6f319237d9ea4856979",
+          "summary_sha256": "e5a2085c819e92e8a6a94eb8b721c9f828f8afc9c6a210e5c690702f8490e501"
+        }
+      },
+      {
+        "label": "P2-01",
+        "complete_artifacts": true,
+        "checks": {
+          "deterministic_baseline": true,
+          "deterministic_diagnostic": true,
+          "deterministic_summary": true,
+          "experiment_id": true,
+          "family": true,
+          "value_label": true,
+          "parameters": true,
+          "cost_contract": true,
+          "source_manifest": true,
+          "partition_name": true,
+          "start_utc": true,
+          "end_exclusive_utc": true,
+          "strict_common_boundary_clock": true,
+          "full_symbol_m1_preserved": true,
+          "replay_boundary_count": true,
+          "replay_boundary_sha256": true,
+          "tp_negative_pl_zero": false,
+          "tp_wrong_side_zero": true
+        },
+        "failed_checks": [
+          "tp_negative_pl_zero"
+        ],
+        "observed": {
+          "experiment_id": "M022-P2-01",
+          "family": "phase2",
+          "value_label": "P2-01",
+          "parameters": {
+            "atr_sl_multiplier": 1.0,
+            "atr_tp_multiplier": 2.0,
+            "block_00_04_utc": false,
+            "decision_spread_max_points": null,
+            "ema_period": 12,
+            "overbought_level": 80.0,
+            "oversold_level": 20.0,
+            "stochastic_d_period": 7,
+            "stochastic_k_period": 28,
+            "stochastic_slowing": 7
+          },
+          "partition": {
+            "common_trading_dates": 56,
+            "common_trading_dates_sha256": "2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5",
+            "end_exclusive_utc": "2026-07-08T00:00:00Z",
+            "full_symbol_m1_preserved": true,
+            "partition": "validation",
+            "partition_spec_sha256": "342891a247122ce44f9c3927ae003969044e9aa3923f87fb06586613368a50da",
+            "replay_boundary_count": 80599,
+            "replay_boundary_first_utc": "2026-04-21T00:01:00Z",
+            "replay_boundary_last_utc": "2026-07-08T00:00:00Z",
+            "replay_boundary_sha256": "9e46ab331f9107dcf6fb5cf2313a44eef0e336b418e276b692f5a069c2b4613f",
+            "source_manifest_sha256": "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558",
+            "start_utc": "2026-04-21T00:00:00Z",
+            "strict_common_boundary_clock": true
+          },
+          "tp_safety": {
+            "negative_pl_take_profit_exits": 1,
+            "wrong_side_initial_tp": 0
+          },
+          "baseline_sha256": "e390066e1ed79d75382481bccc3c3ee26119ae11f060939cf8da7c336043c014",
+          "diagnostic_sha256": "52f84ca35d740466b44d2230089e97c31f8272f98a7212f9efb73281f43a1047",
+          "summary_sha256": "546c191c26a36905cec885c4f9a494423e416e656b94489009687dcc1d062400"
+        }
+      },
+      {
+        "label": "P2-03",
+        "complete_artifacts": true,
+        "checks": {
+          "deterministic_baseline": true,
+          "deterministic_diagnostic": true,
+          "deterministic_summary": true,
+          "experiment_id": true,
+          "family": true,
+          "value_label": true,
+          "parameters": true,
+          "cost_contract": true,
+          "source_manifest": true,
+          "partition_name": true,
+          "start_utc": true,
+          "end_exclusive_utc": true,
+          "strict_common_boundary_clock": true,
+          "full_symbol_m1_preserved": true,
+          "replay_boundary_count": true,
+          "replay_boundary_sha256": true,
+          "tp_negative_pl_zero": true,
+          "tp_wrong_side_zero": true
+        },
+        "failed_checks": [],
+        "observed": {
+          "experiment_id": "M022-P2-03",
+          "family": "phase2",
+          "value_label": "P2-03",
+          "parameters": {
+            "atr_sl_multiplier": 1.5,
+            "atr_tp_multiplier": 2.0,
+            "block_00_04_utc": false,
+            "decision_spread_max_points": null,
+            "ema_period": 7,
+            "overbought_level": 80.0,
+            "oversold_level": 20.0,
+            "stochastic_d_period": 7,
+            "stochastic_k_period": 28,
+            "stochastic_slowing": 7
+          },
+          "partition": {
+            "common_trading_dates": 56,
+            "common_trading_dates_sha256": "2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5",
+            "end_exclusive_utc": "2026-07-08T00:00:00Z",
+            "full_symbol_m1_preserved": true,
+            "partition": "validation",
+            "partition_spec_sha256": "342891a247122ce44f9c3927ae003969044e9aa3923f87fb06586613368a50da",
+            "replay_boundary_count": 80599,
+            "replay_boundary_first_utc": "2026-04-21T00:01:00Z",
+            "replay_boundary_last_utc": "2026-07-08T00:00:00Z",
+            "replay_boundary_sha256": "9e46ab331f9107dcf6fb5cf2313a44eef0e336b418e276b692f5a069c2b4613f",
+            "source_manifest_sha256": "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558",
+            "start_utc": "2026-04-21T00:00:00Z",
+            "strict_common_boundary_clock": true
+          },
+          "tp_safety": {
+            "negative_pl_take_profit_exits": 0,
+            "wrong_side_initial_tp": 0
+          },
+          "baseline_sha256": "44e8e0b0b66823a681ab100d52c71ee0b75de55bbd2f3fa1c336ba8404308fae",
+          "diagnostic_sha256": "30b7718a0075278853a9224cd5939446ea4624bb73f2b566f333e1081ef8c0b8",
+          "summary_sha256": "14d8595fe7279d4de61d0f4d9858526c2a7a925b6f25529d851a8e4528162e6f"
+        }
+      },
+      {
+        "label": "P2-08",
+        "complete_artifacts": true,
+        "checks": {
+          "deterministic_baseline": true,
+          "deterministic_diagnostic": true,
+          "deterministic_summary": true,
+          "experiment_id": true,
+          "family": true,
+          "value_label": true,
+          "parameters": true,
+          "cost_contract": true,
+          "source_manifest": true,
+          "partition_name": true,
+          "start_utc": true,
+          "end_exclusive_utc": true,
+          "strict_common_boundary_clock": true,
+          "full_symbol_m1_preserved": true,
+          "replay_boundary_count": true,
+          "replay_boundary_sha256": true,
+          "tp_negative_pl_zero": true,
+          "tp_wrong_side_zero": true
+        },
+        "failed_checks": [],
+        "observed": {
+          "experiment_id": "M022-P2-08",
+          "family": "phase2",
+          "value_label": "P2-08",
+          "parameters": {
+            "atr_sl_multiplier": 1.5,
+            "atr_tp_multiplier": 3.0,
+            "block_00_04_utc": false,
+            "decision_spread_max_points": null,
+            "ema_period": 7,
+            "overbought_level": 80.0,
+            "oversold_level": 20.0,
+            "stochastic_d_period": 7,
+            "stochastic_k_period": 21,
+            "stochastic_slowing": 7
+          },
+          "partition": {
+            "common_trading_dates": 56,
+            "common_trading_dates_sha256": "2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5",
+            "end_exclusive_utc": "2026-07-08T00:00:00Z",
+            "full_symbol_m1_preserved": true,
+            "partition": "validation",
+            "partition_spec_sha256": "342891a247122ce44f9c3927ae003969044e9aa3923f87fb06586613368a50da",
+            "replay_boundary_count": 80599,
+            "replay_boundary_first_utc": "2026-04-21T00:01:00Z",
+            "replay_boundary_last_utc": "2026-07-08T00:00:00Z",
+            "replay_boundary_sha256": "9e46ab331f9107dcf6fb5cf2313a44eef0e336b418e276b692f5a069c2b4613f",
+            "source_manifest_sha256": "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558",
+            "start_utc": "2026-04-21T00:00:00Z",
+            "strict_common_boundary_clock": true
+          },
+          "tp_safety": {
+            "negative_pl_take_profit_exits": 0,
+            "wrong_side_initial_tp": 0
+          },
+          "baseline_sha256": "f333b76323459395d4d3f007a03fb842f210f86783bc114bd3eed57af21f3aae",
+          "diagnostic_sha256": "a8e81708d5f1128f8ad17497ee35f08cae8d9bc70e4b018aca1be5acd765f2ce",
+          "summary_sha256": "ac0bf69b5a0992190c5dd0854cc10f2230e81b67220c7146b0e29494ba988c0a"
+        }
+      }
+    ],
+    "safety": {
+      "economic_replay_run": false,
+      "read_existing_validation_artifacts_only": true,
+      "historical_holdout_economic_data_used": false,
+      "m021_post_cutoff_data_used": false,
+      "real_order_api_called": false
+    }
   }
 }
