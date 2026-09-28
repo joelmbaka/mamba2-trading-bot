@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m022-phase2-development-assessment-v1",
-  "action": "m022_phase2_development_assessment",
+  "id": "mamba2-m022-validation-preflight-sync-v1",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
