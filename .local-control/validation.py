@@ -9106,6 +9106,107 @@ def m022_phase1_default_regression():
 
 
 
+
+def m023_direction_session_review():
+    """Read the accepted M023 artifact and publish compact partition/hour tables."""
+
+    feature_sha = _require_m023_branch()
+    artifact = (
+        M023_DIRECTION_SESSION_DIR
+        / "m023-direction-session-diagnostics-a.json"
+    )
+    if not artifact.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M023 diagnostic artifact is missing",
+            "feature_sha": feature_sha,
+        }
+    observed = _sha256(artifact)
+    expected = "0b306c2341befd7110ea2a6695ecd4fc473055fb2231849b5a3741a11251d9a2"
+    if observed != expected:
+        return {
+            "ok": False,
+            "reason": "M023 diagnostic artifact SHA mismatch",
+            "feature_sha": feature_sha,
+            "observed_sha256": observed,
+            "expected_sha256": expected,
+        }
+
+    report = json.loads(artifact.read_text(encoding="utf-8"))
+    arms = report["arms"]
+    windows = (
+        "ALL-HOURS",
+        "EAT-MORNING",
+        "EAT-MIDDAY",
+        "EAT-AFTERNOON",
+        "EAT-EVENING",
+        "EAT-ACTIVE",
+        "EAT-OFF-HOURS",
+        "LONDON-OPEN-TRANSITION",
+        "LONDON-NY-OVERLAP",
+    )
+
+    def slim(row):
+        return {
+            "closed_trades": row.get("closed_trades"),
+            "net_realized_pl": row.get("net_realized_pl"),
+            "mean_trade_pl": row.get("mean_trade_pl"),
+            "median_trade_pl": row.get("median_trade_pl"),
+            "win_rate_nonflat_pct": row.get("win_rate_nonflat_pct"),
+            "positive_symbol_count": sum(
+                float(value.get("net_realized_pl", 0.0)) > 0
+                for value in (row.get("per_symbol") or {}).values()
+            ),
+        }
+
+    partition_windows = {}
+    for arm in ("P2-R", "P2-03", "P2-08"):
+        partition_windows[arm] = {}
+        for partition in ("development", "validation"):
+            partition_windows[arm][partition] = {}
+            for direction in ("BOTH", "SELL", "BUY"):
+                partition_windows[arm][partition][direction] = {
+                    window: slim(
+                        arms[arm][partition][direction]["windows"][window]
+                    )
+                    for window in windows
+                }
+
+    hourly_p2_08 = {}
+    for direction in ("BOTH", "SELL", "BUY"):
+        hourly_p2_08[direction] = {}
+        for zone, table in (
+            arms["P2-08"]["combined"][direction]["hourly"].items()
+        ):
+            hourly_p2_08[direction][zone] = {
+                hour: {
+                    "closed_trades": row.get("closed_trades"),
+                    "net_realized_pl": row.get("net_realized_pl"),
+                    "mean_trade_pl": row.get("mean_trade_pl"),
+                    "win_rate_nonflat_pct": row.get(
+                        "win_rate_nonflat_pct"
+                    ),
+                }
+                for hour, row in table.items()
+            }
+
+    return {
+        "ok": True,
+        "feature_branch": "direction-session-research",
+        "feature_sha": feature_sha,
+        "artifact_sha256": observed,
+        "partition_windows": partition_windows,
+        "hourly_p2_08": hourly_p2_08,
+        "safety": {
+            "economic_replay_run": False,
+            "existing_m023_artifact_only": True,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def m023_direction_session_tests():
     """Run the narrow native gate for M023 read-only diagnostics."""
 
@@ -11537,6 +11638,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m023_direction_session_review": m023_direction_session_review,
     "m023_direction_session_tests": m023_direction_session_tests,
     "m023_direction_session_diagnostic": m023_direction_session_diagnostic,
     "m022_phase2_validation_invariant_diagnostic": m022_phase2_validation_invariant_diagnostic,
