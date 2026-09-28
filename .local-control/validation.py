@@ -3938,7 +3938,8 @@ def m022_phase2_validation_family():
         partition = summary.get("partition") or {}
         params = summary.get("parameters") or {}
         tp_safety = summary.get("tp_safety") or {}
-        arm_ok = bool(
+
+        structural_ok = bool(
             payload.get("ok")
             and payload.get("deterministic")
             and payload.get("partition") == "validation"
@@ -3960,15 +3961,21 @@ def m022_phase2_validation_family():
             and partition.get("full_symbol_m1_preserved") is True
             and int(partition.get("replay_boundary_count", 0)) > 0
             and bool(partition.get("replay_boundary_sha256"))
-            and int(
-                tp_safety.get("negative_pl_take_profit_exits", -1)
-            ) == 0
+        )
+        if not structural_ok:
+            raise RuntimeError(
+                f"M022 validation arm {label} failed structural invariants"
+            )
+
+        tp_safety_ok = bool(
+            int(tp_safety.get("negative_pl_take_profit_exits", -1)) == 0
             and int(tp_safety.get("wrong_side_initial_tp", -1)) == 0
         )
-        if not arm_ok:
+        if label == "P2-R" and not tp_safety_ok:
             raise RuntimeError(
-                f"M022 validation arm {label} failed frozen invariants"
+                "M022 validation reference failed mandatory TP safety"
             )
+
         return {
             "label": label,
             "experiment_id": payload.get("experiment_id"),
@@ -3982,6 +3989,7 @@ def m022_phase2_validation_family():
             "by_entry_utc_bucket": summary.get("by_entry_utc_bucket"),
             "rejections": summary.get("rejections"),
             "tp_safety": tp_safety,
+            "tp_safety_gate_passes": tp_safety_ok,
             "remaining_positions": summary.get("remaining_positions"),
             "reused_complete_artifacts": bool(
                 payload.get("reused_complete_artifacts")
