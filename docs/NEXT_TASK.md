@@ -163,55 +163,70 @@ Reference artifact hashes:
 
 ### Current authorized gate
 
-The stochastic, boundary, EMA, decision-time-spread, ATR-SL, and ATR-TP
-Phase-1 families are complete.
+**Phase 1 is COMPLETE.**
 
-Accepted Phase-1 shortlists so far:
+Final carry-forward values:
 
 - stochastic: **14/7/7, 21/7/7 reference, 28/7/7**;
-- boundary: **20/80 reference only**;
+- boundary: **20/80 only**;
 - EMA: **7 reference, 9, 12**;
-- decision-time spread: **none reference, <=12 points**;
-- ATR-SL: **1.00x reference, 1.50x**;
-- ATR-TP: **2.00x reference, 2.50x, 3.00x**.
+- decision-time spread: **none reference, <=12**;
+- ATR-SL: **1.0 reference, 1.5**;
+- ATR-TP: **2.0 reference, 2.5, 3.0**;
+- session: **all hours only**.
 
-Accepted ATR-TP execution:
+Final session assessment:
 
-- family command: `mamba2-m022-atr-tp-family-v1`;
-- mechanical assessment: `mamba2-m022-atr-tp-assessment-v1`;
-- reviewed feature SHA:
-  `01e7b73388ba15fe9da005575e551e6560acd336`;
-- published assessment result commit:
-  `9e4e9a0a27ce87d3abe82216bc6c3e9098218dd9`.
+- family command: `mamba2-m022-session-family-v1`;
+- assessment command: `mamba2-m022-session-assessment-v1`;
+- feature SHA:
+  `48dc49cd9f506aabdcb65b4e095a6a31e77290c1`;
+- published assessment result:
+  `978edf5696a798d80eb02e20d0b8688239130449`;
+- blocked 00:00–03:59 UTC arm:
+  **FRAGILE / CONCENTRATED**;
+- final session shortlist:
+  **all hours only**.
 
-ATR-TP assessment:
+The complete Phase-1 evidence and rejected/ineligible/fragile values are
+recorded in the M022 milestone document.
 
-- TP1.00x: **DOMINATED**, 112.16% activity;
-- TP1.50x: **DOMINATED**, 105.17% activity;
-- TP2.00x: **REFERENCE**;
-- TP2.50x: **SHORTLIST**, 94.65% activity;
-- TP3.00x: **SHORTLIST**, 89.40% activity and broad positive deltas across
-  all five symbols, both sides, and all six UTC buckets.
+**Phase-2 development protocol is now frozen before any Phase-2 result.**
 
-Safety remained clean: deterministic A/B passed, TP safety clean, ATR SL was
-fixed at 1.00x, development only, validation unopened, historical holdout
-unopened, M021 unused, and no real-order API called.
+Exact matrix:
 
-The final authorized Phase-1 family is **SESSION** only:
+- P2-R reference;
+- P2-01 through P2-12 only.
 
-- **all hours** — reference;
-- **block 00:00–03:59 UTC** — sole non-reference hypothesis.
+No additional development combination may be added after the first Phase-2
+economic result.
 
-All other parameters return to the fixed reference: stochastic 21/7/7,
-boundaries 20/80, EMA7, no spread gate, ATR SL1.00x / TP2.00x.
+Phase-2 development sample gate, deterministic/Pareto/breadth rules, finalist
+cap, future validation-opening procedure, validation support rules, and future
+historical-holdout opening/assessment rules are frozen in the M022 milestone.
 
-The session execution and mechanical-assessment protocol is frozen in the
-M022 milestone before outcomes. No other session windows are authorized.
+The next authorized work is:
+
+1. implement only the fixed P2-R/P2-01…P2-12 research definitions and
+   deterministic reporting without changing production defaults;
+2. add tests for exact matrix definitions and development-only gating;
+3. add narrowly fixed local-control actions required for Phase-2 development
+   family execution and mechanical assessment;
+4. sync Dell to the exact feature SHA;
+5. verify clean worktree, 0/0 divergence, exact feature SHA;
+6. run Phase-2 **development only**, at most two independent non-reference arms
+   concurrently;
+7. review deterministic/safety evidence;
+8. run the frozen mechanical development assessment;
+9. durably record the <=3 mechanically selected development finalists.
+
+Validation and historical holdout remain CLOSED and are not yet authorized to
+execute.
 
 ## Start here
 
 Read the durable handoff docs and the M022 milestone. Resume from the
-session-family implementation/sync/run/assessment sequence above.
+frozen Phase-2 development implementation/execution sequence above.
 
 Do not start Phase 2, validation, historical holdout, M15 research, merge,
 deployment, or live trading.
