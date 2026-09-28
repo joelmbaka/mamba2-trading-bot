@@ -1,6 +1,6 @@
 # Milestone 022 — Two-Timeframe Parameter Research
 
-Status: **PHASE 2 DEVELOPMENT COMPLETE — VALIDATION ENTRANTS FROZEN; VALIDATION NOT YET EXECUTED**
+Status: **PHASE 2 VALIDATION COMPLETE — ZERO CANDIDATES SUPPORTED; HISTORICAL HOLDOUT SEALED**
 
 Protocol date: 2026-09-26
 
@@ -2197,6 +2197,158 @@ tie-break order, and keep the top two.
 
 If no non-reference candidate satisfies validation support, do not open the
 historical holdout.
+
+
+## Accepted Phase-2 validation assessment — 2026-09-28
+
+Validation is complete under the predeclared frozen entrant list and support
+rules.
+
+Validation implementation feature SHA:
+
+`a409a5703e709feb0b45cbe870f4d8639189b6ba`
+
+Preflight result:
+
+`320a216f802aef3d0ea179234269c094975a3cd7`
+
+The preflight proved exact feature SHA, clean worktree, and 0/0 divergence.
+
+Native validation-runner gate:
+
+- command: `mamba2-m022-validation-native-tests-v1`;
+- published result: `0fe62cfa8c029f65b70ef4e926de75af3f373358`;
+- **89 passed / 0 failed**;
+- economic replay during the test gate: **no**;
+- M021 post-cutoff use: **no**;
+- real-order API called: **no**.
+
+Validation family evidence:
+
+- initial publication:
+  `969b6168a8a3767e267f3d3d85ae295c84d43554`;
+- the initial family publication stopped on P2-01 because its validation
+  evidence contained one negative-P/L take-profit exit;
+- read-only invariant diagnostic:
+  `103f99987881da9f5a973d2787041d460a930243`;
+- diagnostic result:
+  P2-R, P2-03, and P2-08 passed every structural/deterministic/partition/TP
+  invariant; P2-01 passed every structural/deterministic/partition invariant
+  but recorded exactly **1** negative-P/L take-profit exit;
+- local-control was narrowly repaired to preserve a non-reference TP-safety
+  failure as candidate evidence for the frozen mechanical assessment rather
+  than aborting the whole validation family;
+- no strategy/replay code or validation evidence changed;
+- repaired family command:
+  `mamba2-m022-phase2-validation-family-v2`;
+- repaired family result:
+  `f520aefda1341dd009412659957d37011138bab1`;
+- all four entrants reused their already-complete deterministic validation
+  artifacts; validation economics were **not rerun** after the repair.
+
+Exact validation partition:
+
+`2026-04-21T00:00:00Z` → `2026-07-08T00:00:00Z`,
+**56 trading dates**.
+
+Validation reference replay-boundary evidence:
+
+- strict common boundary count: **80,599**;
+- replay-boundary SHA-256:
+  `9e46ab331f9107dcf6fb5cf2313a44eef0e336b418e276b692f5a069c2b4613f`;
+- common trading dates SHA-256:
+  `2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5`;
+- partition spec SHA-256:
+  `342891a247122ce44f9c3927ae003969044e9aa3923f87fb06586613368a50da`.
+
+Validation entrant evidence:
+
+| Arm | Closed | Net P/L | Max DD | Win rate | TP safety | Mechanical validation status |
+|---|---:|---:|---:|---:|---|---|
+| P2-R | 3,908 | -$2,967.71 | $2,998.48 | 33.8028% | PASS | **REFERENCE** |
+| P2-01 | 3,051 | -$2,925.05 | $2,929.58 | 32.6009% | **FAIL: 1 negative-P/L TP exit** | **INELIGIBLE** |
+| P2-03 | 2,860 | -$2,835.77 | $2,888.85 | 33.1235% | PASS | **NOT SUPPORTED** |
+| P2-08 | 2,884 | -$2,739.90 | $2,816.26 | 35.6103% | PASS | **NOT SUPPORTED** |
+
+Validation family deterministic hashes:
+
+- P2-R:
+  - baseline:
+    `b0103541cc843109a41c7f6df34c01fa912ae74351324cb6233de3df2090c1c6`;
+  - diagnostic:
+    `7a470bfebfa4434793f2f25bfcb416f4342187b5b08ca6f319237d9ea4856979`;
+  - summary:
+    `e5a2085c819e92e8a6a94eb8b721c9f828f8afc9c6a210e5c690702f8490e501`;
+- P2-01:
+  - baseline:
+    `e390066e1ed79d75382481bccc3c3ee26119ae11f060939cf8da7c336043c014`;
+  - diagnostic:
+    `52f84ca35d740466b44d2230089e97c31f8272f98a7212f9efb73281f43a1047`;
+  - summary:
+    `546c191c26a36905cec885c4f9a494423e416e656b94489009687dcc1d062400`;
+- P2-03:
+  - baseline:
+    `44e8e0b0b66823a681ab100d52c71ee0b75de55bbd2f3fa1c336ba8404308fae`;
+  - diagnostic:
+    `30b7718a0075278853a9224cd5939446ea4624bb73f2b566f333e1081ef8c0b8`;
+  - summary:
+    `14d8595fe7279d4de61d0f4d9858526c2a7a925b6f25529d851a8e4528162e6f`;
+- P2-08:
+  - baseline:
+    `f333b76323459395d4d3f007a03fb842f210f86783bc114bd3eed57af21f3aae`;
+  - diagnostic:
+    `a8e81708d5f1128f8ad17497ee35f08cae8d9bc70e4b018aca1be5acd765f2ce`;
+  - summary:
+    `ac0bf69b5a0992190c5dd0854cc10f2230e81b67220c7146b0e29494ba988c0a`.
+
+Frozen mechanical validation assessment:
+
+- command:
+  `mamba2-m022-phase2-validation-assessment-v1`;
+- result commit:
+  `7d28d11cc20b13b8f9a1a0794abc4b090d5689c5`;
+- `ok: true`;
+- reads existing validation evidence only;
+- historical holdout economic data used: **no**;
+- M021 post-cutoff data used: **no**;
+- real-order API called: **no**.
+
+Mechanical classifications:
+
+- **P2-R — REFERENCE**
+- **P2-01 — INELIGIBLE**
+- **P2-03 — NOT SUPPORTED**
+- **P2-08 — NOT SUPPORTED**
+
+P2-01 failed the mandatory TP-safety gate. It also failed the frozen
+win-rate and concentration support checks, so it could not be supported even
+apart from TP safety.
+
+P2-03 passed mandatory/sample gates and improved P/L and drawdown, but the
+positive side contribution was concentrated entirely on SELL
+(max positive-side contribution **100%**, above the frozen 80% limit).
+
+P2-08 passed mandatory/sample gates and improved P/L, drawdown, and win rate,
+but the positive side contribution was concentrated **93.19%** on SELL,
+above the frozen 80% limit.
+
+The mechanical assessment therefore fixed:
+
+- supported candidates: **none**;
+- historical-holdout entrants: **none**;
+- historical-holdout execution authorized: **false**.
+
+Per the predeclared protocol, **historical holdout must not be opened** when
+validation supports zero non-reference candidates.
+
+M022 progression therefore stops at the validation gate. These validation
+results must not be used to redesign the matrix, replace a finalist, weaken a
+gate, or retune parameters.
+
+Historical holdout remains sealed:
+
+`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`,
+**57 trading dates**.
 
 ## Frozen historical-holdout opening and assessment protocol
 

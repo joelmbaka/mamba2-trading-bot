@@ -163,85 +163,98 @@ Reference artifact hashes:
 
 ### Current authorized gate
 
-**Phase 1 is COMPLETE. Phase-2 development is COMPLETE.**
+**M022 PHASE-2 VALIDATION IS COMPLETE.**
 
-Frozen Phase-2 development checkpoints:
+Validation feature SHA:
 
-- protocol freeze:
-  `7c6e15cbfcdc09750b6089c092e4ea1446b51e30`;
-- matrix implementation:
-  `890cf7a160d61be135ae945054498dbe7c70d17d`;
-- native gate:
-  **85 passed / 0 failed**;
-- development family result:
-  `535921dcdde0f2a7a87266d0f677758037bab8a3`;
-- assessment command:
-  `mamba2-m022-phase2-development-assessment-v1`;
-- assessment result:
-  `03329379e9ca4394e09e9ff11c51fe5972f0b8ee`.
+`a409a5703e709feb0b45cbe870f4d8639189b6ba`
 
-Mechanical development classifications:
+Preflight PASS:
 
-- **REFERENCE**: P2-R;
-- **SHORTLIST / FINALISTS**: P2-01, P2-03, P2-08;
-- **DOMINATED**: P2-04;
-- **INELIGIBLE**:
-  P2-02, P2-05, P2-06, P2-07, P2-09, P2-10, P2-11, P2-12.
+`320a216f802aef3d0ea179234269c094975a3cd7`
 
-Validation entrants are now frozen as exactly:
+Native validation-runner gate:
 
-- **P2-R**;
-- **P2-01**;
-- **P2-03**;
-- **P2-08**.
+`mamba2-m022-validation-native-tests-v1`
 
-No replacement arm, new combination, retuning, or sample-gate weakening is
-authorized.
+Published test result:
 
-Validation partition:
+`0fe62cfa8c029f65b70ef4e926de75af3f373358`
 
-`2026-04-21T00:00:00Z` → `2026-07-08T00:00:00Z`,
-**56 trading dates**.
+Result:
 
-The next authorized work is:
+- **89 passed / 0 failed**;
+- exact feature SHA matched;
+- no economic replay;
+- no M021 post-cutoff use;
+- no real-order API.
 
-1. implement only narrowly fixed validation execution for P2-R, P2-01, P2-03,
-   and P2-08;
-2. implement the already-frozen validation mechanical assessment;
-3. keep historical holdout execution mechanically unavailable;
-4. run focused/native tests;
-5. sync Dell to the exact feature SHA;
-6. confirm clean worktree and 0/0 divergence;
-7. execute deterministic validation A/B for exactly the four frozen entrants,
-   with at most two independent non-reference arms concurrently;
-8. run the frozen validation assessment;
-9. durably record validation classifications and the mechanically determined
-   holdout entrant list before any historical-holdout execution.
+Accepted validation family evidence:
 
-Frozen validation support requires all mandatory deterministic/safety/sample
-gates plus:
+- repaired family command:
+  `mamba2-m022-phase2-validation-family-v2`;
+- family result:
+  `f520aefda1341dd009412659957d37011138bab1`;
+- exact entrants:
+  P2-R, P2-01, P2-03, P2-08;
+- validation partition only:
+  `2026-04-21T00:00:00Z` → `2026-07-08T00:00:00Z`,
+  **56 trading dates**;
+- deterministic evidence complete for all four;
+- no historical-holdout access;
+- no M021 use;
+- no real-order API.
 
-- net P/L strictly better than validation P2-R;
-- maximum DD USD no worse than validation P2-R;
-- win rate no more than 1.0 percentage point below validation P2-R;
-- positive P/L delta in >=2 symbols;
-- positive P/L delta in >=2 fixed UTC buckets;
-- max positive-symbol contribution <=70%;
-- max positive-side contribution <=80%.
+Frozen validation assessment:
 
-At most **2 non-reference** entrants may advance to historical holdout.
-If none qualifies, historical holdout must remain unopened.
+- command:
+  `mamba2-m022-phase2-validation-assessment-v1`;
+- result:
+  `7d28d11cc20b13b8f9a1a0794abc4b090d5689c5`;
+- `ok: true`.
 
-Historical holdout remains CLOSED and is not authorized to execute yet.
+Mechanical validation classifications:
+
+- **P2-R — REFERENCE**
+- **P2-01 — INELIGIBLE**
+  - exactly one negative-P/L take-profit exit;
+  - mandatory TP-safety gate failed;
+  - also failed frozen win-rate/concentration support checks;
+- **P2-03 — NOT SUPPORTED**
+  - mandatory/sample gates passed;
+  - P/L and DD improved;
+  - side concentration failed: positive improvement was 100% SELL;
+- **P2-08 — NOT SUPPORTED**
+  - mandatory/sample gates passed;
+  - P/L, DD, and win rate improved;
+  - side concentration failed: 93.19% of positive side contribution was SELL.
+
+Mechanical result:
+
+- supported non-reference candidates: **0**;
+- historical-holdout entrants: **0**;
+- historical-holdout execution authorized: **false**.
+
+Therefore the frozen protocol requires:
+
+**DO NOT OPEN HISTORICAL HOLDOUT.**
+
+Historical holdout remains sealed:
+
+`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`,
+**57 trading dates**.
+
+M022 stops at this validation gate unless a future milestone explicitly
+defines a new, prospectively frozen research action. Do not use validation
+results to redesign this M022 matrix.
+
+No further M022 economic execution is currently authorized.
 
 ## Start here
 
-Read the durable handoff docs and the M022 milestone. Resume from the frozen
-validation entrant checkpoint above.
+Read the durable handoff docs and the M022 milestone. M022 has reached its
+frozen validation stop: zero non-reference candidates are supported.
 
-Validation is now the next authorized economic gate, but only for P2-R,
-P2-01, P2-03, and P2-08 under the already-frozen validation rules.
-
-Do not open historical holdout, add or replace a finalist, weaken a gate,
-inspect M021 for M022 tuning, start M15 research, merge, deploy, or enable live
-trading.
+Do not run more M022 economics, open historical holdout, redesign the matrix
+from validation results, add or replace a finalist, weaken a gate, inspect M021
+for M022 tuning, start M15 research, merge, deploy, or enable live trading.
