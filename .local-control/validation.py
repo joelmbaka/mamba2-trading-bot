@@ -143,6 +143,7 @@ M022_PHASE1_ATR_SL_DIR = REPO / "backtest_data" / "m022-phase1-development" / "a
 M022_PHASE1_ATR_TP_DIR = REPO / "backtest_data" / "m022-phase1-development" / "atr-tp-v1"
 M022_PHASE1_SESSION_DIR = REPO / "backtest_data" / "m022-phase1-development" / "session-v1"
 M022_PHASE2_DEV_DIR = REPO / "backtest_data" / "m022-phase2-development-v1"
+M022_PHASE2_VALIDATION_DIR = REPO / "backtest_data" / "m022-phase2-validation-v1"
 
 
 def _safe_env(wine=False):
@@ -3652,6 +3653,600 @@ def m022_phase2_development_family():
             "economic_replay_run": True,
             "economic_partition": "development",
             "validation_economic_data_used": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+
+def _m022_validation_entrants():
+    return ("P2-R", "P2-01", "P2-03", "P2-08")
+
+
+def m022_phase2_validation_family():
+    """Run exactly the frozen Phase-2 validation entrants."""
+
+    feature_sha = _require_m022_branch()
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+    if not manifest.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 native-M1 manifest is unavailable",
+            "feature_sha": feature_sha,
+        }
+
+    expected = _m022_phase2_expected_parameters()
+    entrants = _m022_validation_entrants()
+    output_root = _ensure_baseline_path(M022_PHASE2_VALIDATION_DIR)
+    output_root.mkdir(parents=True, exist_ok=True)
+
+    def artifact_paths(label):
+        prefix = f"M022-{label}"
+        arm_dir = output_root / label
+        return arm_dir, {
+            "a_baseline": arm_dir / f"{prefix}-a-baseline.json",
+            "b_baseline": arm_dir / f"{prefix}-b-baseline.json",
+            "a_diagnostic": arm_dir / f"{prefix}-a-diagnostic.json",
+            "b_diagnostic": arm_dir / f"{prefix}-b-diagnostic.json",
+            "a_summary": arm_dir / f"{prefix}-a-summary.json",
+            "b_summary": arm_dir / f"{prefix}-b-summary.json",
+        }
+
+    def existing_payload(label):
+        arm_dir, paths = artifact_paths(label)
+        if not arm_dir.exists():
+            return None
+        missing = [name for name, path in paths.items() if not path.is_file()]
+        if missing:
+            raise RuntimeError(
+                f"partial Phase-2 validation directory {label}: "
+                + ",".join(missing)
+            )
+        deterministic = bool(
+            _sha256(paths["a_baseline"]) == _sha256(paths["b_baseline"])
+            and _sha256(paths["a_diagnostic"]) == _sha256(paths["b_diagnostic"])
+            and _sha256(paths["a_summary"]) == _sha256(paths["b_summary"])
+        )
+        if not deterministic:
+            raise RuntimeError(
+                f"non-deterministic existing Phase-2 validation arm {label}"
+            )
+        return {
+            "ok": True,
+            "deterministic": True,
+            "partition": "validation",
+            "experiment_id": f"M022-{label}",
+            "baseline_sha256": _sha256(paths["a_baseline"]),
+            "diagnostic_sha256": _sha256(paths["a_diagnostic"]),
+            "summary_sha256": _sha256(paths["a_summary"]),
+            "summary": json.loads(
+                paths["a_summary"].read_text(encoding="utf-8")
+            ),
+            "reused_complete_artifacts": True,
+        }
+
+    def execute_arm(label):
+        payload = existing_payload(label)
+        if payload is not None:
+            return label, payload, None
+
+        arm_dir, _paths = artifact_paths(label)
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.parameter_research",
+                "--manifest",
+                str(manifest.relative_to(REPO)),
+                "--output-dir",
+                str(arm_dir.relative_to(REPO)),
+                "--family",
+                "phase2-validation",
+                "--value",
+                label,
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        if run["exit_code"] != 0:
+            return label, None, run
+        try:
+            payload = json.loads(run["stdout"].strip().splitlines()[-1])
+        except (json.JSONDecodeError, IndexError):
+            return label, None, {
+                "exit_code": run["exit_code"],
+                "stdout": run["stdout"],
+                "stderr": (
+                    run["stderr"]
+                    + "\nunable to parse final validation JSON payload"
+                ),
+            }
+        return label, payload, run
+
+    executed = {}
+    try:
+        # Run P2-R first, then at most two independent non-reference entrants
+        # concurrently as frozen.
+        label, payload, run = execute_arm("P2-R")
+        if payload is None:
+            return {
+                "ok": False,
+                "reason": "M022 validation reference failed",
+                "feature_branch": "strategy-parameter-research",
+                "feature_sha": feature_sha,
+                "failed_run": {
+                    "arm": label,
+                    "exit_code": (run or {}).get("exit_code"),
+                    "stdout": _bounded((run or {}).get("stdout")),
+                    "stderr": _bounded((run or {}).get("stderr")),
+                },
+            }
+        executed[label] = payload
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            futures = {
+                executor.submit(execute_arm, label): label
+                for label in entrants
+                if label != "P2-R"
+            }
+            for future in concurrent.futures.as_completed(futures):
+                label, payload, run = future.result()
+                if payload is None:
+                    return {
+                        "ok": False,
+                        "reason": f"M022 validation arm {label} failed",
+                        "feature_branch": "strategy-parameter-research",
+                        "feature_sha": feature_sha,
+                        "failed_run": {
+                            "arm": label,
+                            "exit_code": (run or {}).get("exit_code"),
+                            "stdout": _bounded((run or {}).get("stdout")),
+                            "stderr": _bounded((run or {}).get("stderr")),
+                        },
+                    }
+                executed[label] = payload
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+            "safety": {
+                "completed_arm_artifacts_preserved": True,
+                "partial_artifacts_not_overwritten": True,
+            },
+        }
+
+    def validate_arm(label, payload):
+        summary = payload.get("summary") or {}
+        partition = summary.get("partition") or {}
+        params = summary.get("parameters") or {}
+        tp_safety = summary.get("tp_safety") or {}
+        arm_ok = bool(
+            payload.get("ok")
+            and payload.get("deterministic")
+            and payload.get("partition") == "validation"
+            and summary.get("experiment_id") == f"M022-{label}"
+            and summary.get("family") == "phase2"
+            and summary.get("value_label") == label
+            and params == expected[label]
+            and summary.get("cost_contract")
+            == (
+                "SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / "
+                "SWAP-UNMODELED"
+            )
+            and partition.get("source_manifest_sha256")
+            == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+            and partition.get("partition") == "validation"
+            and partition.get("start_utc") == "2026-04-21T00:00:00Z"
+            and partition.get("end_exclusive_utc") == "2026-07-08T00:00:00Z"
+            and partition.get("strict_common_boundary_clock") is True
+            and partition.get("full_symbol_m1_preserved") is True
+            and int(partition.get("replay_boundary_count", 0)) > 0
+            and bool(partition.get("replay_boundary_sha256"))
+            and int(
+                tp_safety.get("negative_pl_take_profit_exits", -1)
+            ) == 0
+            and int(tp_safety.get("wrong_side_initial_tp", -1)) == 0
+        )
+        if not arm_ok:
+            raise RuntimeError(
+                f"M022 validation arm {label} failed frozen invariants"
+            )
+        return {
+            "label": label,
+            "experiment_id": payload.get("experiment_id"),
+            "parameters": params,
+            "baseline_sha256": payload.get("baseline_sha256"),
+            "diagnostic_sha256": payload.get("diagnostic_sha256"),
+            "summary_sha256": payload.get("summary_sha256"),
+            "aggregate": summary.get("aggregate"),
+            "per_symbol": summary.get("per_symbol"),
+            "by_side": summary.get("by_side"),
+            "by_entry_utc_bucket": summary.get("by_entry_utc_bucket"),
+            "rejections": summary.get("rejections"),
+            "tp_safety": tp_safety,
+            "remaining_positions": summary.get("remaining_positions"),
+            "reused_complete_artifacts": bool(
+                payload.get("reused_complete_artifacts")
+            ),
+        }
+
+    try:
+        rows = [validate_arm(label, executed[label]) for label in entrants]
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "family": "phase2-validation",
+        "execution": {
+            "entrants": list(entrants),
+            "entrant_count": len(entrants),
+            "maximum_concurrent_nonreference_arms": 2,
+            "reference_ran_first": True,
+            "independent_arm_processes": True,
+        },
+        "partition": {
+            "name": "validation",
+            "start_utc": "2026-04-21T00:00:00Z",
+            "end_exclusive_utc": "2026-07-08T00:00:00Z",
+            "trading_dates": 56,
+        },
+        "reference": rows[0],
+        "arms": rows[1:],
+        "safety": {
+            "economic_replay_run": True,
+            "economic_partition": "validation",
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m022_phase2_validation_assessment():
+    """Apply the frozen M022 validation support rules mechanically."""
+
+    feature_sha = _require_m022_branch()
+    expected = _m022_phase2_expected_parameters()
+    entrants = _m022_validation_entrants()
+
+    summaries = {}
+    for label in entrants:
+        path = (
+            M022_PHASE2_VALIDATION_DIR
+            / label
+            / f"M022-{label}-a-summary.json"
+        )
+        if not path.is_file():
+            return {
+                "ok": False,
+                "reason": f"validation summary missing for {label}",
+                "feature_sha": feature_sha,
+                "path": str(path.relative_to(REPO)),
+            }
+        summaries[label] = json.loads(path.read_text(encoding="utf-8"))
+
+    reference = summaries["P2-R"]
+    ref_agg = reference.get("aggregate") or {}
+    ref_symbols = reference.get("per_symbol") or {}
+    ref_sides = reference.get("by_side") or {}
+    ref_buckets = reference.get("by_entry_utc_bucket") or {}
+
+    def closed(mapping):
+        return int((mapping or {}).get("closed_trades", 0))
+
+    def numeric(mapping, key):
+        value = (mapping or {}).get(key)
+        return None if value is None else float(value)
+
+    def delta_breakdown(candidate, baseline, key):
+        names = sorted(set(candidate or {}) | set(baseline or {}))
+        rows = {}
+        positive = []
+        for name in names:
+            cand = numeric((candidate or {}).get(name), key)
+            ref = numeric((baseline or {}).get(name), key)
+            if cand is None or ref is None:
+                continue
+            delta = cand - ref
+            rows[name] = delta
+            if delta > 0:
+                positive.append((name, delta))
+        positive_sum = sum(value for _name, value in positive)
+        max_share = (
+            max(value for _name, value in positive) / positive_sum
+            if positive_sum > 0
+            else None
+        )
+        return {
+            "deltas": rows,
+            "positive_count": len(positive),
+            "positive_sum": positive_sum,
+            "max_positive_share": max_share,
+        }
+
+    def sample_gate(summary):
+        agg = summary.get("aggregate") or {}
+        symbols = summary.get("per_symbol") or {}
+        sides = summary.get("by_side") or {}
+        buckets = summary.get("by_entry_utc_bucket") or {}
+
+        total_ratio = (
+            closed(agg) / closed(ref_agg) if closed(ref_agg) else None
+        )
+        symbol_ratios = {
+            name: (
+                closed(symbols.get(name)) / closed(ref_row)
+                if closed(ref_row)
+                else None
+            )
+            for name, ref_row in ref_symbols.items()
+        }
+        side_ratios = {
+            name: (
+                closed(sides.get(name)) / closed(ref_row)
+                if closed(ref_row)
+                else None
+            )
+            for name, ref_row in ref_sides.items()
+        }
+        bucket_ratios = {
+            name: (
+                closed(buckets.get(name)) / closed(ref_row)
+                if closed(ref_row)
+                else None
+            )
+            for name, ref_row in ref_buckets.items()
+        }
+        passes = bool(
+            total_ratio is not None
+            and total_ratio >= 0.50
+            and all(
+                value is not None and value >= 0.40
+                for value in symbol_ratios.values()
+            )
+            and all(
+                value is not None and value >= 0.40
+                for value in side_ratios.values()
+            )
+            and len(bucket_ratios) == 6
+            and all(
+                value is not None and value >= 0.25
+                for value in bucket_ratios.values()
+            )
+        )
+        return {
+            "passes": passes,
+            "total_ratio": total_ratio,
+            "symbol_ratios": symbol_ratios,
+            "side_ratios": side_ratios,
+            "bucket_ratios": bucket_ratios,
+        }
+
+    rows = []
+    for label in entrants:
+        summary = summaries[label]
+        aggregate = summary.get("aggregate") or {}
+        partition = summary.get("partition") or {}
+        params = summary.get("parameters") or {}
+        tp = summary.get("tp_safety") or {}
+        sample = sample_gate(summary)
+
+        invariant_ok = bool(
+            params == expected[label]
+            and summary.get("cost_contract")
+            == (
+                "SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / "
+                "SWAP-UNMODELED"
+            )
+            and partition.get("partition") == "validation"
+            and partition.get("source_manifest_sha256")
+            == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+            and partition.get("start_utc") == "2026-04-21T00:00:00Z"
+            and partition.get("end_exclusive_utc") == "2026-07-08T00:00:00Z"
+            and partition.get("strict_common_boundary_clock") is True
+            and partition.get("full_symbol_m1_preserved") is True
+            and int(partition.get("replay_boundary_count", 0)) > 0
+            and bool(partition.get("replay_boundary_sha256"))
+            and int(tp.get("negative_pl_take_profit_exits", -1)) == 0
+            and int(tp.get("wrong_side_initial_tp", -1)) == 0
+        )
+        mandatory_ok = bool(invariant_ok and sample["passes"])
+
+        net_pl = float(aggregate.get("net_realized_pl", 0.0))
+        dd = float(aggregate.get("maximum_equity_drawdown", 0.0))
+        win_rate_raw = aggregate.get("win_rate_nonflat_pct")
+        win_rate = None if win_rate_raw is None else float(win_rate_raw)
+
+        ref_net = float(ref_agg.get("net_realized_pl", 0.0))
+        ref_dd = float(ref_agg.get("maximum_equity_drawdown", 0.0))
+        ref_wr_raw = ref_agg.get("win_rate_nonflat_pct")
+        ref_wr = None if ref_wr_raw is None else float(ref_wr_raw)
+
+        symbol_delta = delta_breakdown(
+            summary.get("per_symbol") or {},
+            ref_symbols,
+            "net_realized_pl",
+        )
+        side_delta = delta_breakdown(
+            summary.get("by_side") or {},
+            ref_sides,
+            "net_realized_pl",
+        )
+        bucket_delta = delta_breakdown(
+            summary.get("by_entry_utc_bucket") or {},
+            ref_buckets,
+            "net_realized_pl",
+        )
+
+        support_checks = {
+            "mandatory_gates": mandatory_ok,
+            "net_pl_strictly_better": net_pl > ref_net,
+            "max_dd_no_worse": dd <= ref_dd,
+            "win_rate_within_one_percentage_point": bool(
+                win_rate is not None
+                and ref_wr is not None
+                and win_rate >= ref_wr - 1.0
+            ),
+            "symbol_positive_delta_min_2": (
+                symbol_delta["positive_count"] >= 2
+            ),
+            "utc_bucket_positive_delta_min_2": (
+                bucket_delta["positive_count"] >= 2
+            ),
+            "symbol_concentration_max_70pct": bool(
+                symbol_delta["max_positive_share"] is not None
+                and symbol_delta["max_positive_share"] <= 0.70
+            ),
+            "side_concentration_max_80pct": bool(
+                side_delta["max_positive_share"] is not None
+                and side_delta["max_positive_share"] <= 0.80
+            ),
+        }
+        supported = bool(
+            label != "P2-R" and all(support_checks.values())
+        )
+
+        rows.append({
+            "label": label,
+            "is_reference": label == "P2-R",
+            "mandatory_ok": mandatory_ok,
+            "sample_gate": sample,
+            "objectives": {
+                "net_realized_pl": net_pl,
+                "maximum_equity_drawdown": dd,
+                "win_rate_nonflat_pct": win_rate,
+            },
+            "support_checks": support_checks,
+            "supported": supported,
+            "breadth": {
+                "symbol": symbol_delta,
+                "side": side_delta,
+                "entry_utc_bucket": bucket_delta,
+            },
+            "accepted_orders": int(aggregate.get("accepted_orders", 0)),
+            "closed_trades": int(aggregate.get("closed_trades", 0)),
+            "ending_realized_balance": aggregate.get(
+                "ending_realized_balance"
+            ),
+            "ending_equity": aggregate.get("ending_equity"),
+            "maximum_equity_drawdown_pct": aggregate.get(
+                "maximum_equity_drawdown_pct"
+            ),
+            "decision_spread_rejections": int(
+                (summary.get("rejections") or {}).get("decision_spread", 0)
+            ),
+            "remaining_open_positions": int(
+                aggregate.get("remaining_open_positions", 0)
+            ),
+        })
+
+    supported_rows = [row for row in rows if row["supported"]]
+
+    ref_obj = next(
+        row["objectives"] for row in rows if row["label"] == "P2-R"
+    )
+
+    def robustness(row):
+        obj = row["objectives"]
+        ref_pl = float(ref_obj["net_realized_pl"])
+        ref_dd = float(ref_obj["maximum_equity_drawdown"])
+        ref_wr = float(ref_obj["win_rate_nonflat_pct"])
+        pl_gain = (
+            (float(obj["net_realized_pl"]) - ref_pl) / abs(ref_pl)
+            if ref_pl
+            else 0.0
+        )
+        dd_gain = (
+            (ref_dd - float(obj["maximum_equity_drawdown"])) / ref_dd
+            if ref_dd
+            else 0.0
+        )
+        wr_gain = (
+            (float(obj["win_rate_nonflat_pct"]) - ref_wr) / ref_wr
+            if ref_wr
+            else 0.0
+        )
+        return {
+            "pl_gain_fraction": pl_gain,
+            "dd_improvement_fraction": dd_gain,
+            "win_rate_gain_fraction": wr_gain,
+            "maximin": min(pl_gain, dd_gain, wr_gain),
+        }
+
+    for row in supported_rows:
+        row["robustness"] = robustness(row)
+
+    if len(supported_rows) <= 2:
+        holdout_entrants = [row["label"] for row in supported_rows]
+    else:
+        ranked = sorted(
+            supported_rows,
+            key=lambda row: (
+                -float(row["robustness"]["maximin"]),
+                -int(row["breadth"]["symbol"]["positive_count"]),
+                -int(
+                    row["breadth"]["entry_utc_bucket"]["positive_count"]
+                ),
+                -float(row["sample_gate"]["total_ratio"]),
+                row["label"],
+            ),
+        )
+        holdout_entrants = [row["label"] for row in ranked[:2]]
+
+    for row in rows:
+        if row["is_reference"]:
+            row["validation_status"] = "REFERENCE"
+        elif not row["mandatory_ok"]:
+            row["validation_status"] = "INELIGIBLE"
+        elif row["supported"]:
+            row["validation_status"] = "SUPPORTED"
+        else:
+            row["validation_status"] = "NOT SUPPORTED"
+
+    return {
+        "ok": True,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "family": "phase2-validation",
+        "rubric": {
+            "sample_gate": {
+                "total_fraction": 0.50,
+                "per_symbol_fraction": 0.40,
+                "per_side_fraction": 0.40,
+                "per_utc_bucket_fraction": 0.25,
+            },
+            "support": {
+                "net_pl": "strictly better than validation P2-R",
+                "maximum_equity_drawdown": "no worse than validation P2-R",
+                "win_rate_nonflat_pct": (
+                    "no more than 1.0 percentage point below validation P2-R"
+                ),
+                "symbol_positive_delta_min_count": 2,
+                "calendar_bucket_positive_delta_min_count": 2,
+                "max_symbol_positive_delta_share": 0.70,
+                "max_side_positive_delta_share": 0.80,
+            },
+            "holdout_nonreference_cap": 2,
+        },
+        "supported_candidates": [
+            row["label"] for row in supported_rows
+        ],
+        "holdout_entrants": holdout_entrants,
+        "arms": rows,
+        "historical_holdout_execution_authorized": False,
+        "safety": {
+            "economic_replay_run": False,
+            "reads_existing_validation_results_only": True,
             "historical_holdout_economic_data_used": False,
             "m021_post_cutoff_data_used": False,
             "real_order_api_called": False,
@@ -10526,6 +11121,8 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_phase2_validation_assessment": m022_phase2_validation_assessment,
+    "m022_phase2_validation_family": m022_phase2_validation_family,
     "m022_phase2_development_assessment": m022_phase2_development_assessment,
     "m022_phase2_development_family": m022_phase2_development_family,
     "m022_phase1_session_assessment": m022_phase1_session_assessment,

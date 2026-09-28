@@ -203,3 +203,10 @@ M022 fixed Phase-2 development actions:
 - `m022_phase2_development_assessment`
 
 These actions expose development-only execution for the pre-frozen P2-R/P2-01…P2-12 matrix. They do not expose validation, holdout, arbitrary shell, or real-order operations.
+
+M022 fixed Phase-2 validation actions:
+
+- `m022_phase2_validation_family`
+- `m022_phase2_validation_assessment`
+
+These actions expose validation only for the frozen entrants P2-R, P2-01, P2-03, and P2-08. Historical-holdout execution is not exposed. Arbitrary shell and real-order operations remain unavailable.
