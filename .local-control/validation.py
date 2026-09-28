@@ -9141,21 +9141,6 @@ def m023_direction_session_diagnostic():
     output_a = output_dir / "m023-direction-session-diagnostics-a.json"
     output_b = output_dir / "m023-direction-session-diagnostics-b.json"
 
-    existing = [path.is_file() for path in (output_a, output_b)]
-    if any(existing) and not all(existing):
-        return {
-            "ok": False,
-            "reason": "partial M023 diagnostic artifact pair exists",
-            "feature_branch": "direction-session-research",
-            "feature_sha": feature_sha,
-            "safety": {
-                "economic_replay_run": False,
-                "historical_holdout_economic_data_used": False,
-                "m021_post_cutoff_data_used": False,
-                "real_order_api_called": False,
-            },
-        }
-
     def run_one(path):
         run = _run(
             _native_command(
@@ -9169,67 +9154,28 @@ def m023_direction_session_diagnostic():
             env=_safe_env(),
         )
         if run["exit_code"] != 0:
-            return None, run
-        try:
-            payload = json.loads(run["stdout"].strip().splitlines()[-1])
-        except (json.JSONDecodeError, IndexError):
-            return None, {
+            return False, run
+        if not path.is_file():
+            return False, {
                 **run,
-                "stderr": (
-                    run["stderr"]
-                    + "\nunable to parse M023 diagnostic payload"
-                ),
+                "stderr": run["stderr"] + "\nM023 output artifact missing",
             }
-        return payload, run
+        # The CLI stdout contains review convenience data and may be large.
+        # Artifact JSON is the authoritative deterministic product.
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            return False, {
+                **run,
+                "stderr": run["stderr"] + f"\ninvalid M023 artifact JSON: {exc}",
+            }
+        return True, run
 
-    if all(existing):
-        sha_a = _sha256(output_a)
-        sha_b = _sha256(output_b)
-        if sha_a != sha_b:
-            return {
-                "ok": False,
-                "reason": "existing M023 diagnostic pair is non-deterministic",
-                "feature_branch": "direction-session-research",
-                "feature_sha": feature_sha,
-                "sha_a": sha_a,
-                "sha_b": sha_b,
-            }
-        report = json.loads(output_a.read_text(encoding="utf-8"))
-        # Rebuild compact payload from the immutable existing report without
-        # any strategy replay.
-        payload_a = {
-            "sources": report.get("sources"),
-            "timezone_runtime": report.get("timezone_runtime"),
-            "folds": report.get("folds"),
-            "headline": {
-                arm: {
-                    "development": {
-                        direction: report["arms"][arm]["development"][direction]["overall"]
-                        for direction in ("BOTH", "SELL", "BUY")
-                    },
-                    "validation": {
-                        direction: report["arms"][arm]["validation"][direction]["overall"]
-                        for direction in ("BOTH", "SELL", "BUY")
-                    },
-                    "combined": {
-                        direction: {
-                            "overall": report["arms"][arm]["combined"][direction]["overall"],
-                            "windows": report["arms"][arm]["combined"][direction]["windows"],
-                            "weekdays": report["arms"][arm]["combined"][direction]["weekdays"],
-                        }
-                        for direction in ("BOTH", "SELL", "BUY")
-                    },
-                    "fold_stability": report["arms"][arm]["fold_stability"],
-                }
-                for arm in ("P2-R", "P2-03", "P2-08")
-            },
-            "safety": report.get("safety"),
-        }
-        reused = True
-        runs = []
-    else:
-        payload_a, run_a = run_one(output_a)
-        if payload_a is None:
+    runs = []
+    if not output_a.is_file():
+        ok_a, run_a = run_one(output_a)
+        runs.append(run_a)
+        if not ok_a:
             return {
                 "ok": False,
                 "reason": "first M023 diagnostic build failed",
@@ -9237,8 +9183,10 @@ def m023_direction_session_diagnostic():
                 "feature_sha": feature_sha,
                 "run": run_a,
             }
-        payload_b, run_b = run_one(output_b)
-        if payload_b is None:
+    if not output_b.is_file():
+        ok_b, run_b = run_one(output_b)
+        runs.append(run_b)
+        if not ok_b:
             return {
                 "ok": False,
                 "reason": "second M023 diagnostic build failed",
@@ -9246,13 +9194,27 @@ def m023_direction_session_diagnostic():
                 "feature_sha": feature_sha,
                 "run": run_b,
             }
-        sha_a = _sha256(output_a)
-        sha_b = _sha256(output_b)
-        reused = False
-        runs = [run_a, run_b]
 
+    sha_a = _sha256(output_a)
+    sha_b = _sha256(output_b)
     deterministic = sha_a == sha_b
-    safety = payload_a.get("safety") or {}
+    if not deterministic:
+        return {
+            "ok": False,
+            "reason": "M023 diagnostic artifacts are non-deterministic",
+            "feature_branch": "direction-session-research",
+            "feature_sha": feature_sha,
+            "artifact": {
+                "a_path": str(output_a.relative_to(REPO)),
+                "b_path": str(output_b.relative_to(REPO)),
+                "a_sha256": sha_a,
+                "b_sha256": sha_b,
+            },
+            "runs": runs,
+        }
+
+    report = json.loads(output_a.read_text(encoding="utf-8"))
+    safety = report.get("safety") or {}
     safety_ok = bool(
         safety.get("economic_replay_run") is False
         and safety.get("existing_diagnostic_json_only") is True
@@ -9260,6 +9222,109 @@ def m023_direction_session_diagnostic():
         and safety.get("m021_post_cutoff_data_used") is False
         and safety.get("real_order_api_called") is False
     )
+
+    def slim(summary):
+        return {
+            "closed_trades": summary.get("closed_trades"),
+            "wins": summary.get("wins"),
+            "losses": summary.get("losses"),
+            "flats": summary.get("flats"),
+            "win_rate_nonflat_pct": summary.get("win_rate_nonflat_pct"),
+            "net_realized_pl": summary.get("net_realized_pl"),
+            "mean_trade_pl": summary.get("mean_trade_pl"),
+            "median_trade_pl": summary.get("median_trade_pl"),
+            "entry_spread_points": summary.get("entry_spread_points"),
+            "exit_counts": summary.get("exit_counts"),
+            "per_symbol": summary.get("per_symbol"),
+        }
+
+    arms = report.get("arms") or {}
+    overall = {}
+    windows = {}
+    weekdays = {}
+    fold_stability = {}
+    for arm in ("P2-R", "P2-03", "P2-08"):
+        overall[arm] = {}
+        for partition in ("development", "validation", "combined"):
+            overall[arm][partition] = {
+                direction: slim(
+                    arms[arm][partition][direction]["overall"]
+                )
+                for direction in ("BOTH", "SELL", "BUY")
+            }
+
+        windows[arm] = {
+            direction: {
+                name: slim(summary)
+                for name, summary in
+                arms[arm]["combined"][direction]["windows"].items()
+            }
+            for direction in ("BOTH", "SELL", "BUY")
+        }
+        weekdays[arm] = {
+            direction: {
+                name: slim(summary)
+                for name, summary in
+                arms[arm]["combined"][direction]["weekdays"].items()
+            }
+            for direction in ("BOTH", "SELL", "BUY")
+        }
+        fold_stability[arm] = {}
+        for direction in ("BOTH", "SELL", "BUY"):
+            fold_stability[arm][direction] = {}
+            for name, row in arms[arm]["fold_stability"][direction].items():
+                fold_stability[arm][direction][name] = {
+                    "folds_positive_net_pl": row.get(
+                        "folds_positive_net_pl"
+                    ),
+                    "folds_net_pl_above_both_all_hours": row.get(
+                        "folds_net_pl_above_both_all_hours"
+                    ),
+                    "folds_mean_trade_pl_above_both_all_hours": row.get(
+                        "folds_mean_trade_pl_above_both_all_hours"
+                    ),
+                    "largest_fold_share_of_positive_net_pl": row.get(
+                        "largest_fold_share_of_positive_net_pl"
+                    ),
+                    "largest_fold_share_of_positive_delta_vs_both_all_hours":
+                        row.get(
+                            "largest_fold_share_of_positive_delta_vs_both_all_hours"
+                        ),
+                    "folds": [
+                        {
+                            "fold": fold.get("fold"),
+                            "closed_trades": fold.get("closed_trades"),
+                            "net_realized_pl": fold.get("net_realized_pl"),
+                            "mean_trade_pl": fold.get("mean_trade_pl"),
+                            "positive_symbol_count": fold.get(
+                                "positive_symbol_count"
+                            ),
+                        }
+                        for fold in row.get("folds", [])
+                    ],
+                }
+
+    # Hourly output is diagnostic only; return a compact P2-08 combined table
+    # for reviewer visibility while the full artifact retains every arm.
+    hourly_p2_08 = {
+        direction: {
+            zone: {
+                hour: {
+                    "closed_trades": summary.get("closed_trades"),
+                    "net_realized_pl": summary.get("net_realized_pl"),
+                    "mean_trade_pl": summary.get("mean_trade_pl"),
+                    "win_rate_nonflat_pct": summary.get(
+                        "win_rate_nonflat_pct"
+                    ),
+                }
+                for hour, summary in table.items()
+            }
+            for zone, table in
+            arms["P2-08"]["combined"][direction]["hourly"].items()
+        }
+        for direction in ("BOTH", "SELL", "BUY")
+    }
+
     return {
         "ok": bool(deterministic and safety_ok),
         "feature_branch": "direction-session-research",
@@ -9270,15 +9335,22 @@ def m023_direction_session_diagnostic():
             "a_sha256": sha_a,
             "b_sha256": sha_b,
             "deterministic": deterministic,
-            "reused_complete_artifacts": reused,
+            "reused_first_artifact": len(runs) < 2,
         },
-        "sources": payload_a.get("sources"),
-        "timezone_runtime": payload_a.get("timezone_runtime"),
-        "folds": payload_a.get("folds"),
-        "headline": payload_a.get("headline"),
+        "sources": report.get("sources"),
+        "timezone_runtime": report.get("timezone_runtime"),
+        "folds": report.get("folds"),
+        "review_summary": {
+            "overall": overall,
+            "windows": windows,
+            "weekdays": weekdays,
+            "fold_stability": fold_stability,
+            "hourly_p2_08": hourly_p2_08,
+        },
         "runs": runs,
         "safety": safety,
     }
+
 
 
 def m022_phase1_tests():
