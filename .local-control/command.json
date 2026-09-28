@@ -1,9 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m023-switch-direction-session-research-v1",
-  "action": "switch_branch",
-  "args": {
-    "branch": "direction-session-research"
-  },
+  "id": "mamba2-m023-direction-session-tests-v1",
+  "action": "m023_direction_session_tests",
+  "args": {},
   "requested_by": "chatgpt"
 }
