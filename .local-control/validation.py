@@ -3665,6 +3665,121 @@ def _m022_validation_entrants():
     return ("P2-R", "P2-01", "P2-03", "P2-08")
 
 
+
+def m022_phase2_validation_invariant_diagnostic():
+    """Read existing validation summaries and report exact invariant checks."""
+
+    feature_sha = _require_m022_branch()
+    expected = _m022_phase2_expected_parameters()
+    entrants = _m022_validation_entrants()
+    rows = []
+
+    for label in entrants:
+        arm_dir = M022_PHASE2_VALIDATION_DIR / label
+        prefix = f"M022-{label}"
+        paths = {
+            "a_baseline": arm_dir / f"{prefix}-a-baseline.json",
+            "b_baseline": arm_dir / f"{prefix}-b-baseline.json",
+            "a_diagnostic": arm_dir / f"{prefix}-a-diagnostic.json",
+            "b_diagnostic": arm_dir / f"{prefix}-b-diagnostic.json",
+            "a_summary": arm_dir / f"{prefix}-a-summary.json",
+            "b_summary": arm_dir / f"{prefix}-b-summary.json",
+        }
+        exists = {name: path.is_file() for name, path in paths.items()}
+        if not all(exists.values()):
+            rows.append({
+                "label": label,
+                "complete_artifacts": False,
+                "exists": exists,
+            })
+            continue
+
+        summary = json.loads(paths["a_summary"].read_text(encoding="utf-8"))
+        partition = summary.get("partition") or {}
+        params = summary.get("parameters") or {}
+        tp_safety = summary.get("tp_safety") or {}
+
+        checks = {
+            "deterministic_baseline": (
+                _sha256(paths["a_baseline"]) == _sha256(paths["b_baseline"])
+            ),
+            "deterministic_diagnostic": (
+                _sha256(paths["a_diagnostic"]) == _sha256(paths["b_diagnostic"])
+            ),
+            "deterministic_summary": (
+                _sha256(paths["a_summary"]) == _sha256(paths["b_summary"])
+            ),
+            "experiment_id": summary.get("experiment_id") == f"M022-{label}",
+            "family": summary.get("family") == "phase2",
+            "value_label": summary.get("value_label") == label,
+            "parameters": params == expected[label],
+            "cost_contract": summary.get("cost_contract")
+            == (
+                "SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / "
+                "SWAP-UNMODELED"
+            ),
+            "source_manifest": partition.get("source_manifest_sha256")
+            == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558",
+            "partition_name": partition.get("partition") == "validation",
+            "start_utc": partition.get("start_utc") == "2026-04-21T00:00:00Z",
+            "end_exclusive_utc": (
+                partition.get("end_exclusive_utc") == "2026-07-08T00:00:00Z"
+            ),
+            "strict_common_boundary_clock": (
+                partition.get("strict_common_boundary_clock") is True
+            ),
+            "full_symbol_m1_preserved": (
+                partition.get("full_symbol_m1_preserved") is True
+            ),
+            "replay_boundary_count": (
+                int(partition.get("replay_boundary_count", 0)) > 0
+            ),
+            "replay_boundary_sha256": bool(
+                partition.get("replay_boundary_sha256")
+            ),
+            "tp_negative_pl_zero": int(
+                tp_safety.get("negative_pl_take_profit_exits", -1)
+            ) == 0,
+            "tp_wrong_side_zero": int(
+                tp_safety.get("wrong_side_initial_tp", -1)
+            ) == 0,
+        }
+        rows.append({
+            "label": label,
+            "complete_artifacts": True,
+            "checks": checks,
+            "failed_checks": [
+                name for name, passed in checks.items() if not passed
+            ],
+            "observed": {
+                "experiment_id": summary.get("experiment_id"),
+                "family": summary.get("family"),
+                "value_label": summary.get("value_label"),
+                "parameters": params,
+                "partition": partition,
+                "tp_safety": tp_safety,
+                "baseline_sha256": _sha256(paths["a_baseline"]),
+                "diagnostic_sha256": _sha256(paths["a_diagnostic"]),
+                "summary_sha256": _sha256(paths["a_summary"]),
+            },
+        })
+
+    return {
+        "ok": True,
+        "feature_branch": "strategy-parameter-research",
+        "feature_sha": feature_sha,
+        "entrants": list(entrants),
+        "rows": rows,
+        "safety": {
+            "economic_replay_run": False,
+            "read_existing_validation_artifacts_only": True,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def m022_phase2_validation_family():
     """Run exactly the frozen Phase-2 validation entrants."""
 
@@ -11121,6 +11236,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m022_phase2_validation_invariant_diagnostic": m022_phase2_validation_invariant_diagnostic,
     "m022_phase2_validation_assessment": m022_phase2_validation_assessment,
     "m022_phase2_validation_family": m022_phase2_validation_family,
     "m022_phase2_development_assessment": m022_phase2_development_assessment,
