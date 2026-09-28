@@ -26,6 +26,7 @@ should append a dated record here or add a dedicated file under
 | 018 | Proven-defect review and correction | `fb03bc197d60d5d7b5b218a86288811f72ec4f60` | Wrong-side initial ATR TP defect proven and narrowly corrected |
 | 019 | Broader-history validation | `94a74211175d0f1db7e4c00cb3ab1f8ca1f286bb` | Jun 23–Sep 24 deterministic broader replay; M018 and whole-window semantic parity preserved |
 | 020 | Controlled experiments | `0d85b82278ae08a88f8b5b942fb23ec000b11411` | Decision-time spread >10 treatment classified PROMISING in-sample; deterministic/safe, not promoted |
+| 022 | Two-timeframe parameter research | `a409a5703e709feb0b45cbe870f4d8639189b6ba` | Phase-2 validation supported zero non-reference candidates; historical holdout remained sealed |
 
 ## Current acceptance evidence
 
@@ -146,3 +147,19 @@ Record:
 - semantic contract established;
 - limitations intentionally left unresolved;
 - next authorized milestone.
+
+## Milestone 023 active state — direction and session research
+
+M023 is **OPEN — DIAGNOSTIC-ONLY GATE FROZEN**.
+
+Branch:
+
+`direction-session-research`
+
+Branch point / closed M022 docs HEAD:
+
+`7047d5ff3fd4c74163b62f2142742a124462bb7d`
+
+The first gate reuses only already-seen M022 development + validation evidence for P2-R, P2-03, and P2-08. No filtered strategy replay and no historical-holdout access are authorized yet.
+
+See `docs/milestones/023-direction-session-research.md`.

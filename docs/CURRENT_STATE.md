@@ -356,3 +356,21 @@ window is classified or extended by a predeclared seven-day increment.
 
 Real MT5 trading remains disabled. M020-D is not promoted to production/live
 behavior.
+
+## M022 closeout and M023 research state
+
+M022 is **CLOSED** at docs closeout HEAD:
+
+`7047d5ff3fd4c74163b62f2142742a124462bb7d`
+
+Its accepted validation implementation SHA remains:
+
+`a409a5703e709feb0b45cbe870f4d8639189b6ba`
+
+The frozen M022 validation assessment supported zero non-reference candidates, so its historical holdout was not opened.
+
+M023 — Direction and Session Research — is now **OPEN** on:
+
+`direction-session-research`
+
+The current M023 gate is diagnostic only. It may read existing M022 development + validation artifacts for P2-R, P2-03, and P2-08, derive timezone-aware direction/session/day/fold attribution, and publish deterministic diagnostic evidence. It may not run a fresh filtered strategy replay or inspect the untouched historical holdout.
