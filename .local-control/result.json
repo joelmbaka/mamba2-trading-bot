@@ -1,32 +1,38 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage3-sync-v7",
-  "completed_at": "2026-09-29T17:27:06.689039+00:00",
+  "command_id": "mamba2-m025-stage3-ingestion-tests-v6",
+  "completed_at": "2026-09-29T17:28:19.009403+00:00",
   "ok": true,
-  "action": "m025_switch_public_benchmarks",
+  "action": "m025_stage3_ingestion_tests",
   "data": {
     "ok": true,
     "feature_branch": "public-strategy-benchmarks",
     "feature_sha": "890bf16ba9a5f93a08ef3bd39d9dcf883898cf59",
-    "divergence": {
-      "ahead": 0,
-      "behind": 0
-    },
-    "switch": {
+    "tests": [
+      "tests/test_m025_stage3_ingestion.py",
+      "tests/test_public_benchmarks.py"
+    ],
+    "run": {
       "command": [
-        "git",
-        "switch",
-        "public-strategy-benchmarks"
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_m025_stage3_ingestion.py",
+        "tests/test_public_benchmarks.py"
       ],
       "exit_code": 0,
-      "stdout": "Your branch is up to date with 'origin/public-strategy-benchmarks'.\n",
-      "stderr": "Already on 'public-strategy-benchmarks'\n"
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 31 items\n\ntests/test_m025_stage3_ingestion.py ........                             [ 25%]\ntests/test_public_benchmarks.py .......................                  [100%]\n\n============================== 31 passed in 0.88s ==============================\n",
+      "stderr": ""
     },
-    "fast_forward": null,
     "safety": {
-      "dirty_worktree_refused": true,
-      "force_reset_used": false,
-      "economic_replay_run": false,
+      "download_run": false,
+      "economic_computation_run": false,
+      "m021_post_cutoff_data_used": false,
+      "m023_outcomes_used": false,
+      "m024_outcomes_used_to_tune_definitions": false,
       "real_order_api_called": false
     }
   }
