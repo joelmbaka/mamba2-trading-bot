@@ -1,90 +1,54 @@
 # Next Authorized Task
 
-## Milestone 023 — Stage A causal direction screen
+## Milestone 023 — Stage B protocol freeze
 
 Branch:
 
 `direction-session-research`
 
-Current required pre-Stage-A HEAD:
+Stage-A family result:
 
-`810981eba1f82ce051d319784bab1ba3879eda89`
+`04f8cb971ac56b06739aba594df1a2090745f396`
 
-The complete Stage-A numeric protocol must be frozen in the milestone document
-before any D-R/D-S/D-B economic replay. After that freeze, implement and
-execute only Stage A.
+Stage-A economic feature SHA:
 
-### Frozen research partition
+`070ca2f01d887da4088698df40cd012a2596d048`
 
-- start: `2025-08-25T00:00:00Z`
-- end-exclusive: `2026-07-08T00:00:00Z`
-- accepted trading dates: **225**
-- ordered date-list SHA-256:
-  `50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0`
+Stage-A mechanical assessment result:
 
-Historical holdout remains sealed from `2026-07-08T00:00:00Z` onward.
+`ed01975c5ea7945d9890d807c58ff133e07a6aa1`
 
-### Exact P2-08 anchor
+Stage-A result is accepted:
 
-- stochastic 21/7/7;
-- boundary 20/80;
-- EMA7;
-- spread gate none;
-- ATR SL1.5;
-- ATR TP3.0;
-- all hours;
-- directional trailing unchanged;
-- M15 disabled;
-- position size 0.1;
-- costs:
-  SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED.
+- D-R — REFERENCE;
+- D-S — NOT SUPPORTED;
+- D-B — SUPPORTED.
 
-### Exact Stage-A matrix
+Mechanically fixed Stage-B direction:
 
-- D-R — BOTH BUY + SELL;
-- D-S — SELL entries only;
-- D-B — BUY entries only.
+**BUY ONLY**
 
-Direction overrides alter new-entry eligibility only.
+Do not reconsider SELL and do not carry BOTH as a competing Stage-B strategy
+direction.
 
-No session filtering. No weekday filtering. No parameter retuning.
+## Immediate authorization
 
-### Implementation authorization
+Create a separate **docs-only Stage-B protocol-freeze commit** before any
+session-filtered economic replay.
 
-After the docs-only Stage-A protocol freeze commit:
+The freeze must use the exact matrix, session semantics, representation gates,
+profitability/support rules, concentration rules, deterministic reduction
+rule, implementation sequence, and hard boundaries supplied in the current
+M023 reviewer handoff.
 
-1. implement narrow experiment-only direction overrides;
-2. add exact Stage-A tests;
-3. add only fixed Stage-A family and mechanical-assessment local-control
-   actions;
-4. run native Stage-A tests;
-5. sync the Dell to exact feature SHA;
-6. execute D-R first, then D-S/D-B with max two non-reference arms
-   concurrently;
-7. mechanically assess using the frozen gates;
-8. fix exactly one Stage-B direction using the frozen rule;
-9. durably document the result;
-10. stop before Stage B.
+No Stage-B economics may run before that freeze commit exists.
 
-The complete numeric gates, concentration rules, weekly rules, reporting
-requirements, and deterministic reduction rule are authoritative in:
+Historical holdout remains sealed:
 
-`docs/milestones/023-direction-session-research.md`
+`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`
 
-### Hard boundaries
+Weekday filtering remains unauthorized.
 
-Do not:
+M021 remains isolated.
 
-- alter M022 conclusions;
-- add a fourth direction arm;
-- test sessions during Stage A;
-- test weekdays;
-- inspect historical holdout;
-- inspect M021 outcomes for tuning;
-- add M15;
-- change production defaults;
-- merge to main;
-- deploy;
-- enable live trading;
-- place/modify/close real MT5 orders;
-- expose arbitrary shell.
+Production/main/live behavior remains unchanged.

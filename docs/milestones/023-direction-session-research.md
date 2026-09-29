@@ -1,6 +1,6 @@
 # Milestone 023 — Direction and Session Research
 
-Status: **STAGE-A PROTOCOL FROZEN PROSPECTIVELY — IMPLEMENTATION AUTHORIZED; NO STAGE-A ECONOMICS YET**
+Status: **STAGE A COMPLETE — BUY ONLY FIXED FOR STAGE B; STAGE-B ECONOMICS NOT YET AUTHORIZED**
 
 Branch:
 
@@ -1050,3 +1050,108 @@ Historical holdout remains sealed:
 No M023 holdout action may exist yet.
 
 M021 remains isolated and uninspected for M023 tuning.
+
+
+## Stage A accepted result — direction fixed for Stage B
+
+Stage-A family result:
+
+\`04f8cb971ac56b06739aba594df1a2090745f396\`
+
+Exact Stage-A economic feature SHA:
+
+\`070ca2f01d887da4088698df40cd012a2596d048\`
+
+Frozen mechanical assessment command:
+
+\`mamba2-m023-stage-a-direction-assessment-v1\`
+
+Assessment result:
+
+\`ed01975c5ea7945d9890d807c58ff133e07a6aa1\`
+
+Assessment status:
+
+\`ok: true\`
+
+### Mechanical classification
+
+- **D-R / BOTH — REFERENCE**
+- **D-S / SELL only — NOT SUPPORTED**
+- **D-B / BUY only — SUPPORTED**
+
+D-S passed mandatory and representation gates but failed the frozen support
+requirements for:
+
+- mean trade P/L improvement;
+- win-rate tolerance;
+- fold mean breadth;
+- symbol mean breadth;
+- EAT-active mean improvement;
+- weekly robustness.
+
+D-S robustness:
+
+- total activity ratio: **0.6746611053**;
+- folds with better mean: **2 / 5**;
+- symbols with better mean: **2 / 5**;
+- eligible ISO weeks: **46**;
+- better ISO weeks: **19**;
+- better-week ratio: **41.30%**.
+
+D-B economics:
+
+- closed trades: **6,630**;
+- net realized P/L: **USD -7,453.8802448**;
+- maximum equity drawdown: **USD 7,497.0102757**;
+- mean trade P/L: **-1.124265497**;
+- non-flat win rate: **36.6737%**;
+- EAT-active mean trade P/L: **-0.4402526733**.
+
+D-B robustness:
+
+- total activity ratio: **0.5761209593**;
+- every one of five symbols passed representation;
+- every one of five chronological folds passed representation;
+- represented reference trade weeks: **46 / 46**;
+- folds with better mean: **4 / 5**;
+- symbols with better mean: **3 / 5**;
+- eligible ISO weeks: **46**;
+- better ISO weeks: **30**;
+- better-week ratio: **65.2174%**;
+- max positive-symbol improvement share: **44.20%**;
+- max positive-fold improvement share: **26.18%**.
+
+Every frozen Stage-A support condition passed for D-B.
+
+### Mechanically fixed Stage-B direction
+
+The frozen Stage-A rule therefore fixes exactly:
+
+**D-B / BUY ONLY**
+
+for Stage B.
+
+Do not reconsider SELL.
+
+Do not carry BOTH as a competing Stage-B strategy direction.
+
+D-R/BOTH may remain read-only/reference evidence where useful, but Stage-B
+strategy direction is fixed to BUY only.
+
+### Stage-A safety/isolation
+
+Stage A completed with:
+
+- historical holdout untouched;
+- M021 unused;
+- no session filtering;
+- no weekday filtering;
+- no real-order API;
+- exact 225-date research sample preserved;
+- deterministic A/B evidence for all three arms;
+- TP-safety gates clean.
+
+Stage B is still not authorized by this acceptance alone. A separate
+prospective Stage-B protocol-freeze commit must exist before any
+session-filtered economic replay.
