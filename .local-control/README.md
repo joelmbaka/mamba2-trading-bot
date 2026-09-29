@@ -231,3 +231,19 @@ No M023 holdout action, session execution action, weekday execution action, arbi
 - `m023_stage_b_session_assessment` — reads completed Stage-B artifacts only, applies the prospectively frozen same-window representation, strict-positive profitability, fold/symbol/week breadth, concentration, and deterministic reduction rules, and fixes one supported session or zero.
 
 No historical-holdout action and no weekday execution action is exposed.
+
+
+## M024 Symbol Specialization actions
+
+- `m024_symbol_specialization_tests` — runs only the focused native tests for
+  the M024 read-only symbol attribution analyzer on
+  `symbol-specialization-research`.
+- `m024_symbol_specialization_diagnostic` — verifies the exact accepted M023
+  Stage-A D-B deterministic summary pair and its frozen SHA-256, builds the
+  four predeclared M024 descriptive subsets twice, requires byte-identical
+  output artifacts, and mechanically reports the prospectively frozen
+  descriptive screen.
+
+These actions do not run a strategy replay, do not open historical holdout, do
+not inspect M021 post-cutoff outcomes, do not use M025 outcomes, and expose no
+arbitrary-shell or real-order capability.

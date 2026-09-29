@@ -147,6 +147,7 @@ M022_PHASE2_VALIDATION_DIR = REPO / "backtest_data" / "m022-phase2-validation-v1
 M023_DIRECTION_SESSION_DIR = REPO / "backtest_data" / "m023-direction-session-diagnostics-v1"
 M023_STAGE_A_DIRECTION_DIR = REPO / "backtest_data" / "m023-stage-a-direction-v1"
 M023_STAGE_B_SESSION_DIR = REPO / "backtest_data" / "m023-stage-b-session-v1"
+M024_SYMBOL_SPECIALIZATION_DIR = REPO / "backtest_data" / "m024-symbol-specialization-v1"
 
 
 def _safe_env(wine=False):
@@ -880,6 +881,49 @@ def _require_m023_branch():
         raise RuntimeError(
             "M023 action requires local HEAD to match "
             "origin/direction-session-research"
+        )
+    return head["stdout"].strip()
+
+
+def _require_m024_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "symbol-specialization-research":
+        raise RuntimeError(
+            "M024 action requires branch symbol-specialization-research"
+        )
+
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("M024 action refuses a dirty worktree")
+
+    refresh = _run([
+        "git",
+        "fetch",
+        "origin",
+        (
+            "symbol-specialization-research:"
+            "refs/remotes/origin/symbol-specialization-research"
+        ),
+    ])
+    if refresh["exit_code"] != 0:
+        raise RuntimeError("M024 action could not refresh remote branch")
+
+    head = _run(["git", "rev-parse", "HEAD"])
+    remote = _run([
+        "git",
+        "rev-parse",
+        "--verify",
+        "refs/remotes/origin/symbol-specialization-research",
+    ])
+    if (
+        head["exit_code"] != 0
+        or remote["exit_code"] != 0
+        or head["stdout"].strip() != remote["stdout"].strip()
+    ):
+        raise RuntimeError(
+            "M024 action requires local HEAD to match "
+            "origin/symbol-specialization-research"
         )
     return head["stdout"].strip()
 
@@ -13245,6 +13289,222 @@ def m022_history_inventory():
     }
 
 
+def m024_symbol_specialization_tests():
+    """Run the narrow native gate for M024 read-only symbol diagnostics."""
+
+    feature_sha = _require_m024_branch()
+    tests = [
+        "tests/test_m024_symbol_specialization.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "accepted_m023_d_b_summary_only": True,
+            "economic_replay_run": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "m025_outcomes_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m024_symbol_specialization_diagnostic():
+    """Build deterministic M024 attribution from accepted M023 D-B only."""
+
+    feature_sha = _require_m024_branch()
+
+    try:
+        source = _m023_stage_a_validate_artifacts("D-B")
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_branch": "symbol-specialization-research",
+            "feature_sha": feature_sha,
+        }
+    if source is None:
+        return {
+            "ok": False,
+            "reason": "accepted M023 Stage-A D-B artifacts are missing",
+            "feature_branch": "symbol-specialization-research",
+            "feature_sha": feature_sha,
+        }
+
+    expected_summary_sha = (
+        "7f16803e8174ffddc7afe6d7d273cc04a4b2859dd61753f6fae1f272ce28551c"
+    )
+    source_hashes = source["hashes"]
+    if (
+        source_hashes.get("summary_a") != expected_summary_sha
+        or source_hashes.get("summary_b") != expected_summary_sha
+    ):
+        return {
+            "ok": False,
+            "reason": "accepted M023 D-B summary hash changed",
+            "feature_branch": "symbol-specialization-research",
+            "feature_sha": feature_sha,
+            "observed_hashes": source_hashes,
+        }
+
+    output_dir = _ensure_baseline_path(M024_SYMBOL_SPECIALIZATION_DIR)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_a = output_dir / "m024-symbol-specialization-a.json"
+    output_b = output_dir / "m024-symbol-specialization-b.json"
+
+    exists = [output_a.is_file(), output_b.is_file()]
+    if any(exists) and not all(exists):
+        return {
+            "ok": False,
+            "reason": "partial immutable M024 diagnostic artifacts",
+            "feature_branch": "symbol-specialization-research",
+            "feature_sha": feature_sha,
+        }
+
+    def run_one(path):
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.m024_symbol_specialization",
+                "--repo-root",
+                ".",
+                "--output",
+                str(path.relative_to(REPO)),
+            ),
+            env=_safe_env(),
+        )
+        if run["exit_code"] != 0:
+            return False, run
+        if not path.is_file():
+            return False, {
+                **run,
+                "stderr": run["stderr"] + "\nM024 output artifact missing",
+            }
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            return False, {
+                **run,
+                "stderr": run["stderr"] + f"\ninvalid M024 artifact JSON: {exc}",
+            }
+        return True, run
+
+    runs = []
+    if not output_a.is_file():
+        ok_a, run_a = run_one(output_a)
+        runs.append(run_a)
+        if not ok_a:
+            return {
+                "ok": False,
+                "reason": "first M024 diagnostic build failed",
+                "feature_branch": "symbol-specialization-research",
+                "feature_sha": feature_sha,
+                "run": run_a,
+            }
+
+        ok_b, run_b = run_one(output_b)
+        runs.append(run_b)
+        if not ok_b:
+            return {
+                "ok": False,
+                "reason": "second M024 diagnostic build failed",
+                "feature_branch": "symbol-specialization-research",
+                "feature_sha": feature_sha,
+                "run": run_b,
+            }
+
+    sha_a = _sha256(output_a)
+    sha_b = _sha256(output_b)
+    if sha_a != sha_b:
+        return {
+            "ok": False,
+            "reason": "M024 diagnostic artifacts are non-deterministic",
+            "feature_branch": "symbol-specialization-research",
+            "feature_sha": feature_sha,
+            "artifact": {
+                "a_sha256": sha_a,
+                "b_sha256": sha_b,
+            },
+        }
+
+    report = json.loads(output_a.read_text(encoding="utf-8"))
+    safety = report.get("safety") or {}
+    safety_ok = bool(
+        report.get("milestone") == "M024"
+        and report.get("analysis_kind") == "DESCRIPTIVE SUBSET ATTRIBUTION"
+        and report.get("causal_symbol_filtered_replay") is False
+        and safety.get("economic_replay_run") is False
+        and safety.get("accepted_m023_d_b_summary_only") is True
+        and safety.get("historical_holdout_economic_data_used") is False
+        and safety.get("m021_post_cutoff_data_used") is False
+        and safety.get("m025_outcomes_used") is False
+        and safety.get("real_order_api_called") is False
+    )
+    if not safety_ok:
+        return {
+            "ok": False,
+            "reason": "M024 diagnostic safety contract failed",
+            "feature_branch": "symbol-specialization-research",
+            "feature_sha": feature_sha,
+            "artifact_sha256": sha_a,
+        }
+
+    subsets = {}
+    for label in ("SYM-R", "SYM-UJ", "SYM-JPY", "SYM-NONJPY"):
+        row = (report.get("subsets") or {}).get(label)
+        if row is None:
+            return {
+                "ok": False,
+                "reason": f"M024 diagnostic missing frozen subset {label}",
+                "feature_branch": "symbol-specialization-research",
+                "feature_sha": feature_sha,
+            }
+        subsets[label] = {
+            "classification": row.get("classification"),
+            "symbols": row.get("symbols"),
+            "overall": row.get("overall"),
+            "fold_stability": row.get("fold_stability"),
+            "weekly_stability": row.get("weekly_stability"),
+            "descriptive_screen_checks": row.get(
+                "descriptive_screen_checks"
+            ),
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "family": "m024-symbol-specialization-diagnostic",
+        "source": {
+            "m023_stage_a_d_b_summary_sha256": expected_summary_sha,
+            "m023_stage_a_family_result":
+                "04f8cb971ac56b06739aba594df1a2090745f396",
+            "m023_stage_a_assessment":
+                "ed01975c5ea7945d9890d807c58ff133e07a6aa1",
+        },
+        "artifact": {
+            "a_path": str(output_a.relative_to(REPO)),
+            "b_path": str(output_b.relative_to(REPO)),
+            "a_sha256": sha_a,
+            "b_sha256": sha_b,
+            "deterministic": True,
+        },
+        "subsets": subsets,
+        "descriptively_promising_subsets": report.get(
+            "descriptively_promising_subsets"
+        ),
+        "next_stage_authorized": report.get("next_stage_authorized"),
+        "next_stage_rule": report.get("next_stage_rule"),
+        "runs": runs,
+        "safety": safety,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -13273,6 +13533,8 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m024_symbol_specialization_tests": m024_symbol_specialization_tests,
+    "m024_symbol_specialization_diagnostic": m024_symbol_specialization_diagnostic,
     "m023_stage_b_session_family": m023_stage_b_session_family,
     "m023_stage_b_session_assessment": m023_stage_b_session_assessment,
     "m023_stage_a_direction_family": m023_stage_a_direction_family,
