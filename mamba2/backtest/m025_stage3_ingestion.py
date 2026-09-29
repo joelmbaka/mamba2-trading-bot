@@ -483,7 +483,7 @@ def run_ingestion(
         "sources": {
             "h10": {
                 "url": H10_URL,
-                "raw_path": str(h10_raw),
+                "raw_artifact": h10_raw.name,
                 "raw_sha256": _sha256(h10_raw),
                 "snapshot_from": H10_FROM,
                 "snapshot_through": H10_TO,
@@ -491,15 +491,15 @@ def run_ingestion(
             },
             "aqr_tsmom": {
                 "url": AQR_URL,
-                "raw_path": str(aqr_raw),
+                "raw_artifact": aqr_raw.name,
                 "raw_sha256": _sha256(aqr_raw),
                 "schema": aqr_schema,
             },
             "lrv_currency_portfolios": {
                 "url": LRV_URL,
-                "raw_path": str(lrv_raw),
+                "raw_artifact": lrv_raw.name,
                 "raw_sha256": _sha256(lrv_raw),
-                "converted_schema_path": str(lrv_xlsx),
+                "converted_schema_artifact": lrv_xlsx.name,
                 "schema": lrv_schema,
             },
         },
