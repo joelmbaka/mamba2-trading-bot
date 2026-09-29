@@ -224,3 +224,10 @@ These actions do not run strategy replay, do not inspect historical holdout, do 
 - `m023_stage_a_direction_assessment` — reads only the completed Stage-A artifacts, applies the prospectively frozen activity/quality/concentration/weekly gates, classifies D-S/D-B, and mechanically fixes exactly one Stage-B direction. It does not execute Stage B.
 
 No M023 holdout action, session execution action, weekday execution action, arbitrary shell action, or real-order action is exposed.
+
+## M023 Stage-B session actions
+
+- `m023_stage_b_session_family` — runs S-R first, requires exact accepted D-B economic equivalence, then and only then runs S-ACTIVE/S-MORNING/S-MIDDAY/S-AFTERNOON with at most two non-reference processes. Session filters affect new BUY entry eligibility only.
+- `m023_stage_b_session_assessment` — reads completed Stage-B artifacts only, applies the prospectively frozen same-window representation, strict-positive profitability, fold/symbol/week breadth, concentration, and deterministic reduction rules, and fixes one supported session or zero.
+
+No historical-holdout action and no weekday execution action is exposed.
