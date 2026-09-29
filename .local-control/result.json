@@ -1,43 +1,90 @@
 {
   "version": 1,
-  "command_id": "mamba2-m023-stage-b-native-tests-v1",
-  "completed_at": "2026-09-29T03:54:36.791378+00:00",
+  "command_id": "mamba2-m023-stage-b-preflight-sync-v1",
+  "completed_at": "2026-09-29T03:55:20.336943+00:00",
   "ok": true,
-  "action": "m023_direction_session_tests",
+  "action": "sync",
   "data": {
-    "ok": true,
-    "feature_branch": "direction-session-research",
-    "feature_sha": "f5cd1111d4626bd96e11dc9b630cdac364059a04",
-    "tests": [
-      "tests/test_direction_session_diagnostics.py",
-      "tests/test_m023_direction_research.py",
-      "tests/test_m023_session_research.py",
-      "tests/test_backtest_baseline_reporting.py"
-    ],
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest",
-        "tests/test_direction_session_diagnostics.py",
-        "tests/test_m023_direction_research.py",
-        "tests/test_m023_session_research.py",
-        "tests/test_backtest_baseline_reporting.py"
-      ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 43 items\n\ntests/test_direction_session_diagnostics.py .....                        [ 11%]\ntests/test_m023_direction_research.py ..............                     [ 44%]\ntests/test_m023_session_research.py ....................                 [ 90%]\ntests/test_backtest_baseline_reporting.py ....                           [100%]\n\n============================== 43 passed in 0.25s ==============================\n",
-      "stderr": ""
-    },
-    "safety": {
-      "market_data_read_only": true,
-      "existing_diagnostic_json_only": true,
-      "economic_replay_run": false,
-      "historical_holdout_economic_data_used": false,
-      "m021_post_cutoff_data_used": false,
-      "real_order_api_called": false
-    }
+    "branch": "direction-session-research",
+    "before_sha": "f5cd1111d4626bd96e11dc9b630cdac364059a04",
+    "after_sha": "f5cd1111d4626bd96e11dc9b630cdac364059a04",
+    "reason": null,
+    "commands": [
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "f5cd1111d4626bd96e11dc9b630cdac364059a04\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "direction-session-research\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin",
+          "direction-session-research:refs/remotes/origin/direction-session-research"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/direction-session-research"
+        ],
+        "exit_code": 0,
+        "stdout": "f5cd1111d4626bd96e11dc9b630cdac364059a04\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...refs/remotes/origin/direction-session-research"
+        ],
+        "exit_code": 0,
+        "stdout": "0\t0\n",
+        "stderr": ""
+      }
+    ]
   }
 }
