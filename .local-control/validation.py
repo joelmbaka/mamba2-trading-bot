@@ -14851,7 +14851,7 @@ def m025_stage3_ingestion():
     if final_dir.exists():
         required = [
             report_path,
-            final_dir / "h10-daily-rates.csv",
+            final_dir / "h10-all-data.zip",
             final_dir / "h10-normalized-usd-per-foreign.csv",
             final_dir / "Time-Series-Momentum-Factors-Monthly.xlsx",
             final_dir / "CurrencyPortfolios.xls",
