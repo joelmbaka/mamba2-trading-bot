@@ -1,66 +1,80 @@
 # Next Authorized Task
 
-## Milestone 025 — freeze non-equivalent reference/proxy evidence protocol
+## M025 — implement deterministic Stage-3 ingestion gate
 
 Branch:
 
 `public-strategy-benchmarks`
 
-Stage 1 accepted feature:
+Stage-1 acceptance:
 
 `d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
 
-Stage-1 focused acceptance:
+Stage-2 inventory acceptance:
 
-`a9d4ce84b5cc35e911407082c056c24668b79401`
+`efbf59094ff226542201a32963a5e75a1fccd416`
 
-Stage-1 full-native acceptance:
+Stage-3 reference/proxy protocol is frozen in:
 
-`28a5c79dd49e10f1255a97bc24a05b0df721bb1b`
+`docs/milestones/025-public-fx-strategy-benchmarks.md`
 
-Stage-2 inventory:
+## Ingestion only
 
-`docs/research/m025-public-source-inventory.md`
+Implement deterministic, non-economic ingestion/schema validation for:
 
-## Inventory outcome
+1. Federal Reserve H.10 exact frozen 23-series daily-rate package;
+2. AQR monthly TSMOM reference artifact;
+3. LRV `CurrencyPortfolios.xls`.
 
-No public/free **RAW-ELIGIBLE-CANDIDATE** was established for
-publication-faithful B1/B2/B3.
+For H.10, publish before any return calculation:
 
-Do not weaken the raw benchmark requirements and do not run a fake
-publication-faithful reconstruction.
+- exact raw bytes SHA-256;
+- exact 23 source IDs;
+- source quote conventions;
+- normalized USD-per-foreign panel SHA-256;
+- first/last observations per series;
+- missing counts;
+- duplicate/date validity;
+- positive finite price checks;
+- 72-consecutive-month gate result;
+- source and normalized schema metadata.
 
-## Next gate only
+For AQR:
 
-Freeze, before any economic download/calculation, a separate protocol for the
-two scientifically distinct surviving evidence types:
+- raw artifact SHA-256;
+- workbook/file schema;
+- exact sheet/column names;
+- whether a currency-specific monthly TSMOM factor exists;
+- no return summary.
 
-1. **DERIVED REFERENCE SERIES**
-   - AQR TSMOM factor data;
-   - Lustig/Roussanov/Verdelhan CurrencyPortfolios/HML-FX data;
-   - B4 accepted M020-D snapshot.
-   These are external/reference returns, not locally reconstructed raw
-   benchmarks.
+For LRV:
 
-2. **TSMOM SPOT PROXY**
-   - choose one public spot source prospectively from inventory metadata;
-   - freeze exact source, USD quote normalization, eligible currency universe,
-     72-month continuity rule, daily-to-monthly timing, 12/1 signal, centered
-     MOP volatility estimator, 40% target, missing-data rules, and costs;
-   - label every result **TSMOM SPOT PROXY**.
+- raw artifact SHA-256;
+- workbook schema;
+- exact sheet/column names;
+- whether six currency portfolios P1-P6 are identifiable;
+- whether a published HML column exists;
+- no return summary.
 
-The protocol must predeclare any comparison/scaling metric and deterministic
-artifact hashes before economics.
+Add focused synthetic/parser tests and fixed non-economic local-control actions
+only.
 
-B2 Menkhoff raw reconstruction remains stopped unless a future source-access
-milestone proves a valid spot + one-month-forward/log-excess-return panel.
+## Forbidden
 
-B3 raw HML-FX reconstruction remains stopped unless a future source-access
-milestone proves a valid currency-level one-month-forward panel.
+Do not calculate:
 
-Do not calculate P/L, Sharpe, drawdown, win rate, or economic ranking until
-this separate reference/proxy protocol is frozen.
+- strategy/proxy/reference returns;
+- P/L;
+- Sharpe;
+- drawdown;
+- cumulative wealth;
+- positive-month fraction;
+- correlations;
+- tracking error;
+- economic ranking.
 
-Do not use M021 post-cutoff outcomes.
-Do not alter benchmark definitions using M023/M024 outcomes.
+Do not replace H.10 after seeing outcomes.
+Do not drop currencies based on outcomes.
+Do not inspect M021 post-cutoff outcomes.
+Do not alter definitions using M023/M024 outcomes.
 Do not merge/deploy or enable real trading.

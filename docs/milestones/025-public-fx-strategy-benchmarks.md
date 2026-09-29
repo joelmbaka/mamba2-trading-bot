@@ -492,3 +492,259 @@ The frozen Stage-2 stop rule fires for publication-faithful B1/B2/B3 raw
 reconstruction.
 
 No M025 benchmark economics were run during source inventory.
+
+
+## Stage-3 reference/proxy evidence protocol freeze — 2026-09-29
+
+Status: **FROZEN BEFORE ANY STAGE-3 ECONOMIC DOWNLOAD/CALCULATION**
+
+Stage-2 inventory acceptance:
+
+`efbf59094ff226542201a32963a5e75a1fccd416`
+
+Stage 3 keeps the two surviving evidence types scientifically separate:
+
+1. externally published **DERIVED REFERENCE SERIES**;
+2. a locally reconstructed **TSMOM SPOT PROXY**.
+
+Neither may be described as publication-faithful raw reconstruction.
+
+### P1 — Federal Reserve H.10 TSMOM spot proxy
+
+Prospectively selected source:
+
+**Federal Reserve Board H.10 — Daily Foreign Exchange Rates**
+
+The selection is based only on source authority, public access, long history,
+stable documented identifiers, and explicit quote convention. No return
+outcome was inspected to choose H.10.
+
+Canonical H.10 daily-rate package contains exactly these 23 frozen source
+series:
+
+| Currency | H.10 series ID | Source quote |
+|---|---|---|
+| AUD | H10/H10/RXI$US_N.B.AL | USD per AUD |
+| EUR | H10/H10/RXI$US_N.B.EU | USD per EUR |
+| NZD | H10/H10/RXI$US_N.B.NZ | USD per NZD |
+| GBP | H10/H10/RXI$US_N.B.UK | USD per GBP |
+| BRL | H10/H10/RXI_N.B.BZ | BRL per USD |
+| CAD | H10/H10/RXI_N.B.CA | CAD per USD |
+| CNY | H10/H10/RXI_N.B.CH | CNY per USD |
+| DKK | H10/H10/RXI_N.B.DN | DKK per USD |
+| HKD | H10/H10/RXI_N.B.HK | HKD per USD |
+| INR | H10/H10/RXI_N.B.IN | INR per USD |
+| JPY | H10/H10/RXI_N.B.JA | JPY per USD |
+| MYR | H10/H10/RXI_N.B.MA | MYR per USD |
+| MXN | H10/H10/RXI_N.B.MX | MXN per USD |
+| NOK | H10/H10/RXI_N.B.NO | NOK per USD |
+| ZAR | H10/H10/RXI_N.B.SF | ZAR per USD |
+| SGD | H10/H10/RXI_N.B.SI | SGD per USD |
+| KRW | H10/H10/RXI_N.B.KO | KRW per USD |
+| LKR | H10/H10/RXI_N.B.SL | LKR per USD |
+| SEK | H10/H10/RXI_N.B.SD | SEK per USD |
+| CHF | H10/H10/RXI_N.B.SZ | CHF per USD |
+| TWD | H10/H10/RXI_N.B.TA | TWD per USD |
+| THB | H10/H10/RXI_N.B.TH | THB per USD |
+| VES | H10/H10/RXI_N.B.VES | VES per USD |
+
+No H.10 dollar indexes enter the proxy.
+
+#### Frozen normalization
+
+Every source series is normalized to:
+
+**USD value of one foreign-currency unit**
+
+Therefore:
+
+- AUD/EUR/NZD/GBP: keep source observation unchanged;
+- all other frozen series: normalized price = `1 / source_rate`.
+
+No sign or quote convention may be changed after economics.
+
+#### Frozen data handling
+
+- use only source observation dates;
+- source `ND`/missing values become missing observations;
+- do not forward-fill or backward-fill missing observations;
+- do not interpolate;
+- do not synthesize weekend/holiday observations;
+- normalized prices must be finite and strictly positive;
+- duplicate source dates are invalid;
+- source rows are sorted chronologically;
+- preserve source series identifiers and original quote convention in metadata.
+
+The ingestion gate must freeze the downloaded bytes SHA-256 and a normalized
+panel SHA-256 before any proxy return is calculated.
+
+#### Frozen history / universe gate
+
+The **source universe is exactly the 23 series above**.
+
+Each instrument must have a consecutive source history sufficient for:
+
+- 12 months pre-signal formation history; and
+- at least 60 subsequent complete evaluation months.
+
+The complete source panel must therefore demonstrate the Stage-1
+72-consecutive-month gate before proxy economics.
+
+An instrument may not be removed because of its later performance.
+
+If an instrument fails the predeclared data gate, the ingestion result must
+name it and classify P1 as **DATA GATE FAILED** unless a protocol-defined
+source-level reason proves that the H.10 series itself is discontinued or
+structurally unavailable. No economic subset search is allowed.
+
+#### Frozen P1 strategy semantics
+
+Label every artifact/result:
+
+**TSMOM SPOT PROXY — FED H.10**
+
+For each eligible normalized spot-price series:
+
+1. compute simple spot returns with no fill;
+2. use the already accepted MOP Stage-1 mechanics:
+   - 12-month formation;
+   - 1-month hold/rebalance;
+   - centered ex-ante EWMA daily volatility;
+   - `delta = 60/61`;
+   - annualization = 261;
+   - 40% per-instrument target volatility;
+   - volatility information only through `t-1`;
+3. long when the trailing 12-month spot return is positive;
+4. short when negative;
+5. a zero signal receives zero directional exposure;
+6. a non-finite/non-positive volatility observation is ineligible for that
+   formation month; no volatility floor or leverage cap may be invented;
+7. apply the month-end formation weight only to the following month;
+8. form the proxy portfolio as the equal-weight mean of valid
+   volatility-scaled instrument returns for the month.
+
+No currency is weighted or excluded based on realized performance.
+
+#### Costs and financing
+
+H.10 supplies reference spot rates, not executable bid/ask/forward funding.
+
+Therefore P1 is reported:
+
+**GROSS SPOT-PRICE PROXY / TRANSACTION COSTS UNMODELED / CARRY AND FINANCING UNMODELED**
+
+Do not invent spreads, commissions, swaps, or financing.
+
+This limitation must accompany every economic result.
+
+### R1 — AQR TSMOM derived reference
+
+Canonical reference:
+
+**AQR — Time Series Momentum: Factors, Monthly**
+
+Use the published **currency TSMOM factor** only if ingestion/schema inspection
+can identify a currency-specific monthly factor unambiguously.
+
+If the downloadable artifact contains only a combined all-asset factor, classify
+the currency-reference comparison as **SCHEMA INELIGIBLE** rather than silently
+using the combined factor.
+
+Do not reconstruct AQR's underlying positions.
+
+### R2 — LRV currency-portfolio derived reference
+
+Canonical reference:
+
+**Lustig / Roussanov / Verdelhan — CurrencyPortfolios.xls**
+
+Use the published six currency portfolio return series only after a
+schema-only ingestion gate identifies P1 through P6 (or an unambiguous
+equivalent).
+
+Reference HML-FX is frozen as:
+
+**P6 − P1**
+
+If the sheet already publishes HML-FX, verify its identity against P6 − P1
+before using it.
+
+Do not treat these portfolio returns as raw spot/forward formation data.
+
+### R3 — M020-D internal reference
+
+Use only the already accepted M020-D snapshot/artifact hashes.
+
+Do not rerun M020-D in Stage 3.
+
+### Frozen economic summary metrics
+
+For every monthly derived-reference or proxy return series admitted by a later
+execution gate, report exactly:
+
+- first/last included month;
+- observation count;
+- arithmetic mean monthly return;
+- annualized arithmetic mean = `12 * monthly_mean`;
+- annualized volatility = `sqrt(12) * sample_std(ddof=1)`;
+- annualized Sharpe = annualized mean / annualized volatility;
+- cumulative wealth from 1.0 by `cumprod(1 + r)`;
+- maximum drawdown of that cumulative-wealth series;
+- positive-month fraction.
+
+No metric may be used to retune benchmark definitions.
+
+### Frozen cross-series comparisons
+
+Only when two series overlap in calendar months, report:
+
+- exact common-window start/end/count;
+- zero-lag Pearson correlation of monthly returns;
+- annualized mean-return difference:
+  `12 * mean(proxy - reference)`;
+- annualized tracking error:
+  `sqrt(12) * std(proxy - reference, ddof=1)`.
+
+Do not optimize lags, scaling, signs, subperiods, or currency subsets to improve
+correlation.
+
+P1 may be compared with R1 only if R1 is a currency-specific TSMOM factor.
+
+R2 HML-FX remains a standalone derived reference because no B3 raw/proxy
+reconstruction is authorized.
+
+R3 M020-D remains an internal accepted snapshot and is not forced into a
+monthly return correlation comparison unless an already-accepted monthly
+artifact exists.
+
+### Stage-3 deterministic artifacts
+
+Before economics, a separate ingestion gate must publish deterministic:
+
+- source download URL/identifier;
+- retrieval timestamp;
+- raw source SHA-256;
+- parsed/schema metadata;
+- normalized panel SHA-256 where applicable;
+- exact included source IDs/columns;
+- first/last raw observation metadata;
+- missing-value counts;
+- 72-month gate result;
+- no-economic-computation safety assertion.
+
+Economic execution is unauthorized until those ingestion artifacts are
+accepted.
+
+### Stop / contamination rules
+
+- no source replacement after seeing returns;
+- no H.10 currency removal based on performance;
+- no lookback/hold/vol-target/estimator change;
+- no leverage cap/volatility floor invented after outcomes;
+- no transaction-cost estimate invented after outcomes;
+- no B2/B3 spot-only substitute;
+- no M021 post-cutoff use;
+- no M023/M024 outcome use to alter benchmark definitions;
+- no production/live promotion.
+
+Any later economic result is research evidence only.

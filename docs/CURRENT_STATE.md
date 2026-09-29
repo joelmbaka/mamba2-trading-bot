@@ -451,3 +451,27 @@ Result:
 
 No M025 economics have run. Raw publication-faithful reconstruction stops here
 under the current free-data boundary.
+
+
+## M025 Stage-3 reference/proxy protocol frozen
+
+Stage-2 inventory acceptance:
+
+`efbf59094ff226542201a32963a5e75a1fccd416`
+
+Stage 3 prospectively selects:
+
+- **Federal Reserve H.10** for the explicit
+  `TSMOM SPOT PROXY — FED H.10` path;
+- AQR monthly TSMOM as a derived reference, currency factor only if schema
+  proves it exists;
+- LRV `CurrencyPortfolios.xls` as a derived HML-FX reference;
+- accepted M020-D artifacts as the internal reference.
+
+The H.10 source universe is frozen at all 23 daily currency-rate series, with
+USD-per-foreign normalization and no fill/interpolation.
+
+Economic metrics and cross-series comparison formulas are frozen before any
+Stage-3 economic download/calculation.
+
+Next gate: deterministic schema/ingestion only.
