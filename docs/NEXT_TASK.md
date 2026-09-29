@@ -52,3 +52,14 @@ Do not modify benchmark/proxy definitions after source ingestion.
 Do not inspect M021 post-cutoff outcomes.
 Do not use M023/M024 outcomes to alter definitions.
 Do not merge/deploy or enable real trading.
+
+
+### Latest non-economic ingestion repair
+
+H.10 exact-series VES/VEB metadata alias repair:
+
+`82c9665f9dd29f7985b71dd2fa0e70422efba9fc`
+
+Before the next ingestion attempt, sync Dell to this exact feature HEAD and
+rerun `m025_stage3_ingestion_tests`. Only if focused tests pass may the fixed
+`m025_stage3_ingestion` action run again.

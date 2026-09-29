@@ -870,3 +870,42 @@ Scientific source/sample semantics remain unchanged:
 
 This is a transport repair caused by DDP endpoint behavior, not a source,
 universe, date, strategy, or economic-rule change.
+
+
+## Stage-3 H.10 Venezuelan SDMX metadata alias repair — 2026-09-29
+
+The fourth non-economic ingestion attempt reached the exact frozen H.10
+Venezuelan series:
+
+`H10/H10/RXI_N.B.VES`
+
+and stopped because the release-wide SDMX archive reports:
+
+`CURRENCY="VEB"`
+
+for that series even though the Federal Reserve DDP/public package identifier
+remains `RXI_N.B.VES` and the series description remains **Venezuelan
+Bolivar**.
+
+Failed local-control result:
+
+`mamba2-m025-stage3-ingestion-v4`
+
+No immutable ingestion artifact was published and no economic calculation ran.
+
+This is accepted as one explicit transport/schema alias only:
+
+- frozen series remains exactly `H10/H10/RXI_N.B.VES`;
+- normalized proxy symbol remains **VES**;
+- accepted SDMX `CURRENCY` values for this exact series are only
+  `VES` or legacy `VEB`;
+- no other series receives a currency-code alias;
+- all other currency metadata drift remains a hard failure.
+
+Repair commit:
+
+`82c9665f9dd29f7985b71dd2fa0e70422efba9fc`
+
+This repair does not change source, universe, sample dates, quote
+normalization, missing-data treatment, strategy definition, or any economic
+rule.

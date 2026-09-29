@@ -501,3 +501,19 @@ Runtime probe:
 
 No Stage-3 source has been economically evaluated. Next: focused ingestion
 tests, then the immutable non-economic source snapshot.
+
+
+## M025 Stage-3 H.10 VES/VEB metadata repair
+
+Non-economic ingestion v4 stopped before publication because the exact frozen
+Fed series `RXI_N.B.VES` carries legacy SDMX metadata
+`CURRENCY="VEB"`.
+
+The parser now accepts only `VES`/legacy `VEB` for that exact series and
+still rejects all other currency-code drift.
+
+Repair:
+
+`82c9665f9dd29f7985b71dd2fa0e70422efba9fc`
+
+No Stage-3 economics have run.
