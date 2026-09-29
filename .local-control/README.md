@@ -293,3 +293,16 @@ real-order APIs.
 No alternate holdout candidate, partition, session, weekday, direction,
 parameter set, M15 setting, spread gate, or position size is exposed. The
 assessment cannot rerun economics. No action can place/modify/close real orders.
+
+
+## M025 public benchmark Stage-1 controls
+
+- `m025_switch_public_benchmarks` — clean-worktree-only switch to
+  `public-strategy-benchmarks`; creates the local tracking branch when absent,
+  permits only fast-forward synchronization, and refuses local divergence.
+- `m025_public_benchmark_tests` — runs only
+  `tests/test_public_benchmarks.py` on the exact remote feature HEAD.
+
+These actions expose no M025 historical economic replay, no arbitrary shell,
+no M021/M023/M024 outcome consumption for benchmark selection, and no real
+order capability.

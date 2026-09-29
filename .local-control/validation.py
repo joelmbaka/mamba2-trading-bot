@@ -931,6 +931,49 @@ def _require_m024_branch():
     return head["stdout"].strip()
 
 
+def _require_m025_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "public-strategy-benchmarks":
+        raise RuntimeError(
+            "M025 action requires branch public-strategy-benchmarks"
+        )
+
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("M025 action refuses a dirty worktree")
+
+    refresh = _run([
+        "git",
+        "fetch",
+        "origin",
+        (
+            "public-strategy-benchmarks:"
+            "refs/remotes/origin/public-strategy-benchmarks"
+        ),
+    ])
+    if refresh["exit_code"] != 0:
+        raise RuntimeError("M025 action could not refresh remote branch")
+
+    head = _run(["git", "rev-parse", "HEAD"])
+    remote = _run([
+        "git",
+        "rev-parse",
+        "--verify",
+        "refs/remotes/origin/public-strategy-benchmarks",
+    ])
+    if (
+        head["exit_code"] != 0
+        or remote["exit_code"] != 0
+        or head["stdout"].strip() != remote["stdout"].strip()
+    ):
+        raise RuntimeError(
+            "M025 action requires local HEAD to match "
+            "origin/public-strategy-benchmarks"
+        )
+    return head["stdout"].strip()
+
+
 def _ensure_baseline_path(path):
     root = (REPO / "backtest_data").resolve()
     resolved = Path(path).resolve()
@@ -14612,6 +14655,129 @@ def m024_holdout_assessment():
     }
 
 
+def m025_switch_public_benchmarks():
+    """Switch clean Dell checkout to the exact M025 feature branch safely."""
+
+    target = "public-strategy-benchmarks"
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        return {
+            "ok": False,
+            "reason": "M025 branch switch refuses a dirty worktree",
+        }
+
+    fetch = _run([
+        "git",
+        "fetch",
+        "origin",
+        f"{target}:refs/remotes/origin/{target}",
+    ])
+    if fetch["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "could not fetch M025 remote branch",
+            "run": fetch,
+        }
+
+    local_ref = _run(["git", "show-ref", "--verify", f"refs/heads/{target}"])
+    if local_ref["exit_code"] == 0:
+        switch = _run(["git", "switch", target])
+    else:
+        switch = _run([
+            "git",
+            "switch",
+            "--track",
+            "-c",
+            target,
+            f"origin/{target}",
+        ])
+    if switch["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "could not switch to M025 branch",
+            "run": switch,
+        }
+
+    divergence = _run([
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        f"HEAD...refs/remotes/origin/{target}",
+    ])
+    if divergence["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "could not measure M025 divergence",
+            "run": divergence,
+        }
+    left, right = [
+        int(value)
+        for value in divergence["stdout"].strip().split()
+    ]
+    if left > 0:
+        return {
+            "ok": False,
+            "reason": "local M025 branch has unpushed/divergent commits",
+            "divergence": {"ahead": left, "behind": right},
+        }
+    ff = None
+    if right > 0:
+        ff = _run([
+            "git",
+            "merge",
+            "--ff-only",
+            f"refs/remotes/origin/{target}",
+        ])
+        if ff["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M025 fast-forward failed",
+                "run": ff,
+            }
+
+    feature_sha = _require_m025_branch()
+    return {
+        "ok": True,
+        "feature_branch": target,
+        "feature_sha": feature_sha,
+        "divergence": {"ahead": 0, "behind": 0},
+        "switch": switch,
+        "fast_forward": ff,
+        "safety": {
+            "dirty_worktree_refused": True,
+            "force_reset_used": False,
+            "economic_replay_run": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m025_public_benchmark_tests():
+    """Run M025 Stage-1 benchmark machinery tests only."""
+
+    feature_sha = _require_m025_branch()
+    tests = [
+        "tests/test_public_benchmarks.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "stage1_only": True,
+            "historical_economics_run": False,
+            "m021_post_cutoff_data_used": False,
+            "m023_outcomes_used": False,
+            "m024_holdout_outcomes_used_for_definition": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -14640,6 +14806,8 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m025_switch_public_benchmarks": m025_switch_public_benchmarks,
+    "m025_public_benchmark_tests": m025_public_benchmark_tests,
     "m024_holdout_tests": m024_holdout_tests,
     "m024_holdout_h_uj_pair": m024_holdout_h_uj_pair,
     "m024_holdout_assessment": m024_holdout_assessment,
