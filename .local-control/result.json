@@ -1,17 +1,13 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage3-ingestion-tests-v2",
-  "completed_at": "2026-09-29T16:54:35.488826+00:00",
-  "ok": true,
-  "action": "m025_stage3_ingestion_tests",
+  "command_id": "mamba2-m025-stage3-ingestion-v2",
+  "completed_at": "2026-09-29T16:55:18.197332+00:00",
+  "ok": false,
+  "action": "m025_stage3_ingestion",
   "data": {
-    "ok": true,
-    "feature_branch": "public-strategy-benchmarks",
+    "ok": false,
+    "reason": "M025 Stage-3 ingestion failed",
     "feature_sha": "3446d871dcdd41a1a560654d8efdd5d13bfe23ad",
-    "tests": [
-      "tests/test_m025_stage3_ingestion.py",
-      "tests/test_public_benchmarks.py"
-    ],
     "run": {
       "command": [
         "/home/joel/.local/bin/uv",
@@ -19,21 +15,16 @@
         "--locked",
         "python",
         "-m",
-        "pytest",
-        "tests/test_m025_stage3_ingestion.py",
-        "tests/test_public_benchmarks.py"
+        "mamba2.backtest.m025_stage3_ingestion",
+        "--output-dir",
+        "backtest_data/m025-stage3-ingestion-v1.tmp",
+        "--libreoffice",
+        "/usr/bin/libreoffice"
       ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 28 items\n\ntests/test_m025_stage3_ingestion.py .....                                [ 17%]\ntests/test_public_benchmarks.py .......................                  [100%]\n\n============================== 28 passed in 0.78s ==============================\n",
-      "stderr": ""
-    },
-    "safety": {
-      "download_run": false,
-      "economic_computation_run": false,
-      "m021_post_cutoff_data_used": false,
-      "m023_outcomes_used": false,
-      "m024_outcomes_used_to_tune_definitions": false,
-      "real_order_api_called": false
+      "exit_code": 1,
+      "timed_out": false,
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"/home/joel/.local/share/uv/python/cpython-3.10.19-linux-x86_64-gnu/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/joel/.local/share/uv/python/cpython-3.10.19-linux-x86_64-gnu/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage3_ingestion.py\", line 556, in <module>\n    raise SystemExit(main())\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage3_ingestion.py\", line 537, in main\n    report = run_ingestion(\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage3_ingestion.py\", line 457, in run_ingestion\n    h10_raw = _download(H10_URL, root / \"h10-daily-rates.csv\")\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage3_ingestion.py\", line 97, in _download\n    raise RuntimeError(f\"empty download from {url}\")\nRuntimeError: empty download from https://www.federalreserve.gov/datadownload/Output.aspx?filetype=csv&from=01%2F04%2F1971&label=include&lastObs=&layout=seriescolumn&rel=H10&series=60f32914ab61dfab590e0e470153e3ae&to=08%2F31%2F2026\n"
     }
   }
 }
