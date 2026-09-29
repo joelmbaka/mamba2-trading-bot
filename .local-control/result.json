@@ -1,37 +1,245 @@
 {
   "version": 1,
-  "command_id": "mamba2-m024-symbol-specialization-tests-v1",
-  "completed_at": "2026-09-29T08:43:09.208879+00:00",
+  "command_id": "mamba2-m024-symbol-specialization-diagnostic-v1",
+  "completed_at": "2026-09-29T08:44:17.399423+00:00",
   "ok": true,
-  "action": "m024_symbol_specialization_tests",
+  "action": "m024_symbol_specialization_diagnostic",
   "data": {
     "ok": true,
     "feature_branch": "symbol-specialization-research",
     "feature_sha": "f403124a31464f6b42768f6a1d985abe290cbc4c",
-    "tests": [
-      "tests/test_m024_symbol_specialization.py"
-    ],
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest",
-        "tests/test_m024_symbol_specialization.py"
-      ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 7 items\n\ntests/test_m024_symbol_specialization.py .......                         [100%]\n\n============================== 7 passed in 0.27s ===============================\n",
-      "stderr": ""
+    "family": "m024-symbol-specialization-diagnostic",
+    "source": {
+      "m023_stage_a_d_b_summary_sha256": "7f16803e8174ffddc7afe6d7d273cc04a4b2859dd61753f6fae1f272ce28551c",
+      "m023_stage_a_family_result": "04f8cb971ac56b06739aba594df1a2090745f396",
+      "m023_stage_a_assessment": "ed01975c5ea7945d9890d807c58ff133e07a6aa1"
     },
+    "artifact": {
+      "a_path": "backtest_data/m024-symbol-specialization-v1/m024-symbol-specialization-a.json",
+      "b_path": "backtest_data/m024-symbol-specialization-v1/m024-symbol-specialization-b.json",
+      "a_sha256": "108752dfdb7430efb2c3b4b971d16d6affb1c43e2aacc1bc5ef8e276db2d6410",
+      "b_sha256": "108752dfdb7430efb2c3b4b971d16d6affb1c43e2aacc1bc5ef8e276db2d6410",
+      "deterministic": true
+    },
+    "subsets": {
+      "SYM-R": {
+        "classification": "REFERENCE",
+        "symbols": [
+          "EURUSD",
+          "EURJPY",
+          "GBPUSD",
+          "GBPJPY",
+          "USDJPY"
+        ],
+        "overall": {
+          "closed_trades": 6630,
+          "flats": 4,
+          "losses": 4196,
+          "mean_trade_pl": -1.124265496953277,
+          "median_trade_pl": null,
+          "net_realized_pl": -7453.880244800227,
+          "win_rate_nonflat_pct": 36.67370962873528,
+          "wins": 2430
+        },
+        "fold_stability": {
+          "max_positive_fold_pl_share": null,
+          "positive_mean_trade_pl_fold_count": 0,
+          "positive_mean_trade_pl_folds": [],
+          "positive_net_pl_fold_count": 0,
+          "positive_net_pl_folds": []
+        },
+        "weekly_stability": {
+          "eligible_week_count": 46,
+          "eligible_week_min_trades": 5,
+          "positive_mean_trade_pl_week_count": 5,
+          "positive_mean_trade_pl_week_fraction": 0.10869565217391304,
+          "positive_net_pl_week_count": 5,
+          "positive_net_pl_week_fraction": 0.10869565217391304
+        },
+        "descriptive_screen_checks": {}
+      },
+      "SYM-UJ": {
+        "classification": "DESCRIPTIVELY PROMISING",
+        "symbols": [
+          "USDJPY"
+        ],
+        "overall": {
+          "closed_trades": 1335,
+          "flats": 1,
+          "losses": 780,
+          "mean_trade_pl": 0.011268717335108567,
+          "median_trade_pl": null,
+          "net_realized_pl": 15.043737642369937,
+          "win_rate_nonflat_pct": 41.52923538230884,
+          "wins": 554
+        },
+        "fold_stability": {
+          "max_positive_fold_pl_share": 0.4105198244306363,
+          "positive_mean_trade_pl_fold_count": 3,
+          "positive_mean_trade_pl_folds": [
+            "F2",
+            "F3",
+            "F5"
+          ],
+          "positive_net_pl_fold_count": 3,
+          "positive_net_pl_folds": [
+            "F2",
+            "F3",
+            "F5"
+          ]
+        },
+        "weekly_stability": {
+          "eligible_week_count": 46,
+          "eligible_week_min_trades": 5,
+          "positive_mean_trade_pl_week_count": 23,
+          "positive_mean_trade_pl_week_fraction": 0.5,
+          "positive_net_pl_week_count": 23,
+          "positive_net_pl_week_fraction": 0.5
+        },
+        "descriptive_screen_checks": {
+          "aggregate_mean_trade_pl_positive": true,
+          "aggregate_net_pl_positive": true,
+          "eligible_iso_weeks_ge_20": true,
+          "positive_fold_concentration_le_60pct": true,
+          "positive_mean_iso_weeks_ge_50pct": true,
+          "positive_mean_trade_pl_folds_ge_3": true,
+          "positive_net_pl_folds_ge_3": true
+        }
+      },
+      "SYM-JPY": {
+        "classification": "DESCRIPTIVELY UNSUPPORTED",
+        "symbols": [
+          "EURJPY",
+          "GBPJPY",
+          "USDJPY"
+        ],
+        "overall": {
+          "closed_trades": 3817,
+          "flats": 3,
+          "losses": 2423,
+          "mean_trade_pl": -1.1838864371271989,
+          "median_trade_pl": null,
+          "net_realized_pl": -4518.894530514518,
+          "win_rate_nonflat_pct": 36.47089669638175,
+          "wins": 1391
+        },
+        "fold_stability": {
+          "max_positive_fold_pl_share": null,
+          "positive_mean_trade_pl_fold_count": 0,
+          "positive_mean_trade_pl_folds": [],
+          "positive_net_pl_fold_count": 0,
+          "positive_net_pl_folds": []
+        },
+        "weekly_stability": {
+          "eligible_week_count": 46,
+          "eligible_week_min_trades": 5,
+          "positive_mean_trade_pl_week_count": 8,
+          "positive_mean_trade_pl_week_fraction": 0.17391304347826086,
+          "positive_net_pl_week_count": 8,
+          "positive_net_pl_week_fraction": 0.17391304347826086
+        },
+        "descriptive_screen_checks": {
+          "aggregate_mean_trade_pl_positive": false,
+          "aggregate_net_pl_positive": false,
+          "eligible_iso_weeks_ge_20": true,
+          "positive_fold_concentration_le_60pct": false,
+          "positive_mean_iso_weeks_ge_50pct": false,
+          "positive_mean_trade_pl_folds_ge_3": false,
+          "positive_net_pl_folds_ge_3": false
+        }
+      },
+      "SYM-NONJPY": {
+        "classification": "DESCRIPTIVELY UNSUPPORTED",
+        "symbols": [
+          "EURUSD",
+          "GBPUSD"
+        ],
+        "overall": {
+          "closed_trades": 2813,
+          "flats": 1,
+          "losses": 1773,
+          "mean_trade_pl": -1.0433649890813044,
+          "median_trade_pl": null,
+          "net_realized_pl": -2934.985714285709,
+          "win_rate_nonflat_pct": 36.948790896159316,
+          "wins": 1039
+        },
+        "fold_stability": {
+          "max_positive_fold_pl_share": null,
+          "positive_mean_trade_pl_fold_count": 0,
+          "positive_mean_trade_pl_folds": [],
+          "positive_net_pl_fold_count": 0,
+          "positive_net_pl_folds": []
+        },
+        "weekly_stability": {
+          "eligible_week_count": 46,
+          "eligible_week_min_trades": 5,
+          "positive_mean_trade_pl_week_count": 8,
+          "positive_mean_trade_pl_week_fraction": 0.17391304347826086,
+          "positive_net_pl_week_count": 8,
+          "positive_net_pl_week_fraction": 0.17391304347826086
+        },
+        "descriptive_screen_checks": {
+          "aggregate_mean_trade_pl_positive": false,
+          "aggregate_net_pl_positive": false,
+          "eligible_iso_weeks_ge_20": true,
+          "positive_fold_concentration_le_60pct": false,
+          "positive_mean_iso_weeks_ge_50pct": false,
+          "positive_mean_trade_pl_folds_ge_3": false,
+          "positive_net_pl_folds_ge_3": false
+        }
+      }
+    },
+    "descriptively_promising_subsets": [
+      "SYM-UJ"
+    ],
+    "next_stage_authorized": true,
+    "next_stage_rule": "freeze a prospective causal symbol-filtered replay family before fresh economics",
+    "runs": [
+      {
+        "command": [
+          "/home/joel/.local/bin/uv",
+          "run",
+          "--locked",
+          "python",
+          "-m",
+          "mamba2.backtest.m024_symbol_specialization",
+          "--repo-root",
+          ".",
+          "--output",
+          "backtest_data/m024-symbol-specialization-v1/m024-symbol-specialization-a.json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"descriptively_promising_subsets\": [\"SYM-UJ\"], \"headline\": {\"SYM-JPY\": {\"classification\": \"DESCRIPTIVELY UNSUPPORTED\", \"closed_trades\": 3817, \"eligible_weeks\": 46, \"mean_trade_pl\": -1.1838864371271989, \"net_realized_pl\": -4518.894530514518, \"positive_folds\": 0, \"positive_mean_week_fraction\": 0.17391304347826086, \"symbols\": [\"EURJPY\", \"GBPJPY\", \"USDJPY\"]}, \"SYM-NONJPY\": {\"classification\": \"DESCRIPTIVELY UNSUPPORTED\", \"closed_trades\": 2813, \"eligible_weeks\": 46, \"mean_trade_pl\": -1.0433649890813044, \"net_realized_pl\": -2934.985714285709, \"positive_folds\": 0, \"positive_mean_week_fraction\": 0.17391304347826086, \"symbols\": [\"EURUSD\", \"GBPUSD\"]}, \"SYM-R\": {\"classification\": \"REFERENCE\", \"closed_trades\": 6630, \"eligible_weeks\": 46, \"mean_trade_pl\": -1.124265496953277, \"net_realized_pl\": -7453.880244800227, \"positive_folds\": 0, \"positive_mean_week_fraction\": 0.10869565217391304, \"symbols\": [\"EURUSD\", \"EURJPY\", \"GBPUSD\", \"GBPJPY\", \"USDJPY\"]}, \"SYM-UJ\": {\"classification\": \"DESCRIPTIVELY PROMISING\", \"closed_trades\": 1335, \"eligible_weeks\": 46, \"mean_trade_pl\": 0.011268717335108567, \"net_realized_pl\": 15.043737642369937, \"positive_folds\": 3, \"positive_mean_week_fraction\": 0.5, \"symbols\": [\"USDJPY\"]}}, \"ok\": true, \"output\": \"backtest_data/m024-symbol-specialization-v1/m024-symbol-specialization-a.json\", \"report_sha256\": \"335fd223b503b4c19b34bf923658a9bb8615be9c590001466b71acd7a3945c4f\", \"safety\": {\"accepted_m023_d_b_summary_only\": true, \"economic_replay_run\": false, \"historical_holdout_economic_data_used\": false, \"m021_post_cutoff_data_used\": false, \"m025_outcomes_used\": false, \"real_order_api_called\": false, \"session_filter_run\": false, \"weekday_filter_run\": false}, \"sha256\": \"108752dfdb7430efb2c3b4b971d16d6affb1c43e2aacc1bc5ef8e276db2d6410\"}\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "/home/joel/.local/bin/uv",
+          "run",
+          "--locked",
+          "python",
+          "-m",
+          "mamba2.backtest.m024_symbol_specialization",
+          "--repo-root",
+          ".",
+          "--output",
+          "backtest_data/m024-symbol-specialization-v1/m024-symbol-specialization-b.json"
+        ],
+        "exit_code": 0,
+        "stdout": "{\"descriptively_promising_subsets\": [\"SYM-UJ\"], \"headline\": {\"SYM-JPY\": {\"classification\": \"DESCRIPTIVELY UNSUPPORTED\", \"closed_trades\": 3817, \"eligible_weeks\": 46, \"mean_trade_pl\": -1.1838864371271989, \"net_realized_pl\": -4518.894530514518, \"positive_folds\": 0, \"positive_mean_week_fraction\": 0.17391304347826086, \"symbols\": [\"EURJPY\", \"GBPJPY\", \"USDJPY\"]}, \"SYM-NONJPY\": {\"classification\": \"DESCRIPTIVELY UNSUPPORTED\", \"closed_trades\": 2813, \"eligible_weeks\": 46, \"mean_trade_pl\": -1.0433649890813044, \"net_realized_pl\": -2934.985714285709, \"positive_folds\": 0, \"positive_mean_week_fraction\": 0.17391304347826086, \"symbols\": [\"EURUSD\", \"GBPUSD\"]}, \"SYM-R\": {\"classification\": \"REFERENCE\", \"closed_trades\": 6630, \"eligible_weeks\": 46, \"mean_trade_pl\": -1.124265496953277, \"net_realized_pl\": -7453.880244800227, \"positive_folds\": 0, \"positive_mean_week_fraction\": 0.10869565217391304, \"symbols\": [\"EURUSD\", \"EURJPY\", \"GBPUSD\", \"GBPJPY\", \"USDJPY\"]}, \"SYM-UJ\": {\"classification\": \"DESCRIPTIVELY PROMISING\", \"closed_trades\": 1335, \"eligible_weeks\": 46, \"mean_trade_pl\": 0.011268717335108567, \"net_realized_pl\": 15.043737642369937, \"positive_folds\": 3, \"positive_mean_week_fraction\": 0.5, \"symbols\": [\"USDJPY\"]}}, \"ok\": true, \"output\": \"backtest_data/m024-symbol-specialization-v1/m024-symbol-specialization-b.json\", \"report_sha256\": \"335fd223b503b4c19b34bf923658a9bb8615be9c590001466b71acd7a3945c4f\", \"safety\": {\"accepted_m023_d_b_summary_only\": true, \"economic_replay_run\": false, \"historical_holdout_economic_data_used\": false, \"m021_post_cutoff_data_used\": false, \"m025_outcomes_used\": false, \"real_order_api_called\": false, \"session_filter_run\": false, \"weekday_filter_run\": false}, \"sha256\": \"108752dfdb7430efb2c3b4b971d16d6affb1c43e2aacc1bc5ef8e276db2d6410\"}\n",
+        "stderr": ""
+      }
+    ],
     "safety": {
       "accepted_m023_d_b_summary_only": true,
       "economic_replay_run": false,
       "historical_holdout_economic_data_used": false,
       "m021_post_cutoff_data_used": false,
       "m025_outcomes_used": false,
-      "real_order_api_called": false
+      "real_order_api_called": false,
+      "session_filter_run": false,
+      "weekday_filter_run": false
     }
   }
 }
