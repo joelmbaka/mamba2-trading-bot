@@ -1,9 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m024-switch-symbol-specialization-v1",
-  "action": "switch_branch",
-  "args": {
-    "branch": "symbol-specialization-research"
-  },
+  "id": "mamba2-m024-sync-documented-head-v1",
+  "action": "sync",
+  "args": {},
   "requested_by": "chatgpt"
 }
