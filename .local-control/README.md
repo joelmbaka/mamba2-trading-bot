@@ -306,3 +306,19 @@ assessment cannot rerun economics. No action can place/modify/close real orders.
 These actions expose no M025 historical economic replay, no arbitrary shell,
 no M021/M023/M024 outcome consumption for benchmark selection, and no real
 order capability.
+
+
+## M025 Stage-3 ingestion controls
+
+- `m025_stage3_runtime_probe` — checks only the fixed spreadsheet parser/
+  converter capabilities needed by Stage 3.
+- `m025_stage3_ingestion_tests` — runs non-economic ingestion/parser tests
+  plus the accepted Stage-1 public-benchmark tests.
+- `m025_stage3_ingestion` — downloads only the prospectively frozen H.10,
+  AQR TSMOM, and LRV artifacts; freezes raw hashes; normalizes H.10 quote
+  direction; validates missingness/72-month continuity; converts legacy LRV
+  XLS with installed LibreOffice solely for schema inspection; and publishes
+  an immutable ingestion report.
+
+No Stage-3 action computes returns, P/L, Sharpe, drawdown, correlation,
+tracking error, ranking, or real orders.

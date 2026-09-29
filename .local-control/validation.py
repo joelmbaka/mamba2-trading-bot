@@ -151,6 +151,7 @@ M024_SYMBOL_SPECIALIZATION_DIR = REPO / "backtest_data" / "m024-symbol-specializ
 M024_STAGE2_SYMBOL_DIR = REPO / "backtest_data" / "m024-stage2-symbol-v1"
 M024_HOLDOUT_READINESS_DIR = REPO / "backtest_data" / "m024-holdout-readiness-v1"
 M024_HOLDOUT_DIR = REPO / "backtest_data" / "m024-holdout-h-uj-v1"
+M025_STAGE3_INGESTION_DIR = REPO / "backtest_data" / "m025-stage3-ingestion-v1"
 
 
 def _safe_env(wine=False):
@@ -14806,6 +14807,206 @@ def m025_stage3_runtime_probe():
     }
 
 
+def m025_stage3_ingestion_tests():
+    """Run only M025 Stage-3 ingestion + accepted Stage-1 benchmark tests."""
+
+    feature_sha = _require_m025_branch()
+    tests = [
+        "tests/test_m025_stage3_ingestion.py",
+        "tests/test_public_benchmarks.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "download_run": False,
+            "economic_computation_run": False,
+            "m021_post_cutoff_data_used": False,
+            "m023_outcomes_used": False,
+            "m024_outcomes_used_to_tune_definitions": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m025_stage3_ingestion():
+    """Run the fixed non-economic source/schema ingestion exactly once."""
+
+    feature_sha = _require_m025_branch()
+    libreoffice = shutil.which("libreoffice")
+    if not libreoffice:
+        return {
+            "ok": False,
+            "reason": "LibreOffice is unavailable for fixed LRV schema conversion",
+            "feature_sha": feature_sha,
+        }
+
+    final_dir = _ensure_baseline_path(M025_STAGE3_INGESTION_DIR)
+    report_path = final_dir / "m025-stage3-ingestion.json"
+
+    if final_dir.exists():
+        required = [
+            report_path,
+            final_dir / "h10-daily-rates.csv",
+            final_dir / "h10-normalized-usd-per-foreign.csv",
+            final_dir / "Time-Series-Momentum-Factors-Monthly.xlsx",
+            final_dir / "CurrencyPortfolios.xls",
+            final_dir / "CurrencyPortfolios.xlsx",
+        ]
+        if not all(path.is_file() for path in required):
+            return {
+                "ok": False,
+                "reason": "partial immutable M025 Stage-3 ingestion artifacts",
+                "feature_sha": feature_sha,
+            }
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        return {
+            "ok": True,
+            "feature_branch": "public-strategy-benchmarks",
+            "feature_sha": feature_sha,
+            "reused_immutable_artifacts": True,
+            "report_sha256": _sha256(report_path),
+            "report": report,
+            "safety": report.get("safety"),
+        }
+
+    temp_dir = _ensure_baseline_path(
+        Path(str(final_dir) + ".tmp")
+    )
+    if temp_dir.exists():
+        shutil.rmtree(temp_dir)
+    temp_dir.mkdir(parents=True, exist_ok=False)
+
+    run = _run_process_group_bounded(
+        _native_command(
+            "-m",
+            "mamba2.backtest.m025_stage3_ingestion",
+            "--output-dir",
+            str(temp_dir.relative_to(REPO)),
+            "--libreoffice",
+            libreoffice,
+        ),
+        env=_safe_env(),
+        timeout_seconds=300,
+    )
+    if run["exit_code"] != 0:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        return {
+            "ok": False,
+            "reason": "M025 Stage-3 ingestion failed",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+
+    temp_report = temp_dir / "m025-stage3-ingestion.json"
+    if not temp_report.is_file():
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        return {
+            "ok": False,
+            "reason": "M025 Stage-3 ingestion report missing",
+            "feature_sha": feature_sha,
+        }
+
+    report = json.loads(temp_report.read_text(encoding="utf-8"))
+    safety = report.get("safety") or {}
+    forbidden_true = [
+        "returns_computed",
+        "pl_computed",
+        "sharpe_computed",
+        "drawdown_computed",
+        "correlation_computed",
+        "tracking_error_computed",
+        "economic_ranking_computed",
+        "m021_post_cutoff_outcomes_used",
+        "m023_outcomes_used",
+        "m024_outcomes_used_to_tune_definitions",
+        "real_order_api_called",
+    ]
+    failed_safety = [
+        key for key in forbidden_true
+        if safety.get(key) is not False
+    ]
+    if (
+        report.get("economic_computation_performed") is not False
+        or failed_safety
+    ):
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        return {
+            "ok": False,
+            "reason": "M025 Stage-3 non-economic safety contract failed",
+            "feature_sha": feature_sha,
+            "failed_safety": failed_safety,
+        }
+
+    h10 = ((report.get("sources") or {}).get("h10") or {})
+    if len(h10.get("source_ids") or []) != 23:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        return {
+            "ok": False,
+            "reason": "M025 H.10 23-series source contract failed",
+            "feature_sha": feature_sha,
+        }
+
+    temp_dir.rename(final_dir)
+    report_path = final_dir / "m025-stage3-ingestion.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "reused_immutable_artifacts": False,
+        "report_sha256": _sha256(report_path),
+        "h10": {
+            "raw_sha256": report["sources"]["h10"]["raw_sha256"],
+            "normalized_panel_sha256": report["sources"]["h10"][
+                "normalized_panel_sha256"
+            ],
+            "gate_72_consecutive_months_all_series": report["sources"][
+                "h10"
+            ]["gate_72_consecutive_months_all_series"],
+            "first_source_date": report["sources"]["h10"][
+                "first_source_date"
+            ],
+            "last_source_date": report["sources"]["h10"][
+                "last_source_date"
+            ],
+        },
+        "aqr": {
+            "raw_sha256": report["sources"]["aqr_tsmom"]["raw_sha256"],
+            "sheet_names": report["sources"]["aqr_tsmom"]["schema"][
+                "sheet_names"
+            ],
+            "currency_specific_schema_present": report["sources"][
+                "aqr_tsmom"
+            ]["schema"]["currency_specific_schema_present"],
+            "currency_or_fx_schema_tokens": report["sources"][
+                "aqr_tsmom"
+            ]["schema"]["currency_or_fx_schema_tokens"],
+        },
+        "lrv": {
+            "raw_sha256": report["sources"][
+                "lrv_currency_portfolios"
+            ]["raw_sha256"],
+            "sheet_names": report["sources"][
+                "lrv_currency_portfolios"
+            ]["schema"]["sheet_names"],
+            "p1_through_p6_schema_present": report["sources"][
+                "lrv_currency_portfolios"
+            ]["schema"]["p1_through_p6_schema_present"],
+            "hml_schema_present": report["sources"][
+                "lrv_currency_portfolios"
+            ]["schema"]["hml_schema_present"],
+        },
+        "safety": report.get("safety"),
+        "run": run,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -14834,6 +15035,8 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m025_stage3_ingestion_tests": m025_stage3_ingestion_tests,
+    "m025_stage3_ingestion": m025_stage3_ingestion,
     "m025_stage3_runtime_probe": m025_stage3_runtime_probe,
     "m025_switch_public_benchmarks": m025_switch_public_benchmarks,
     "m025_public_benchmark_tests": m025_public_benchmark_tests,
