@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m023-stage-b-native-tests-v1",
-  "action": "m023_direction_session_tests",
+  "id": "mamba2-m023-stage-b-preflight-sync-v1",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
