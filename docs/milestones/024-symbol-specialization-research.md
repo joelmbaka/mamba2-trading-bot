@@ -1,6 +1,6 @@
 # Milestone 024 — Symbol Specialization Research
 
-Status: **DIAGNOSTIC PROTOCOL FROZEN — NO FRESH SYMBOL-FILTERED ECONOMICS YET**
+Status: **DIAGNOSTIC ACCEPTED — STAGE 2 CAUSAL SYMBOL PROTOCOL FROZEN; NO STAGE-2 ECONOMICS YET**
 
 Protocol date: 2026-09-29
 
@@ -311,3 +311,301 @@ If resuming from a fresh chat:
 8. durably document the accepted result before authorizing any causal replay.
 
 Do not skip directly to fresh symbol-filtered economics.
+
+
+## Accepted diagnostic result — 2026-09-29
+
+Focused native-test result commit:
+
+`7bed8ad0173916f61b488c2d1ffe3742f9051446`
+
+Focused result:
+
+- **7 passed / 0 failed**;
+- exact feature SHA:
+  `f403124a31464f6b42768f6a1d985abe290cbc4c`;
+- economic replay: **no**;
+- historical holdout access: **no**;
+- M021 post-cutoff use: **no**;
+- M025 outcome use: **no**;
+- real-order API: **no**.
+
+Deterministic diagnostic result commit:
+
+`0473b8f149a15516c6d7b4e2f1b0585482be7eef`
+
+Accepted deterministic artifact pair:
+
+- `backtest_data/m024-symbol-specialization-v1/m024-symbol-specialization-a.json`;
+- `backtest_data/m024-symbol-specialization-v1/m024-symbol-specialization-b.json`.
+
+Both artifact SHA-256:
+
+`108752dfdb7430efb2c3b4b971d16d6affb1c43e2aacc1bc5ef8e276db2d6410`
+
+Internal canonical report SHA-256:
+
+`335fd223b503b4c19b34bf923658a9bb8615be9c590001466b71acd7a3945c4f`
+
+Accepted source-summary SHA-256:
+
+`7f16803e8174ffddc7afe6d7d273cc04a4b2859dd61753f6fae1f272ce28551c`
+
+Full native regression result commit:
+
+`1bed8eb23b6bca980d076dbf9173f6479f53239d`
+
+Full native result:
+
+**283 passed / 2 skipped**
+
+### Frozen-subset classifications
+
+| ID | Symbols | Closed trades | Net P/L | Mean/trade | Positive folds | Positive-mean weeks |
+|---|---|---:|---:|---:|---:|---:|
+| SYM-R | all five | 6,630 | -$7,453.88 | -$1.12427 | 0/5 | 5/46 |
+| SYM-UJ | USDJPY | 1,335 | **+$15.04** | **+$0.01127** | **3/5** | **23/46 (50.0%)** |
+| SYM-JPY | EURJPY + GBPJPY + USDJPY | 3,817 | -$4,518.89 | -$1.18389 | 0/5 | 8/46 |
+| SYM-NONJPY | EURUSD + GBPUSD | 2,813 | -$2,934.99 | -$1.04336 | 0/5 | 8/46 |
+
+Mechanical classification:
+
+- **SYM-R — REFERENCE**
+- **SYM-UJ — DESCRIPTIVELY PROMISING**
+- **SYM-JPY — DESCRIPTIVELY UNSUPPORTED**
+- **SYM-NONJPY — DESCRIPTIVELY UNSUPPORTED**
+
+SYM-UJ passed all prospectively frozen descriptive screens:
+
+- aggregate net P/L > 0;
+- aggregate mean trade P/L > 0;
+- positive net P/L in 3/5 folds;
+- positive mean trade P/L in 3/5 folds;
+- maximum positive-fold P/L share:
+  **41.05198% <= 60%**;
+- eligible ISO weeks: **46 >= 20**;
+- positive-mean eligible weeks:
+  **23/46 = 50.0%**.
+
+Exact SYM-UJ fold economics:
+
+| Fold | Closed trades | Net P/L | Mean/trade |
+|---|---:|---:|---:|
+| F1 | 284 | -$125.95 | -$0.44348 |
+| F2 | 282 | +$36.28 | +$0.12867 |
+| F3 | 296 | +$58.70 | +$0.19830 |
+| F4 | 261 | -$1.99 | -$0.00762 |
+| F5 | 212 | +$48.00 | +$0.22642 |
+
+The accepted analyzer output matched an independent reviewer-side
+recalculation from the published M023 Stage-A family result.
+
+### Interpretation boundary
+
+SYM-UJ is **not yet a proven USDJPY-only strategy**.
+
+It passed a descriptive attribution screen over already-seen research evidence.
+Its total edge is small and two of five folds remain negative. The result only
+authorizes a separately frozen causal symbol-filtered replay stage.
+
+No historical holdout is authorized by this diagnostic result.
+
+
+## Stage 2 protocol freeze — causal USDJPY specialization
+
+Status: **FROZEN BEFORE STAGE-2 ECONOMICS**
+
+Exactly two causal arms exist:
+
+| ID | Strategy symbols | Market-data universe |
+|---|---|---|
+| C-R | EURUSD, EURJPY, GBPUSD, GBPJPY, USDJPY | all five |
+| C-UJ | USDJPY only | all five |
+
+No other symbol subset may be added.
+
+### Strategy anchor
+
+Both arms use the exact accepted M023 D-B strategy settings:
+
+- P2-08 parameters;
+- stochastic: 21 / 7 / 7;
+- boundaries: 20 / 80;
+- EMA: 7;
+- decision-time spread gate: none;
+- ATR SL: 1.5;
+- ATR TP: 3.0;
+- direction: BUY only;
+- all hours;
+- M15 disabled;
+- position size: 0.1;
+- unchanged trailing/protection semantics;
+- unchanged conversion semantics;
+- cost contract:
+  `SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`.
+
+### Exact causal symbol semantics
+
+C-R must instantiate and evaluate all five strategies exactly as accepted D-B.
+
+C-UJ must:
+
+- retain all five symbols' historical market-data streams;
+- retain the exact common replay-boundary clock;
+- retain all five symbols as available account-currency conversion data;
+- instantiate/evaluate **only USDJPY** for strategy entries;
+- create no strategy orders for EURUSD, EURJPY, GBPUSD, or GBPJPY;
+- preserve all USDJPY open-position management outside entry evaluation;
+- preserve fixed 0.1-lot size and all broker/account semantics.
+
+Do not implement C-UJ by deleting non-USDJPY market data.
+
+### Exact Stage-2 seen-research partition
+
+Use exactly:
+
+`2025-08-25T00:00:00Z` → `2026-07-08T00:00:00Z`
+
+Accepted trading dates:
+
+**225**
+
+Date-list SHA-256:
+
+`50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0`
+
+Reuse the existing five 45-date folds unchanged.
+
+Historical holdout remains sealed:
+
+`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`
+
+### C-R reference-equivalence gate
+
+C-R must reproduce accepted M023 D-B exactly for at least:
+
+- closed trades;
+- net realized P/L;
+- mean trade P/L;
+- non-flat win rate;
+- maximum equity drawdown;
+- per-symbol economics;
+- five-fold economics;
+- ISO-week economics;
+- TP safety;
+- exact partition/source/replay hashes.
+
+If C-R reference equivalence fails, stop before interpreting C-UJ.
+
+### Mandatory C-UJ gates
+
+C-UJ must pass all of:
+
+1. deterministic A/B baseline hash equality;
+2. deterministic A/B diagnostic hash equality;
+3. deterministic A/B summary hash equality;
+4. exact P2-08 parameters;
+5. BUY only;
+6. zero accepted SELL entries;
+7. strategy-entry universe exactly USDJPY;
+8. market-data universe still all five symbols;
+9. exact 225-date partition and date-list hash;
+10. strict common replay-boundary clock unchanged;
+11. source manifest unchanged;
+12. M15 disabled;
+13. session filter absent;
+14. weekday filter absent;
+15. wrong-side initial TP = 0;
+16. negative-P/L TP exits = 0;
+17. historical holdout untouched;
+18. M021 post-cutoff outcomes unused;
+19. M025 outcomes unused;
+20. no real-order API.
+
+### C-UJ representation gate
+
+Relative to the accepted descriptive SYM-UJ evidence, require:
+
+1. causal closed trades >= **80%** of 1,335;
+2. every fold causal closed trades >= **70%** of that fold's descriptive
+   USDJPY trade count;
+3. causal trades occur in >= **80%** of the 46 descriptive USDJPY trade weeks.
+
+These are representation checks only and may not be lowered after economics.
+
+### C-UJ support rule
+
+C-UJ is **SUPPORTED FOR HOLDOUT CHECKPOINT ONLY** if every condition holds:
+
+1. mandatory gates pass;
+2. representation gate passes;
+3. net realized P/L > 0;
+4. mean closed-trade P/L > 0;
+5. positive net P/L in at least **3 of 5** folds;
+6. positive mean trade P/L in at least **3 of 5** folds;
+7. no one positive fold contributes more than **60%** of summed positive
+   fold P/L;
+8. at least **30** ISO weeks are eligible, where an eligible week contains at
+   least 5 C-UJ closed trades;
+9. at least **50%** of eligible ISO weeks have positive mean trade P/L.
+
+Also report, but do not use as post-result substitute gates:
+
+- win rate;
+- maximum drawdown USD/%;
+- C-UJ versus descriptive SYM-UJ trade-count/economic parity;
+- exact entry/exit/trade evidence differences where available.
+
+### Stage-2 classification and stop rule
+
+- C-R: **REFERENCE**.
+- Mandatory/reference failure: **INELIGIBLE**.
+- Eligible C-UJ failing any support rule: **NOT SUPPORTED**.
+- C-UJ passing every support rule:
+  **SUPPORTED FOR HOLDOUT CHECKPOINT ONLY**.
+
+If C-UJ is NOT SUPPORTED:
+
+- close M024;
+- do not open historical holdout.
+
+If C-UJ is SUPPORTED:
+
+- durably record the exact fixed USDJPY-only strategy and Stage-2 evidence;
+- stop;
+- do **not** immediately open historical holdout;
+- a separate prospective holdout protocol/acceptance checkpoint is required.
+
+### Stage-2 implementation sequence
+
+1. implement experiment-only causal strategy-symbol selection;
+2. production defaults remain all five symbols and unchanged;
+3. add tests for exact C-R/C-UJ symbol universes and all-five data retention;
+4. add tests proving non-USDJPY strategies cannot submit C-UJ entries;
+5. add exact partition/holdout-refusal and deterministic-reporting tests;
+6. expose only fixed local-control Stage-2 family and assessment actions;
+7. run focused native tests;
+8. sync Dell to exact feature SHA;
+9. run C-R first and require D-B reference equivalence;
+10. only then run C-UJ;
+11. run the frozen mechanical Stage-2 assessment;
+12. run full native regression;
+13. durably record result;
+14. stop before historical holdout.
+
+### Hard boundaries
+
+Do not:
+
+- add another currency pair/subset;
+- add a session or weekday filter;
+- change BUY-only direction;
+- change P2-08 parameters;
+- add M15;
+- use M020-D spread filtering;
+- inspect/open historical holdout;
+- inspect M021 post-cutoff outcomes;
+- use M025 outcomes for tuning;
+- alter production defaults;
+- merge/deploy;
+- enable/place/modify/close real MT5 orders.

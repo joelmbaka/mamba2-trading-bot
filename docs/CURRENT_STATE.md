@@ -470,3 +470,44 @@ and cannot run strategy replay.
 Focused native tests and the deterministic M024 diagnostic remain the next
 acceptance gates. No M024 economic replay has run and historical holdout/M021
 remain untouched.
+
+
+## M024 diagnostic accepted / Stage 2 frozen
+
+M024 diagnostic acceptance is complete at feature HEAD
+`f403124a31464f6b42768f6a1d985abe290cbc4c`.
+
+Focused tests:
+
+- result commit:
+  `7bed8ad0173916f61b488c2d1ffe3742f9051446`;
+- **7 passed**.
+
+Deterministic diagnostic:
+
+- result commit:
+  `0473b8f149a15516c6d7b4e2f1b0585482be7eef`;
+- artifact SHA-256:
+  `108752dfdb7430efb2c3b4b971d16d6affb1c43e2aacc1bc5ef8e276db2d6410`;
+- only SYM-UJ / USDJPY classified **DESCRIPTIVELY PROMISING**.
+
+Full native regression:
+
+- result commit:
+  `1bed8eb23b6bca980d076dbf9173f6479f53239d`;
+- **283 passed, 2 skipped**.
+
+USDJPY descriptive evidence:
+
+- 1,335 trades;
+- +$15.0437376424 total;
+- +$0.0112687173/trade;
+- 3/5 positive folds;
+- 23/46 positive-mean eligible weeks = 50.0%;
+- max positive-fold contribution share = 41.05198%.
+
+This is not yet a causal/proven edge.
+
+M024 Stage 2 is now prospectively frozen before economics with exactly C-R
+(all-five reference) and C-UJ (USDJPY strategy only, all-five market data
+retained). No historical holdout execution is authorized.
