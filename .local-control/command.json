@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m024-symbol-specialization-tests-v1",
-  "action": "m024_symbol_specialization_tests",
+  "id": "mamba2-m024-symbol-specialization-diagnostic-v1",
+  "action": "m024_symbol_specialization_diagnostic",
   "args": {},
   "requested_by": "chatgpt"
 }
