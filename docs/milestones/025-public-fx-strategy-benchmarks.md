@@ -550,6 +550,19 @@ series:
 
 No H.10 dollar indexes enter the proxy.
 
+#### Frozen source snapshot range
+
+The H.10 ingestion request is frozen prospectively to:
+
+- from: **1971-01-04**;
+- through: **2026-08-31**, inclusive.
+
+August 2026 is the last complete calendar month before the Stage-3 protocol
+date. September 2026 observations are excluded from this snapshot so later
+H.10 releases cannot alter a partially observed month.
+
+The exact downloaded bytes must be hashed before parsing.
+
 #### Frozen normalization
 
 Every source series is normalized to:
