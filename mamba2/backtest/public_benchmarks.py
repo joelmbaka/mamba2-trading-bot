@@ -99,6 +99,52 @@ def _monthly_compounded_returns(daily_returns: pd.DataFrame) -> pd.DataFrame:
     return (1.0 + daily_returns).resample("ME").prod(min_count=1) - 1.0
 
 
+def _longest_consecutive_month_run(mask: pd.Series) -> int:
+    """Return the longest consecutive calendar-month run with a true gate."""
+
+    if not isinstance(mask.index, pd.DatetimeIndex):
+        raise TypeError("monthly eligibility mask must use a DatetimeIndex")
+    selected = [
+        int(timestamp.year) * 12 + int(timestamp.month)
+        for timestamp, value in mask.items()
+        if bool(value)
+    ]
+    if not selected:
+        return 0
+
+    longest = 1
+    current = 1
+    for previous, value in zip(selected, selected[1:]):
+        if value == previous + 1:
+            current += 1
+        else:
+            current = 1
+        longest = max(longest, current)
+    return longest
+
+
+def _require_one_row_per_month(frame: pd.DataFrame, *, name: str) -> None:
+    keys = [
+        int(timestamp.year) * 12 + int(timestamp.month)
+        for timestamp in frame.index
+    ]
+    if len(keys) != len(set(keys)):
+        raise ValueError(f"{name} must contain at most one row per calendar month")
+
+
+def _currency_momentum_formation_returns(
+    monthly_log_excess_returns: pd.DataFrame,
+    *,
+    formation_months: int,
+) -> pd.DataFrame:
+    """Paper-faithful cumulative log excess return over the formation window."""
+
+    return monthly_log_excess_returns.rolling(
+        formation_months,
+        min_periods=formation_months,
+    ).sum()
+
+
 def tsmom_weights_from_excess_returns(
     daily_excess_returns: pd.DataFrame,
 ) -> BenchmarkWeights:
@@ -210,7 +256,12 @@ def currency_momentum_weights(
     *,
     formation_months: int,
 ) -> BenchmarkWeights:
-    """Build MSSS high-minus-low weights for a frozen formation horizon."""
+    """Build MSSS high-minus-low weights from monthly log excess returns.
+
+    Menkhoff et al. define currency excess returns in logs. Multi-month
+    formation returns therefore aggregate additively across the formation
+    window rather than by arithmetic-return compounding.
+    """
 
     if formation_months not in MSSS_FORMATION_MONTHS:
         raise ValueError(
@@ -222,14 +273,10 @@ def currency_momentum_weights(
         monthly_excess_returns,
         name="monthly_excess_returns",
     )
-    trailing = (
-        (1.0 + returns)
-        .rolling(
-            formation_months,
-            min_periods=formation_months,
-        )
-        .apply(np.prod, raw=True)
-        - 1.0
+    _require_one_row_per_month(returns, name="monthly_excess_returns")
+    trailing = _currency_momentum_formation_returns(
+        returns,
+        formation_months=formation_months,
     )
     formation_weights = _extreme_portfolio_weights(trailing)
     # Month-end ranking at t is held during t+1.
@@ -249,6 +296,7 @@ def carry_weights(
         monthly_carry_signal,
         name="monthly_carry_signal",
     )
+    _require_one_row_per_month(signal, name="monthly_carry_signal")
     formation_weights = _extreme_portfolio_weights(signal)
     # Month-end carry sort at t is held during t+1.
     return BenchmarkWeights(
@@ -277,21 +325,41 @@ def audit_tsmom_history(
             eligible_observations=0,
         )
 
-    monthly = _monthly_compounded_returns(returns)
-    eligible_months = max(
-        0,
-        len(monthly) - MOP_TSMOM_LOOKBACK_MONTHS,
+    monthly_presence = returns.notna().resample("ME").sum() > 0
+    required_total = (
+        minimum_evaluation_years * 12
+        + MOP_TSMOM_LOOKBACK_MONTHS
     )
-    required = minimum_evaluation_years * 12
     reasons: list[str] = []
 
-    if eligible_months < required:
-        reasons.append(
-            f"TSMOM requires {required} evaluation months after "
-            f"{MOP_TSMOM_LOOKBACK_MONTHS}-month warmup; "
-            f"got {eligible_months}"
-        )
+    if returns.shape[1] == 0:
+        reasons.append("TSMOM requires at least one instrument")
+        minimum_run = 0
+    else:
+        per_instrument_runs = {
+            str(column): _longest_consecutive_month_run(
+                monthly_presence[column]
+            )
+            for column in monthly_presence.columns
+        }
+        minimum_run = min(per_instrument_runs.values(), default=0)
+        failing = {
+            column: run
+            for column, run in per_instrument_runs.items()
+            if run < required_total
+        }
+        if failing:
+            reasons.append(
+                "TSMOM requires at least "
+                f"{required_total} consecutive usable months per instrument "
+                f"(12-month warmup plus {minimum_evaluation_years} complete "
+                f"evaluation years); got {failing}"
+            )
 
+    eligible_months = max(
+        0,
+        minimum_run - MOP_TSMOM_LOOKBACK_MONTHS,
+    )
     return BenchmarkDataAudit(
         eligible=not reasons,
         reasons=tuple(reasons),
@@ -311,6 +379,10 @@ def audit_cross_sectional_history(
 
     returns = _validate_frame(
         monthly_excess_returns,
+        name="monthly_excess_returns",
+    )
+    _require_one_row_per_month(
+        returns,
         name="monthly_excess_returns",
     )
     reasons: list[str] = []
@@ -346,6 +418,7 @@ def audit_cross_sectional_history(
                 carry_signal,
                 name="carry_signal",
             )
+            _require_one_row_per_month(carry, name="carry_signal")
             if (
                 not carry.index.equals(returns.index)
                 or set(carry.columns) != set(returns.columns)
@@ -367,22 +440,25 @@ def audit_cross_sectional_history(
 
         eligible_mask = eligible_mask & carry_eligible
 
-    eligible_months = int(eligible_mask.sum())
+    consecutive_eligible_months = _longest_consecutive_month_run(
+        eligible_mask
+    )
     required = (
         MIN_EVALUATION_MONTHS
         + max(MSSS_FORMATION_MONTHS)
     )
 
-    if eligible_months < required:
+    if consecutive_eligible_months < required:
         reasons.append(
             "cross-sectional benchmarks require at least "
-            f"{required} eligible months including 12-month warmup; "
-            f"got {eligible_months}"
+            f"{required} consecutive eligible months including "
+            "12-month warmup; "
+            f"got longest run {consecutive_eligible_months}"
         )
 
     return BenchmarkDataAudit(
         eligible=not reasons,
         reasons=tuple(reasons),
         observations=len(returns),
-        eligible_observations=eligible_months,
+        eligible_observations=consecutive_eligible_months,
     )

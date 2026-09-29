@@ -1,4 +1,4 @@
-# Milestone 024 — Public FX Strategy Benchmarks
+# Milestone 025 — Public FX Strategy Benchmarks
 
 Status: **PROTOCOL FROZEN — IMPLEMENTATION/DATA GATE ONLY; NO ECONOMIC RESULTS AUTHORIZED**
 
@@ -66,8 +66,9 @@ Frozen benchmark variants:
 Frozen mechanics:
 
 - month-end formation;
-- rank currencies by lagged currency **excess return** over the fixed formation
-  horizon;
+- rank currencies by lagged currency **log excess return** over the fixed formation
+  horizon; multi-month formation returns are additive sums of monthly log excess
+  returns;
 - split the available cross-section into **six** deterministic portfolios;
 - long the highest-return portfolio;
 - short the lowest-return portfolio;
@@ -84,9 +85,7 @@ six-portfolio currency universe and must fail the data gate.
 
 ### B3 — HML-FX-CARRY
 
-Source definition: the standard carry construction used by
-Lustig and Verdelhan: sort currencies on the one-month forward
-discount or corresponding short-term interest-rate differential.
+Source definition: Lustig, Roussanov, and Verdelhan (2011), *Common Risk Factors in Currency Markets*. Sort currencies into six portfolios on the one-month forward discount (equivalently, under covered interest parity, the short-term interest-rate differential) and define HML-FX as portfolio 6 minus portfolio 1.
 
 Frozen mechanics:
 
@@ -128,7 +127,7 @@ Before any benchmark economics:
 Require:
 
 - daily observations with deterministic calendar handling;
-- at least **5 complete years** of usable history after cleaning;
+- at least **5 complete consecutive years** of usable history after cleaning;
 - at least 12 months of pre-signal history before the first eligible trade;
 - no forward filling across missing trading observations;
 - explicit source, timezone/calendar, instrument convention, and hashes.
@@ -146,7 +145,7 @@ Require:
 - monthly one-month forward observations or directly observed excess returns;
 - carry additionally requires observed forward discount / short-rate
   differential;
-- at least **5 complete years** after the common-universe gate;
+- at least **5 complete consecutive years** after the common-universe gate;
 - deterministic treatment of missing currencies and ties;
 - bid/ask or other transaction-cost inputs must be separately labelled; costs
   may not be invented.
@@ -191,3 +190,40 @@ Stage 1 closes only when:
 
 Only after Stage 1 acceptance may a separate, prospectively frozen data-source
 inventory gate be authorized.
+
+
+## Stage-1 fidelity review — 2026-09-29
+
+No M025 historical economics had been run before this review.
+
+Primary-source reconciliation:
+
+- Moskowitz, Ooi, and Pedersen (2012), *Time Series Momentum*:
+  the ex-ante variance is an exponentially weighted variance of lagged daily
+  returns around the exponentially weighted mean, annualized by 261, with
+  delta chosen so the center of mass is 60 days. Therefore the existing
+  centered EWM-variance implementation is retained and is now regression-tested
+  against the explicit weighted-mean/weighted-variance equation.
+- Menkhoff, Sarno, Schmeling, and Schrimpf (2012), *Currency Momentum
+  Strategies*:
+  monthly currency excess returns are log returns derived from spot and
+  one-month forward rates. Formation returns over f months must therefore be
+  additive sums of monthly log excess returns. The prior Stage-1 implementation
+  incorrectly compounded them as arithmetic returns; this is a fidelity bug,
+  not a parameter change.
+- Lustig, Roussanov, and Verdelhan (2011), *Common Risk Factors in Currency
+  Markets*:
+  HML-FX is the excess-return spread between the sixth (highest forward
+  discount / highest interest-rate) and first (lowest) of six monthly
+  forward-discount-sorted currency portfolios.
+
+Data-gate clarification:
+
+- "five complete years + 12-month warmup" means one consecutive eligible run,
+  not a count of scattered eligible months;
+- monthly cross-sectional inputs must have at most one observation per calendar
+  month;
+- no forward filling is introduced.
+
+These corrections occur before any M025 economic replay and therefore preserve
+the prospective benchmark-research boundary.

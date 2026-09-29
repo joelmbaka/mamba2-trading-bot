@@ -1,6 +1,6 @@
 # Next Authorized Task
 
-## Milestone 024 — public FX benchmark machinery
+## Milestone 025 — public FX benchmark fidelity repair
 
 Branch:
 
@@ -19,8 +19,18 @@ M021 remains frozen and must not be inspected early.
 
 ## Stage 1 only
 
-Implement deterministic, research-only machinery for the exact frozen benchmark
-definitions:
+Repair and validate the existing deterministic research-only machinery against
+the primary-source fidelity review. In particular:
+
+- Menkhoff multi-month currency-momentum formation returns must be additive
+  sums of monthly **log excess returns**, not arithmetic compounding;
+- MOP EWMA variance must remain centered on the exponentially weighted mean and
+  be regression-tested against the explicit paper equation;
+- five-year-plus-warmup gates must require a **consecutive** eligible monthly
+  run, not scattered eligible months;
+- monthly cross-sectional panels must reject duplicate calendar-month rows.
+
+Preserve the exact frozen benchmark definitions:
 
 - MOP TSMOM 12-month formation / 1-month hold with 40% per-instrument target
   volatility and the fixed 60-day-center EWMA estimator;

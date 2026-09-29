@@ -376,3 +376,25 @@ Frozen benchmark families are:
 
 Stage 1 authorizes signal/portfolio machinery, data sufficiency gates, and
 synthetic tests only. No M025 historical economics are authorized yet.
+
+
+## M025 fidelity review checkpoint
+
+Branch:
+
+`public-strategy-benchmarks`
+
+M025 remains independent of M024/M023 outcome selection. No M025 historical
+economics have been run.
+
+Primary-source review found:
+
+- MOP centered EWMA variance semantics are correct in principle and should be
+  preserved;
+- Menkhoff formation returns require additive aggregation of monthly **log
+  currency excess returns**;
+- HML-FX attribution is Lustig, Roussanov, and Verdelhan (2011);
+- the five-year-plus-warmup sufficiency gate must be consecutive, not a count
+  of scattered eligible months.
+
+Stage 1 remains code/tests/data-gate only.

@@ -17,6 +17,7 @@ from mamba2.backtest.public_benchmarks import (
     MOP_TSMOM_TARGET_VOL,
     MSSS_FORMATION_MONTHS,
     MSSS_HOLD_MONTHS,
+    _currency_momentum_formation_returns,
     audit_cross_sectional_history,
     audit_tsmom_history,
     carry_weights,
@@ -243,3 +244,83 @@ def test_tsmom_gate_requires_five_years_after_twelve_month_warmup():
 
     assert audit_tsmom_history(short).eligible is False
     assert audit_tsmom_history(long).eligible is True
+
+
+
+def test_mop_ewma_matches_explicit_paper_weighting():
+    index = pd.date_range("2020-01-01", periods=6, freq="B", tz="UTC")
+    values = np.asarray([0.01, -0.02, 0.03, 0.005, -0.01, 0.02])
+    frame = pd.DataFrame({"X": values}, index=index)
+
+    observed = ewma_ex_ante_volatility(frame)
+    target_row = 5
+    history = values[:target_row][::-1]
+    raw_weights = np.asarray(
+        [MOP_EWMA_DELTA ** i for i in range(len(history))],
+        dtype=float,
+    )
+    weights = raw_weights / raw_weights.sum()
+    weighted_mean = float(np.sum(weights * history))
+    weighted_variance = float(
+        np.sum(weights * (history - weighted_mean) ** 2)
+    )
+    expected = np.sqrt(MOP_TRADING_DAYS * weighted_variance)
+
+    assert observed.iloc[target_row, 0] == pytest.approx(expected)
+
+
+def test_currency_momentum_formation_uses_additive_log_excess_returns():
+    index = pd.date_range(
+        "2020-01-31",
+        periods=6,
+        freq="ME",
+        tz="UTC",
+    )
+    panel = pd.DataFrame(
+        {"X": [1.0, -0.45, 0.0, 0.0, 0.0, 0.0]},
+        index=index,
+    )
+    formation = _currency_momentum_formation_returns(
+        panel,
+        formation_months=6,
+    )
+
+    # Paper inputs are log currency excess returns, so the six-month
+    # formation return is the sum: 1.0 - 0.45 = 0.55.
+    assert formation.iloc[-1, 0] == pytest.approx(0.55)
+
+
+def test_cross_sectional_gate_requires_consecutive_eligible_months():
+    panel = _monthly_panel(months=90)
+    # Leave more than 72 eligible months in total but split them into
+    # shorter runs so the five-year-plus-warmup gate must refuse.
+    broken = panel.copy()
+    broken.loc[broken.index[40], :] = np.nan
+
+    audit = audit_cross_sectional_history(broken)
+
+    assert audit.eligible is False
+    assert any("consecutive eligible months" in reason for reason in audit.reasons)
+
+
+def test_tsmom_gate_requires_consecutive_monthly_coverage_per_instrument():
+    returns = _daily_returns("2015-01-01", "2022-12-31")
+    broken = returns.copy()
+    gap = (
+        (broken.index.year == 2018)
+        & (broken.index.month == 6)
+    )
+    broken.loc[gap, "UP"] = np.nan
+
+    audit = audit_tsmom_history(broken)
+
+    assert audit.eligible is False
+    assert any("consecutive usable months" in reason for reason in audit.reasons)
+
+
+def test_monthly_cross_section_refuses_duplicate_calendar_month_rows():
+    panel = _monthly_panel()
+    duplicate = pd.concat([panel.iloc[:1], panel]).sort_index()
+
+    with pytest.raises(ValueError, match="one row per calendar month"):
+        audit_cross_sectional_history(duplicate)
