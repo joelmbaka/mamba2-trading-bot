@@ -247,3 +247,19 @@ No historical-holdout action and no weekday execution action is exposed.
 These actions do not run a strategy replay, do not open historical holdout, do
 not inspect M021 post-cutoff outcomes, do not use M025 outcomes, and expose no
 arbitrary-shell or real-order capability.
+
+
+## M024 Stage-2 causal symbol actions
+
+- `m024_stage2_symbol_tests` — focused native tests for the frozen C-R/C-UJ
+  causal symbol family and supporting M023 reference machinery.
+- `m024_stage2_symbol_family` — runs C-R first, requires exact accepted M023
+  D-B equivalence, then runs the sole C-UJ / USDJPY-only strategy arm while
+  retaining all-five market-data and conversion streams.
+- `m024_stage2_symbol_assessment` — reads completed Stage-2 artifacts only
+  and mechanically applies the frozen representation, profitability,
+  fold-concentration, and weekly-stability gates.
+
+No M024 historical-holdout action exists. These actions do not inspect M021
+post-cutoff outcomes, do not use M025 outcomes, expose no arbitrary shell, and
+cannot place/modify/close real orders.

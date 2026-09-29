@@ -148,6 +148,7 @@ M023_DIRECTION_SESSION_DIR = REPO / "backtest_data" / "m023-direction-session-di
 M023_STAGE_A_DIRECTION_DIR = REPO / "backtest_data" / "m023-stage-a-direction-v1"
 M023_STAGE_B_SESSION_DIR = REPO / "backtest_data" / "m023-stage-b-session-v1"
 M024_SYMBOL_SPECIALIZATION_DIR = REPO / "backtest_data" / "m024-symbol-specialization-v1"
+M024_STAGE2_SYMBOL_DIR = REPO / "backtest_data" / "m024-stage2-symbol-v1"
 
 
 def _safe_env(wine=False):
@@ -13505,6 +13506,604 @@ def m024_symbol_specialization_diagnostic():
     }
 
 
+def _m024_stage2_expected():
+    return {
+        "C-R": ("EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"),
+        "C-UJ": ("USDJPY",),
+    }
+
+
+def _m024_stage2_paths(label):
+    arm_dir = M024_STAGE2_SYMBOL_DIR / label
+    prefix = f"M024-S2-{label}"
+    return {
+        "dir": arm_dir,
+        "a_baseline": arm_dir / f"{prefix}-a-baseline.json",
+        "b_baseline": arm_dir / f"{prefix}-b-baseline.json",
+        "a_diagnostic": arm_dir / f"{prefix}-a-diagnostic.json",
+        "b_diagnostic": arm_dir / f"{prefix}-b-diagnostic.json",
+        "a_summary": arm_dir / f"{prefix}-a-summary.json",
+        "b_summary": arm_dir / f"{prefix}-b-summary.json",
+    }
+
+
+def _m024_stage2_validate_artifacts(label):
+    expected_symbols = _m024_stage2_expected()[label]
+    paths = _m024_stage2_paths(label)
+    required = [
+        paths["a_baseline"],
+        paths["b_baseline"],
+        paths["a_diagnostic"],
+        paths["b_diagnostic"],
+        paths["a_summary"],
+        paths["b_summary"],
+    ]
+    exists = [path.is_file() for path in required]
+    if any(exists) and not all(exists):
+        raise RuntimeError(
+            f"M024 Stage-2 {label} has partial immutable artifacts"
+        )
+    if not all(exists):
+        return None
+
+    hashes = {
+        "baseline_a": _sha256(paths["a_baseline"]),
+        "baseline_b": _sha256(paths["b_baseline"]),
+        "diagnostic_a": _sha256(paths["a_diagnostic"]),
+        "diagnostic_b": _sha256(paths["b_diagnostic"]),
+        "summary_a": _sha256(paths["a_summary"]),
+        "summary_b": _sha256(paths["b_summary"]),
+    }
+    deterministic = (
+        hashes["baseline_a"] == hashes["baseline_b"]
+        and hashes["diagnostic_a"] == hashes["diagnostic_b"]
+        and hashes["summary_a"] == hashes["summary_b"]
+    )
+    summary = json.loads(paths["a_summary"].read_text(encoding="utf-8"))
+    partition = summary.get("partition") or {}
+    safety = summary.get("safety") or {}
+    tp = summary.get("tp_safety") or {}
+    direction = summary.get("direction_invariants") or {}
+    symbol_inv = summary.get("symbol_invariants") or {}
+    expected_market = ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"]
+    expected_params = {
+        "stochastic_k_period": 21,
+        "stochastic_d_period": 7,
+        "stochastic_slowing": 7,
+        "oversold_level": 20.0,
+        "overbought_level": 80.0,
+        "ema_period": 7,
+        "decision_spread_max_points": None,
+        "atr_sl_multiplier": 1.5,
+        "atr_tp_multiplier": 3.0,
+        "block_00_04_utc": False,
+    }
+
+    checks = {
+        "deterministic": deterministic,
+        "milestone": summary.get("milestone") == "M024",
+        "stage": summary.get("stage") == "2",
+        "experiment_id": summary.get("experiment_id") == f"M024-S2-{label}",
+        "arm_id": summary.get("arm_id") == label,
+        "direction_buy_only": summary.get("direction") == "BUY",
+        "session_all_hours": summary.get("session") == "all-hours",
+        "m15_disabled": summary.get("m15_signal_enabled") is False,
+        "position_size": float(summary.get("position_size", 0.0)) == 0.1,
+        "parameters": summary.get("parameters") == expected_params,
+        "cost_contract": summary.get("cost_contract")
+        == (
+            "SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / "
+            "SWAP-UNMODELED"
+        ),
+        "strategy_symbols": tuple(summary.get("strategy_symbols") or ())
+        == tuple(expected_symbols),
+        "market_data_symbols": summary.get("market_data_symbols")
+        == expected_market,
+        "symbol_invariant_strategy": tuple(
+            symbol_inv.get("strategy_symbols") or ()
+        ) == tuple(expected_symbols),
+        "symbol_invariant_market": symbol_inv.get("market_data_symbols")
+        == expected_market,
+        "excluded_symbol_trades_zero": int(
+            symbol_inv.get("excluded_symbol_closed_trade_rows", -1)
+        ) == 0,
+        "sell_entries_zero": int(direction.get("sell_accepted_entries", -1)) == 0,
+        "source_manifest": partition.get("source_manifest_sha256")
+        == "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558",
+        "start_utc": partition.get("start_utc")
+        == "2025-08-25T00:00:00Z",
+        "end_exclusive_utc": partition.get("end_exclusive_utc")
+        == "2026-07-08T00:00:00Z",
+        "trading_dates": int(partition.get("trading_dates", 0)) == 225,
+        "date_list_sha256": partition.get("date_list_sha256")
+        == "50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0",
+        "strict_common_boundary_clock": (
+            partition.get("strict_common_boundary_clock") is True
+        ),
+        "full_symbol_m1_preserved": (
+            partition.get("full_symbol_m1_preserved") is True
+        ),
+        "fold_count": len(partition.get("folds") or []) == 5,
+        "tp_negative_zero": int(
+            tp.get("negative_pl_take_profit_exits", -1)
+        ) == 0,
+        "tp_wrong_side_zero": int(tp.get("wrong_side_initial_tp", -1)) == 0,
+        "holdout_unused": (
+            safety.get("historical_holdout_economic_data_used") is False
+        ),
+        "m021_unused": safety.get("m021_post_cutoff_data_used") is False,
+        "m025_unused": safety.get("m025_outcomes_used") is False,
+        "real_order_unused": safety.get("real_order_api_called") is False,
+        "session_filter_absent": safety.get("session_filter_applied") is False,
+        "weekday_filter_absent": safety.get("weekday_filter_applied") is False,
+        "market_data_not_reduced": (
+            safety.get("market_data_universe_reduced") is False
+        ),
+    }
+    if not all(checks.values()):
+        failed = [name for name, passed in checks.items() if not passed]
+        raise RuntimeError(
+            f"M024 Stage-2 {label} failed frozen invariants: {failed}"
+        )
+
+    return {
+        "label": label,
+        "strategy_symbols": list(expected_symbols),
+        "hashes": hashes,
+        "summary": summary,
+        "checks": checks,
+    }
+
+
+def _m024_stage2_reference_equivalence(stage2_ref, m023_d_b):
+    current = stage2_ref["summary"]
+    accepted = m023_d_b["summary"]
+    checks = {
+        "aggregate": current.get("aggregate") == accepted.get("aggregate"),
+        "per_symbol": current.get("per_symbol") == accepted.get("per_symbol"),
+        "folds": current.get("folds") == accepted.get("folds"),
+        "iso_weeks": current.get("iso_weeks") == accepted.get("iso_weeks"),
+        "tp_safety": current.get("tp_safety") == accepted.get("tp_safety"),
+        "remaining_positions": current.get("remaining_positions")
+        == accepted.get("remaining_positions"),
+        "source_date_replay_hashes": current.get("source_date_replay_hashes")
+        == accepted.get("source_date_replay_hashes"),
+    }
+    return {
+        "passes": all(checks.values()),
+        "checks": checks,
+    }
+
+
+def m024_stage2_symbol_tests():
+    """Run focused native tests for M024 Stage-2 causal symbol research."""
+
+    feature_sha = _require_m024_branch()
+    tests = [
+        "tests/test_m024_symbol_specialization.py",
+        "tests/test_m024_symbol_causal_research.py",
+        "tests/test_m023_direction_research.py",
+        "tests/test_backtest_baseline_reporting.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "economic_replay_run": False,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "m025_outcomes_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m024_stage2_symbol_family():
+    """Run C-R, prove D-B parity, then run the sole C-UJ causal arm."""
+
+    feature_sha = _require_m024_branch()
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+    if not manifest.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 source manifest is missing",
+            "feature_sha": feature_sha,
+        }
+    if _sha256(manifest) != (
+        "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+    ):
+        return {
+            "ok": False,
+            "reason": "accepted M022 source manifest SHA changed",
+            "feature_sha": feature_sha,
+        }
+
+    root = _ensure_baseline_path(M024_STAGE2_SYMBOL_DIR)
+    root.mkdir(parents=True, exist_ok=True)
+
+    def run_arm(label):
+        existing = _m024_stage2_validate_artifacts(label)
+        if existing is not None:
+            return {
+                "ok": True,
+                "label": label,
+                "reused_complete_artifacts": True,
+                "run": None,
+            }
+        paths = _m024_stage2_paths(label)
+        paths["dir"].mkdir(parents=True, exist_ok=True)
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.m024_symbol_causal_research",
+                "--manifest",
+                str(manifest.relative_to(REPO)),
+                "--output-dir",
+                str(paths["dir"].relative_to(REPO)),
+                "--arm",
+                label,
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        return {
+            "ok": run["exit_code"] == 0,
+            "label": label,
+            "reused_complete_artifacts": False,
+            "run": run,
+        }
+
+    reference_run = run_arm("C-R")
+    if not reference_run["ok"]:
+        return {
+            "ok": False,
+            "reason": "M024 Stage-2 C-R execution failed",
+            "feature_sha": feature_sha,
+            "execution": {"C-R": reference_run},
+        }
+
+    try:
+        reference = _m024_stage2_validate_artifacts("C-R")
+        accepted_d_b = _m023_stage_a_validate_artifacts("D-B")
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+        }
+    if accepted_d_b is None:
+        return {
+            "ok": False,
+            "reason": "accepted M023 D-B artifacts are missing",
+            "feature_sha": feature_sha,
+        }
+
+    equivalence = _m024_stage2_reference_equivalence(
+        reference,
+        accepted_d_b,
+    )
+    if not equivalence["passes"]:
+        return {
+            "ok": False,
+            "reason": "M024 Stage-2 C-R failed accepted D-B equivalence",
+            "feature_sha": feature_sha,
+            "reference_equivalence": equivalence,
+        }
+
+    candidate_run = run_arm("C-UJ")
+    if not candidate_run["ok"]:
+        return {
+            "ok": False,
+            "reason": "M024 Stage-2 C-UJ execution failed",
+            "feature_sha": feature_sha,
+            "reference_equivalence": equivalence,
+            "execution": {
+                "C-R": reference_run,
+                "C-UJ": candidate_run,
+            },
+        }
+
+    try:
+        candidate = _m024_stage2_validate_artifacts("C-UJ")
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+        }
+
+    def compact(item):
+        summary = item["summary"]
+        return {
+            "label": item["label"],
+            "strategy_symbols": item["strategy_symbols"],
+            "hashes": item["hashes"],
+            "aggregate": summary.get("aggregate"),
+            "per_symbol": summary.get("per_symbol"),
+            "folds": summary.get("folds"),
+            "iso_weeks": summary.get("iso_weeks"),
+            "direction_invariants": summary.get("direction_invariants"),
+            "symbol_invariants": summary.get("symbol_invariants"),
+            "tp_safety": summary.get("tp_safety"),
+            "remaining_positions": summary.get("remaining_positions"),
+            "source_date_replay_hashes": summary.get(
+                "source_date_replay_hashes"
+            ),
+            "checks": item["checks"],
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "family": "m024-stage2-symbol",
+        "reference_equivalence": equivalence,
+        "arms": {
+            "C-R": compact(reference),
+            "C-UJ": compact(candidate),
+        },
+        "execution": {
+            "order": ["C-R", "C-UJ"],
+            "runs": {
+                "C-R": {
+                    "reused_complete_artifacts":
+                        reference_run["reused_complete_artifacts"],
+                    "exit_code": (
+                        None if reference_run["run"] is None
+                        else reference_run["run"]["exit_code"]
+                    ),
+                },
+                "C-UJ": {
+                    "reused_complete_artifacts":
+                        candidate_run["reused_complete_artifacts"],
+                    "exit_code": (
+                        None if candidate_run["run"] is None
+                        else candidate_run["run"]["exit_code"]
+                    ),
+                },
+            },
+        },
+        "safety": {
+            "economic_replay_run": True,
+            "economic_partition": "seen-research-only",
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "m025_outcomes_used": False,
+            "real_order_api_called": False,
+            "session_filter_applied": False,
+            "weekday_filter_applied": False,
+        },
+    }
+
+
+def m024_stage2_symbol_assessment():
+    """Mechanically apply frozen C-UJ representation/support rules."""
+
+    feature_sha = _require_m024_branch()
+    try:
+        reference = _m024_stage2_validate_artifacts("C-R")
+        candidate = _m024_stage2_validate_artifacts("C-UJ")
+        accepted_d_b = _m023_stage_a_validate_artifacts("D-B")
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+        }
+    if reference is None or candidate is None or accepted_d_b is None:
+        return {
+            "ok": False,
+            "reason": "M024 Stage-2 artifacts are incomplete",
+            "feature_sha": feature_sha,
+        }
+
+    equivalence = _m024_stage2_reference_equivalence(
+        reference,
+        accepted_d_b,
+    )
+    if not equivalence["passes"]:
+        return {
+            "ok": False,
+            "reason": "M024 Stage-2 C-R reference equivalence failed",
+            "feature_sha": feature_sha,
+            "reference_equivalence": equivalence,
+        }
+
+    summary = candidate["summary"]
+    descriptive = accepted_d_b["summary"]
+    aggregate = summary.get("aggregate") or {}
+    per_symbol = summary.get("per_symbol") or {}
+    usd = per_symbol.get("USDJPY") or {}
+    closed = int(aggregate.get("closed_trades", 0))
+    net_pl = float(aggregate.get("net_realized_pl", 0.0))
+    mean_pl = (
+        float(usd.get("mean_trade_pl"))
+        if usd.get("mean_trade_pl") is not None
+        else None
+    )
+
+    descriptive_usd = (descriptive.get("per_symbol") or {}).get("USDJPY") or {}
+    descriptive_closed = int(descriptive_usd.get("closed_trades", 0))
+    total_ratio = (
+        closed / descriptive_closed if descriptive_closed else 0.0
+    )
+
+    candidate_folds = summary.get("folds") or {}
+    descriptive_folds = descriptive.get("folds") or {}
+    per_fold_ratio = {}
+    positive_folds = {}
+    for label in ("F1", "F2", "F3", "F4", "F5"):
+        current = candidate_folds.get(label) or {}
+        source = (
+            (descriptive_folds.get(label) or {}).get("per_symbol") or {}
+        ).get("USDJPY") or {}
+        current_count = int(current.get("closed_trades", 0))
+        source_count = int(source.get("closed_trades", 0))
+        per_fold_ratio[label] = (
+            current_count / source_count if source_count else 0.0
+        )
+        fold_pl = float(current.get("net_realized_pl", 0.0))
+        fold_mean = current.get("mean_trade_pl")
+        positive_folds[label] = {
+            "closed_trades": current_count,
+            "net_realized_pl": fold_pl,
+            "mean_trade_pl": fold_mean,
+            "net_positive": fold_pl > 0,
+            "mean_positive": (
+                fold_mean is not None and float(fold_mean) > 0
+            ),
+        }
+
+    positive_fold_rows = [
+        row for row in positive_folds.values()
+        if row["net_positive"]
+    ]
+    positive_fold_sum = sum(
+        row["net_realized_pl"] for row in positive_fold_rows
+    )
+    max_positive_fold_share = (
+        max(row["net_realized_pl"] for row in positive_fold_rows)
+        / positive_fold_sum
+        if positive_fold_sum > 0
+        else None
+    )
+
+    candidate_weeks = summary.get("iso_weeks") or {}
+    descriptive_weeks = descriptive.get("iso_weeks") or {}
+    source_trade_weeks = [
+        label for label, row in descriptive_weeks.items()
+        if int(((row.get("per_symbol") or {}).get("USDJPY") or {}).get(
+            "closed_trades", 0
+        )) > 0
+    ]
+    represented_weeks = [
+        label for label in source_trade_weeks
+        if int((candidate_weeks.get(label) or {}).get("closed_trades", 0)) > 0
+    ]
+    week_presence_ratio = (
+        len(represented_weeks) / len(source_trade_weeks)
+        if source_trade_weeks else 0.0
+    )
+
+    eligible_weeks = [
+        row for row in candidate_weeks.values()
+        if int(row.get("closed_trades", 0)) >= 5
+    ]
+    positive_mean_weeks = [
+        row for row in eligible_weeks
+        if row.get("mean_trade_pl") is not None
+        and float(row["mean_trade_pl"]) > 0
+    ]
+    positive_mean_week_ratio = (
+        len(positive_mean_weeks) / len(eligible_weeks)
+        if eligible_weeks else 0.0
+    )
+
+    representation = {
+        "total_ge_80pct_descriptive": total_ratio >= 0.80,
+        "every_fold_ge_70pct_descriptive": all(
+            ratio >= 0.70 for ratio in per_fold_ratio.values()
+        ),
+        "week_presence_ge_80pct": week_presence_ratio >= 0.80,
+        "ok": (
+            total_ratio >= 0.80
+            and all(ratio >= 0.70 for ratio in per_fold_ratio.values())
+            and week_presence_ratio >= 0.80
+        ),
+        "total_ratio": total_ratio,
+        "per_fold_ratio": per_fold_ratio,
+        "source_trade_weeks": len(source_trade_weeks),
+        "represented_trade_weeks": len(represented_weeks),
+        "week_presence_ratio": week_presence_ratio,
+    }
+
+    support_checks = {
+        "net_pl_positive": net_pl > 0,
+        "mean_trade_pl_positive": mean_pl is not None and mean_pl > 0,
+        "positive_net_pl_folds_ge_3": sum(
+            row["net_positive"] for row in positive_folds.values()
+        ) >= 3,
+        "positive_mean_folds_ge_3": sum(
+            row["mean_positive"] for row in positive_folds.values()
+        ) >= 3,
+        "positive_fold_concentration_le_60pct": (
+            max_positive_fold_share is not None
+            and max_positive_fold_share <= 0.60
+        ),
+        "eligible_iso_weeks_ge_30": len(eligible_weeks) >= 30,
+        "positive_mean_iso_weeks_ge_50pct": (
+            positive_mean_week_ratio >= 0.50
+        ),
+    }
+    supported = representation["ok"] and all(support_checks.values())
+    classification = (
+        "SUPPORTED FOR HOLDOUT CHECKPOINT ONLY"
+        if supported
+        else "NOT SUPPORTED"
+    )
+
+    return {
+        "ok": True,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "reference": {
+            "label": "C-R",
+            "classification": "REFERENCE",
+            "reference_equivalence": equivalence,
+        },
+        "candidate": {
+            "label": "C-UJ",
+            "classification": classification,
+            "strategy_symbols": ["USDJPY"],
+            "economics": {
+                "closed_trades": closed,
+                "net_realized_pl": net_pl,
+                "mean_trade_pl": mean_pl,
+                "maximum_equity_drawdown": aggregate.get(
+                    "maximum_equity_drawdown"
+                ),
+                "maximum_equity_drawdown_pct": aggregate.get(
+                    "maximum_equity_drawdown_pct"
+                ),
+                "win_rate_nonflat_pct": aggregate.get(
+                    "win_rate_nonflat_pct"
+                ),
+            },
+            "representation": representation,
+            "support_checks": support_checks,
+            "folds": positive_folds,
+            "weekly": {
+                "eligible_iso_weeks": len(eligible_weeks),
+                "positive_mean_iso_weeks": len(positive_mean_weeks),
+                "positive_mean_iso_week_ratio": positive_mean_week_ratio,
+            },
+            "max_positive_fold_pl_share": max_positive_fold_share,
+        },
+        "supported": supported,
+        "historical_holdout_execution_authorized": False,
+        "next_step": (
+            "freeze separate prospective historical-holdout checkpoint"
+            if supported
+            else "close M024 without historical holdout"
+        ),
+        "safety": {
+            "economic_replay_run": False,
+            "reads_existing_stage2_artifacts_only": True,
+            "historical_holdout_economic_data_used": False,
+            "m021_post_cutoff_data_used": False,
+            "m025_outcomes_used": False,
+            "real_order_api_called": False,
+            "session_filter_run": False,
+            "weekday_filter_run": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -13533,6 +14132,9 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m024_stage2_symbol_tests": m024_stage2_symbol_tests,
+    "m024_stage2_symbol_family": m024_stage2_symbol_family,
+    "m024_stage2_symbol_assessment": m024_stage2_symbol_assessment,
     "m024_symbol_specialization_tests": m024_symbol_specialization_tests,
     "m024_symbol_specialization_diagnostic": m024_symbol_specialization_diagnostic,
     "m023_stage_b_session_family": m023_stage_b_session_family,
