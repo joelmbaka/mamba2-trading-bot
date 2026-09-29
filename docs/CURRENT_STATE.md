@@ -412,3 +412,25 @@ Fixed local-control support:
 
 No M025 economics have run. The next gate is exact Dell branch switch, focused
 public-benchmark tests, then full native regression.
+
+
+## M025 Stage 1 accepted
+
+Accepted feature SHA:
+
+`d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
+
+Focused acceptance:
+
+`a9d4ce84b5cc35e911407082c056c24668b79401`
+— **23 passed**.
+
+Full native acceptance:
+
+`28a5c79dd49e10f1255a97bc24a05b0df721bb1b`
+— **260 passed, 2 skipped**.
+
+No M025 economics have run.
+
+The Stage-2 data-source inventory protocol is frozen. The next work is public
+source metadata/schema inventory only, with no benchmark P/L.

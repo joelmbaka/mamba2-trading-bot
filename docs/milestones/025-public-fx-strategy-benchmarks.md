@@ -1,6 +1,6 @@
 # Milestone 025 — Public FX Strategy Benchmarks
 
-Status: **PROTOCOL FROZEN — IMPLEMENTATION/DATA GATE ONLY; NO ECONOMIC RESULTS AUTHORIZED**
+Status: **STAGE 1 ACCEPTED — DATA-SOURCE INVENTORY PROTOCOL FROZEN; NO ECONOMIC RESULTS AUTHORIZED**
 
 Protocol date: 2026-09-29
 
@@ -269,3 +269,199 @@ No M025 historical economics have run.
 5. review failures without weakening literature definitions or data gates;
 6. durably accept Stage 1 only after focused + full native pass;
 7. stop before any data-source inventory or benchmark economics.
+
+
+## Stage-1 acceptance — 2026-09-29
+
+Primary-source fidelity implementation:
+
+`35775c872ef83fa161732f7975ef3c0513e1b847`
+
+Test-fixture-only repair:
+
+`d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
+
+Fixed local-control Stage-1 support:
+
+`6c5342e804c24f9a4ca8ee2b46f7991192713839`
+
+First focused run:
+
+`446ebdaf8b100fda2ae7b6c1f925a48672847098`
+
+It reached **22 passed / 1 failed**. The sole failure was a synthetic fixture
+that duplicated the exact timestamp, causing the pre-existing unique-index
+guard to fire before the newer duplicate-calendar-month guard. No scientific
+or benchmark behavior failed.
+
+Accepted focused run after fixture correction:
+
+`a9d4ce84b5cc35e911407082c056c24668b79401`
+
+Focused result:
+
+**23 passed / 0 failed**
+
+Final full native regression:
+
+`28a5c79dd49e10f1255a97bc24a05b0df721bb1b`
+
+Final full native result:
+
+**260 passed / 2 skipped**
+
+Exact accepted Stage-1 feature SHA:
+
+`d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
+
+Stage-1 safety:
+
+- M025 historical benchmark economics: **not run**;
+- M021 post-cutoff outcomes: **unused**;
+- M023 outcomes: **unused**;
+- M024 holdout outcomes used to define/tune benchmarks: **no**;
+- production defaults changed: **no**;
+- real-order API: **unused**.
+
+Stage 1 is accepted.
+
+
+## Stage-2 data-source inventory protocol freeze — 2026-09-29
+
+Status: **FROZEN BEFORE ANY M025 BENCHMARK ECONOMICS**
+
+Stage 2 is a source/metadata gate only. It does not authorize strategy-return
+calculation.
+
+### Objective
+
+Identify whether accessible historical data exist that can support the already
+frozen B1/B2/B3 benchmark definitions without substituting economically
+different inputs.
+
+No source may be preferred because of its returns.
+
+### Inventory classifications
+
+Each candidate source/series must receive exactly one classification:
+
+- **RAW-ELIGIBLE-CANDIDATE** — fields/frequency/history/universe can support
+  the frozen publication-faithful calculation, subject to later deterministic
+  ingestion validation;
+- **DERIVED-REFERENCE-ONLY** — published portfolio/factor return series useful
+  for external reference/equivalence checks but insufficient to reconstruct
+  the frozen raw benchmark;
+- **PROXY-ONLY** — can support an explicitly labelled proxy such as
+  `TSMOM SPOT PROXY`, but not publication-faithful economics;
+- **INSUFFICIENT** — missing required fields/history/universe;
+- **UNAVAILABLE/RESTRICTED** — source exists but cannot be accessed under the
+  current public/free research boundary.
+
+No ranking among eligible sources based on economic performance is allowed.
+
+### B1 — MOP TSMOM inventory requirements
+
+A RAW-ELIGIBLE-CANDIDATE must provide:
+
+1. daily returns or prices from a futures/forward-compatible currency
+   instrument whose excess-return convention can be stated exactly;
+2. enough raw information to construct daily excess returns without inventing
+   financing/carry;
+3. at least 72 consecutive usable calendar months per evaluated instrument
+   (12-month warmup + 60 evaluation months);
+4. stable instrument identifiers and roll/contract convention where futures
+   are used;
+5. source timezone/calendar documentation;
+6. no synthetic forward filling across missing observations;
+7. reproducible access metadata and source hashes once ingested.
+
+Spot-only daily prices are **PROXY-ONLY**.
+
+A published TSMOM factor return series is **DERIVED-REFERENCE-ONLY** unless it
+contains the instrument-level raw data required by the frozen signal and
+volatility calculation.
+
+### B2 — currency momentum inventory requirements
+
+A RAW-ELIGIBLE-CANDIDATE must provide, for a common base currency:
+
+1. at least 12 distinct foreign currencies in every evaluated month;
+2. end-of-month spot rates;
+3. one-month forward rates or directly observed monthly currency **log excess
+   returns**;
+4. at least 72 consecutive eligible months;
+5. quote convention sufficient to reproduce the U.S./base-investor return
+   sign;
+6. deterministic currency identifiers through redenominations/euro entry;
+7. missing-data and availability metadata.
+
+A spot-only cross-section is **INSUFFICIENT** for publication-faithful B2.
+
+### B3 — HML-FX carry inventory requirements
+
+A RAW-ELIGIBLE-CANDIDATE must satisfy the B2 cross-sectional requirements and
+also provide either:
+
+- observed one-month forward discounts; or
+- corresponding directly observed short-term rate differentials with an
+  explicit covered-interest-parity convention.
+
+Price momentum, trailing spot returns, or an inferred carry score from price
+history are not permitted substitutes.
+
+A published HML-FX factor/portfolio series is
+**DERIVED-REFERENCE-ONLY** unless currency-level formation data are also
+available.
+
+### B4 — internal M020-D comparator
+
+The accepted M020-D snapshot remains the fixed internal comparator.
+
+Stage 2 may inventory its already-accepted source/artifact references but may
+not rerun or retune M020-D.
+
+### Source evidence to record
+
+For every candidate source record:
+
+- source/publisher;
+- public URL or canonical identifier;
+- access status;
+- license/reuse limitation where visible;
+- raw versus derived;
+- fields;
+- frequency;
+- first/last available dates where documented;
+- currency/instrument universe where documented;
+- base/quote convention;
+- forward/interest-rate availability;
+- transaction-cost fields if any;
+- whether the 72-month gate is plausibly satisfiable;
+- classification;
+- exact reason for classification;
+- date the source metadata were checked.
+
+Do not record strategy P/L, Sharpe ratio, drawdown, winning periods, or other
+candidate economic outcomes during this gate.
+
+### Stop rule
+
+If no public/free RAW-ELIGIBLE-CANDIDATE exists for a publication-faithful
+benchmark family, record that fact and stop that family at the data gate.
+
+Do not weaken the benchmark or silently substitute spot data.
+
+A PROXY-ONLY TSMOM path may proceed later only under its explicit proxy label
+and under a separately frozen execution protocol.
+
+### Stage-2 authorized sequence
+
+1. prospectively freeze this inventory protocol;
+2. inspect public source documentation/metadata only;
+3. publish a deterministic source-inventory document/artifact;
+4. independently review classifications against the frozen field gates;
+5. do not download/compute benchmark return panels yet unless needed solely to
+   prove schema/access and explicitly authorized in a later ingestion gate;
+6. freeze a separate ingestion/economic protocol only for
+   RAW-ELIGIBLE-CANDIDATE sources that survive inventory;
+7. stop before economics.

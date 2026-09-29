@@ -1,92 +1,50 @@
 # Next Authorized Task
 
-## Milestone 025 — public FX benchmark fidelity repair
+## Milestone 025 — public FX benchmark data-source inventory
 
 Branch:
 
 `public-strategy-benchmarks`
 
-Protocol:
+Accepted Stage-1 feature:
 
-`docs/milestones/024-public-fx-strategy-benchmarks.md`
+`d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
 
-Base:
+Accepted focused tests:
 
-`7047d5ff3fd4c74163b62f2142742a124462bb7d`
+`a9d4ce84b5cc35e911407082c056c24668b79401`
+— **23 passed**.
 
-M025 is intentionally independent of M023. Do not read or use M023 outcomes.
-M021 remains frozen and must not be inspected early.
+Accepted full native regression:
 
-## Stage 1 only
+`28a5c79dd49e10f1255a97bc24a05b0df721bb1b`
+— **260 passed, 2 skipped**.
 
-Repair and validate the existing deterministic research-only machinery against
-the primary-source fidelity review. In particular:
+## Stage 2 only
 
-- Menkhoff multi-month currency-momentum formation returns must be additive
-  sums of monthly **log excess returns**, not arithmetic compounding;
-- MOP EWMA variance must remain centered on the exponentially weighted mean and
-  be regression-tested against the explicit paper equation;
-- five-year-plus-warmup gates must require a **consecutive** eligible monthly
-  run, not scattered eligible months;
-- monthly cross-sectional panels must reject duplicate calendar-month rows.
+Execute the frozen source-inventory protocol in:
 
-Preserve the exact frozen benchmark definitions:
+`docs/milestones/025-public-fx-strategy-benchmarks.md`
 
-- MOP TSMOM 12-month formation / 1-month hold with 40% per-instrument target
-  volatility and the fixed 60-day-center EWMA estimator;
-- currency momentum MOM(1,1), MOM(6,1), MOM(12,1), six portfolios, long High /
-  short Low;
-- HML-FX carry, six portfolios, long highest carry / short lowest carry;
-- frozen internal comparator metadata for M020-D.
+Inventory public/free candidate data sources for:
 
-Implement hard data sufficiency gates:
+- B1 MOP TSMOM;
+- B2 Menkhoff currency momentum;
+- B3 HML-FX carry;
+- B4 accepted M020-D artifact references.
 
-- TSMOM: minimum five complete usable years plus 12-month warmup;
-- cross-sectional momentum/carry: minimum 12 distinct foreign currencies versus
-  a common base, minimum five complete years, and required forward/excess-return
-  inputs;
-- carry additionally requires observed forward discount or rate differential;
-- the existing five-symbol Mamba2 universe must fail B2/B3 before economics.
-
-Add focused synthetic tests for:
-
-- constants;
-- no lookahead;
-- deterministic ranking/ties;
-- exact portfolio membership;
-- insufficient-history refusal;
-- insufficient-universe refusal;
-- spot-proxy labelling.
+For each source, record publisher/access/raw-vs-derived/fields/frequency/history/
+universe/convention/forward-or-rate availability/licensing metadata and apply
+exactly one frozen inventory classification.
 
 ## Prohibited
 
-Do not run any M025 historical economics yet.
-Do not add economic local-control actions.
-Do not inspect M022 holdout.
-Do not inspect M021 post-cutoff data.
-Do not read M023 results.
-Do not modify production strategy defaults.
-Do not merge, deploy, or enable real trading.
+Do not calculate benchmark P/L, Sharpe, drawdown, win rate, or economic ranking.
+Do not choose a source based on returns.
+Do not weaken raw-data requirements because a preferred source is unavailable.
+Do not use M021 post-cutoff outcomes.
+Do not use M023/M024 outcomes to alter benchmark definitions.
+Do not merge/deploy or enable real trading.
 
-After code/tests are committed, run the native focused/full suite only. Stage 1
-acceptance must precede any data-source inventory or economic replay.
-
-
-## Current implementation checkpoint
-
-Feature repair SHA:
-
-`35775c872ef83fa161732f7975ef3c0513e1b847`
-
-Local-control support SHA:
-
-`6c5342e804c24f9a4ca8ee2b46f7991192713839`
-
-Execute only:
-
-1. `m025_switch_public_benchmarks`;
-2. `m025_public_benchmark_tests`;
-3. `test_full_native` if focused tests pass;
-4. document Stage-1 acceptance.
-
-Do not run any benchmark historical economics or data-source inventory yet.
+After inventory review, stop before ingestion/economics and freeze a separate
+protocol for any surviving RAW-ELIGIBLE-CANDIDATE.
