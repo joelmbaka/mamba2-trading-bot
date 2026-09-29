@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m025-stage3-runtime-probe-v1",
-  "action": "m025_stage3_runtime_probe",
+  "id": "mamba2-m025-stage3-sync-v1",
+  "action": "m025_switch_public_benchmarks",
   "args": {},
   "requested_by": "chatgpt"
 }
