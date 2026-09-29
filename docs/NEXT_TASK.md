@@ -1,61 +1,63 @@
 # Next Authorized Task
 
-## Milestone 024 — freeze historical-holdout checkpoint protocol
+## M024 — implement metadata-only historical-holdout readiness
 
 Branch:
 
 `symbol-specialization-research`
 
-Stage 2 is accepted.
+Stage-2 acceptance documentation:
 
-Accepted Stage-2 feature SHA:
+`ff9182cb835d8db022122dae3eed019c53faa924`
 
-`fd9c0ec689c57c572a7318ddd54fecb8dc5e8666`
+The historical-holdout checkpoint protocol is frozen in:
 
-Accepted family result:
+`docs/milestones/024-symbol-specialization-research.md`
 
-`45cc718b908a28040a1907c08c8dc7382d800883`
+## Exact authorized work
 
-Accepted mechanical assessment:
+Implement a metadata-only readiness gate for the frozen M024 H-UJ holdout.
 
-`d99ca44882f9814d42ed5b71a86fd13150d41b8f`
+Holdout:
 
-Final full native acceptance:
+`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`
 
-`2a824763aab9e8b9be7eb5626cf657b857cae945`
-— **288 passed, 2 skipped**.
+Expected common trading dates:
 
-Accepted candidate:
+**57**
 
-**C-UJ — USDJPY-only strategy, all-five market data retained**
+Source manifest SHA-256:
 
-Classification:
+`143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`
 
-**SUPPORTED FOR HOLDOUT CHECKPOINT ONLY**
+Readiness must verify the exact source/coverage/partition/all-five-data/common
+boundary semantics in the milestone protocol and deterministically publish:
 
-## Next step
+- ordered 57-date list SHA-256;
+- H1/H2/H3 19-date block SHA-256 values;
+- replay-boundary SHA-256;
+- source-manifest SHA-256;
+- partition-spec SHA-256;
+- required row-count metadata.
 
-Freeze a separate prospective historical-holdout checkpoint protocol **before
-opening or computing any historical-holdout economics**.
+Add tests proving readiness performs no economic replay and that H-UJ economic
+execution remains inaccessible until readiness is accepted.
 
-The checkpoint protocol must predeclare at minimum:
+A fixed local-control readiness action is allowed.
 
-1. exact fixed C-UJ strategy configuration;
-2. exact historical holdout window:
-   `2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`;
-3. exact holdout data/date eligibility rules;
-4. deterministic A/B replay requirements;
-5. exact representation/readiness gates;
-6. exact support/failure classification rules;
-7. no post-result threshold changes;
-8. stop rule after one holdout evaluation;
-9. no M021 post-cutoff use;
-10. no M025 outcome use;
-11. no production/live promotion from the holdout without a separate gate.
+## Still forbidden
 
-Do not inspect/open the historical holdout before the protocol-freeze commit.
+Do not compute or inspect holdout:
 
-Do not tune symbols, sessions, weekdays, direction, parameters, M15, spread
-filters, or position size.
+- P/L;
+- trades;
+- win rate;
+- drawdown;
+- fold/block economics;
+- weekly economics;
+- economic classification.
 
+Do not use M021 post-cutoff outcomes.
+Do not use M025 outcomes.
+Do not add any candidate or filter.
 Do not merge/deploy or enable real trading.

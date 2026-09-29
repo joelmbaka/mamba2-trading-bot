@@ -1,6 +1,6 @@
 # Milestone 024 — Symbol Specialization Research
 
-Status: **STAGE 2 ACCEPTED — C-UJ SUPPORTED FOR HOLDOUT CHECKPOINT ONLY; HOLDOUT STILL SEALED**
+Status: **STAGE 2 ACCEPTED — HISTORICAL HOLDOUT CHECKPOINT PROTOCOL FROZEN; NO HOLDOUT ECONOMICS YET**
 
 Protocol date: 2026-09-29
 
@@ -808,3 +808,257 @@ Historical holdout execution remains **unauthorized** until that new checkpoint
 is frozen and reviewed.
 
 Do not merge/deploy or enable real trading from this result alone.
+
+
+## Historical holdout checkpoint protocol freeze — 2026-09-29
+
+Status: **FROZEN BEFORE ANY M024 HOLDOUT ECONOMICS**
+
+Protocol base / accepted Stage-2 documentation:
+
+`ff9182cb835d8db022122dae3eed019c53faa924`
+
+This checkpoint exists only because C-UJ was mechanically classified
+**SUPPORTED FOR HOLDOUT CHECKPOINT ONLY**.
+
+### One fixed candidate
+
+Exactly one holdout candidate exists:
+
+**H-UJ**
+
+Strategy semantics are identical to accepted C-UJ:
+
+- strategy-entry universe: **USDJPY only**;
+- market-data / conversion universe:
+  **EURUSD, EURJPY, GBPUSD, GBPJPY, USDJPY**;
+- stochastic: **21 / 7 / 7**;
+- stochastic boundaries: **20 / 80**;
+- EMA: **7**;
+- decision-time spread gate: **none**;
+- ATR SL multiplier: **1.5**;
+- ATR TP multiplier: **3.0**;
+- direction: **BUY only**;
+- session: **all hours**;
+- M15 / higher-TF signal: **disabled**;
+- position size: **0.1**;
+- unchanged protection/trailing semantics;
+- unchanged account-currency conversion semantics;
+- cost contract:
+  `SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`.
+
+No reference, alternate symbol subset, SELL/BOTH arm, session arm, weekday arm,
+spread arm, M15 arm, or parameter variant may be evaluated on the holdout.
+
+### Exact holdout window
+
+Use exactly the pre-existing M022 historical-holdout partition:
+
+`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`
+
+End is exclusive.
+
+Expected common trading dates:
+
+**57**
+
+Accepted full source-manifest SHA-256:
+
+`143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`
+
+The holdout date list has not been inspected for M024 economics. A
+metadata-only readiness step must derive the exact ordered 57-date list and its
+SHA-256 before any economic replay. That readiness artifact becomes immutable
+for the economic step.
+
+### Fixed chronological holdout blocks
+
+After readiness confirms exactly 57 ordered common trading dates, split them by
+position only into three consecutive, non-overlapping blocks:
+
+- **H1** — dates 1–19;
+- **H2** — dates 20–38;
+- **H3** — dates 39–57.
+
+Do not redraw, rebalance, merge, optimize, or redefine these blocks after
+economics.
+
+### Metadata-only readiness gate
+
+Before any H-UJ economic replay, a readiness action may inspect only source and
+coverage metadata necessary to prove the partition is executable.
+
+It must verify:
+
+1. source manifest SHA is exactly the accepted SHA above;
+2. requested source range covers the complete holdout;
+3. holdout slice is exactly
+   `[2026-07-08T00:00:00Z, 2026-09-25T00:00:00Z)`;
+4. exactly **57** common trading dates exist;
+5. ordered date list is unique and chronological;
+6. all five Bid M1 streams are present;
+7. all five Ask M1 streams are present;
+8. Bid/Ask M1 indexes match per symbol inside the partition;
+9. all five symbols retain native M5 data required by accepted ATR semantics;
+10. all five market-data/conversion streams remain available;
+11. strict common replay-boundary clock is non-empty, unique, chronological,
+    and derived with the accepted M022 boundary semantics;
+12. no bar at or after `2026-09-25T00:00:00Z` enters the sliced replay;
+13. H1/H2/H3 each contain exactly 19 trading dates;
+14. no M021 post-cutoff outcome is read;
+15. no M025 outcome is read;
+16. no trade/P&L/drawdown/win-rate economic calculation is executed;
+17. no real-order API is called.
+
+Readiness must publish deterministic metadata including:
+
+- ordered holdout-date SHA-256;
+- H1/H2/H3 date-list SHA-256 values;
+- replay-boundary SHA-256;
+- source manifest SHA-256;
+- partition-spec SHA-256;
+- row counts by symbol/timeframe required for readiness.
+
+If readiness fails, classify the checkpoint **INELIGIBLE — DATA/READINESS** and
+stop without economics.
+
+### Economic execution
+
+Only after readiness passes may H-UJ run.
+
+The H-UJ holdout evaluation consists of exactly two deterministic copies,
+**A and B**, of the same fixed candidate and same fixed readiness artifact.
+
+A/B exist only to test deterministic reproducibility; they are one scientific
+holdout evaluation, not two attempts.
+
+Require byte-identical SHA-256 pairs for:
+
+- baseline report;
+- diagnostic report;
+- summary report.
+
+If A/B differ, classify:
+
+**INELIGIBLE — NONDETERMINISTIC**
+
+and stop. Do not tune or rerun a modified strategy.
+
+### Mandatory execution invariants
+
+H-UJ must also prove:
+
+1. exact fixed strategy configuration above;
+2. strategy symbols exactly `["USDJPY"]`;
+3. market-data symbols exactly all five accepted symbols;
+4. excluded non-USDJPY strategy trade rows = **0**;
+5. accepted SELL entries = **0**;
+6. M15 disabled;
+7. session filter absent;
+8. weekday filter absent;
+9. position size exactly **0.1**;
+10. source/readiness/date/replay hashes exactly match readiness;
+11. wrong-side initial TP = **0**;
+12. negative-P/L take-profit exits = **0**;
+13. M021 post-cutoff outcomes unused;
+14. M025 outcomes unused;
+15. real-order API unused.
+
+Any failure => **INELIGIBLE — INVARIANT FAILURE**.
+
+### Frozen sample-representation gate
+
+Because the holdout contains only 57 trading dates, economic support requires
+enough observed candidate activity to make the one-shot result interpretable.
+
+Require all:
+
+1. total closed trades >= **200**;
+2. each H1/H2/H3 block contains >= **50** closed trades;
+3. trades occur on >= **80%** of the 57 holdout trading dates;
+4. at least **8** ISO weeks contain >=5 closed trades.
+
+These thresholds are frozen now and may not be weakened after outcomes.
+
+Failure of any representation condition => **HOLDOUT NOT SUPPORTED**.
+
+### Frozen economic support rule
+
+If readiness, determinism, invariants, and representation all pass, classify
+H-UJ as **HOLDOUT SUPPORTED — RESEARCH VALIDATION ONLY** only if every one of
+the following also holds:
+
+1. aggregate net realized P/L > **0**;
+2. aggregate mean closed-trade P/L > **0**;
+3. at least **2 of 3** chronological blocks have positive net P/L;
+4. at least **2 of 3** chronological blocks have positive mean trade P/L;
+5. no one positive block contributes > **70%** of summed positive-block P/L;
+6. at least **50%** of eligible ISO weeks have positive mean trade P/L.
+
+Maximum drawdown, win rate, median trade P/L, largest win/loss, and detailed
+exit attribution must be reported, but they are descriptive outputs and may
+not replace or relax a failed frozen support gate.
+
+If any frozen economic rule fails:
+
+**HOLDOUT NOT SUPPORTED**
+
+### One-shot stop rule
+
+After the first valid H-UJ holdout evaluation:
+
+- do not change thresholds;
+- do not add symbols;
+- do not add/remove sessions or weekdays;
+- do not change BUY-only direction;
+- do not change stochastic/EMA/ATR parameters;
+- do not add a spread filter;
+- do not enable M15;
+- do not change position size;
+- do not create a second holdout candidate;
+- do not mine losing dates/weeks for another filter;
+- do not rerun a modified H-UJ on this holdout.
+
+A technical failure may be repaired only if the repair is demonstrably
+non-economic and preserves this exact protocol. Any such repair must be
+documented before rerun.
+
+### Outcome meanings
+
+Possible terminal holdout classifications are exactly:
+
+- **INELIGIBLE — DATA/READINESS**
+- **INELIGIBLE — NONDETERMINISTIC**
+- **INELIGIBLE — INVARIANT FAILURE**
+- **HOLDOUT NOT SUPPORTED**
+- **HOLDOUT SUPPORTED — RESEARCH VALIDATION ONLY**
+
+Even **HOLDOUT SUPPORTED — RESEARCH VALIDATION ONLY** does not authorize:
+
+- production parameter changes;
+- live or paper-to-live promotion;
+- merge to main;
+- deployment;
+- real MT5 trading.
+
+Any production/live promotion would require a separate milestone and a new
+prospective gate.
+
+### Authorized implementation sequence
+
+1. commit this protocol freeze before any holdout data/economics action;
+2. implement metadata-only holdout readiness + tests;
+3. expose only a fixed readiness local-control action;
+4. run readiness and durably freeze its hashes;
+5. implement fixed H-UJ holdout A/B runner + mechanical assessment;
+6. add tests proving no alternate candidate/partition is accessible;
+7. expose only fixed H-UJ holdout and assessment actions;
+8. run focused native tests;
+9. sync Dell to exact feature SHA;
+10. run H-UJ deterministic A/B once;
+11. run mechanical assessment once;
+12. run full native regression;
+13. durably document terminal classification;
+14. stop.
+
+Historical holdout economics remain sealed until steps 1–4 are complete.

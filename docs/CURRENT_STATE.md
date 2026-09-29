@@ -572,3 +572,27 @@ Mechanical classification:
 
 Historical holdout remains sealed and unauthorized. The next task is only to
 freeze and review a separate prospective holdout-checkpoint protocol.
+
+
+## M024 historical holdout checkpoint protocol frozen
+
+Stage 2 is accepted and C-UJ is fixed as the sole holdout candidate.
+
+A separate M024 historical-holdout checkpoint protocol is now frozen before
+holdout economics.
+
+Holdout window:
+
+`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`
+
+Expected common trading dates:
+
+**57**
+
+Candidate:
+
+**H-UJ — USDJPY strategy only, all-five market data retained**
+
+The next gate is metadata-only readiness. No holdout P/L, trades, drawdown,
+win rate, weekly economics, or classification may be computed before readiness
+passes and publishes immutable date/replay hashes.
