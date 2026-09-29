@@ -227,3 +227,45 @@ Data-gate clarification:
 
 These corrections occur before any M025 economic replay and therefore preserve
 the prospective benchmark-research boundary.
+
+
+## Stage-1 fidelity implementation checkpoint — 2026-09-29
+
+Primary-source fidelity repair commit:
+
+`35775c872ef83fa161732f7975ef3c0513e1b847`
+
+Fixed local-control Stage-1 support:
+
+`6c5342e804c24f9a4ca8ee2b46f7991192713839`
+
+Feature changes at the fidelity-repair commit:
+
+- Menkhoff multi-month formation returns now sum monthly **log excess
+  returns**;
+- MOP ex-ante volatility remains a centered EWM variance and is now tested
+  against an explicit finite-history implementation of the paper equation;
+- cross-sectional sufficiency now requires a consecutive 72-month eligible run
+  (12-month warmup + 60 evaluation months);
+- TSMOM sufficiency requires a consecutive 72-month usable run for each
+  instrument;
+- duplicate calendar-month rows are rejected for monthly cross-sectional
+  inputs;
+- M025 numbering and HML-FX source attribution are corrected.
+
+Fixed local-control actions:
+
+- `m025_switch_public_benchmarks`;
+- `m025_public_benchmark_tests`.
+
+No M025 historical economics have run.
+
+### Recovery sequence
+
+1. switch Dell with `m025_switch_public_benchmarks`;
+2. require exact remote feature HEAD and clean 0/0;
+3. run `m025_public_benchmark_tests`;
+4. if focused tests pass, run `test_full_native`;
+5. review failures without weakening literature definitions or data gates;
+6. durably accept Stage 1 only after focused + full native pass;
+7. stop before any data-source inventory or benchmark economics.

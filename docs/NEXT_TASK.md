@@ -70,3 +70,23 @@ Do not merge, deploy, or enable real trading.
 
 After code/tests are committed, run the native focused/full suite only. Stage 1
 acceptance must precede any data-source inventory or economic replay.
+
+
+## Current implementation checkpoint
+
+Feature repair SHA:
+
+`35775c872ef83fa161732f7975ef3c0513e1b847`
+
+Local-control support SHA:
+
+`6c5342e804c24f9a4ca8ee2b46f7991192713839`
+
+Execute only:
+
+1. `m025_switch_public_benchmarks`;
+2. `m025_public_benchmark_tests`;
+3. `test_full_native` if focused tests pass;
+4. document Stage-1 acceptance.
+
+Do not run any benchmark historical economics or data-source inventory yet.

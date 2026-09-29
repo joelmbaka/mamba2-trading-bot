@@ -398,3 +398,17 @@ Primary-source review found:
   of scattered eligible months.
 
 Stage 1 remains code/tests/data-gate only.
+
+
+## M025 Stage-1 fidelity implementation checkpoint
+
+Feature repair:
+
+`35775c872ef83fa161732f7975ef3c0513e1b847`
+
+Fixed local-control support:
+
+`6c5342e804c24f9a4ca8ee2b46f7991192713839`
+
+No M025 economics have run. The next gate is exact Dell branch switch, focused
+public-benchmark tests, then full native regression.
