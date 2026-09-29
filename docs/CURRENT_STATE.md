@@ -644,3 +644,26 @@ and computed no trades or economics.
 The next authorized work is implementation of the single fixed H-UJ
 deterministic A/B holdout replay and mechanical assessment against the already
 frozen protocol.
+
+
+## M024 holdout economic implementation checkpoint
+
+Accepted readiness documentation:
+
+`62f1bb0d0151e0cd8b2e29a824881107b0649e95`
+
+H-UJ runner/assessment:
+
+`ee6bec3e93b507a9c7ac61a0c43fb485e2028357`
+
+Invariant hardening:
+
+`58e9a13b94598e4435c81637a476774abe096863`
+
+Fixed local-control support/hardening:
+
+- `04ae5bbb0168c44d54b74bfc2bde37c6abc0a254`
+- `2acd2e73e78f27a2c50d837ba96cae36dd5efc08`
+
+No H-UJ holdout economics have run yet. The next gate is focused tests, then
+the one-shot deterministic H-UJ A/B evaluation.

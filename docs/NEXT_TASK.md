@@ -1,63 +1,51 @@
 # Next Authorized Task
 
-## M024 — implement fixed H-UJ historical-holdout replay
+## M024 — execute the one-shot H-UJ historical holdout
 
 Branch:
 
 `symbol-specialization-research`
 
-Holdout checkpoint protocol freeze:
+Prospective holdout protocol:
 
 `b8f54de8f79f84c6f913515231e46453106a6cc7`
 
-Accepted readiness result:
+Accepted readiness documentation:
 
-`098ecd3116daf9e26b2bf6b03d6d7a643fce66cb`
+`62f1bb0d0151e0cd8b2e29a824881107b0649e95`
 
-Accepted readiness artifact SHA-256:
+H-UJ economic implementation:
 
-`85852452d61db9447e8935ddc05e2f8e41889aa3ae168b3cc2a76ab26ceedb2e`
+`ee6bec3e93b507a9c7ac61a0c43fb485e2028357`
 
-Frozen readiness hashes:
+Assessment hardening:
 
-- 57-date list:
-  `5d71d3ed67e5ae50f7e515f765e99a4887336e8a0d3659c62836d79dfe484af4`
-- replay boundary:
-  `945c9961af7ce58e3b54223f0b8c10eb216e3dbfdf687ac002ef27b18197fab7`
-- partition spec:
-  `2fac9ab123f1ed173a51aab2cccb42368937e9373b4937a94fd421a89a49cb70`
-- H1:
-  `35cd428dd20dc965aa6e1479a28c73ad66329a1e64d188c1a6e16df25f7b260d`
-- H2:
-  `eb2dfda09cf52320eeb83aac9175713fb45a8b32a330e5b29168f5cd1bc9ae19`
-- H3:
-  `c57086b4e23affa9125f3ff4b4b9eb0352cf7bd5b45b45d7efdf865d984f9359`
+`58e9a13b94598e4435c81637a476774abe096863`
 
-## Implement exactly one economic candidate
+Fixed local-control support:
 
-**H-UJ**
+`04ae5bbb0168c44d54b74bfc2bde37c6abc0a254`
 
-- USDJPY strategy only;
-- all-five market/conversion data retained;
-- exact accepted C-UJ P2-08 BUY-only/all-hours configuration;
-- exact readiness partition/hashes above;
-- deterministic A/B artifacts;
-- exact H1/H2/H3 blocks;
-- no alternate arm.
+Control invariant hardening:
 
-Implement the frozen mechanical assessment from the milestone protocol without
-changing thresholds.
+`2acd2e73e78f27a2c50d837ba96cae36dd5efc08`
 
-Add tests proving:
+## Execute exactly
 
-- only H-UJ is executable;
-- readiness hashes are mandatory;
-- alternate partition/candidate is rejected before economic computation;
-- non-USDJPY strategy entries remain impossible;
-- M021/M025 outcomes remain unused;
-- no real-order API.
+1. sync Dell to exact current remote feature HEAD;
+2. run `m024_holdout_tests`;
+3. require focused PASS;
+4. run `m024_holdout_h_uj_pair` exactly once;
+5. require deterministic A/B hashes and every frozen invariant;
+6. run `m024_holdout_assessment` exactly once;
+7. mechanically accept its terminal classification;
+8. run `test_full_native`;
+9. durably document M024 closeout;
+10. stop.
 
-Then add only fixed holdout family + assessment local-control actions.
+No alternate candidate, partition, symbol set, direction, session, weekday,
+spread filter, M15 setting, parameter, or position-size change is authorized.
 
-Do not tune anything after seeing the holdout.
+Do not use M021 post-cutoff outcomes.
+Do not use M025 outcomes.
 Do not merge/deploy or enable real trading.

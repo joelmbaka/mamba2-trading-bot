@@ -1176,3 +1176,56 @@ Readiness safety checks all passed:
 The holdout economic step may now be implemented, but it must consume these
 exact immutable readiness hashes. No alternate partition or candidate is
 authorized.
+
+
+## Holdout economic implementation checkpoint — 2026-09-29
+
+Accepted readiness documentation:
+
+`62f1bb0d0151e0cd8b2e29a824881107b0649e95`
+
+Fixed H-UJ holdout runner + assessment implementation:
+
+`ee6bec3e93b507a9c7ac61a0c43fb485e2028357`
+
+Assessment invariant hardening:
+
+`58e9a13b94598e4435c81637a476774abe096863`
+
+Fixed local-control H-UJ support:
+
+`04ae5bbb0168c44d54b74bfc2bde37c6abc0a254`
+
+Local-control invariant hardening:
+
+`2acd2e73e78f27a2c50d837ba96cae36dd5efc08`
+
+Implemented feature files:
+
+- `mamba2/backtest/m024_holdout_research.py`;
+- `mamba2/backtest/m024_holdout_assessment.py`;
+- `tests/test_m024_holdout_research.py`.
+
+The economic runner exposes exactly one candidate: **H-UJ**.
+
+Before loading the source dataset it requires the exact accepted readiness
+artifact SHA. It then requires the frozen 57-date, H1/H2/H3, replay-boundary,
+partition-spec, source-manifest, strategy, direction, cost, and safety
+contracts.
+
+### Recovery state
+
+No H-UJ historical-holdout economic replay has run at this checkpoint.
+
+Next exact sequence:
+
+1. sync Dell to exact current feature HEAD;
+2. run `m024_holdout_tests`;
+3. require focused tests PASS;
+4. run `m024_holdout_h_uj_pair` exactly once;
+5. require deterministic A/B artifact equality and all execution invariants;
+6. run `m024_holdout_assessment` exactly once;
+7. accept only the prospectively frozen mechanical classification;
+8. run full native regression;
+9. durably document the terminal M024 classification;
+10. stop — no second candidate or retuning on this holdout.
