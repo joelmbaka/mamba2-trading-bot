@@ -1,260 +1,62 @@
 # Next Authorized Task
 
-## Milestone 022 — two-timeframe parameter research
+## Milestone 024 — public FX benchmark machinery
 
 Branch:
 
-`strategy-parameter-research`
+`public-strategy-benchmarks`
 
-M022 protocol:
+Protocol:
 
-`docs/milestones/022-two-timeframe-parameter-research.md`
+`docs/milestones/024-public-fx-strategy-benchmarks.md`
 
-M021 remains independently frozen on:
+Base:
 
-`prospective-forward-validation`
+`7047d5ff3fd4c74163b62f2142742a124462bb7d`
 
-Do not modify, retune, rebase, or inspect M021 early.
+M024 is intentionally independent of M023. Do not read or use M023 outcomes.
+M021 remains frozen and must not be inspected early.
 
-## Objective
+## Stage 1 only
 
-Systematically validate the human-selected parameters of the existing **M5 + M1** strategy while preserving its basic entry structure.
+Implement deterministic, research-only machinery for the exact frozen benchmark
+definitions:
 
-Do not add M15/three-timeframe confirmation in M022.
+- MOP TSMOM 12-month formation / 1-month hold with 40% per-instrument target
+  volatility and the fixed 60-day-center EWMA estimator;
+- currency momentum MOM(1,1), MOM(6,1), MOM(12,1), six portfolios, long High /
+  short Low;
+- HML-FX carry, six portfolios, long highest carry / short lowest carry;
+- frozen internal comparator metadata for M020-D.
 
-## First required gate — history inventory
+Implement hard data sufficiency gates:
 
-Before broad parameter results are inspected, establish the maximum trustworthy common read-only MT5 history available for all five symbols:
+- TSMOM: minimum five complete usable years plus 12-month warmup;
+- cross-sectional momentum/carry: minimum 12 distinct foreign currencies versus
+  a common base, minimum five complete years, and required forward/excess-return
+  inputs;
+- carry additionally requires observed forward discount or rate differential;
+- the existing five-symbol Mamba2 universe must fail B2/B3 before economics.
 
-- EURUSD
-- EURJPY
-- GBPUSD
-- GBPJPY
-- USDJPY
+Add focused synthetic tests for:
 
-Required market data:
+- constants;
+- no lookahead;
+- deterministic ranking/ties;
+- exact portfolio membership;
+- insufficient-history refusal;
+- insufficient-universe refusal;
+- spot-proxy labelling.
 
-- M1 Bid;
-- Ask M1 / sufficient tick-derived Ask data for truthful spread-aware replay;
-- M5;
-- M15 only where existing exporter/replay compatibility requires it, never as an M022 signal input.
+## Prohibited
 
-Record exact UTC ranges, row counts, missing-data diagnostics, artifact hashes, broker/source metadata, and runtime versions.
+Do not run any M024 historical economics yet.
+Do not add economic local-control actions.
+Do not inspect M022 holdout.
+Do not inspect M021 post-cutoff data.
+Do not read M023 results.
+Do not modify production strategy defaults.
+Do not merge, deploy, or enable real trading.
 
-If enough trustworthy history exists, predeclare chronological **development / validation / untouched historical holdout** partitions before optimization outcomes are interpreted.
-
-If history is too short for meaningful separation, stop and document that limitation rather than brute-force the already-inspected sample.
-
-## Phase 1
-
-Implement experiment-only parameter overrides and deterministic reporting, preserving production defaults.
-
-Screen one family at a time using the bounded grid frozen in the M022 milestone document:
-
-- stochastic tuples;
-- symmetric oversold/overbought boundaries;
-- EMA period;
-- decision-time spread threshold;
-- ATR SL/TP protection;
-- all-hours vs the already-documented 00:00–03:59 UTC exclusion.
-
-Do not brute-force the full Cartesian product.
-
-## Phase 2
-
-Only after Phase 1 evidence is reviewed:
-
-- freeze a shortlist;
-- freeze a bounded combination matrix;
-- then run combinations.
-
-Do not select solely by maximum historical P/L. Require robustness across symbols, BUY/SELL, calendar buckets, drawdown, trade count, and nearby parameter values.
-
-## Local execution
-
-Use `local-control` and `local-control-results` for Dell/MT5 work.
-
-Installed service:
-
-`chatgpt-mamba2-local-agent.service`
-
-Prefer cloud execution/review for work that does not require the Dell. For Dell-only operations, use existing fixed allowlisted actions or add narrowly scoped fixed actions. Never expose arbitrary shell execution and never expose a real-order action.
-
-Each local result must identify the exact feature SHA and return deterministic evidence.
-
-## Safety / boundaries
-
-Never:
-
-- modify M021 frozen behavior/protocol;
-- use post-Sep-25 M021 outcomes to tune M022;
-- add M15 as a signal timeframe;
-- change production defaults silently;
-- merge to main;
-- deploy;
-- enable/place/modify/close real MT5 trades from research tooling;
-- invent commission/slippage/swap costs.
-
-The accepted M019/M020 regression artifacts must remain protected as specified in the M022 milestone.
-
-## Current checkpoint
-
-The M022 history/data gate has passed and the first scientifically accepted
-development economic reference has now passed.
-
-Accepted source dataset:
-
-`backtest_data/m022-history-inventory-native-m1-v3/manifest.json`
-
-Source manifest SHA-256:
-
-`143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`
-
-Frozen partitions remain:
-
-- development:
-  `2025-08-25T00:00:00Z` → `2026-04-21T00:00:00Z`,
-  **169** trading dates;
-- validation:
-  `2026-04-21T00:00:00Z` → `2026-07-08T00:00:00Z`,
-  **56** trading dates;
-- untouched historical holdout:
-  `2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`,
-  **57** trading dates.
-
-Validation and historical holdout remain closed for economic inspection.
-
-### Accepted reference-v3
-
-Command:
-
-`mamba2-m022-phase1-reference-v3-20260926-1859`
-
-Feature SHA:
-
-`3136d2143f79e80ea0ce9688559b7e7aaaca7ef5`
-
-Reference evidence:
-
-- deterministic A/B: PASS;
-- replay boundaries: **241,474**;
-- replay-boundary SHA:
-  `17685ae6a08ce8e6e4f3af215f4215f92fe87de24f5a934d7935778634d47e28`;
-- closed trades: **12,006**;
-- net realized P/L: **-$15,499.3611**;
-- ending realized balance: **-$5,499.3611**;
-- max equity drawdown: **$15,501.9142 / 155.0054%**;
-- non-flat win rate: **32.8667%**;
-- remaining open positions: **3**;
-- TP/safety invariants: PASS;
-- validation used: no;
-- historical holdout used: no;
-- M021 outcomes used: no;
-- live orders: no.
-
-Reference artifact hashes:
-
-- baseline:
-  `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
-- diagnostic:
-  `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
-- summary:
-  `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
-
-### Current authorized gate
-
-**M022 PHASE-2 VALIDATION IS COMPLETE.**
-
-Validation feature SHA:
-
-`a409a5703e709feb0b45cbe870f4d8639189b6ba`
-
-Preflight PASS:
-
-`320a216f802aef3d0ea179234269c094975a3cd7`
-
-Native validation-runner gate:
-
-`mamba2-m022-validation-native-tests-v1`
-
-Published test result:
-
-`0fe62cfa8c029f65b70ef4e926de75af3f373358`
-
-Result:
-
-- **89 passed / 0 failed**;
-- exact feature SHA matched;
-- no economic replay;
-- no M021 post-cutoff use;
-- no real-order API.
-
-Accepted validation family evidence:
-
-- repaired family command:
-  `mamba2-m022-phase2-validation-family-v2`;
-- family result:
-  `f520aefda1341dd009412659957d37011138bab1`;
-- exact entrants:
-  P2-R, P2-01, P2-03, P2-08;
-- validation partition only:
-  `2026-04-21T00:00:00Z` → `2026-07-08T00:00:00Z`,
-  **56 trading dates**;
-- deterministic evidence complete for all four;
-- no historical-holdout access;
-- no M021 use;
-- no real-order API.
-
-Frozen validation assessment:
-
-- command:
-  `mamba2-m022-phase2-validation-assessment-v1`;
-- result:
-  `7d28d11cc20b13b8f9a1a0794abc4b090d5689c5`;
-- `ok: true`.
-
-Mechanical validation classifications:
-
-- **P2-R — REFERENCE**
-- **P2-01 — INELIGIBLE**
-  - exactly one negative-P/L take-profit exit;
-  - mandatory TP-safety gate failed;
-  - also failed frozen win-rate/concentration support checks;
-- **P2-03 — NOT SUPPORTED**
-  - mandatory/sample gates passed;
-  - P/L and DD improved;
-  - side concentration failed: positive improvement was 100% SELL;
-- **P2-08 — NOT SUPPORTED**
-  - mandatory/sample gates passed;
-  - P/L, DD, and win rate improved;
-  - side concentration failed: 93.19% of positive side contribution was SELL.
-
-Mechanical result:
-
-- supported non-reference candidates: **0**;
-- historical-holdout entrants: **0**;
-- historical-holdout execution authorized: **false**.
-
-Therefore the frozen protocol requires:
-
-**DO NOT OPEN HISTORICAL HOLDOUT.**
-
-Historical holdout remains sealed:
-
-`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`,
-**57 trading dates**.
-
-M022 stops at this validation gate unless a future milestone explicitly
-defines a new, prospectively frozen research action. Do not use validation
-results to redesign this M022 matrix.
-
-No further M022 economic execution is currently authorized.
-
-## Start here
-
-Read the durable handoff docs and the M022 milestone. M022 has reached its
-frozen validation stop: zero non-reference candidates are supported.
-
-Do not run more M022 economics, open historical holdout, redesign the matrix
-from validation results, add or replace a finalist, weaken a gate, inspect M021
-for M022 tuning, start M15 research, merge, deploy, or enable live trading.
+After code/tests are committed, run the native focused/full suite only. Stage 1
+acceptance must precede any data-source inventory or economic replay.
