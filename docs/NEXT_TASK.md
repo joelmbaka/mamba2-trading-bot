@@ -1,58 +1,69 @@
 # Next Authorized Task
 
-## Milestone 023 — Stage B causal session screen
+## Milestone 024 — Symbol Specialization Research
 
-Branch:
+M023 has closed with **zero supported Stage-B sessions**.
 
-`direction-session-research`
+Create the next feature branch from the final durable M023 closeout commit:
 
-Stage-A acceptance commit precedes this Stage-B freeze.
+`symbol-specialization-research`
 
-Fixed Stage-B direction:
+Protocol file:
 
-**BUY ONLY**
+`docs/milestones/024-symbol-specialization-research.md`
 
-Exact Stage-B matrix:
+## First gate — diagnostic only
 
-- S-R — BUY only, all hours;
-- S-ACTIVE — BUY only, 08:00–20:59 Africa/Nairobi;
-- S-MORNING — BUY only, 08:00–11:59 Africa/Nairobi;
-- S-MIDDAY — BUY only, 12:00–14:59 Africa/Nairobi;
-- S-AFTERNOON — BUY only, 15:00–17:59 Africa/Nairobi.
-
-No other session may be added.
-
-Use exact P2-08 parameters and the same 225-date seen-research sample:
+Use only the accepted, already-seen M023 Stage-A D-B / BUY-only all-hours
+evidence on the fixed 225-date research sample:
 
 `2025-08-25T00:00:00Z` → `2026-07-08T00:00:00Z`
 
-Date-list SHA-256:
+Ordered date-list SHA-256:
 
 `50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0`
 
-The complete frozen representation, profitability, fold/symbol/weekly,
-concentration, reduction, and safety rules are authoritative in:
+The bounded symbol hypotheses are exactly:
 
-`docs/milestones/023-direction-session-research.md`
+- **SYM-R** — all five symbols;
+- **SYM-UJ** — USDJPY only;
+- **SYM-JPY** — EURJPY + GBPJPY + USDJPY;
+- **SYM-NONJPY** — EURUSD + GBPUSD.
 
-## Implementation authorization
+Do not add or search arbitrary symbol subsets.
 
-1. implement narrow experiment-only session entry eligibility;
-2. add exact Stage-B tests;
-3. add only Stage-B family/reference-equivalence and mechanical-assessment
-   local-control actions;
-4. do not expose holdout or weekday execution;
-5. run native Stage-B tests;
-6. sync Dell to exact feature SHA;
-7. run S-R and require exact accepted D-B economic equivalence;
-8. only then run the four non-reference sessions with max concurrency 2;
-9. run the frozen mechanical Stage-B assessment;
-10. mechanically fix one supported session or zero sessions;
-11. durably document the result;
-12. stop.
+The diagnostic gate may aggregate existing deterministic D-B evidence by these
+fixed subsets and report total/fold/week/symbol contribution and stability. It
+must not run a fresh symbol-filtered strategy replay yet.
 
-Historical holdout remains sealed:
+## Hypothesis source
 
-`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`
+In accepted D-B, USDJPY was the only positive full-sample symbol:
 
-No historical-holdout execution is authorized in this gate.
+- closed trades: **1,335**;
+- net realized P/L: **+$15.0437376424**;
+- mean trade P/L: **+$0.0112687173**.
+
+This is a hypothesis generator only. USDJPY was not positive in every
+chronological fold, so it is not evidence of a proven or production-ready
+USDJPY-only edge.
+
+## Hard boundaries
+
+Do not:
+
+- inspect/open historical holdout
+  `2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`;
+- use M021 post-cutoff outcomes;
+- use M025 public-benchmark economic results to tune M024;
+- run fresh symbol-filtered economics before a later prospective freeze;
+- add symbol subsets;
+- revive SELL/BOTH as candidate directions;
+- mine sessions or weekdays;
+- add M15;
+- alter production defaults;
+- merge or deploy;
+- enable/place/modify/close real MT5 orders.
+
+First freeze the M024 diagnostic protocol on the new branch, then implement only
+the deterministic read-only diagnostic machinery and tests.

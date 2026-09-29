@@ -1,6 +1,6 @@
 # Milestone 023 — Direction and Session Research
 
-Status: **STAGE A COMPLETE — STAGE-B PROTOCOL FROZEN PROSPECTIVELY; IMPLEMENTATION AUTHORIZED, NO STAGE-B ECONOMICS YET**
+Status: **CLOSED — ZERO STAGE-B SESSIONS SUPPORTED; HISTORICAL HOLDOUT SEALED**
 
 Branch:
 
@@ -1539,3 +1539,87 @@ Do not:
 - enable live trading;
 - place, modify, or close real MT5 orders;
 - expose arbitrary shell execution.
+
+
+## Stage B accepted result — M023 closeout
+
+Stage-B implementation feature SHA:
+
+`f5cd1111d4626bd96e11dc9b630cdac364059a04`
+
+Native Stage-B test result:
+
+`8c9c245a4e114298e95a80e88a494c363ab9bfa9`
+
+Preflight/sync result:
+
+`806bb5a776d55c36aba71f2f42509f105398d248`
+
+Stage-B deterministic family result:
+
+`0c91e8fad993c9ab2f9075bf0d3b28dcda718249`
+
+Frozen mechanical assessment command:
+
+`mamba2-m023-stage-b-session-assessment-v1`
+
+Assessment result:
+
+`42630379450fa3b20d7fd24c5bc2decf83dddf46`
+
+Assessment status:
+
+`ok: true`
+
+S-R reproduced the accepted D-B reference exactly across the frozen economic,
+per-symbol, fold, EAT, drawdown, win-rate, and TP-safety checks.
+
+### Exact Stage-B economics
+
+| Arm | Closed trades | Net realized P/L | Mean trade P/L | Max DD USD | Win rate |
+|---|---:|---:|---:|---:|---:|
+| S-R | 6,630 | -$7,453.88 | -$1.12427 | $7,497.01 | 36.6737% |
+| S-ACTIVE | 3,881 | -$1,687.54 | -$0.43482 | $2,095.95 | 38.8402% |
+| S-MORNING | 1,256 | -$802.82 | -$0.63919 | $1,063.48 | 35.8566% |
+| S-MIDDAY | 930 | -$53.41 | -$0.05743 | $453.56 | 42.2581% |
+| S-AFTERNOON | 946 | -$281.73 | -$0.29781 | $508.04 | 39.7463% |
+
+All four non-reference session arms passed mandatory and representation gates,
+but every arm failed the prospectively frozen requirement that both:
+
+- net realized P/L be strictly positive; and
+- mean closed-trade P/L be strictly positive.
+
+Mechanical classifications:
+
+- **S-R — REFERENCE**
+- **S-ACTIVE — NOT SUPPORTED**
+- **S-MORNING — NOT SUPPORTED**
+- **S-MIDDAY — NOT SUPPORTED**
+- **S-AFTERNOON — NOT SUPPORTED**
+
+Mechanical result:
+
+- supported Stage-B sessions: **0**;
+- fixed session: **none**;
+- historical-holdout execution authorized: **false**.
+
+S-MIDDAY was nearest to break-even, but the frozen protocol does not permit
+advancing a merely less-negative session.
+
+### M023 safety/isolation closeout
+
+The assessment confirms:
+
+- no new economic replay during assessment;
+- existing Stage-B artifacts only;
+- historical holdout economic data used: **no**;
+- M021 post-cutoff data used: **no**;
+- weekday filter run: **no**;
+- real-order API called: **no**.
+
+Therefore M023 is **CLOSED** before historical holdout. Do not add another
+session, optimize hours, revive SELL/BOTH, test weekdays, or open the M022/M023
+historical holdout under M023.
+
+The next research milestone is **M024 — Symbol Specialization Research**.

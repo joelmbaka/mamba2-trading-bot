@@ -396,3 +396,32 @@ The main finding is a strong time-of-day effect: EAT-ACTIVE 08:00–20:59 is con
 ## M023 Stage-A prospective freeze
 
 The M023 diagnostic gate is complete. The exact Stage-A causal direction protocol is now prospectively frozen before Stage-A economics. Stage A uses P2-08 on the already-seen 225-date research sample, with exactly D-R/BOTH, D-S/SELL-only, and D-B/BUY-only. The ordered 225-date list SHA-256 is `50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0`. Historical holdout and M021 remain sealed/uninspected. Stage B is not authorized.
+
+
+## M023 closeout — direction/session research
+
+M023 is **CLOSED** on `direction-session-research`.
+
+Final economic feature SHA:
+
+`f5cd1111d4626bd96e11dc9b630cdac364059a04`
+
+Accepted Stage-B family result:
+
+`0c91e8fad993c9ab2f9075bf0d3b28dcda718249`
+
+Accepted Stage-B mechanical assessment:
+
+`42630379450fa3b20d7fd24c5bc2decf83dddf46`
+
+The frozen assessment classified S-ACTIVE, S-MORNING, S-MIDDAY, and
+S-AFTERNOON **NOT SUPPORTED**. Supported sessions: **0**. Fixed session:
+**none**. Historical-holdout execution remains **unauthorized**.
+
+S-MIDDAY was closest to break-even at **-$53.4115** total and
+**-$0.05743/trade**, but failed the mandatory positive-P/L and positive-mean
+requirements.
+
+The next milestone is **M024 — Symbol Specialization Research**. Its first gate
+must remain diagnostic-only on already-seen research evidence. Historical
+holdout and M021 remain sealed/uninspected for this research path.
