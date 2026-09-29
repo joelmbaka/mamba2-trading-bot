@@ -1,69 +1,36 @@
 # Next Authorized Task
 
-## Milestone 024 — Symbol Specialization Research
+## Milestone 024 — diagnostic symbol specialization
 
-M023 has closed with **zero supported Stage-B sessions**.
-
-Create the next feature branch from the final durable M023 closeout commit:
+Branch:
 
 `symbol-specialization-research`
 
-Protocol file:
+Protocol:
 
 `docs/milestones/024-symbol-specialization-research.md`
 
-## First gate — diagnostic only
+Protocol is frozen before M024 diagnostic output.
 
-Use only the accepted, already-seen M023 Stage-A D-B / BUY-only all-hours
-evidence on the fixed 225-date research sample:
+Implement only the deterministic read-only diagnostic analyzer and tests for
+the exact frozen subsets:
 
-`2025-08-25T00:00:00Z` → `2026-07-08T00:00:00Z`
+- SYM-R — all five;
+- SYM-UJ — USDJPY;
+- SYM-JPY — EURJPY + GBPJPY + USDJPY;
+- SYM-NONJPY — EURUSD + GBPUSD.
 
-Ordered date-list SHA-256:
+Use only accepted M023 Stage-A D-B / BUY-only all-hours evidence over the same
+225 seen-research dates.
 
-`50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0`
+Do not run fresh strategy economics.
+Do not inspect historical holdout.
+Do not inspect M021 post-cutoff outcomes.
+Do not use M025 outcomes.
+Do not add symbol subsets, sessions, weekdays, SELL/BOTH, or M15.
+Do not modify production defaults.
+Do not merge/deploy or enable real trading.
 
-The bounded symbol hypotheses are exactly:
-
-- **SYM-R** — all five symbols;
-- **SYM-UJ** — USDJPY only;
-- **SYM-JPY** — EURJPY + GBPJPY + USDJPY;
-- **SYM-NONJPY** — EURUSD + GBPUSD.
-
-Do not add or search arbitrary symbol subsets.
-
-The diagnostic gate may aggregate existing deterministic D-B evidence by these
-fixed subsets and report total/fold/week/symbol contribution and stability. It
-must not run a fresh symbol-filtered strategy replay yet.
-
-## Hypothesis source
-
-In accepted D-B, USDJPY was the only positive full-sample symbol:
-
-- closed trades: **1,335**;
-- net realized P/L: **+$15.0437376424**;
-- mean trade P/L: **+$0.0112687173**.
-
-This is a hypothesis generator only. USDJPY was not positive in every
-chronological fold, so it is not evidence of a proven or production-ready
-USDJPY-only edge.
-
-## Hard boundaries
-
-Do not:
-
-- inspect/open historical holdout
-  `2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`;
-- use M021 post-cutoff outcomes;
-- use M025 public-benchmark economic results to tune M024;
-- run fresh symbol-filtered economics before a later prospective freeze;
-- add symbol subsets;
-- revive SELL/BOTH as candidate directions;
-- mine sessions or weekdays;
-- add M15;
-- alter production defaults;
-- merge or deploy;
-- enable/place/modify/close real MT5 orders.
-
-First freeze the M024 diagnostic protocol on the new branch, then implement only
-the deterministic read-only diagnostic machinery and tests.
+The diagnostic artifact must be deterministic, source-hash anchored, and
+clearly labelled DESCRIPTIVE SUBSET ATTRIBUTION rather than causal
+symbol-filtered economics.

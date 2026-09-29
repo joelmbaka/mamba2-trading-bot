@@ -425,3 +425,21 @@ requirements.
 The next milestone is **M024 — Symbol Specialization Research**. Its first gate
 must remain diagnostic-only on already-seen research evidence. Historical
 holdout and M021 remain sealed/uninspected for this research path.
+
+
+## M024 open — Symbol Specialization Research
+
+M024 is **OPEN — DIAGNOSTIC PROTOCOL FROZEN** on
+`symbol-specialization-research`, branched from final M023 closeout
+`ffd33e2ae0534d572c73840cccaa98104b3ad460`.
+
+The first gate reads only accepted M023 D-B / BUY-only all-hours evidence and
+tests exactly four predeclared descriptive symbol subsets: SYM-R, SYM-UJ,
+SYM-JPY, and SYM-NONJPY. No fresh symbol-filtered economic replay is authorized.
+
+The accepted D-B full-sample USDJPY slice was +$15.0437 across 1,335 closed
+trades, but two of five chronological folds were negative. It is therefore a
+hypothesis generator only.
+
+Historical holdout and M021 remain sealed. M025 public benchmark research is
+independent and may not be used to tune M024.
