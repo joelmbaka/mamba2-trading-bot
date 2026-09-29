@@ -117,6 +117,18 @@ def test_tsmom_12_1_direction_and_label_are_fixed():
     assert (usable["DOWN"].dropna() < 0).all()
 
 
+def test_tsmom_weights_apply_after_the_formation_month():
+    returns = _daily_returns()
+    result = tsmom_weights_from_excess_returns(returns)
+
+    monthly = (1.0 + returns).resample("ME").prod() - 1.0
+    first_formed = monthly.index[MOP_TSMOM_LOOKBACK_MONTHS - 1]
+    next_month = monthly.index[MOP_TSMOM_LOOKBACK_MONTHS]
+
+    assert result.weights.loc[first_formed].isna().all()
+    assert result.weights.loc[next_month].notna().all()
+
+
 def test_spot_tsmom_is_never_labelled_publication_faithful():
     returns = _daily_returns()
     prices = (1.0 + returns).cumprod()
@@ -176,6 +188,7 @@ def test_carry_long_high_short_low():
     row = result.weights.iloc[-1]
 
     assert result.label == "HML-FX-CARRY"
+    assert result.weights.iloc[0].isna().all()
     assert row[["C00", "C01"]].sum() == pytest.approx(-1.0)
     assert row[["C10", "C11"]].sum() == pytest.approx(1.0)
 

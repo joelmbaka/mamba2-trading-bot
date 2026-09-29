@@ -121,7 +121,12 @@ def tsmom_weights_from_excess_returns(
     daily_vol = ewma_ex_ante_volatility(returns)
     monthly_vol = daily_vol.resample("ME").last().reindex(trailing.index)
     valid_vol = monthly_vol.where(monthly_vol > 0)
-    weights = np.sign(trailing) * (MOP_TSMOM_TARGET_VOL / valid_vol)
+    formation_weights = np.sign(trailing) * (
+        MOP_TSMOM_TARGET_VOL / valid_vol
+    )
+    # A signal formed at month-end t earns the return from t to t+1.
+    # Shift once so a weights row can never be applied to its formation month.
+    weights = formation_weights.shift(1)
     return BenchmarkWeights(label="MOP-TSMOM-12-1", weights=weights)
 
 
@@ -226,7 +231,9 @@ def currency_momentum_weights(
         .apply(np.prod, raw=True)
         - 1.0
     )
-    weights = _extreme_portfolio_weights(trailing)
+    formation_weights = _extreme_portfolio_weights(trailing)
+    # Month-end ranking at t is held during t+1.
+    weights = formation_weights.shift(1)
     return BenchmarkWeights(
         label=f"MSSS-MOM({formation_months},1)",
         weights=weights,
@@ -242,9 +249,11 @@ def carry_weights(
         monthly_carry_signal,
         name="monthly_carry_signal",
     )
+    formation_weights = _extreme_portfolio_weights(signal)
+    # Month-end carry sort at t is held during t+1.
     return BenchmarkWeights(
         label="HML-FX-CARRY",
-        weights=_extreme_portfolio_weights(signal),
+        weights=formation_weights.shift(1),
     )
 
 
