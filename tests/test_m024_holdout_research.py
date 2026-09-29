@@ -35,6 +35,22 @@ def _summary():
         "session": "all-hours",
         "m15_signal_enabled": False,
         "position_size": 0.1,
+        "parameters": {
+            "stochastic_k_period": 21,
+            "stochastic_d_period": 7,
+            "stochastic_slowing": 7,
+            "oversold_level": 20.0,
+            "overbought_level": 80.0,
+            "ema_period": 7,
+            "decision_spread_max_points": None,
+            "atr_sl_multiplier": 1.5,
+            "atr_tp_multiplier": 3.0,
+            "block_00_04_utc": False,
+        },
+        "cost_contract": (
+            "SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / "
+            "SWAP-UNMODELED"
+        ),
         "readiness": {
             "artifact_sha256": M024_ACCEPTED_READINESS_SHA256,
             "partition_spec_sha256": M024_ACCEPTED_PARTITION_SPEC_SHA256,
@@ -43,6 +59,9 @@ def _summary():
             "block_sha256": dict(M024_ACCEPTED_BLOCK_SHA256),
         },
         "partition": {
+            "start_utc": "2026-07-08T00:00:00Z",
+            "end_exclusive_utc": "2026-09-25T00:00:00Z",
+            "trading_dates": 57,
             "date_list_sha256": M024_ACCEPTED_DATE_LIST_SHA256,
             "replay_boundary_sha256": M024_ACCEPTED_REPLAY_SHA256,
         },
@@ -67,6 +86,7 @@ def _summary():
             "negative_pl_take_profit_exits": 0,
         },
         "safety": {
+            "historical_holdout_economic_data_used": True,
             "m021_post_cutoff_data_used": False,
             "m025_outcomes_used": False,
             "real_order_api_called": False,
@@ -121,3 +141,11 @@ def test_readiness_hash_drift_is_invariant_failure():
 def test_readiness_is_required_before_source_manifest_access():
     with pytest.raises(FileNotFoundError, match="readiness artifact required"):
         load_accepted_readiness("/definitely/not/readiness.json")
+
+
+def test_parameter_drift_is_invariant_failure():
+    summary = _summary()
+    summary["parameters"]["atr_tp_multiplier"] = 2.0
+    result = assess_summary(summary)
+    assert result["classification"] == "INELIGIBLE — INVARIANT FAILURE"
+    assert result["invariant_checks"]["parameters"] is False

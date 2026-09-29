@@ -32,6 +32,18 @@ def assess_summary(summary: Mapping[str, Any]) -> dict[str, Any]:
     symbols = summary.get("symbol_invariants") or {}
     tp = summary.get("tp_safety") or {}
     safety = summary.get("safety") or {}
+    expected_parameters = {
+        "stochastic_k_period": 21,
+        "stochastic_d_period": 7,
+        "stochastic_slowing": 7,
+        "oversold_level": 20.0,
+        "overbought_level": 80.0,
+        "ema_period": 7,
+        "decision_spread_max_points": None,
+        "atr_sl_multiplier": 1.5,
+        "atr_tp_multiplier": 3.0,
+        "block_00_04_utc": False,
+    }
 
     invariant_checks = {
         "readiness_artifact": readiness.get("artifact_sha256")
@@ -58,10 +70,24 @@ def assess_summary(summary: Mapping[str, Any]) -> dict[str, Any]:
         "m15_disabled": summary.get("m15_signal_enabled") is False,
         "session_all_hours": summary.get("session") == "all-hours",
         "position_size": float(summary.get("position_size", 0.0)) == 0.1,
+        "parameters": summary.get("parameters") == expected_parameters,
+        "cost_contract": summary.get("cost_contract")
+        == (
+            "SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / "
+            "SWAP-UNMODELED"
+        ),
+        "partition_start": partition.get("start_utc")
+        == "2026-07-08T00:00:00Z",
+        "partition_end": partition.get("end_exclusive_utc")
+        == "2026-09-25T00:00:00Z",
+        "partition_dates": int(partition.get("trading_dates", 0)) == 57,
         "wrong_side_tp_zero": int(tp.get("wrong_side_initial_tp", -1)) == 0,
         "negative_pl_tp_zero": int(
             tp.get("negative_pl_take_profit_exits", -1)
         ) == 0,
+        "holdout_used": safety.get(
+            "historical_holdout_economic_data_used"
+        ) is True,
         "m021_unused": safety.get("m021_post_cutoff_data_used") is False,
         "m025_unused": safety.get("m025_outcomes_used") is False,
         "real_order_unused": safety.get("real_order_api_called") is False,
