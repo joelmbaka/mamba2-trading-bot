@@ -14343,6 +14343,18 @@ def _m024_validate_holdout_artifacts():
         "H2": "eb2dfda09cf52320eeb83aac9175713fb45a8b32a330e5b29168f5cd1bc9ae19",
         "H3": "c57086b4e23affa9125f3ff4b4b9eb0352cf7bd5b45b45d7efdf865d984f9359",
     }
+    expected_parameters = {
+        "stochastic_k_period": 21,
+        "stochastic_d_period": 7,
+        "stochastic_slowing": 7,
+        "oversold_level": 20.0,
+        "overbought_level": 80.0,
+        "ema_period": 7,
+        "decision_spread_max_points": None,
+        "atr_sl_multiplier": 1.5,
+        "atr_tp_multiplier": 3.0,
+        "block_00_04_utc": False,
+    }
     checks = {
         "deterministic": deterministic,
         "candidate": summary.get("candidate") == "H-UJ",
@@ -14353,6 +14365,16 @@ def _m024_validate_holdout_artifacts():
         "session_all_hours": summary.get("session") == "all-hours",
         "m15_disabled": summary.get("m15_signal_enabled") is False,
         "position_size": float(summary.get("position_size", 0.0)) == 0.1,
+        "parameters": summary.get("parameters") == expected_parameters,
+        "cost_contract": summary.get("cost_contract")
+        == (
+            "SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / "
+            "SWAP-UNMODELED"
+        ),
+        "partition_start": partition.get("start_utc")
+        == "2026-07-08T00:00:00Z",
+        "partition_end": partition.get("end_exclusive_utc")
+        == "2026-09-25T00:00:00Z",
         "readiness_artifact": readiness.get("artifact_sha256")
         == "85852452d61db9447e8935ddc05e2f8e41889aa3ae168b3cc2a76ab26ceedb2e",
         "partition_spec": readiness.get("partition_spec_sha256")
