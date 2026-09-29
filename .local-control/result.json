@@ -1,498 +1,109 @@
 {
   "version": 1,
-  "command_id": "mamba2-m024-holdout-h-uj-pair-v1",
-  "completed_at": "2026-09-29T14:43:50.892769+00:00",
+  "command_id": "mamba2-m024-holdout-assessment-v1",
+  "completed_at": "2026-09-29T15:16:33.031657+00:00",
   "ok": true,
-  "action": "m024_holdout_h_uj_pair",
+  "action": "m024_holdout_assessment",
   "data": {
     "ok": true,
     "feature_branch": "symbol-specialization-research",
     "feature_sha": "add0c420af98e581975389eb7bdac370bed16f14",
-    "candidate": "H-UJ",
-    "hashes": {
-      "baseline_a": "a9f9db9bea6e9e649e4332c12805e2f7eaa86dd8a6121ae60b845bcba29c1024",
-      "baseline_b": "a9f9db9bea6e9e649e4332c12805e2f7eaa86dd8a6121ae60b845bcba29c1024",
-      "diagnostic_a": "4c2367ecd08532e20e51fa6da1b38cd593bfe2de5aa731c632706ce5cf62a9b2",
-      "diagnostic_b": "4c2367ecd08532e20e51fa6da1b38cd593bfe2de5aa731c632706ce5cf62a9b2",
-      "summary_a": "edafc57e10552c2fa3cf59dc449fb6293d97cd4e0b8ba9f44a2894f56604ff93",
-      "summary_b": "edafc57e10552c2fa3cf59dc449fb6293d97cd4e0b8ba9f44a2894f56604ff93"
-    },
-    "checks": {
-      "deterministic": true,
-      "candidate": true,
-      "strategy_symbols": true,
-      "market_symbols": true,
-      "buy_only": true,
-      "session_all_hours": true,
-      "m15_disabled": true,
-      "position_size": true,
-      "parameters": true,
-      "cost_contract": true,
-      "partition_start": true,
-      "partition_end": true,
-      "readiness_artifact": true,
-      "partition_spec": true,
-      "date_sha": true,
-      "replay_sha": true,
-      "block_hashes": true,
-      "trading_dates": true,
-      "sell_zero": true,
-      "excluded_symbol_rows_zero": true,
-      "tp_wrong_side_zero": true,
-      "tp_negative_zero": true,
-      "holdout_used": true,
-      "m021_unused": true,
-      "m025_unused": true,
-      "real_order_unused": true,
-      "session_filter_absent": true,
-      "weekday_filter_absent": true,
-      "market_data_not_reduced": true
-    },
-    "aggregate": {
-      "accepted_orders": 0,
-      "closed_trades": 308,
-      "commission": 0.0,
-      "ending_equity": 9771.366094330773,
-      "ending_realized_balance": 9771.366094330773,
-      "ending_unrealized_pl": 0.0,
-      "flat_closed_trades": 0,
-      "global_replay_boundaries": 82049,
-      "gross_realized_pl": -228.63390566922675,
-      "largest_closed_trade_gain": 34.611063733944164,
-      "largest_closed_trade_loss": -32.800228096287455,
-      "losing_closed_trades": 186,
-      "maximum_equity_drawdown": 278.59487758512296,
-      "maximum_equity_drawdown_pct": 2.773890007249351,
-      "net_realized_pl": -228.6339056692268,
-      "remaining_open_positions": 0,
-      "starting_balance": 10000.0,
-      "win_rate_nonflat_pct": 39.61038961038961,
-      "winning_closed_trades": 122
-    },
-    "blocks": {
-      "H1": {
-        "closed_trades": 89,
-        "entry_spread_points": {
-          "count": 89,
-          "mean": 3.932584269662921,
-          "median": 2.0
+    "assessment_sha256": "1ef48c926f394c3b2f6c354f6311e6201ffa1298680ce5d987bf26a1564e5aad",
+    "assessment": {
+      "blocks": {
+        "H1": {
+          "closed_trades": 89,
+          "mean_trade_pl": -1.1236567335173775,
+          "net_realized_pl": -100.0054492830466
         },
-        "flats": 0,
-        "losses": 58,
-        "mean_trade_pl": -1.1236567335173775,
-        "median_trade_pl": -2.238767894749694,
-        "net_realized_pl": -100.0054492830466,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 89,
-            "mean_trade_pl": -1.1236567335173775,
-            "net_realized_pl": -100.0054492830466
-          }
+        "H2": {
+          "closed_trades": 106,
+          "mean_trade_pl": 0.4836887747173707,
+          "net_realized_pl": 51.27101012004127
         },
-        "win_rate_nonflat_pct": 34.831460674157306,
-        "wins": 31
+        "H3": {
+          "closed_trades": 113,
+          "mean_trade_pl": -1.592030677046207,
+          "net_realized_pl": -179.89946650622147
+        }
       },
-      "H2": {
-        "closed_trades": 106,
-        "entry_spread_points": {
-          "count": 106,
-          "mean": 2.811320754716981,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 59,
-        "mean_trade_pl": 0.4836887747173707,
-        "median_trade_pl": -1.305872045630356,
-        "net_realized_pl": 51.27101012004127,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 106,
-            "mean_trade_pl": 0.4836887747173707,
-            "net_realized_pl": 51.27101012004127
-          }
-        },
-        "win_rate_nonflat_pct": 44.339622641509436,
-        "wins": 47
+      "classification": "HOLDOUT NOT SUPPORTED",
+      "economics": {
+        "closed_trades": 308,
+        "maximum_equity_drawdown": 278.59487758512296,
+        "maximum_equity_drawdown_pct": 2.773890007249351,
+        "mean_trade_pl": -0.7423178755494377,
+        "net_realized_pl": -228.6339056692268,
+        "win_rate_nonflat_pct": 39.61038961038961
       },
-      "H3": {
-        "closed_trades": 113,
-        "entry_spread_points": {
-          "count": 113,
-          "mean": 3.230088495575221,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 69,
-        "mean_trade_pl": -1.592030677046207,
-        "median_trade_pl": -3.447023378180987,
-        "net_realized_pl": -179.89946650622147,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 113,
-            "mean_trade_pl": -1.592030677046207,
-            "net_realized_pl": -179.89946650622147
-          }
-        },
-        "win_rate_nonflat_pct": 38.93805309734513,
-        "wins": 44
+      "historical_holdout_execution_authorized": false,
+      "invariant_checks": {
+        "block_hashes": true,
+        "buy_only": true,
+        "cost_contract": true,
+        "date_sha": true,
+        "excluded_symbol_rows_zero": true,
+        "holdout_used": true,
+        "m021_unused": true,
+        "m025_unused": true,
+        "m15_disabled": true,
+        "market_data_not_reduced": true,
+        "market_symbols": true,
+        "negative_pl_tp_zero": true,
+        "parameters": true,
+        "partition_dates": true,
+        "partition_end": true,
+        "partition_spec": true,
+        "partition_start": true,
+        "position_size": true,
+        "readiness_artifact": true,
+        "real_order_unused": true,
+        "replay_sha": true,
+        "sell_entries_zero": true,
+        "session_all_hours": true,
+        "session_filter_absent": true,
+        "strategy_symbols": true,
+        "weekday_filter_absent": true,
+        "wrong_side_tp_zero": true
+      },
+      "max_positive_block_pl_share": 1.0,
+      "production_live_promotion_authorized": false,
+      "representation": {
+        "closed_trades": 308,
+        "each_block_closed_trades_ge_50": true,
+        "eligible_iso_weeks": 12,
+        "eligible_iso_weeks_ge_8": true,
+        "ok": true,
+        "represented_date_fraction": 1.0,
+        "represented_dates_ge_80pct": true,
+        "represented_trading_dates": 57,
+        "total_closed_trades_ge_200": true
+      },
+      "summary_path": "backtest_data/m024-holdout-h-uj-v1/M024-H-UJ-a-summary.json",
+      "summary_sha256": "edafc57e10552c2fa3cf59dc449fb6293d97cd4e0b8ba9f44a2894f56604ff93",
+      "support_checks": {
+        "aggregate_mean_trade_pl_positive": false,
+        "aggregate_net_pl_positive": false,
+        "positive_block_concentration_le_70pct": false,
+        "positive_mean_blocks_ge_2": false,
+        "positive_mean_iso_weeks_ge_50pct": false,
+        "positive_net_pl_blocks_ge_2": false
+      },
+      "supported": false,
+      "weekly": {
+        "eligible_iso_weeks": 12,
+        "positive_mean_iso_week_ratio": 0.25,
+        "positive_mean_iso_weeks": 3
       }
     },
-    "iso_weeks": {
-      "2026-W28": {
-        "closed_trades": 14,
-        "entry_spread_points": {
-          "count": 14,
-          "mean": 2.7142857142857144,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 8,
-        "mean_trade_pl": 1.984127380666251,
-        "median_trade_pl": -2.119270258016149,
-        "net_realized_pl": 27.777783329327516,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 14,
-            "mean_trade_pl": 1.984127380666251,
-            "net_realized_pl": 27.777783329327516
-          }
-        },
-        "win_rate_nonflat_pct": 42.857142857142854,
-        "wins": 6
-      },
-      "2026-W29": {
-        "closed_trades": 26,
-        "entry_spread_points": {
-          "count": 26,
-          "mean": 2.269230769230769,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 18,
-        "mean_trade_pl": -0.47472198168605684,
-        "median_trade_pl": -2.155477637822834,
-        "net_realized_pl": -12.34277152383748,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 26,
-            "mean_trade_pl": -0.47472198168605684,
-            "net_realized_pl": -12.34277152383748
-          }
-        },
-        "win_rate_nonflat_pct": 30.76923076923077,
-        "wins": 8
-      },
-      "2026-W30": {
-        "closed_trades": 15,
-        "entry_spread_points": {
-          "count": 15,
-          "mean": 10.8,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 8,
-        "mean_trade_pl": -0.16630136476679053,
-        "median_trade_pl": -1.6543761769836978,
-        "net_realized_pl": -2.4945204715018594,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 15,
-            "mean_trade_pl": -0.16630136476679053,
-            "net_realized_pl": -2.4945204715018594
-          }
-        },
-        "win_rate_nonflat_pct": 46.666666666666664,
-        "wins": 7
-      },
-      "2026-W31": {
-        "closed_trades": 32,
-        "entry_spread_points": {
-          "count": 32,
-          "mean": 2.28125,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 23,
-        "mean_trade_pl": -2.5945529503181537,
-        "median_trade_pl": -2.992829789117133,
-        "net_realized_pl": -83.0256944101809,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 32,
-            "mean_trade_pl": -2.5945529503181537,
-            "net_realized_pl": -83.0256944101809
-          }
-        },
-        "win_rate_nonflat_pct": 28.125,
-        "wins": 9
-      },
-      "2026-W32": {
-        "closed_trades": 22,
-        "entry_spread_points": {
-          "count": 22,
-          "mean": 2.227272727272727,
-          "median": 1.5
-        },
-        "flats": 0,
-        "losses": 11,
-        "mean_trade_pl": -0.338866787596262,
-        "median_trade_pl": 0.20993116328191144,
-        "net_realized_pl": -7.455069327117766,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 22,
-            "mean_trade_pl": -0.338866787596262,
-            "net_realized_pl": -7.455069327117766
-          }
-        },
-        "win_rate_nonflat_pct": 50.0,
-        "wins": 11
-      },
-      "2026-W33": {
-        "closed_trades": 23,
-        "entry_spread_points": {
-          "count": 23,
-          "mean": 1.7826086956521738,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 12,
-        "mean_trade_pl": 1.1027708018158469,
-        "median_trade_pl": -0.19484306399205797,
-        "net_realized_pl": 25.363728441764486,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 23,
-            "mean_trade_pl": 1.1027708018158469,
-            "net_realized_pl": 25.363728441764486
-          }
-        },
-        "win_rate_nonflat_pct": 47.82608695652174,
-        "wins": 11
-      },
-      "2026-W34": {
-        "closed_trades": 35,
-        "entry_spread_points": {
-          "count": 35,
-          "mean": 3.4857142857142858,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 20,
-        "mean_trade_pl": -0.09278627578633236,
-        "median_trade_pl": -3.0027611082005112,
-        "net_realized_pl": -3.247519652521637,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 35,
-            "mean_trade_pl": -0.09278627578633236,
-            "net_realized_pl": -3.247519652521637
-          }
-        },
-        "win_rate_nonflat_pct": 42.857142857142854,
-        "wins": 15
-      },
-      "2026-W35": {
-        "closed_trades": 28,
-        "entry_spread_points": {
-          "count": 28,
-          "mean": 3.7142857142857144,
-          "median": 3.0
-        },
-        "flats": 0,
-        "losses": 17,
-        "mean_trade_pl": 0.23891515896651272,
-        "median_trade_pl": -1.4315321172149424,
-        "net_realized_pl": 6.689624451062356,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 28,
-            "mean_trade_pl": 0.23891515896651272,
-            "net_realized_pl": 6.689624451062356
-          }
-        },
-        "win_rate_nonflat_pct": 39.285714285714285,
-        "wins": 11
-      },
-      "2026-W36": {
-        "closed_trades": 41,
-        "entry_spread_points": {
-          "count": 41,
-          "mean": 2.7560975609756095,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 26,
-        "mean_trade_pl": -3.2288753187259243,
-        "median_trade_pl": -4.078234124622413,
-        "net_realized_pl": -132.38388806776288,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 41,
-            "mean_trade_pl": -3.2288753187259243,
-            "net_realized_pl": -132.38388806776288
-          }
-        },
-        "win_rate_nonflat_pct": 36.58536585365854,
-        "wins": 15
-      },
-      "2026-W37": {
-        "closed_trades": 31,
-        "entry_spread_points": {
-          "count": 31,
-          "mean": 4.741935483870968,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 16,
-        "mean_trade_pl": -0.0036489499169371415,
-        "median_trade_pl": -0.3371356029157267,
-        "net_realized_pl": -0.11311744742505425,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 31,
-            "mean_trade_pl": -0.0036489499169371415,
-            "net_realized_pl": -0.11311744742505425
-          }
-        },
-        "win_rate_nonflat_pct": 48.38709677419355,
-        "wins": 15
-      },
-      "2026-W38": {
-        "closed_trades": 21,
-        "entry_spread_points": {
-          "count": 21,
-          "mean": 2.2857142857142856,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 13,
-        "mean_trade_pl": -0.5719074841496044,
-        "median_trade_pl": -3.5807195843503505,
-        "net_realized_pl": -12.010057167141692,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 21,
-            "mean_trade_pl": -0.5719074841496044,
-            "net_realized_pl": -12.010057167141692
-          }
-        },
-        "win_rate_nonflat_pct": 38.095238095238095,
-        "wins": 8
-      },
-      "2026-W39": {
-        "closed_trades": 20,
-        "entry_spread_points": {
-          "count": 20,
-          "mean": 2.85,
-          "median": 2.0
-        },
-        "flats": 0,
-        "losses": 14,
-        "mean_trade_pl": -1.769620191194587,
-        "median_trade_pl": -3.5940482491875647,
-        "net_realized_pl": -35.39240382389174,
-        "per_symbol": {
-          "USDJPY": {
-            "closed_trades": 20,
-            "mean_trade_pl": -1.769620191194587,
-            "net_realized_pl": -35.39240382389174
-          }
-        },
-        "win_rate_nonflat_pct": 30.0,
-        "wins": 6
-      }
-    },
-    "trading_date_counts": {
-      "2026-07-08": 3,
-      "2026-07-09": 6,
-      "2026-07-10": 5,
-      "2026-07-13": 3,
-      "2026-07-14": 7,
-      "2026-07-15": 5,
-      "2026-07-16": 6,
-      "2026-07-17": 5,
-      "2026-07-20": 4,
-      "2026-07-21": 2,
-      "2026-07-22": 3,
-      "2026-07-23": 2,
-      "2026-07-24": 4,
-      "2026-07-27": 3,
-      "2026-07-28": 4,
-      "2026-07-29": 9,
-      "2026-07-30": 9,
-      "2026-07-31": 7,
-      "2026-08-03": 2,
-      "2026-08-04": 4,
-      "2026-08-05": 4,
-      "2026-08-06": 6,
-      "2026-08-07": 6,
-      "2026-08-10": 4,
-      "2026-08-11": 3,
-      "2026-08-12": 4,
-      "2026-08-13": 5,
-      "2026-08-14": 7,
-      "2026-08-17": 10,
-      "2026-08-18": 7,
-      "2026-08-19": 7,
-      "2026-08-20": 7,
-      "2026-08-21": 4,
-      "2026-08-24": 3,
-      "2026-08-25": 5,
-      "2026-08-26": 4,
-      "2026-08-27": 5,
-      "2026-08-28": 11,
-      "2026-08-31": 6,
-      "2026-09-01": 5,
-      "2026-09-02": 7,
-      "2026-09-03": 14,
-      "2026-09-04": 9,
-      "2026-09-07": 5,
-      "2026-09-08": 6,
-      "2026-09-09": 7,
-      "2026-09-10": 6,
-      "2026-09-11": 7,
-      "2026-09-14": 3,
-      "2026-09-15": 4,
-      "2026-09-16": 4,
-      "2026-09-17": 7,
-      "2026-09-18": 3,
-      "2026-09-21": 5,
-      "2026-09-22": 4,
-      "2026-09-23": 7,
-      "2026-09-24": 4
-    },
-    "direction_invariants": {
-      "buy_accepted_entries": 308,
-      "sell_accepted_entries": 0
-    },
-    "symbol_invariants": {
-      "closed_trade_rows_by_symbol": {
-        "EURJPY": 0,
-        "EURUSD": 0,
-        "GBPJPY": 0,
-        "GBPUSD": 0,
-        "USDJPY": 308
-      },
-      "excluded_symbol_closed_trade_rows": 0
-    },
-    "tp_safety": {
-      "negative_pl_take_profit_exits": 0,
-      "wrong_side_initial_tp": 0
-    },
-    "remaining_positions": [],
-    "execution": {
-      "reused_complete_artifacts": false,
-      "exit_code": 0
-    },
+    "historical_holdout_execution_authorized": false,
+    "production_live_promotion_authorized": false,
     "safety": {
-      "historical_holdout_economic_data_used": true,
+      "economic_replay_run": false,
+      "reads_existing_holdout_artifacts_only": true,
       "m021_post_cutoff_data_used": false,
       "m025_outcomes_used": false,
-      "market_data_universe_reduced": false,
-      "real_order_api_called": false,
-      "session_filter_applied": false,
-      "weekday_filter_applied": false
+      "real_order_api_called": false
     }
   }
 }
