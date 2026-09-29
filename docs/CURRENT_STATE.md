@@ -614,3 +614,33 @@ Fixed local-control readiness support:
 
 No M024 holdout economics have run. The next gate is focused readiness tests,
 then deterministic metadata-only readiness.
+
+
+## M024 historical holdout readiness accepted
+
+Readiness result:
+
+`098ecd3116daf9e26b2bf6b03d6d7a643fce66cb`
+
+Readiness artifact SHA-256:
+
+`85852452d61db9447e8935ddc05e2f8e41889aa3ae168b3cc2a76ab26ceedb2e`
+
+Ordered 57-date SHA-256:
+
+`5d71d3ed67e5ae50f7e515f765e99a4887336e8a0d3659c62836d79dfe484af4`
+
+Replay-boundary SHA-256:
+
+`945c9961af7ce58e3b54223f0b8c10eb216e3dbfdf687ac002ef27b18197fab7`
+
+Partition-spec SHA-256:
+
+`2fac9ab123f1ed173a51aab2cccb42368937e9373b4937a94fd421a89a49cb70`
+
+Blocks are fixed at three 19-date chunks H1/H2/H3. Readiness was metadata-only
+and computed no trades or economics.
+
+The next authorized work is implementation of the single fixed H-UJ
+deterministic A/B holdout replay and mechanical assessment against the already
+frozen protocol.

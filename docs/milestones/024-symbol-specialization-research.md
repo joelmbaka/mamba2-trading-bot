@@ -1108,3 +1108,71 @@ Next exact sequence:
 7. only then implement the already-frozen H-UJ economic runner and mechanical
    assessment;
 8. do not inspect any holdout economics before step 6.
+
+
+## Historical holdout readiness accepted — 2026-09-29
+
+Focused readiness-tests result:
+
+`135f73e4044723f0ecb4f8aff5e82f6ad6252c4a`
+
+Focused readiness tests:
+
+**9 passed / 0 failed**
+
+Deterministic readiness result:
+
+`098ecd3116daf9e26b2bf6b03d6d7a643fce66cb`
+
+Exact readiness feature SHA:
+
+`57f58ee1f6f0809fd945fd412ce9e0ea22967473`
+
+Readiness artifact A/B SHA-256:
+
+`85852452d61db9447e8935ddc05e2f8e41889aa3ae168b3cc2a76ab26ceedb2e`
+
+Partition-spec SHA-256:
+
+`2fac9ab123f1ed173a51aab2cccb42368937e9373b4937a94fd421a89a49cb70`
+
+Exact ordered 57-date SHA-256:
+
+`5d71d3ed67e5ae50f7e515f765e99a4887336e8a0d3659c62836d79dfe484af4`
+
+Replay-boundary SHA-256:
+
+`945c9961af7ce58e3b54223f0b8c10eb216e3dbfdf687ac002ef27b18197fab7`
+
+Replay-boundary count:
+
+**82,049**
+
+Exact chronological holdout blocks:
+
+| Block | First date | Last date | Trading dates | Date-list SHA-256 |
+|---|---|---|---:|---|
+| H1 | 2026-07-08 | 2026-08-03 | 19 | `35cd428dd20dc965aa6e1479a28c73ad66329a1e64d188c1a6e16df25f7b260d` |
+| H2 | 2026-08-04 | 2026-08-28 | 19 | `eb2dfda09cf52320eeb83aac9175713fb45a8b32a330e5b29168f5cd1bc9ae19` |
+| H3 | 2026-08-31 | 2026-09-24 | 19 | `c57086b4e23affa9125f3ff4b4b9eb0352cf7bd5b45b45d7efdf865d984f9359` |
+
+Accepted holdout source manifest SHA-256:
+
+`143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`
+
+Readiness safety checks all passed:
+
+- broker constructed: **no**;
+- strategy constructed: **no**;
+- orders constructed: **no**;
+- trades computed: **no**;
+- P/L computed: **no**;
+- drawdown computed: **no**;
+- win rate computed: **no**;
+- M021 post-cutoff outcomes used: **no**;
+- M025 outcomes used: **no**;
+- real-order API called: **no**.
+
+The holdout economic step may now be implemented, but it must consume these
+exact immutable readiness hashes. No alternate partition or candidate is
+authorized.
