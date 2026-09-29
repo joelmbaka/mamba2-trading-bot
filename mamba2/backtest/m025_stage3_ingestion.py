@@ -179,12 +179,6 @@ def inspect_h10_sdmx_zip(
                     )
 
                 definition = expected[short_name]
-                if elem.attrib.get("FREQ") != "B":
-                    raise ValueError(
-                        f"H.10 frozen daily series changed frequency: "
-                        f"{short_name}"
-                    )
-
                 source_currency = elem.attrib.get("CURRENCY")
                 if (
                     source_currency
