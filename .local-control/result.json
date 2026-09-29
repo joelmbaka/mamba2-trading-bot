@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "command_id": "mamba2-m024-stage2-sync-v1",
-  "completed_at": "2026-09-29T08:52:29.560280+00:00",
+  "command_id": "mamba2-m024-stage2-sync-documented-head-v2",
+  "completed_at": "2026-09-29T08:54:33.775301+00:00",
   "ok": true,
   "action": "sync",
   "data": {
     "branch": "symbol-specialization-research",
-    "before_sha": "ea49b23f72b0e857538c77a6f469920248cfde6a",
-    "after_sha": "ea49b23f72b0e857538c77a6f469920248cfde6a",
+    "before_sha": "fd9c0ec689c57c572a7318ddd54fecb8dc5e8666",
+    "after_sha": "fd9c0ec689c57c572a7318ddd54fecb8dc5e8666",
     "reason": null,
     "commands": [
       {
@@ -17,7 +17,7 @@
           "HEAD"
         ],
         "exit_code": 0,
-        "stdout": "ea49b23f72b0e857538c77a6f469920248cfde6a\n",
+        "stdout": "fd9c0ec689c57c572a7318ddd54fecb8dc5e8666\n",
         "stderr": ""
       },
       {
@@ -70,7 +70,7 @@
           "refs/remotes/origin/symbol-specialization-research"
         ],
         "exit_code": 0,
-        "stdout": "ea49b23f72b0e857538c77a6f469920248cfde6a\n",
+        "stdout": "fd9c0ec689c57c572a7318ddd54fecb8dc5e8666\n",
         "stderr": ""
       },
       {
