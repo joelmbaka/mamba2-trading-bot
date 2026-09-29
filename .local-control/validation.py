@@ -150,6 +150,7 @@ M023_STAGE_B_SESSION_DIR = REPO / "backtest_data" / "m023-stage-b-session-v1"
 M024_SYMBOL_SPECIALIZATION_DIR = REPO / "backtest_data" / "m024-symbol-specialization-v1"
 M024_STAGE2_SYMBOL_DIR = REPO / "backtest_data" / "m024-stage2-symbol-v1"
 M024_HOLDOUT_READINESS_DIR = REPO / "backtest_data" / "m024-holdout-readiness-v1"
+M024_HOLDOUT_DIR = REPO / "backtest_data" / "m024-holdout-h-uj-v1"
 
 
 def _safe_env(wine=False):
@@ -14286,6 +14287,309 @@ def m024_holdout_readiness():
     }
 
 
+def _m024_holdout_paths():
+    root = M024_HOLDOUT_DIR
+    return {
+        "dir": root,
+        "a_baseline": root / "M024-H-UJ-a-baseline.json",
+        "b_baseline": root / "M024-H-UJ-b-baseline.json",
+        "a_diagnostic": root / "M024-H-UJ-a-diagnostic.json",
+        "b_diagnostic": root / "M024-H-UJ-b-diagnostic.json",
+        "a_summary": root / "M024-H-UJ-a-summary.json",
+        "b_summary": root / "M024-H-UJ-b-summary.json",
+        "assessment": root / "M024-H-UJ-assessment.json",
+    }
+
+
+def _m024_validate_holdout_artifacts():
+    paths = _m024_holdout_paths()
+    required = [
+        paths["a_baseline"],
+        paths["b_baseline"],
+        paths["a_diagnostic"],
+        paths["b_diagnostic"],
+        paths["a_summary"],
+        paths["b_summary"],
+    ]
+    exists = [path.is_file() for path in required]
+    if any(exists) and not all(exists):
+        raise RuntimeError("M024 H-UJ has partial immutable artifacts")
+    if not all(exists):
+        return None
+
+    hashes = {
+        "baseline_a": _sha256(paths["a_baseline"]),
+        "baseline_b": _sha256(paths["b_baseline"]),
+        "diagnostic_a": _sha256(paths["a_diagnostic"]),
+        "diagnostic_b": _sha256(paths["b_diagnostic"]),
+        "summary_a": _sha256(paths["a_summary"]),
+        "summary_b": _sha256(paths["b_summary"]),
+    }
+    deterministic = (
+        hashes["baseline_a"] == hashes["baseline_b"]
+        and hashes["diagnostic_a"] == hashes["diagnostic_b"]
+        and hashes["summary_a"] == hashes["summary_b"]
+    )
+    summary = json.loads(paths["a_summary"].read_text(encoding="utf-8"))
+    readiness = summary.get("readiness") or {}
+    partition = summary.get("partition") or {}
+    direction = summary.get("direction_invariants") or {}
+    symbols = summary.get("symbol_invariants") or {}
+    safety = summary.get("safety") or {}
+    tp = summary.get("tp_safety") or {}
+
+    expected_blocks = {
+        "H1": "35cd428dd20dc965aa6e1479a28c73ad66329a1e64d188c1a6e16df25f7b260d",
+        "H2": "eb2dfda09cf52320eeb83aac9175713fb45a8b32a330e5b29168f5cd1bc9ae19",
+        "H3": "c57086b4e23affa9125f3ff4b4b9eb0352cf7bd5b45b45d7efdf865d984f9359",
+    }
+    checks = {
+        "deterministic": deterministic,
+        "candidate": summary.get("candidate") == "H-UJ",
+        "strategy_symbols": summary.get("strategy_symbols") == ["USDJPY"],
+        "market_symbols": summary.get("market_data_symbols")
+        == ["EURUSD", "EURJPY", "GBPUSD", "GBPJPY", "USDJPY"],
+        "buy_only": summary.get("direction") == "BUY",
+        "session_all_hours": summary.get("session") == "all-hours",
+        "m15_disabled": summary.get("m15_signal_enabled") is False,
+        "position_size": float(summary.get("position_size", 0.0)) == 0.1,
+        "readiness_artifact": readiness.get("artifact_sha256")
+        == "85852452d61db9447e8935ddc05e2f8e41889aa3ae168b3cc2a76ab26ceedb2e",
+        "partition_spec": readiness.get("partition_spec_sha256")
+        == "2fac9ab123f1ed173a51aab2cccb42368937e9373b4937a94fd421a89a49cb70",
+        "date_sha": readiness.get("date_list_sha256")
+        == "5d71d3ed67e5ae50f7e515f765e99a4887336e8a0d3659c62836d79dfe484af4"
+        and partition.get("date_list_sha256")
+        == "5d71d3ed67e5ae50f7e515f765e99a4887336e8a0d3659c62836d79dfe484af4",
+        "replay_sha": readiness.get("replay_boundary_sha256")
+        == "945c9961af7ce58e3b54223f0b8c10eb216e3dbfdf687ac002ef27b18197fab7"
+        and partition.get("replay_boundary_sha256")
+        == "945c9961af7ce58e3b54223f0b8c10eb216e3dbfdf687ac002ef27b18197fab7",
+        "block_hashes": readiness.get("block_sha256") == expected_blocks,
+        "trading_dates": int(partition.get("trading_dates", 0)) == 57,
+        "sell_zero": int(direction.get("sell_accepted_entries", -1)) == 0,
+        "excluded_symbol_rows_zero": int(
+            symbols.get("excluded_symbol_closed_trade_rows", -1)
+        ) == 0,
+        "tp_wrong_side_zero": int(tp.get("wrong_side_initial_tp", -1)) == 0,
+        "tp_negative_zero": int(
+            tp.get("negative_pl_take_profit_exits", -1)
+        ) == 0,
+        "holdout_used": (
+            safety.get("historical_holdout_economic_data_used") is True
+        ),
+        "m021_unused": safety.get("m021_post_cutoff_data_used") is False,
+        "m025_unused": safety.get("m025_outcomes_used") is False,
+        "real_order_unused": safety.get("real_order_api_called") is False,
+        "session_filter_absent": safety.get("session_filter_applied") is False,
+        "weekday_filter_absent": safety.get("weekday_filter_applied") is False,
+        "market_data_not_reduced": (
+            safety.get("market_data_universe_reduced") is False
+        ),
+    }
+    if not all(checks.values()):
+        failed = [name for name, passed in checks.items() if not passed]
+        raise RuntimeError(
+            f"M024 H-UJ failed frozen holdout invariants: {failed}"
+        )
+    return {
+        "hashes": hashes,
+        "summary": summary,
+        "checks": checks,
+    }
+
+
+def m024_holdout_tests():
+    """Run focused tests for the frozen one-shot H-UJ holdout."""
+
+    feature_sha = _require_m024_branch()
+    tests = [
+        "tests/test_m024_holdout_readiness.py",
+        "tests/test_m024_holdout_research.py",
+        "tests/test_m024_symbol_causal_research.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "economic_replay_run": False,
+            "holdout_economics_computed": False,
+            "m021_post_cutoff_data_used": False,
+            "m025_outcomes_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m024_holdout_h_uj_pair():
+    """Run the sole frozen H-UJ deterministic historical-holdout pair."""
+
+    feature_sha = _require_m024_branch()
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+    readiness_a = (
+        M024_HOLDOUT_READINESS_DIR / "m024-holdout-readiness-a.json"
+    )
+    readiness_b = (
+        M024_HOLDOUT_READINESS_DIR / "m024-holdout-readiness-b.json"
+    )
+    expected_readiness_sha = (
+        "85852452d61db9447e8935ddc05e2f8e41889aa3ae168b3cc2a76ab26ceedb2e"
+    )
+
+    if not manifest.is_file():
+        return {"ok": False, "reason": "accepted source manifest missing"}
+    if _sha256(manifest) != (
+        "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+    ):
+        return {"ok": False, "reason": "accepted source manifest SHA changed"}
+    if not readiness_a.is_file() or not readiness_b.is_file():
+        return {"ok": False, "reason": "accepted readiness pair is missing"}
+    if (
+        _sha256(readiness_a) != expected_readiness_sha
+        or _sha256(readiness_b) != expected_readiness_sha
+    ):
+        return {"ok": False, "reason": "accepted readiness SHA changed"}
+
+    existing = _m024_validate_holdout_artifacts()
+    run = None
+    if existing is None:
+        paths = _m024_holdout_paths()
+        paths["dir"].mkdir(parents=True, exist_ok=True)
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.m024_holdout_research",
+                "--manifest",
+                str(manifest.relative_to(REPO)),
+                "--readiness",
+                str(readiness_a.relative_to(REPO)),
+                "--output-dir",
+                str(paths["dir"].relative_to(REPO)),
+                "--starting-balance",
+                "10000",
+            ),
+            env=_safe_env(),
+        )
+        if run["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M024 H-UJ holdout replay failed",
+                "feature_sha": feature_sha,
+                "run": run,
+            }
+
+    try:
+        evidence = _m024_validate_holdout_artifacts()
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+        }
+
+    summary = evidence["summary"]
+    return {
+        "ok": True,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "candidate": "H-UJ",
+        "hashes": evidence["hashes"],
+        "checks": evidence["checks"],
+        "aggregate": summary.get("aggregate"),
+        "blocks": summary.get("blocks"),
+        "iso_weeks": summary.get("iso_weeks"),
+        "trading_date_counts": summary.get("trading_date_counts"),
+        "direction_invariants": summary.get("direction_invariants"),
+        "symbol_invariants": summary.get("symbol_invariants"),
+        "tp_safety": summary.get("tp_safety"),
+        "remaining_positions": summary.get("remaining_positions"),
+        "execution": {
+            "reused_complete_artifacts": run is None,
+            "exit_code": None if run is None else run["exit_code"],
+        },
+        "safety": summary.get("safety"),
+    }
+
+
+def m024_holdout_assessment():
+    """Apply frozen one-shot H-UJ holdout classification rules."""
+
+    feature_sha = _require_m024_branch()
+    try:
+        evidence = _m024_validate_holdout_artifacts()
+    except RuntimeError as exc:
+        return {
+            "ok": False,
+            "reason": str(exc),
+            "feature_sha": feature_sha,
+        }
+    if evidence is None:
+        return {
+            "ok": False,
+            "reason": "M024 H-UJ holdout artifacts are incomplete",
+            "feature_sha": feature_sha,
+        }
+
+    paths = _m024_holdout_paths()
+    run = _run(
+        _native_command(
+            "-m",
+            "mamba2.backtest.m024_holdout_assessment",
+            "--summary",
+            str(paths["a_summary"].relative_to(REPO)),
+            "--output",
+            str(paths["assessment"].relative_to(REPO)),
+        ),
+        env=_safe_env(),
+    )
+    if run["exit_code"] != 0 or not paths["assessment"].is_file():
+        return {
+            "ok": False,
+            "reason": "M024 H-UJ mechanical assessment failed",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+
+    assessment = json.loads(
+        paths["assessment"].read_text(encoding="utf-8")
+    )
+    allowed = {
+        "INELIGIBLE — DATA/READINESS",
+        "INELIGIBLE — NONDETERMINISTIC",
+        "INELIGIBLE — INVARIANT FAILURE",
+        "HOLDOUT NOT SUPPORTED",
+        "HOLDOUT SUPPORTED — RESEARCH VALIDATION ONLY",
+    }
+    if assessment.get("classification") not in allowed:
+        return {
+            "ok": False,
+            "reason": "unexpected M024 holdout classification",
+            "feature_sha": feature_sha,
+            "classification": assessment.get("classification"),
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "assessment_sha256": _sha256(paths["assessment"]),
+        "assessment": assessment,
+        "historical_holdout_execution_authorized": False,
+        "production_live_promotion_authorized": False,
+        "safety": {
+            "economic_replay_run": False,
+            "reads_existing_holdout_artifacts_only": True,
+            "m021_post_cutoff_data_used": False,
+            "m025_outcomes_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -14314,6 +14618,9 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m024_holdout_tests": m024_holdout_tests,
+    "m024_holdout_h_uj_pair": m024_holdout_h_uj_pair,
+    "m024_holdout_assessment": m024_holdout_assessment,
     "m024_holdout_readiness_tests": m024_holdout_readiness_tests,
     "m024_holdout_readiness": m024_holdout_readiness,
     "m024_stage2_symbol_tests": m024_stage2_symbol_tests,

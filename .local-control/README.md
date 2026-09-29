@@ -278,3 +278,18 @@ The readiness action cannot construct a broker, strategy, order, trade, P/L,
 drawdown, or win-rate result. It does not expose holdout economic execution,
 does not use M021/M025 outcomes, exposes no arbitrary shell, and cannot call
 real-order APIs.
+
+
+## M024 one-shot H-UJ holdout
+
+- `m024_holdout_tests` — focused native tests for the frozen H-UJ runner,
+  readiness lock, and mechanical assessment.
+- `m024_holdout_h_uj_pair` — the only holdout economic action. It requires
+  the exact accepted readiness A/B SHA, exact source manifest, and runs exactly
+  one candidate: USDJPY-only strategy with all-five market/conversion data.
+- `m024_holdout_assessment` — reads completed H-UJ artifacts only and applies
+  the prospectively frozen representation/economic classification rules.
+
+No alternate holdout candidate, partition, session, weekday, direction,
+parameter set, M15 setting, spread gate, or position size is exposed. The
+assessment cannot rerun economics. No action can place/modify/close real orders.
