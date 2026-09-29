@@ -1,6 +1,6 @@
 # Milestone 023 — Direction and Session Research
 
-Status: **STAGE A COMPLETE — BUY ONLY FIXED FOR STAGE B; STAGE-B ECONOMICS NOT YET AUTHORIZED**
+Status: **STAGE A COMPLETE — STAGE-B PROTOCOL FROZEN PROSPECTIVELY; IMPLEMENTATION AUTHORIZED, NO STAGE-B ECONOMICS YET**
 
 Branch:
 
@@ -1155,3 +1155,387 @@ Stage A completed with:
 Stage B is still not authorized by this acceptance alone. A separate
 prospective Stage-B protocol-freeze commit must exist before any
 session-filtered economic replay.
+
+
+## Stage B protocol freeze — BUY-only causal session screen
+
+Status: **FROZEN BEFORE STAGE-B ECONOMICS**
+
+This Stage-B protocol is prospectively fixed after Stage A mechanically selected
+D-B / BUY only and before any session-filtered replay.
+
+### Research anchor
+
+Use exact P2-08 parameters:
+
+- stochastic: **21 / 7 / 7**;
+- boundary: **20 / 80**;
+- EMA: **7**;
+- decision-time spread gate: **none**;
+- ATR SL: **1.5**;
+- ATR TP: **3.0**;
+- direction: **BUY ONLY**;
+- directional trailing: **unchanged**;
+- M15: **disabled**;
+- position size: **0.1**.
+
+Cost contract:
+
+\`SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED\`
+
+### Exact Stage-B matrix
+
+Exactly five arms:
+
+| ID | Direction | New-entry session |
+|---|---|---|
+| S-R | BUY only | ALL HOURS |
+| S-ACTIVE | BUY only | 08:00–20:59 Africa/Nairobi |
+| S-MORNING | BUY only | 08:00–11:59 Africa/Nairobi |
+| S-MIDDAY | BUY only | 12:00–14:59 Africa/Nairobi |
+| S-AFTERNOON | BUY only | 15:00–17:59 Africa/Nairobi |
+
+Do **not** add:
+
+- EAT-EVENING;
+- London-open transition;
+- London/New-York overlap;
+- arbitrary hours.
+
+Frozen exclusion rationale from already accepted diagnostics:
+
+- EAT-ACTIVE is the dominant stable structural hypothesis;
+- P2-08 BUY EAT-AFTERNOON had the strongest narrow-window fold positivity:
+  **3 / 5** folds;
+- P2-08 BUY EAT-MIDDAY materially improved development mean and had positive
+  validation economics;
+- P2-08 BUY EAT-MORNING preserves the predeclared independent morning
+  hypothesis and had positive validation evidence;
+- P2-08 BUY EAT-EVENING was positive in **0 / 5** folds;
+- London-open transition was materially negative during development for BUY
+  and was previously more relevant under a possible SELL direction;
+- London/New-York overlap remained negative and less stable.
+
+No session candidate may be added after the first Stage-B economic result.
+
+### Session-filter semantics
+
+The session filter controls **new BUY entry eligibility only**.
+
+Outside the selected session:
+
+- suppress new BUY entries.
+
+Do not:
+
+- force-close existing positions at session end;
+- disable stop loss;
+- disable take profit;
+- disable trailing;
+- modify open-position management;
+- alter account-currency conversion;
+- alter replay timing;
+- alter stochastic/EMA/ATR calculations.
+
+An open position may continue to be managed and exit outside its entry
+session.
+
+Record session-filter rejection counts.
+
+### Timezone contract
+
+All Stage-B EAT windows use:
+
+\`Africa/Nairobi\`
+
+Use timezone-aware timestamps.
+
+Africa/Nairobi has no DST transition, but use the named timezone rather than a
+hardcoded offset or naive local-clock conversion.
+
+Record timezone implementation/runtime metadata.
+
+### Exact Stage-B seen-research sample
+
+Use exactly:
+
+\`2025-08-25T00:00:00Z\` → \`2026-07-08T00:00:00Z\`
+
+Accepted trading dates:
+
+**225**
+
+Ordered date-list SHA-256:
+
+\`50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0\`
+
+Reuse the exact existing five 45-date chronological folds. Do not redraw them.
+
+Historical holdout remains sealed:
+
+\`2026-07-08T00:00:00Z\` → \`2026-09-25T00:00:00Z\`
+
+### Stage-B reference equivalence
+
+S-R is the causal BUY-only all-hours strategy.
+
+It must reproduce accepted Stage-A D-B exactly under identical feature code,
+apart from Stage-B metadata.
+
+Require exact economic parity with accepted D-B for:
+
+- closed trades;
+- net realized P/L;
+- mean trade P/L;
+- non-flat win rate;
+- maximum equity drawdown;
+- per-symbol economics;
+- fold economics;
+- EAT diagnostics;
+- TP safety.
+
+If S-R does not reproduce D-B, **STOP**.
+
+Do not interpret any non-reference session economics until reference
+equivalence passes.
+
+### Mandatory gates
+
+Every Stage-B arm must pass:
+
+1. deterministic A/B baseline hash equality;
+2. deterministic A/B diagnostic hash equality;
+3. deterministic A/B summary hash equality;
+4. exact P2-08 parameters;
+5. BUY-only direction;
+6. zero accepted SELL entries;
+7. exact session metadata;
+8. exact 225-date list;
+9. exact source manifest;
+10. strict common replay-boundary clock;
+11. full per-symbol M1 preservation;
+12. unchanged cost contract;
+13. wrong-side initial TP = **0**;
+14. negative-P/L TP exits = **0**;
+15. historical holdout untouched;
+16. M021 unused;
+17. weekday filter absent;
+18. M15 disabled;
+19. no real-order API.
+
+### Session representation gate
+
+Do not compare a short session's raw trade count directly to all-hours.
+
+For each candidate session W, derive from deterministic S-R / D-B all-hours
+evidence the descriptive count of reference entries whose **entry time** falls
+inside W.
+
+That reference-window slice is used only as the representation denominator,
+not as causal economic evidence.
+
+For each non-reference session require all of:
+
+1. candidate total closed trades >= **60%** of S-R's descriptive same-window
+   closed-trade count;
+2. for every symbol, candidate closed trades >= **40%** of S-R's descriptive
+   same-window count for that symbol;
+3. for every chronological fold, candidate closed trades >= **40%** of S-R's
+   descriptive same-window count for that fold;
+4. candidate has at least **500** closed trades total;
+5. every fold has at least **50** closed trades;
+6. candidate has trades in >= **75%** of ISO weeks in which the S-R
+   descriptive same-window slice has at least one trade.
+
+These gates may not be lowered after results.
+
+### Primary Stage-B support rule
+
+A non-reference session is **SUPPORTED** only if every condition holds:
+
+1. mandatory gates pass;
+2. representation gate passes;
+3. net realized P/L is **strictly positive**;
+4. mean closed-trade P/L is **strictly positive**;
+5. maximum equity drawdown USD is strictly lower than S-R;
+6. non-flat win rate is no more than **1.0 percentage point** below S-R;
+7. mean trade P/L is better than S-R in at least **4 of 5** chronological
+   folds;
+8. candidate net P/L is positive in at least **3 of 5** chronological folds;
+9. mean trade P/L is better than S-R in at least **3 of 5** symbols;
+10. candidate net P/L is positive in at least **3 of 5** symbols;
+11. candidate mean trade P/L is better than S-R in at least **60%** of
+    eligible ISO weeks;
+12. at least **30** ISO weeks are eligible.
+
+Eligible weekly comparison:
+
+- both candidate and S-R descriptive same-window evidence must contain at
+  least **5** closed trades in that ISO week;
+- compare **mean trade P/L**;
+- do not substitute weekly total P/L.
+
+### Concentration rules
+
+For a candidate with positive net P/L:
+
+**Positive symbol P/L concentration**
+
+- at least **3** symbols must have positive net P/L;
+- no one symbol may contribute more than **60%** of total positive symbol
+  P/L.
+
+**Positive fold P/L concentration**
+
+- at least **3** folds must have positive net P/L;
+- no one fold may contribute more than **60%** of total positive fold P/L.
+
+These are mandatory Stage-B support rules.
+
+### Stage-B classifications
+
+- S-R: **REFERENCE**.
+- Mandatory or representation failure: **INELIGIBLE**.
+- Eligible but failing one or more support requirements:
+  **NOT SUPPORTED**.
+- Passing every support requirement: **SUPPORTED**.
+
+### Session-fixing rule
+
+If zero sessions are SUPPORTED:
+
+- **STOP M023 before historical holdout**;
+- do not open the holdout;
+- do not invent another session.
+
+If exactly one session is SUPPORTED:
+
+- fix that session.
+
+If more than one session is SUPPORTED, calculate relative to S-R:
+
+\`pl_gain_fraction = (candidate_net_pl - reference_net_pl) / abs(reference_net_pl)\`
+
+\`dd_improvement_fraction = (reference_dd - candidate_dd) / reference_dd\`
+
+\`mean_trade_gain_fraction = (candidate_mean_trade_pl - reference_mean_trade_pl) / abs(reference_mean_trade_pl)\`
+
+\`win_rate_gain_fraction = (candidate_win_rate - reference_win_rate) / reference_win_rate\`
+
+\`positive_fold_fraction = positive_net_pl_folds / 5\`
+
+\`positive_symbol_fraction = positive_net_pl_symbols / 5\`
+
+Then:
+
+\`robustness_maximin = minimum of all six values\`
+
+Choose the largest robustness_maximin.
+
+Exact tie-break order:
+
+1. more positive folds;
+2. more positive symbols;
+3. larger proportion of eligible weeks with improved mean trade P/L;
+4. higher representation/activity ratio;
+5. broader session duration;
+6. lexicographically smaller arm ID.
+
+No alternative ranking is allowed after results.
+
+### Profitability rule
+
+Unlike Stage A, Stage B is not allowed to advance a merely less-negative
+session.
+
+The objective is a positive-expectancy session before consuming the untouched
+historical holdout.
+
+Therefore both are mandatory:
+
+- \`net P/L > 0\`;
+- \`mean trade P/L > 0\`.
+
+If no session clears both plus all frozen robustness gates, do not open
+historical holdout.
+
+### Implementation sequence
+
+After this docs-only Stage-B protocol-freeze commit exists:
+
+1. implement experiment-only session entry eligibility;
+2. leave production defaults unchanged;
+3. add exact tests for:
+   - S-R all-hours;
+   - S-ACTIVE;
+   - S-MORNING;
+   - S-MIDDAY;
+   - S-AFTERNOON;
+   - exact BUY-only direction;
+   - zero SELL entries;
+   - exact time boundaries;
+   - no forced session-end close;
+   - continued open-position management outside entry windows;
+   - exact research partition;
+   - holdout refusal;
+   - deterministic reporting;
+4. add only fixed local-control actions for:
+   - Stage-B reference-equivalence/family execution;
+   - Stage-B mechanical assessment;
+5. do not add historical-holdout execution;
+6. do not add weekday execution;
+7. run native Stage-B tests;
+8. sync Dell to exact feature SHA;
+9. confirm clean worktree, divergence 0/0, exact feature SHA;
+10. run S-R first and require exact D-B equivalence;
+11. only after reference equivalence PASS, run the four fixed non-reference
+    sessions;
+12. maximum concurrent non-reference arms: **2**;
+13. review deterministic/safety evidence;
+14. run frozen mechanical Stage-B assessment;
+15. mechanically fix exactly one supported session or zero sessions and STOP;
+16. durably document Stage-B result;
+17. **STOP**.
+
+### Holdout checkpoint
+
+Even if Stage B produces a supported profitable session, do not immediately
+execute historical holdout.
+
+First durably record:
+
+- exact supported session;
+- exact parameters;
+- exact direction;
+- exact Stage-B economics;
+- exact robustness evidence;
+- exact prospective final holdout acceptance criteria.
+
+Historical-holdout opening requires a separate reviewer checkpoint.
+
+### Weekday filtering
+
+Still unauthorized.
+
+The accepted diagnostic did not support weekday filtering.
+
+Do not use Stage-B outcomes to start weekday mining.
+
+### Hard boundaries
+
+Do not:
+
+- reconsider SELL after the frozen Stage-A result;
+- restore BOTH as a competing Stage-B direction;
+- add another session;
+- optimize arbitrary hours;
+- test weekdays;
+- inspect historical holdout;
+- inspect M021 for tuning;
+- add M15;
+- change production defaults;
+- merge to main;
+- deploy;
+- enable live trading;
+- place, modify, or close real MT5 orders;
+- expose arbitrary shell execution.
