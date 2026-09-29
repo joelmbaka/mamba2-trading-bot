@@ -1,63 +1,44 @@
 # Next Authorized Task
 
-## M024 — implement metadata-only historical-holdout readiness
+## M024 — execute metadata-only historical-holdout readiness
 
 Branch:
 
 `symbol-specialization-research`
 
-Stage-2 acceptance documentation:
+Prospective holdout protocol freeze:
 
-`ff9182cb835d8db022122dae3eed019c53faa924`
+`b8f54de8f79f84c6f913515231e46453106a6cc7`
 
-The historical-holdout checkpoint protocol is frozen in:
+Readiness implementation:
 
-`docs/milestones/024-symbol-specialization-research.md`
+`f7c0f432367bd7d0e667af08b55f041e13700730`
 
-## Exact authorized work
+Fixed local-control support:
 
-Implement a metadata-only readiness gate for the frozen M024 H-UJ holdout.
+`276f2d6c414d2f0405be9d4ec45009f529f17931`
 
-Holdout:
+## Execute exactly
 
-`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`
+1. sync Dell to exact current remote feature HEAD and require clean 0/0;
+2. run `m024_holdout_readiness_tests`;
+3. require focused PASS;
+4. run `m024_holdout_readiness`;
+5. require deterministic A/B artifact equality;
+6. require all readiness/safety checks;
+7. durably freeze the published:
+   - 57-date list SHA;
+   - H1/H2/H3 19-date SHAs;
+   - replay-boundary SHA;
+   - partition-spec SHA;
+   - readiness artifact SHA;
+8. stop before holdout economics until those hashes are documented.
 
-Expected common trading dates:
+Still forbidden:
 
-**57**
-
-Source manifest SHA-256:
-
-`143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`
-
-Readiness must verify the exact source/coverage/partition/all-five-data/common
-boundary semantics in the milestone protocol and deterministically publish:
-
-- ordered 57-date list SHA-256;
-- H1/H2/H3 19-date block SHA-256 values;
-- replay-boundary SHA-256;
-- source-manifest SHA-256;
-- partition-spec SHA-256;
-- required row-count metadata.
-
-Add tests proving readiness performs no economic replay and that H-UJ economic
-execution remains inaccessible until readiness is accepted.
-
-A fixed local-control readiness action is allowed.
-
-## Still forbidden
-
-Do not compute or inspect holdout:
-
-- P/L;
-- trades;
-- win rate;
-- drawdown;
-- fold/block economics;
-- weekly economics;
-- economic classification.
-
-Do not use M021 post-cutoff outcomes.
-Do not use M025 outcomes.
-Do not add any candidate or filter.
-Do not merge/deploy or enable real trading.
+- holdout P/L/trades/win rate/drawdown;
+- holdout block/week economics;
+- alternate candidates;
+- M021 post-cutoff outcomes;
+- M025 outcomes;
+- merge/deploy/live trading.

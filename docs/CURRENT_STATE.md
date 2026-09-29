@@ -596,3 +596,21 @@ Candidate:
 The next gate is metadata-only readiness. No holdout P/L, trades, drawdown,
 win rate, weekly economics, or classification may be computed before readiness
 passes and publishes immutable date/replay hashes.
+
+
+## M024 holdout-readiness implementation checkpoint
+
+Prospective holdout protocol freeze:
+
+`b8f54de8f79f84c6f913515231e46453106a6cc7`
+
+Metadata-only readiness implementation:
+
+`f7c0f432367bd7d0e667af08b55f041e13700730`
+
+Fixed local-control readiness support:
+
+`276f2d6c414d2f0405be9d4ec45009f529f17931`
+
+No M024 holdout economics have run. The next gate is focused readiness tests,
+then deterministic metadata-only readiness.

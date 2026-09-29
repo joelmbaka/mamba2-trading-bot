@@ -1062,3 +1062,49 @@ prospective gate.
 14. stop.
 
 Historical holdout economics remain sealed until steps 1–4 are complete.
+
+
+## Holdout-readiness implementation checkpoint — 2026-09-29
+
+Protocol-freeze commit:
+
+`b8f54de8f79f84c6f913515231e46453106a6cc7`
+
+Metadata-only readiness implementation:
+
+`f7c0f432367bd7d0e667af08b55f041e13700730`
+
+Implemented feature files:
+
+- `mamba2/backtest/m024_holdout_readiness.py`;
+- `tests/test_m024_holdout_readiness.py`.
+
+Fixed local-control readiness support:
+
+`276f2d6c414d2f0405be9d4ec45009f529f17931`
+
+Allowlisted actions:
+
+- `m024_holdout_readiness_tests`;
+- `m024_holdout_readiness`.
+
+The readiness module imports no broker, strategy, position manager, ATR
+manager, portfolio runner, baseline builder, or diagnostic builder. It can
+derive source/coverage/date/replay metadata only.
+
+### Recovery state
+
+At this checkpoint no M024 holdout economic replay has run.
+
+Next exact sequence:
+
+1. sync Dell to exact current feature HEAD;
+2. run `m024_holdout_readiness_tests`;
+3. require focused tests PASS;
+4. run `m024_holdout_readiness`;
+5. require deterministic A/B metadata hash equality and every readiness/safety
+   check;
+6. durably freeze the readiness date/block/replay hashes;
+7. only then implement the already-frozen H-UJ economic runner and mechanical
+   assessment;
+8. do not inspect any holdout economics before step 6.
