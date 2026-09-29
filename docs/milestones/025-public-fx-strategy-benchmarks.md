@@ -815,3 +815,58 @@ functions. Its report contains hashes/schema/missingness/continuity only.
 6. review H.10 72-month gate and AQR/LRV schema flags;
 7. durably freeze all raw/normalized/report hashes;
 8. stop before any Stage-3 economic calculation.
+
+
+## Stage-3 H.10 transport-only repair — 2026-09-29
+
+The first two non-economic ingestion attempts failed before parsing because the
+Federal Reserve DDP custom CSV `Output.aspx` endpoint returned an empty body.
+
+Failed local-control results:
+
+- `mamba2-m025-stage3-ingestion-v1`;
+- `mamba2-m025-stage3-ingestion-v2`.
+
+No final ingestion artifact was published and no return/economic calculation
+ran in either attempt.
+
+The Federal Reserve's official H.10 page separately exposes:
+
+`https://www.federalreserve.gov/datadownload/Output.aspx?filetype=zip&rel=h10`
+
+as the release-wide SDMX/XML ZIP. A schema-only fixed transport probe confirmed:
+
+- HTTP 200;
+- content type `application/x-zip-compressed`;
+- archive members exactly include:
+  `H10_data.xml`, `H10_struct.xml`, `H10_H10.xsd`,
+  `frb_common.xsd`;
+- `H10_data.xml` has `Series` keys including
+  `SERIES_NAME/CURRENCY/FREQ/FX/UNIT/UNIT_MULT`;
+- observations expose
+  `TIME_PERIOD/OBS_VALUE/OBS_STATUS`.
+
+Transport probe result:
+
+`mamba2-m025-stage3-h10-transport-probe-v1`
+
+This repair authorizes use of that official release-wide ZIP **only as the
+transport container**.
+
+Scientific source/sample semantics remain unchanged:
+
+1. source remains Federal Reserve H.10;
+2. exact frozen 23 daily series remain unchanged;
+3. the full DDP identifier is reconstructed as
+   `H10/H10/<SERIES_NAME>`;
+4. only observations in
+   **[1971-01-04, 2026-08-31] inclusive** may enter the normalized panel;
+5. observations after 2026-08-31 may exist in the release-wide raw archive but
+   must be ignored before normalized-panel construction and may not affect
+   missingness/continuity/economics;
+6. raw ZIP bytes receive a SHA-256, and the cutoff-normalized panel receives a
+   separate SHA-256;
+7. all other Stage-3 protocol rules remain frozen.
+
+This is a transport repair caused by DDP endpoint behavior, not a source,
+universe, date, strategy, or economic-rule change.
