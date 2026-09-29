@@ -1,64 +1,51 @@
 # Next Authorized Task
 
-## Milestone 024 — Stage 2 causal USDJPY specialization
+## Milestone 024 — validate and execute frozen Stage 2
 
 Branch:
 
 `symbol-specialization-research`
 
-The read-only diagnostic is accepted.
-
-Accepted diagnostic feature SHA:
-
-`f403124a31464f6b42768f6a1d985abe290cbc4c`
-
-Accepted diagnostic result:
-
-`0473b8f149a15516c6d7b4e2f1b0585482be7eef`
-
-Accepted diagnostic artifact SHA-256:
-
-`108752dfdb7430efb2c3b4b971d16d6affb1c43e2aacc1bc5ef8e276db2d6410`
-
-Full native acceptance:
-
-`1bed8eb23b6bca980d076dbf9173f6479f53239d`
-— **283 passed, 2 skipped**.
-
-Stage-2 protocol is frozen in:
+Frozen Stage-2 protocol:
 
 `docs/milestones/024-symbol-specialization-research.md`
 
-## Exact Stage-2 family
+Causal runner implementation:
 
-- C-R — all five strategy symbols; all-five market data.
-- C-UJ — USDJPY strategy only; all-five market data retained.
+`d0dff1fc66e6bc1b60200a4aeaa27990bd1322fc`
 
-Use exact accepted P2-08 BUY-only/all-hours settings and the same frozen
-225-date seen-research partition.
+Invariant-hardening repair:
 
-## Implement now
+`ea49b23f72b0e857538c77a6f469920248cfde6a`
 
-1. implement experiment-only causal strategy-symbol selection;
-2. add exact C-R/C-UJ tests;
-3. ensure C-UJ retains all-five market/conversion data but instantiates only
-   USDJPY strategy;
-4. expose only fixed Stage-2 family + mechanical-assessment local-control
-   actions;
-5. do not expose historical holdout execution;
-6. run focused native tests;
-7. sync Dell to exact feature SHA;
-8. run C-R first and require exact accepted D-B equivalence;
-9. only then run C-UJ;
-10. run frozen mechanical Stage-2 assessment;
-11. run full native regression;
-12. durably document the result;
-13. stop before holdout.
+Fixed local-control support:
 
-Do not add symbol subsets, sessions, weekdays, SELL/BOTH, M15, M020-D spread
-filtering, or parameter changes.
+`0226b4e807480ed7e754c362d72e0adf05d5f25d`
 
-Do not inspect historical holdout or M021 post-cutoff outcomes.
+## Execute exactly
+
+1. sync Dell to exact current remote feature HEAD and require clean 0/0;
+2. run `m024_stage2_symbol_tests`;
+3. require focused native PASS;
+4. run `m024_stage2_symbol_family`;
+5. require C-R exact accepted M023 D-B equivalence;
+6. only then inspect C-UJ economics;
+7. run `m024_stage2_symbol_assessment`;
+8. mechanically accept its frozen classification;
+9. run `test_full_native`;
+10. durably document Stage-2 result;
+11. stop before historical holdout.
+
+Exact family remains:
+
+- C-R — all-five strategies + all-five market data;
+- C-UJ — USDJPY strategy only + all-five market data.
+
+Do not add subsets, sessions, weekdays, SELL/BOTH, M15, spread filters, or
+parameter changes.
+
+Do not inspect/open historical holdout.
+Do not inspect M021 post-cutoff outcomes.
 Do not use M025 outcomes.
 Do not modify production defaults.
 Do not merge/deploy or enable real trading.

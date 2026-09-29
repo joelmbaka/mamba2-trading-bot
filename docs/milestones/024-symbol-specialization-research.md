@@ -609,3 +609,52 @@ Do not:
 - alter production defaults;
 - merge/deploy;
 - enable/place/modify/close real MT5 orders.
+
+
+## Stage-2 implementation checkpoint — 2026-09-29
+
+Causal runner implementation:
+
+`d0dff1fc66e6bc1b60200a4aeaa27990bd1322fc`
+
+Invariant-hardening repair:
+
+`ea49b23f72b0e857538c77a6f469920248cfde6a`
+
+Implemented feature files:
+
+- `mamba2/backtest/m024_symbol_causal_research.py`;
+- `tests/test_m024_symbol_causal_research.py`.
+
+The implementation preserves all-five market data and conversion streams for
+both arms. C-UJ changes only the strategy-instantiation universe to USDJPY.
+
+Fixed local-control Stage-2 support:
+
+`0226b4e807480ed7e754c362d72e0adf05d5f25d`
+
+Allowlisted Stage-2 actions:
+
+- `m024_stage2_symbol_tests`;
+- `m024_stage2_symbol_family`;
+- `m024_stage2_symbol_assessment`.
+
+No M024 historical-holdout action exists.
+
+### Recovery state
+
+A Dell sync to the current `symbol-specialization-research` branch has been
+queued. No Stage-2 focused-test result, Stage-2 family economics, or Stage-2
+assessment result is accepted at this checkpoint.
+
+If resuming:
+
+1. verify Dell is clean and exactly matches the current remote feature HEAD;
+2. run `m024_stage2_symbol_tests`;
+3. require PASS before economic replay;
+4. run `m024_stage2_symbol_family`;
+5. require C-R exact accepted D-B equivalence before reading C-UJ;
+6. run `m024_stage2_symbol_assessment`;
+7. run full native regression;
+8. durably document the final Stage-2 classification;
+9. stop before historical holdout even if C-UJ is supported.

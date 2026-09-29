@@ -511,3 +511,23 @@ This is not yet a causal/proven edge.
 M024 Stage 2 is now prospectively frozen before economics with exactly C-R
 (all-five reference) and C-UJ (USDJPY strategy only, all-five market data
 retained). No historical holdout execution is authorized.
+
+
+## M024 Stage-2 implementation checkpoint
+
+The frozen C-R/C-UJ causal runner is implemented.
+
+Feature implementation:
+
+`d0dff1fc66e6bc1b60200a4aeaa27990bd1322fc`
+
+Invariant hardening:
+
+`ea49b23f72b0e857538c77a6f469920248cfde6a`
+
+Fixed local-control actions:
+
+`0226b4e807480ed7e754c362d72e0adf05d5f25d`
+
+Stage-2 validation/economics have not yet been accepted at this checkpoint.
+Historical holdout remains sealed and no holdout action exists.
