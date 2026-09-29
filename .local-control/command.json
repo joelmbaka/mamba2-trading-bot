@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m024-holdout-readiness-tests-v1",
-  "action": "m024_holdout_readiness_tests",
+  "id": "mamba2-m024-holdout-readiness-v1",
+  "action": "m024_holdout_readiness",
   "args": {},
   "requested_by": "chatgpt"
 }
