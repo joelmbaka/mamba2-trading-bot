@@ -475,3 +475,29 @@ Economic metrics and cross-series comparison formulas are frozen before any
 Stage-3 economic download/calculation.
 
 Next gate: deterministic schema/ingestion only.
+
+
+## M025 Stage-3 ingestion implementation checkpoint
+
+Protocol:
+
+`6b6592237fe4f9e087745c914e916bda6521012d`
+
+Snapshot-range addendum:
+
+`a7fa66244e57c9f0e214526ab8dee9b96537f87c`
+
+Ingestion implementation:
+
+`184f0fbd0e58e0d451120232a2cb9295c729f7f2`
+
+Fixed controls:
+
+`cd985e2f29d6814b1aec54ffff1b57b2c9a1ab6a`
+
+Runtime probe:
+
+`315a03a0ba1967d30a884b0fc0d33c39543f6e70`
+
+No Stage-3 source has been economically evaluated. Next: focused ingestion
+tests, then the immutable non-economic source snapshot.

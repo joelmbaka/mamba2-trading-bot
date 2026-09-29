@@ -761,3 +761,57 @@ accepted.
 - no production/live promotion.
 
 Any later economic result is research evidence only.
+
+
+## Stage-3 ingestion implementation checkpoint — 2026-09-29
+
+Stage-3 protocol freeze:
+
+`6b6592237fe4f9e087745c914e916bda6521012d`
+
+H.10 snapshot-range freeze:
+
+`a7fa66244e57c9f0e214526ab8dee9b96537f87c`
+
+Non-economic ingestion implementation:
+
+`184f0fbd0e58e0d451120232a2cb9295c729f7f2`
+
+Fixed local-control ingestion support:
+
+`cd985e2f29d6814b1aec54ffff1b57b2c9a1ab6a`
+
+Runtime probe result:
+
+`315a03a0ba1967d30a884b0fc0d33c39543f6e70`
+
+Runtime probe established:
+
+- LibreOffice: `/usr/bin/libreoffice`;
+- `openpyxl`: absent;
+- `xlrd`: absent.
+
+No dependency change is required. AQR XLSX schema is inspected with Python
+standard-library ZIP/XML parsing. The legacy LRV XLS is converted by the
+already-installed LibreOffice to XLSX solely for string-schema inspection.
+
+Ingestion source endpoints are fixed:
+
+- Federal Reserve H.10 23-series daily-rate package,
+  1971-01-04 through 2026-08-31;
+- AQR `Time-Series-Momentum-Factors-Monthly.xlsx`;
+- author-hosted `CurrencyPortfolios.xls`.
+
+The ingestion module cannot import or call the benchmark signal/return
+functions. Its report contains hashes/schema/missingness/continuity only.
+
+### Recovery sequence
+
+1. fast-forward Dell to exact documented M025 feature HEAD;
+2. run `m025_stage3_ingestion_tests`;
+3. require focused PASS with no downloads/economics;
+4. run `m025_stage3_ingestion`;
+5. accept the first complete immutable source snapshot only;
+6. review H.10 72-month gate and AQR/LRV schema flags;
+7. durably freeze all raw/normalized/report hashes;
+8. stop before any Stage-3 economic calculation.

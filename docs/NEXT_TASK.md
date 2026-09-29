@@ -1,80 +1,54 @@
 # Next Authorized Task
 
-## M025 — implement deterministic Stage-3 ingestion gate
+## M025 — execute Stage-3 non-economic ingestion
 
 Branch:
 
 `public-strategy-benchmarks`
 
-Stage-1 acceptance:
+Protocol freeze:
 
-`d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
+`6b6592237fe4f9e087745c914e916bda6521012d`
 
-Stage-2 inventory acceptance:
+H.10 snapshot-range freeze:
 
-`efbf59094ff226542201a32963a5e75a1fccd416`
+`a7fa66244e57c9f0e214526ab8dee9b96537f87c`
 
-Stage-3 reference/proxy protocol is frozen in:
+Ingestion implementation:
 
-`docs/milestones/025-public-fx-strategy-benchmarks.md`
+`184f0fbd0e58e0d451120232a2cb9295c729f7f2`
 
-## Ingestion only
+Fixed local-control support:
 
-Implement deterministic, non-economic ingestion/schema validation for:
+`cd985e2f29d6814b1aec54ffff1b57b2c9a1ab6a`
 
-1. Federal Reserve H.10 exact frozen 23-series daily-rate package;
-2. AQR monthly TSMOM reference artifact;
-3. LRV `CurrencyPortfolios.xls`.
+Runtime probe:
 
-For H.10, publish before any return calculation:
+`315a03a0ba1967d30a884b0fc0d33c39543f6e70`
 
-- exact raw bytes SHA-256;
-- exact 23 source IDs;
-- source quote conventions;
-- normalized USD-per-foreign panel SHA-256;
-- first/last observations per series;
-- missing counts;
-- duplicate/date validity;
-- positive finite price checks;
-- 72-consecutive-month gate result;
-- source and normalized schema metadata.
+## Execute exactly
 
-For AQR:
-
-- raw artifact SHA-256;
-- workbook/file schema;
-- exact sheet/column names;
-- whether a currency-specific monthly TSMOM factor exists;
-- no return summary.
-
-For LRV:
-
-- raw artifact SHA-256;
-- workbook schema;
-- exact sheet/column names;
-- whether six currency portfolios P1-P6 are identifiable;
-- whether a published HML column exists;
-- no return summary.
-
-Add focused synthetic/parser tests and fixed non-economic local-control actions
-only.
+1. sync/fast-forward Dell to exact current M025 feature HEAD;
+2. run `m025_stage3_ingestion_tests`;
+3. require focused PASS;
+4. run `m025_stage3_ingestion` once;
+5. require non-economic safety flags;
+6. freeze:
+   - H.10 raw SHA;
+   - H.10 normalized-panel SHA;
+   - AQR raw SHA and schema classification;
+   - LRV raw SHA and schema classification;
+   - ingestion report SHA;
+7. stop before returns/economics;
+8. freeze a separate Stage-3 economic-execution checkpoint only after
+   ingestion acceptance.
 
 ## Forbidden
 
-Do not calculate:
+Do not compute returns, P/L, Sharpe, drawdown, wealth, correlations, tracking
+error, or rankings.
 
-- strategy/proxy/reference returns;
-- P/L;
-- Sharpe;
-- drawdown;
-- cumulative wealth;
-- positive-month fraction;
-- correlations;
-- tracking error;
-- economic ranking.
-
-Do not replace H.10 after seeing outcomes.
-Do not drop currencies based on outcomes.
+Do not modify benchmark/proxy definitions after source ingestion.
 Do not inspect M021 post-cutoff outcomes.
-Do not alter definitions using M023/M024 outcomes.
+Do not use M023/M024 outcomes to alter definitions.
 Do not merge/deploy or enable real trading.
