@@ -25,13 +25,9 @@ import zipfile
 
 H10_FROM = "1971-01-04"
 H10_TO = "2026-08-31"
-H10_PACKAGE_ID = "60f32914ab61dfab590e0e470153e3ae"
 H10_URL = (
-    "https://www.federalreserve.gov/datadownload/Output.aspx?"
-    "filetype=csv&from=01%2F04%2F1971&label=include&lastObs=&"
-    "layout=seriescolumn&rel=H10&series="
-    + H10_PACKAGE_ID
-    + "&to=08%2F31%2F2026"
+    "https://www.federalreserve.gov/datadownload/"
+    "Output.aspx?filetype=zip&rel=h10"
 )
 AQR_URL = (
     "https://www.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/"
@@ -129,84 +125,163 @@ def _longest_consecutive_months(dates: Iterable[str]) -> int:
     return longest
 
 
-def inspect_h10_csv(
+def _local_tag(tag: str) -> str:
+    return tag.split("}")[-1]
+
+
+def _h10_short_name(full_identifier: str) -> str:
+    return full_identifier.rsplit("/", 1)[-1]
+
+
+def inspect_h10_sdmx_zip(
     raw_path: str | Path,
     normalized_path: str | Path,
 ) -> dict[str, Any]:
-    """Validate the frozen H.10 package and write normalized USD/FX prices."""
+    """Validate official H.10 SDMX ZIP and write frozen normalized prices."""
 
-    with Path(raw_path).open(
-        "r",
-        encoding="utf-8-sig",
-        newline="",
-    ) as handle:
-        rows = list(csv.reader(handle))
+    expected = {
+        _h10_short_name(full_id): {
+            "symbol": symbol,
+            "full_id": full_id,
+            "source_quote": source_quote,
+            "invert": invert,
+        }
+        for symbol, full_id, source_quote, invert in H10_SERIES
+    }
 
-    unique_row = next(
-        (
-            row for row in rows
-            if row
-            and row[0].strip().lower().startswith("unique identifier")
-        ),
-        None,
-    )
-    header_index = next(
-        (
-            index for index, row in enumerate(rows)
-            if row and row[0].strip().lower() == "time period"
-        ),
-        None,
-    )
-    if unique_row is None or header_index is None:
-        raise ValueError("H.10 CSV metadata/header rows are missing")
+    required_members = {
+        "H10_data.xml",
+        "H10_struct.xml",
+        "H10_H10.xsd",
+        "frb_common.xsd",
+    }
+    with zipfile.ZipFile(Path(raw_path), "r") as archive:
+        members = set(archive.namelist())
+        if not required_members.issubset(members):
+            missing = sorted(required_members - members)
+            raise ValueError(
+                f"H.10 SDMX ZIP missing required members: {missing}"
+            )
 
-    observed_ids = tuple(cell.strip() for cell in unique_row[1:])
-    if observed_ids != H10_EXPECTED_IDS:
+        series_rows: dict[str, dict[str, Any]] = {}
+        with archive.open("H10_data.xml") as handle:
+            for _, elem in ET.iterparse(handle, events=("end",)):
+                if _local_tag(elem.tag) != "Series":
+                    continue
+
+                short_name = elem.attrib.get("SERIES_NAME", "").strip()
+                if short_name not in expected:
+                    elem.clear()
+                    continue
+                if short_name in series_rows:
+                    raise ValueError(
+                        f"duplicate H.10 SDMX series: {short_name}"
+                    )
+
+                definition = expected[short_name]
+                if elem.attrib.get("FREQ") != "B":
+                    raise ValueError(
+                        f"H.10 frozen daily series changed frequency: "
+                        f"{short_name}"
+                    )
+
+                source_currency = elem.attrib.get("CURRENCY")
+                if (
+                    source_currency
+                    and source_currency != definition["symbol"]
+                ):
+                    raise ValueError(
+                        f"H.10 currency metadata changed for {short_name}: "
+                        f"{source_currency}"
+                    )
+
+                observations: dict[str, float | None] = {}
+                status_counts: dict[str, int] = {}
+                for child in elem.iter():
+                    if _local_tag(child.tag) != "Obs":
+                        continue
+                    time_period = child.attrib.get("TIME_PERIOD")
+                    if not time_period:
+                        raise ValueError(
+                            f"H.10 observation without TIME_PERIOD in "
+                            f"{short_name}"
+                        )
+                    date_text = _parse_date(time_period)
+                    if date_text < H10_FROM or date_text > H10_TO:
+                        continue
+                    if date_text in observations:
+                        raise ValueError(
+                            f"duplicate H.10 date for {short_name}: "
+                            f"{date_text}"
+                        )
+
+                    status = child.attrib.get("OBS_STATUS", "").strip()
+                    status_counts[status or "UNSPECIFIED"] = (
+                        status_counts.get(status or "UNSPECIFIED", 0) + 1
+                    )
+                    raw_value = child.attrib.get("OBS_VALUE")
+                    if (
+                        status.upper() == "ND"
+                        or raw_value is None
+                        or not raw_value.strip()
+                    ):
+                        observations[date_text] = None
+                        continue
+
+                    value = float(raw_value)
+                    if not math.isfinite(value) or value <= 0:
+                        raise ValueError(
+                            f"H.10 source value must be positive and finite: "
+                            f"{short_name} {date_text}"
+                        )
+                    observations[date_text] = value
+
+                if not observations:
+                    raise ValueError(
+                        f"H.10 frozen series has no in-window observations: "
+                        f"{short_name}"
+                    )
+
+                series_rows[short_name] = {
+                    "series_attributes": {
+                        key: value
+                        for key, value in elem.attrib.items()
+                        if key in {
+                            "SERIES_NAME",
+                            "CURRENCY",
+                            "FREQ",
+                            "FX",
+                            "UNIT",
+                            "UNIT_MULT",
+                        }
+                    },
+                    "observations": observations,
+                    "status_counts": status_counts,
+                }
+                elem.clear()
+
+    observed_short_names = set(series_rows)
+    expected_short_names = set(expected)
+    if observed_short_names != expected_short_names:
+        missing = sorted(expected_short_names - observed_short_names)
+        extra = sorted(observed_short_names - expected_short_names)
         raise ValueError(
-            "H.10 frozen 23-series identifier contract changed"
+            "H.10 frozen 23-series identifier contract changed: "
+            f"missing={missing}, extra={extra}"
         )
 
-    header = rows[header_index]
-    if len(header) != 24:
-        raise ValueError("H.10 data header must contain 23 series")
-    if len(set(header[1:])) != 23:
-        raise ValueError("H.10 short series headers must be unique")
+    dates = sorted(
+        {
+            date_text
+            for row in series_rows.values()
+            for date_text in row["observations"]
+        }
+    )
+    if not dates:
+        raise ValueError("H.10 frozen window contains no observations")
+    if dates[0] < H10_FROM or dates[-1] > H10_TO:
+        raise ValueError("H.10 normalized window escaped frozen cutoff")
 
-    by_date: dict[str, list[float | None]] = {}
-    for row in rows[header_index + 1 :]:
-        if not row or not row[0].strip():
-            continue
-        date_text = _parse_date(row[0])
-        if date_text in by_date:
-            raise ValueError(f"duplicate H.10 date: {date_text}")
-        if date_text < H10_FROM or date_text > H10_TO:
-            raise ValueError(
-                "H.10 download escaped frozen source snapshot range"
-            )
-        cells = list(row[1:])
-        if len(cells) < 23:
-            cells.extend([""] * (23 - len(cells)))
-        if len(cells) > 23:
-            raise ValueError("H.10 row has unexpected extra columns")
-
-        parsed: list[float | None] = []
-        for cell in cells:
-            text = cell.strip()
-            if not text or text.upper() == "ND":
-                parsed.append(None)
-                continue
-            value = float(text)
-            if not math.isfinite(value) or value <= 0:
-                raise ValueError(
-                    "H.10 source rates must be positive finite values"
-                )
-            parsed.append(value)
-        by_date[date_text] = parsed
-
-    if not by_date:
-        raise ValueError("H.10 download contains no data rows")
-
-    dates = sorted(by_date)
     normalized_path = Path(normalized_path)
     normalized_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -215,33 +290,42 @@ def inspect_h10_csv(
     }
     missing_counts = {symbol: 0 for symbol in H10_SYMBOLS}
 
+    by_symbol = {
+        definition["symbol"]: series_rows[short_name]["observations"]
+        for short_name, definition in expected.items()
+    }
+    definition_by_symbol = {
+        definition["symbol"]: definition
+        for definition in expected.values()
+    }
+
     with normalized_path.open(
         "w",
         encoding="utf-8",
         newline="",
     ) as handle:
-        writer = csv.writer(
-            handle,
-            lineterminator="\n",
-        )
+        writer = csv.writer(handle, lineterminator="\n")
         writer.writerow(["date", *H10_SYMBOLS])
+
         for date_text in dates:
-            source_values = by_date[date_text]
             output_row: list[str] = [date_text]
-            for index, (symbol, _, _, invert) in enumerate(H10_SERIES):
-                source_value = source_values[index]
+            for symbol in H10_SYMBOLS:
+                definition = definition_by_symbol[symbol]
+                source_value = by_symbol[symbol].get(date_text)
                 if source_value is None:
                     missing_counts[symbol] += 1
                     output_row.append("")
                     continue
+
                 normalized = (
                     1.0 / source_value
-                    if invert
+                    if definition["invert"]
                     else source_value
                 )
                 if not math.isfinite(normalized) or normalized <= 0:
                     raise ValueError(
-                        "normalized H.10 prices must be positive and finite"
+                        f"normalized H.10 price invalid: "
+                        f"{symbol} {date_text}"
                     )
                 nonmissing_dates[symbol].append(date_text)
                 output_row.append(format(normalized, ".15g"))
@@ -250,24 +334,33 @@ def inspect_h10_csv(
     per_series: dict[str, Any] = {}
     gate_passed = True
     for symbol, full_id, source_quote, invert in H10_SERIES:
+        short_name = _h10_short_name(full_id)
         present = nonmissing_dates[symbol]
         longest = _longest_consecutive_months(present)
         passed = longest >= 72
         gate_passed = gate_passed and passed
+        source_row = series_rows[short_name]
         per_series[symbol] = {
             "unique_identifier": full_id,
+            "series_name": short_name,
             "source_quote": source_quote,
             "normalized_quote": f"USD per {symbol}",
             "inverted": invert,
             "first_nonmissing_date": present[0] if present else None,
             "last_nonmissing_date": present[-1] if present else None,
-            "missing_observations": missing_counts[symbol],
+            "missing_observations_on_union_calendar": missing_counts[symbol],
             "longest_consecutive_months_with_observation": longest,
             "gate_72_consecutive_months": passed,
+            "series_attributes": source_row["series_attributes"],
+            "observation_status_counts_in_window": source_row[
+                "status_counts"
+            ],
         }
 
     return {
-        "source_rows": len(dates),
+        "transport": "Federal Reserve H.10 release-wide SDMX/XML ZIP",
+        "archive_members": sorted(required_members),
+        "source_rows_union_calendar": len(dates),
         "first_source_date": dates[0],
         "last_source_date": dates[-1],
         "source_ids": list(H10_EXPECTED_IDS),
@@ -275,6 +368,7 @@ def inspect_h10_csv(
         "normalized_panel_sha256": _sha256(normalized_path),
         "per_series": per_series,
         "gate_72_consecutive_months_all_series": gate_passed,
+        "post_cutoff_observations_ignored": True,
     }
 
 
@@ -454,7 +548,7 @@ def run_ingestion(
     root = Path(output_dir)
     root.mkdir(parents=True, exist_ok=True)
 
-    h10_raw = _download(H10_URL, root / "h10-daily-rates.csv")
+    h10_raw = _download(H10_URL, root / "h10-all-data.zip")
     aqr_raw = _download(
         AQR_URL,
         root / "Time-Series-Momentum-Factors-Monthly.xlsx",
@@ -465,7 +559,7 @@ def run_ingestion(
     )
 
     normalized = root / "h10-normalized-usd-per-foreign.csv"
-    h10 = inspect_h10_csv(h10_raw, normalized)
+    h10 = inspect_h10_sdmx_zip(h10_raw, normalized)
 
     aqr_schema = inspect_xlsx_schema(aqr_raw)
     lrv_xlsx = _convert_xls_to_xlsx(

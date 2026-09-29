@@ -17,7 +17,7 @@ from mamba2.backtest.m025_stage3_ingestion import (
     H10_TO,
     H10_URL,
     LRV_URL,
-    inspect_h10_csv,
+    inspect_h10_sdmx_zip,
     inspect_xlsx_schema,
 )
 
@@ -35,25 +35,41 @@ def _month_rows(count: int = 73):
     return rows
 
 
-def _write_h10(path: Path, *, omit_last_id: bool = False):
-    ids = list(H10_EXPECTED_IDS)
+def _write_h10_zip(path: Path, *, omit_last_id: bool = False):
+    rows = list(H10_SERIES)
     if omit_last_id:
-        ids = ids[:-1]
+        rows = rows[:-1]
 
-    with path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.writer(handle, lineterminator="\n")
-        writer.writerow(["Series Description", *["FX"] * len(ids)])
-        writer.writerow(["Unit:", *["Currency"] * len(ids)])
-        writer.writerow(["Multiplier:", *["1"] * len(ids)])
-        writer.writerow(["Currency:", *["NA"] * len(ids)])
-        writer.writerow(["Unique Identifier:", *ids])
-        writer.writerow(
-            ["Time Period", *[value.split("/")[-1] for value in ids]]
-        )
-        for date_text in _month_rows():
-            writer.writerow(
-                [date_text, *["2.0"] * len(ids)]
+    series_xml = []
+    for symbol, full_id, _, _ in rows:
+        short_name = full_id.rsplit("/", 1)[-1]
+        observations = "".join(
+            (
+                f'<Obs TIME_PERIOD="{date_text}" '
+                'OBS_VALUE="2.0" OBS_STATUS="A"/>'
             )
+            for date_text in _month_rows()
+        )
+        series_xml.append(
+            (
+                f'<Series SERIES_NAME="{short_name}" '
+                f'CURRENCY="{symbol}" FREQ="B" FX="{symbol}" '
+                'UNIT="Currency" UNIT_MULT="1">'
+                f"{observations}</Series>"
+            )
+        )
+
+    data_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<CompactData><DataSet>'
+        + "".join(series_xml)
+        + '</DataSet></CompactData>'
+    )
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("H10_data.xml", data_xml)
+        archive.writestr("H10_struct.xml", "<Structure/>")
+        archive.writestr("H10_H10.xsd", "<schema/>")
+        archive.writestr("frb_common.xsd", "<schema/>")
 
 
 def _write_minimal_xlsx(path: Path):
@@ -108,19 +124,19 @@ def _write_minimal_xlsx(path: Path):
 def test_stage3_sources_and_snapshot_are_frozen():
     assert H10_FROM == "1971-01-04"
     assert H10_TO == "2026-08-31"
-    assert "60f32914ab61dfab590e0e470153e3ae" in H10_URL
-    assert H10_TO.replace("-", "%2F") not in H10_URL
+    assert H10_URL.endswith("Output.aspx?filetype=zip&rel=h10")
+    assert "series=" not in H10_URL
     assert AQR_URL.endswith("Time-Series-Momentum-Factors-Monthly.xlsx")
     assert LRV_URL.endswith("CurrencyPortfolios.xls")
     assert len(H10_SERIES) == 23
 
 
 def test_h10_parser_normalizes_quote_direction_without_returns(tmp_path):
-    raw = tmp_path / "h10.csv"
+    raw = tmp_path / "h10.zip"
     normalized = tmp_path / "normalized.csv"
-    _write_h10(raw)
+    _write_h10_zip(raw)
 
-    result = inspect_h10_csv(raw, normalized)
+    result = inspect_h10_sdmx_zip(raw, normalized)
 
     assert result["gate_72_consecutive_months_all_series"] is True
     assert result["source_ids"] == list(H10_EXPECTED_IDS)
@@ -136,12 +152,12 @@ def test_h10_parser_normalizes_quote_direction_without_returns(tmp_path):
 
 
 def test_h10_parser_refuses_series_contract_drift(tmp_path):
-    raw = tmp_path / "h10.csv"
+    raw = tmp_path / "h10.zip"
     normalized = tmp_path / "normalized.csv"
-    _write_h10(raw, omit_last_id=True)
+    _write_h10_zip(raw, omit_last_id=True)
 
     with pytest.raises(ValueError, match="23-series identifier"):
-        inspect_h10_csv(raw, normalized)
+        inspect_h10_sdmx_zip(raw, normalized)
 
 
 def test_xlsx_schema_scanner_reads_strings_but_not_numeric_cells(tmp_path):
