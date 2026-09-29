@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m025-stage3-h10-transport-probe-v1",
-  "action": "m025_stage3_h10_transport_probe",
+  "id": "mamba2-m025-stage3-sync-v4",
+  "action": "m025_switch_public_benchmarks",
   "args": {},
   "requested_by": "chatgpt"
 }
