@@ -1,23 +1,90 @@
 {
   "version": 1,
-  "command_id": "mamba2-m024-full-native-v1",
-  "completed_at": "2026-09-29T08:44:58.558197+00:00",
+  "command_id": "mamba2-m024-stage2-sync-v1",
+  "completed_at": "2026-09-29T08:52:29.560280+00:00",
   "ok": true,
-  "action": "test_full_native",
+  "action": "sync",
   "data": {
-    "ok": true,
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest"
-      ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 283 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  1%]\ntests/test_backtest_account_currency.py ............                     [  5%]\ntests/test_backtest_baseline_reporting.py ....                           [  7%]\ntests/test_backtest_diagnostics.py ....                                  [  8%]\ntests/test_backtest_execution.py .........                               [ 11%]\ntests/test_backtest_execution_costs.py ............                      [ 15%]\ntests/test_backtest_experiments.py .....                                 [ 17%]\ntests/test_backtest_foundation.py ..........                             [ 21%]\ntests/test_backtest_native_runtime.py ....                               [ 22%]\ntests/test_backtest_portfolio_runner.py .........                        [ 25%]\ntests/test_backtest_spread_execution.py ........                         [ 28%]\ntests/test_backtest_strategy_integration.py ..                           [ 29%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 31%]\ntests/test_cache_manager_security.py .........                           [ 34%]\ntests/test_config_security.py ...                                        [ 35%]\ntests/test_detect_trend.py ...                                           [ 36%]\ntests/test_direction_session_diagnostics.py .....                        [ 38%]\ntests/test_m020_decision_spread.py ...                                   [ 39%]\ntests/test_m020_diagnostics.py ....                                      [ 40%]\ntests/test_m020_spread_treatment.py ...                                  [ 41%]\ntests/test_m021_forward_validation.py ...........                        [ 45%]\ntests/test_m023_direction_research.py ..............                     [ 50%]\ntests/test_m023_session_research.py ....................                 [ 57%]\ntests/test_m024_symbol_specialization.py .......                         [ 60%]\ntests/test_mt5__broker.py ......                                         [ 62%]\ntests/test_mt5_dataset.py ..............                                 [ 67%]\ntests/test_parameter_research.py .............................           [ 77%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 85%]\n.                                                                        [ 85%]\ntests/test_rates.py .......                                              [ 87%]\ntests/test_replay_indicator_cache.py ..                                  [ 88%]\ntests/test_stochastic_indicator.py ....                                  [ 90%]\ntests/test_trend_line.py ..                                              [ 90%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================== 283 passed, 2 skipped in 3.19s ========================\n",
-      "stderr": ""
-    }
+    "branch": "symbol-specialization-research",
+    "before_sha": "ea49b23f72b0e857538c77a6f469920248cfde6a",
+    "after_sha": "ea49b23f72b0e857538c77a6f469920248cfde6a",
+    "reason": null,
+    "commands": [
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "ea49b23f72b0e857538c77a6f469920248cfde6a\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "symbol-specialization-research\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin",
+          "symbol-specialization-research:refs/remotes/origin/symbol-specialization-research"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/symbol-specialization-research"
+        ],
+        "exit_code": 0,
+        "stdout": "ea49b23f72b0e857538c77a6f469920248cfde6a\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...refs/remotes/origin/symbol-specialization-research"
+        ],
+        "exit_code": 0,
+        "stdout": "0\t0\n",
+        "stderr": ""
+      }
+    ]
   }
 }
