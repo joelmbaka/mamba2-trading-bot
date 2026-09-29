@@ -1,109 +1,23 @@
 {
   "version": 1,
-  "command_id": "mamba2-m024-holdout-assessment-v1",
-  "completed_at": "2026-09-29T15:16:33.031657+00:00",
+  "command_id": "mamba2-m024-holdout-full-native-v1",
+  "completed_at": "2026-09-29T15:17:12.633405+00:00",
   "ok": true,
-  "action": "m024_holdout_assessment",
+  "action": "test_full_native",
   "data": {
     "ok": true,
-    "feature_branch": "symbol-specialization-research",
-    "feature_sha": "add0c420af98e581975389eb7bdac370bed16f14",
-    "assessment_sha256": "1ef48c926f394c3b2f6c354f6311e6201ffa1298680ce5d987bf26a1564e5aad",
-    "assessment": {
-      "blocks": {
-        "H1": {
-          "closed_trades": 89,
-          "mean_trade_pl": -1.1236567335173775,
-          "net_realized_pl": -100.0054492830466
-        },
-        "H2": {
-          "closed_trades": 106,
-          "mean_trade_pl": 0.4836887747173707,
-          "net_realized_pl": 51.27101012004127
-        },
-        "H3": {
-          "closed_trades": 113,
-          "mean_trade_pl": -1.592030677046207,
-          "net_realized_pl": -179.89946650622147
-        }
-      },
-      "classification": "HOLDOUT NOT SUPPORTED",
-      "economics": {
-        "closed_trades": 308,
-        "maximum_equity_drawdown": 278.59487758512296,
-        "maximum_equity_drawdown_pct": 2.773890007249351,
-        "mean_trade_pl": -0.7423178755494377,
-        "net_realized_pl": -228.6339056692268,
-        "win_rate_nonflat_pct": 39.61038961038961
-      },
-      "historical_holdout_execution_authorized": false,
-      "invariant_checks": {
-        "block_hashes": true,
-        "buy_only": true,
-        "cost_contract": true,
-        "date_sha": true,
-        "excluded_symbol_rows_zero": true,
-        "holdout_used": true,
-        "m021_unused": true,
-        "m025_unused": true,
-        "m15_disabled": true,
-        "market_data_not_reduced": true,
-        "market_symbols": true,
-        "negative_pl_tp_zero": true,
-        "parameters": true,
-        "partition_dates": true,
-        "partition_end": true,
-        "partition_spec": true,
-        "partition_start": true,
-        "position_size": true,
-        "readiness_artifact": true,
-        "real_order_unused": true,
-        "replay_sha": true,
-        "sell_entries_zero": true,
-        "session_all_hours": true,
-        "session_filter_absent": true,
-        "strategy_symbols": true,
-        "weekday_filter_absent": true,
-        "wrong_side_tp_zero": true
-      },
-      "max_positive_block_pl_share": 1.0,
-      "production_live_promotion_authorized": false,
-      "representation": {
-        "closed_trades": 308,
-        "each_block_closed_trades_ge_50": true,
-        "eligible_iso_weeks": 12,
-        "eligible_iso_weeks_ge_8": true,
-        "ok": true,
-        "represented_date_fraction": 1.0,
-        "represented_dates_ge_80pct": true,
-        "represented_trading_dates": 57,
-        "total_closed_trades_ge_200": true
-      },
-      "summary_path": "backtest_data/m024-holdout-h-uj-v1/M024-H-UJ-a-summary.json",
-      "summary_sha256": "edafc57e10552c2fa3cf59dc449fb6293d97cd4e0b8ba9f44a2894f56604ff93",
-      "support_checks": {
-        "aggregate_mean_trade_pl_positive": false,
-        "aggregate_net_pl_positive": false,
-        "positive_block_concentration_le_70pct": false,
-        "positive_mean_blocks_ge_2": false,
-        "positive_mean_iso_weeks_ge_50pct": false,
-        "positive_net_pl_blocks_ge_2": false
-      },
-      "supported": false,
-      "weekly": {
-        "eligible_iso_weeks": 12,
-        "positive_mean_iso_week_ratio": 0.25,
-        "positive_mean_iso_weeks": 3
-      }
-    },
-    "historical_holdout_execution_authorized": false,
-    "production_live_promotion_authorized": false,
-    "safety": {
-      "economic_replay_run": false,
-      "reads_existing_holdout_artifacts_only": true,
-      "m021_post_cutoff_data_used": false,
-      "m025_outcomes_used": false,
-      "real_order_api_called": false
+    "run": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest"
+      ],
+      "exit_code": 0,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 299 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  1%]\ntests/test_backtest_account_currency.py ............                     [  5%]\ntests/test_backtest_baseline_reporting.py ....                           [  6%]\ntests/test_backtest_diagnostics.py ....                                  [  8%]\ntests/test_backtest_execution.py .........                               [ 11%]\ntests/test_backtest_execution_costs.py ............                      [ 15%]\ntests/test_backtest_experiments.py .....                                 [ 16%]\ntests/test_backtest_foundation.py ..........                             [ 20%]\ntests/test_backtest_native_runtime.py ....                               [ 21%]\ntests/test_backtest_portfolio_runner.py .........                        [ 24%]\ntests/test_backtest_spread_execution.py ........                         [ 27%]\ntests/test_backtest_strategy_integration.py ..                           [ 27%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 29%]\ntests/test_cache_manager_security.py .........                           [ 32%]\ntests/test_config_security.py ...                                        [ 33%]\ntests/test_detect_trend.py ...                                           [ 34%]\ntests/test_direction_session_diagnostics.py .....                        [ 36%]\ntests/test_m020_decision_spread.py ...                                   [ 37%]\ntests/test_m020_diagnostics.py ....                                      [ 38%]\ntests/test_m020_spread_treatment.py ...                                  [ 39%]\ntests/test_m021_forward_validation.py ...........                        [ 43%]\ntests/test_m023_direction_research.py ..............                     [ 47%]\ntests/test_m023_session_research.py ....................                 [ 54%]\ntests/test_m024_holdout_readiness.py ....                                [ 55%]\ntests/test_m024_holdout_research.py .......                              [ 58%]\ntests/test_m024_symbol_causal_research.py .....                          [ 59%]\ntests/test_m024_symbol_specialization.py .......                         [ 62%]\ntests/test_mt5__broker.py ......                                         [ 64%]\ntests/test_mt5_dataset.py ..............                                 [ 68%]\ntests/test_parameter_research.py .............................           [ 78%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 85%]\n.                                                                        [ 86%]\ntests/test_rates.py .......                                              [ 88%]\ntests/test_replay_indicator_cache.py ..                                  [ 89%]\ntests/test_stochastic_indicator.py ....                                  [ 90%]\ntests/test_trend_line.py ..                                              [ 91%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n======================== 299 passed, 2 skipped in 3.46s ========================\n",
+      "stderr": ""
     }
   }
 }
