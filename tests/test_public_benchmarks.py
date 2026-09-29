@@ -320,7 +320,11 @@ def test_tsmom_gate_requires_consecutive_monthly_coverage_per_instrument():
 
 def test_monthly_cross_section_refuses_duplicate_calendar_month_rows():
     panel = _monthly_panel()
-    duplicate = pd.concat([panel.iloc[:1], panel]).sort_index()
+    extra = panel.iloc[:1].copy()
+    extra.index = pd.DatetimeIndex(
+        [pd.Timestamp("2010-01-30T00:00:00Z")]
+    )
+    duplicate = pd.concat([extra, panel]).sort_index()
 
     with pytest.raises(ValueError, match="one row per calendar month"):
         audit_cross_sectional_history(duplicate)
