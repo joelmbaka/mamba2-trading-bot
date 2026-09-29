@@ -15122,6 +15122,131 @@ def m025_stage3_h10_transport_probe():
     }
 
 
+def m025_stage3_lrv_binary_probe():
+    """Probe only the fixed LRV workbook transport/schema container."""
+
+    feature_sha = _require_m025_branch()
+    url = "https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls"
+    root = _ensure_baseline_path(
+        REPO / "backtest_data" / "m025-stage3-lrv-binary-probe-v1"
+    )
+    if root.exists():
+        shutil.rmtree(root)
+    root.mkdir(parents=True, exist_ok=False)
+    source = root / "CurrencyPortfolios.xls"
+    converted = root / "converted"
+    converted.mkdir()
+
+    downloader = (
+        "from pathlib import Path;"
+        "from urllib.request import Request,urlopen;"
+        f"u={url!r};p=Path({str(source)!r});"
+        "r=Request(u,headers={'User-Agent':'Mozilla/5.0 Mamba2-Research-Ingestion/1.0'});"
+        "d=urlopen(r,timeout=120).read();"
+        "p.write_bytes(d);"
+        "print(len(d))"
+    )
+    download = _run_process_group_bounded(
+        _native_command("-c", downloader),
+        env=_safe_env(),
+        timeout_seconds=180,
+    )
+    if download["exit_code"] != 0 or not source.is_file():
+        shutil.rmtree(root, ignore_errors=True)
+        return {
+            "ok": False,
+            "reason": "fixed LRV binary probe download failed",
+            "feature_sha": feature_sha,
+            "run": download,
+        }
+
+    magic = source.read_bytes()[:8].hex().upper()
+    file_cmd = shutil.which("file")
+    strings_cmd = shutil.which("strings")
+    file_result = (
+        _run([file_cmd, "-b", str(source)])
+        if file_cmd
+        else {"exit_code": -1, "stdout": "", "stderr": "file unavailable"}
+    )
+
+    string_runs = []
+    selected_strings = []
+    if strings_cmd:
+        for args in (
+            [strings_cmd, "-a", "-n", "4", str(source)],
+            [strings_cmd, "-a", "-e", "l", "-n", "4", str(source)],
+        ):
+            run = _run(args)
+            string_runs.append(run)
+            if run["exit_code"] == 0:
+                for line in run["stdout"].splitlines():
+                    clean = line.strip()
+                    if not clean:
+                        continue
+                    lower = clean.lower()
+                    if any(
+                        token in lower
+                        for token in (
+                            "portfolio",
+                            "currency",
+                            "currencies",
+                            "hml",
+                            "dollar",
+                            "developed",
+                            "all countries",
+                            "all currencies",
+                        )
+                    ):
+                        selected_strings.append(clean[:300])
+
+    libreoffice = shutil.which("libreoffice")
+    conversion = None
+    conversion_output = converted / "CurrencyPortfolios.xlsx"
+    if libreoffice:
+        conversion = _run_process_group_bounded(
+            [
+                libreoffice,
+                "--headless",
+                "--convert-to",
+                "xlsx",
+                '--infilter=MS Excel 97',
+                "--outdir",
+                str(converted.resolve()),
+                str(source.resolve()),
+            ],
+            env=_safe_env(),
+            timeout_seconds=120,
+        )
+
+    result = {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "url": url,
+        "size_bytes": source.stat().st_size,
+        "sha256": _sha256(source),
+        "first_8_bytes_hex": magic,
+        "ole_magic_matches": magic == "D0CF11E0A1B11AE1",
+        "file_description": file_result["stdout"].strip(),
+        "selected_schema_strings": sorted(set(selected_strings))[:200],
+        "libreoffice_infilter_conversion": {
+            "attempted": conversion is not None,
+            "exit_code": None if conversion is None else conversion["exit_code"],
+            "stdout": "" if conversion is None else conversion["stdout"],
+            "stderr": "" if conversion is None else conversion["stderr"],
+            "xlsx_created": conversion_output.is_file(),
+        },
+        "safety": {
+            "numeric_cells_parsed": False,
+            "returns_computed": False,
+            "economic_computation_run": False,
+            "real_order_api_called": False,
+        },
+    }
+    shutil.rmtree(root, ignore_errors=True)
+    return result
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -15151,6 +15276,7 @@ ACTION_HANDLERS = {
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
     "m025_stage3_h10_transport_probe": m025_stage3_h10_transport_probe,
+    "m025_stage3_lrv_binary_probe": m025_stage3_lrv_binary_probe,
     "m025_stage3_ingestion_tests": m025_stage3_ingestion_tests,
     "m025_stage3_ingestion": m025_stage3_ingestion,
     "m025_stage3_runtime_probe": m025_stage3_runtime_probe,
