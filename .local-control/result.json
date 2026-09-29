@@ -1,35 +1,36 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-switch-public-benchmarks-v1",
-  "completed_at": "2026-09-29T15:45:43.429102+00:00",
-  "ok": true,
-  "action": "m025_switch_public_benchmarks",
+  "command_id": "mamba2-m025-public-benchmark-tests-v1",
+  "completed_at": "2026-09-29T15:46:26.167609+00:00",
+  "ok": false,
+  "action": "m025_public_benchmark_tests",
   "data": {
-    "ok": true,
+    "ok": false,
     "feature_branch": "public-strategy-benchmarks",
     "feature_sha": "b93845d8568251ba2d2983a92a4ec645314aac58",
-    "divergence": {
-      "ahead": 0,
-      "behind": 0
-    },
-    "switch": {
+    "tests": [
+      "tests/test_public_benchmarks.py"
+    ],
+    "run": {
       "command": [
-        "git",
-        "switch",
-        "--track",
-        "-c",
-        "public-strategy-benchmarks",
-        "origin/public-strategy-benchmarks"
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_public_benchmarks.py"
       ],
-      "exit_code": 0,
-      "stdout": "branch 'public-strategy-benchmarks' set up to track 'origin/public-strategy-benchmarks'.\n",
-      "stderr": "Switched to a new branch 'public-strategy-benchmarks'\n"
+      "exit_code": 1,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 23 items\n\ntests/test_public_benchmarks.py ......................F                  [100%]\n\n=================================== FAILURES ===================================\n_______ test_monthly_cross_section_refuses_duplicate_calendar_month_rows _______\n\n    def test_monthly_cross_section_refuses_duplicate_calendar_month_rows():\n        panel = _monthly_panel()\n        duplicate = pd.concat([panel.iloc[:1], panel]).sort_index()\n    \n        with pytest.raises(ValueError, match=\"one row per calendar month\"):\n>           audit_cross_sectional_history(duplicate)\n\ntests/test_public_benchmarks.py:326: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \nmamba2/backtest/public_benchmarks.py:380: in audit_cross_sectional_history\n    returns = _validate_frame(\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nframe =                                 C00       C01  ...       C10       C11\n2010-01-31 00:00:00+00:00  0.000000  0.001000  ... ...  0.019873  0.020873\n2016-08-31 00:00:00+00:00  0.010000  0.011000  ...  0.020000  0.021000\n\n[81 rows x 12 columns]\n\n    def _validate_frame(frame: pd.DataFrame, *, name: str) -> pd.DataFrame:\n        if not isinstance(frame, pd.DataFrame):\n            raise TypeError(f\"{name} must be a pandas DataFrame\")\n        if not isinstance(frame.index, pd.DatetimeIndex):\n            raise TypeError(f\"{name} must use a DatetimeIndex\")\n        if frame.index.has_duplicates:\n>           raise ValueError(f\"{name} index must be unique\")\nE           ValueError: monthly_excess_returns index must be unique\n\nmamba2/backtest/public_benchmarks.py:73: ValueError\n\nDuring handling of the above exception, another exception occurred:\n\n    def test_monthly_cross_section_refuses_duplicate_calendar_month_rows():\n        panel = _monthly_panel()\n        duplicate = pd.concat([panel.iloc[:1], panel]).sort_index()\n    \n>       with pytest.raises(ValueError, match=\"one row per calendar month\"):\nE       AssertionError: Regex pattern did not match.\nE        Regex: 'one row per calendar month'\nE        Input: 'monthly_excess_returns index must be unique'\n\ntests/test_public_benchmarks.py:325: AssertionError\n=========================== short test summary info ============================\nFAILED tests/test_public_benchmarks.py::test_monthly_cross_section_refuses_duplicate_calendar_month_rows\n========================= 1 failed, 22 passed in 0.79s =========================\n",
+      "stderr": ""
     },
-    "fast_forward": null,
     "safety": {
-      "dirty_worktree_refused": true,
-      "force_reset_used": false,
-      "economic_replay_run": false,
+      "stage1_only": true,
+      "historical_economics_run": false,
+      "m021_post_cutoff_data_used": false,
+      "m023_outcomes_used": false,
+      "m024_holdout_outcomes_used_for_definition": false,
       "real_order_api_called": false
     }
   }
