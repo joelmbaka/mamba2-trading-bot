@@ -434,3 +434,20 @@ No M025 economics have run.
 
 The Stage-2 data-source inventory protocol is frozen. The next work is public
 source metadata/schema inventory only, with no benchmark P/L.
+
+
+## M025 Stage 2 source inventory accepted
+
+Inventory artifact:
+
+`docs/research/m025-public-source-inventory.md`
+
+Result:
+
+- no public/free raw-eligible source established for publication-faithful B1,
+  B2, or B3;
+- AQR TSMOM and CurrencyPortfolios are retained as derived external references;
+- H.10/Dukascopy spot are retained only as possible TSMOM spot-proxy sources.
+
+No M025 economics have run. Raw publication-faithful reconstruction stops here
+under the current free-data boundary.

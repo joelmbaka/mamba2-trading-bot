@@ -1,50 +1,66 @@
 # Next Authorized Task
 
-## Milestone 025 — public FX benchmark data-source inventory
+## Milestone 025 — freeze non-equivalent reference/proxy evidence protocol
 
 Branch:
 
 `public-strategy-benchmarks`
 
-Accepted Stage-1 feature:
+Stage 1 accepted feature:
 
 `d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
 
-Accepted focused tests:
+Stage-1 focused acceptance:
 
 `a9d4ce84b5cc35e911407082c056c24668b79401`
-— **23 passed**.
 
-Accepted full native regression:
+Stage-1 full-native acceptance:
 
 `28a5c79dd49e10f1255a97bc24a05b0df721bb1b`
-— **260 passed, 2 skipped**.
 
-## Stage 2 only
+Stage-2 inventory:
 
-Execute the frozen source-inventory protocol in:
+`docs/research/m025-public-source-inventory.md`
 
-`docs/milestones/025-public-fx-strategy-benchmarks.md`
+## Inventory outcome
 
-Inventory public/free candidate data sources for:
+No public/free **RAW-ELIGIBLE-CANDIDATE** was established for
+publication-faithful B1/B2/B3.
 
-- B1 MOP TSMOM;
-- B2 Menkhoff currency momentum;
-- B3 HML-FX carry;
-- B4 accepted M020-D artifact references.
+Do not weaken the raw benchmark requirements and do not run a fake
+publication-faithful reconstruction.
 
-For each source, record publisher/access/raw-vs-derived/fields/frequency/history/
-universe/convention/forward-or-rate availability/licensing metadata and apply
-exactly one frozen inventory classification.
+## Next gate only
 
-## Prohibited
+Freeze, before any economic download/calculation, a separate protocol for the
+two scientifically distinct surviving evidence types:
 
-Do not calculate benchmark P/L, Sharpe, drawdown, win rate, or economic ranking.
-Do not choose a source based on returns.
-Do not weaken raw-data requirements because a preferred source is unavailable.
+1. **DERIVED REFERENCE SERIES**
+   - AQR TSMOM factor data;
+   - Lustig/Roussanov/Verdelhan CurrencyPortfolios/HML-FX data;
+   - B4 accepted M020-D snapshot.
+   These are external/reference returns, not locally reconstructed raw
+   benchmarks.
+
+2. **TSMOM SPOT PROXY**
+   - choose one public spot source prospectively from inventory metadata;
+   - freeze exact source, USD quote normalization, eligible currency universe,
+     72-month continuity rule, daily-to-monthly timing, 12/1 signal, centered
+     MOP volatility estimator, 40% target, missing-data rules, and costs;
+   - label every result **TSMOM SPOT PROXY**.
+
+The protocol must predeclare any comparison/scaling metric and deterministic
+artifact hashes before economics.
+
+B2 Menkhoff raw reconstruction remains stopped unless a future source-access
+milestone proves a valid spot + one-month-forward/log-excess-return panel.
+
+B3 raw HML-FX reconstruction remains stopped unless a future source-access
+milestone proves a valid currency-level one-month-forward panel.
+
+Do not calculate P/L, Sharpe, drawdown, win rate, or economic ranking until
+this separate reference/proxy protocol is frozen.
+
 Do not use M021 post-cutoff outcomes.
-Do not use M023/M024 outcomes to alter benchmark definitions.
+Do not alter benchmark definitions using M023/M024 outcomes.
 Do not merge/deploy or enable real trading.
-
-After inventory review, stop before ingestion/economics and freeze a separate
-protocol for any surviving RAW-ELIGIBLE-CANDIDATE.

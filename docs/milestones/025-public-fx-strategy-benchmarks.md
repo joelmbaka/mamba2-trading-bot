@@ -1,6 +1,6 @@
 # Milestone 025 — Public FX Strategy Benchmarks
 
-Status: **STAGE 1 ACCEPTED — DATA-SOURCE INVENTORY PROTOCOL FROZEN; NO ECONOMIC RESULTS AUTHORIZED**
+Status: **STAGE 2 INVENTORY ACCEPTED — NO PUBLIC/FREE RAW-ELIGIBLE SOURCE; NO ECONOMIC RESULTS AUTHORIZED**
 
 Protocol date: 2026-09-29
 
@@ -38,7 +38,7 @@ Frozen mechanics:
 - direction: long when the instrument's trailing 12-month excess return is
   positive, short when negative;
 - per-instrument ex-ante annualized volatility target: **40%**;
-- volatility estimator: exponentially weighted lagged squared **daily** returns;
+- volatility estimator: exponentially weighted variance of lagged **daily** returns around the exponentially weighted lagged-return mean;
 - annualization scalar: **261**;
 - EWMA decay: `delta = 60 / 61`, matching a 60-day center of mass;
 - the volatility estimate at time `t` may use information only through
@@ -465,3 +465,30 @@ and under a separately frozen execution protocol.
 6. freeze a separate ingestion/economic protocol only for
    RAW-ELIGIBLE-CANDIDATE sources that survive inventory;
 7. stop before economics.
+
+
+## Stage-2 source-inventory result — 2026-09-29
+
+Deterministic inventory artifact:
+
+`docs/research/m025-public-source-inventory.md`
+
+Inventory decision:
+
+- B1 MOP TSMOM: **no public/free RAW-ELIGIBLE-CANDIDATE established**;
+- B2 Menkhoff momentum: **no public/free RAW-ELIGIBLE-CANDIDATE established**;
+- B3 HML-FX carry: **no public/free RAW-ELIGIBLE-CANDIDATE established**;
+- B4 M020-D: accepted frozen internal reference only.
+
+Non-raw paths retained without weakening definitions:
+
+- AQR TSMOM factor datasets — **DERIVED-REFERENCE-ONLY**;
+- Roussanov/Lustig/Verdelhan CurrencyPortfolios.xls —
+  **DERIVED-REFERENCE-ONLY**;
+- Federal Reserve H.10 / Dukascopy spot —
+  **PROXY-ONLY** for a separately labelled TSMOM spot proxy.
+
+The frozen Stage-2 stop rule fires for publication-faithful B1/B2/B3 raw
+reconstruction.
+
+No M025 benchmark economics were run during source inventory.
