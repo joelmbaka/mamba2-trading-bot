@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m025-public-benchmark-tests-v2",
-  "action": "m025_public_benchmark_tests",
+  "id": "mamba2-m025-stage1-full-native-v1",
+  "action": "test_full_native",
   "args": {},
   "requested_by": "chatgpt"
 }
