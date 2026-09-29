@@ -15007,6 +15007,121 @@ def m025_stage3_ingestion():
     }
 
 
+def m025_stage3_h10_transport_probe():
+    """Probe the fixed official H.10 all-data ZIP transport, schema only."""
+
+    import io
+    import urllib.request
+    import xml.etree.ElementTree as ET
+    import zipfile
+
+    feature_sha = _require_m025_branch()
+    url = (
+        "https://www.federalreserve.gov/datadownload/"
+        "Output.aspx?filetype=zip&rel=h10"
+    )
+    request = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0 Mamba2-Research-Ingestion/1.0"
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=120) as response:
+            body = response.read()
+            status = getattr(response, "status", None)
+            content_type = response.headers.get("Content-Type")
+    except Exception as exc:
+        return {
+            "ok": False,
+            "feature_sha": feature_sha,
+            "reason": f"H.10 ZIP transport failed: {exc}",
+            "safety": {
+                "observation_values_reported": False,
+                "economic_computation_run": False,
+                "real_order_api_called": False,
+            },
+        }
+
+    if not body:
+        return {
+            "ok": False,
+            "feature_sha": feature_sha,
+            "reason": "H.10 ZIP transport returned an empty body",
+            "status": status,
+            "content_type": content_type,
+            "safety": {
+                "observation_values_reported": False,
+                "economic_computation_run": False,
+                "real_order_api_called": False,
+            },
+        }
+
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(body), "r")
+    except zipfile.BadZipFile as exc:
+        return {
+            "ok": False,
+            "feature_sha": feature_sha,
+            "reason": f"H.10 all-data body is not a ZIP: {exc}",
+            "status": status,
+            "content_type": content_type,
+            "body_bytes": len(body),
+            "safety": {
+                "observation_values_reported": False,
+                "economic_computation_run": False,
+                "real_order_api_called": False,
+            },
+        }
+
+    members = archive.namelist()
+    xml_members = [
+        name for name in members
+        if name.lower().endswith(".xml")
+    ]
+
+    schema_shapes = {}
+    for name in xml_members[:12]:
+        tags = set()
+        attribute_names = set()
+        try:
+            with archive.open(name) as handle:
+                count = 0
+                for event, elem in ET.iterparse(handle, events=("start",)):
+                    tags.add(elem.tag.split("}")[-1])
+                    attribute_names.update(elem.attrib.keys())
+                    count += 1
+                    if count >= 2000:
+                        break
+        except ET.ParseError:
+            continue
+        schema_shapes[name] = {
+            "tags": sorted(tags),
+            "attribute_names": sorted(attribute_names),
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "url": url,
+        "status": status,
+        "content_type": content_type,
+        "body_bytes": len(body),
+        "archive_members": members,
+        "xml_members": xml_members,
+        "schema_shapes": schema_shapes,
+        "safety": {
+            "observation_values_reported": False,
+            "economic_computation_run": False,
+            "m021_post_cutoff_data_used": False,
+            "m023_outcomes_used": False,
+            "m024_outcomes_used_to_tune_definitions": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -15035,6 +15150,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m025_stage3_h10_transport_probe": m025_stage3_h10_transport_probe,
     "m025_stage3_ingestion_tests": m025_stage3_ingestion_tests,
     "m025_stage3_ingestion": m025_stage3_ingestion,
     "m025_stage3_runtime_probe": m025_stage3_runtime_probe,
