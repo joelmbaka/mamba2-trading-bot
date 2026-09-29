@@ -1,406 +1,136 @@
 {
   "version": 1,
-  "command_id": "mamba2-m023-stage-b-session-assessment-v1",
-  "completed_at": "2026-09-29T07:23:57.512898+00:00",
+  "command_id": "mamba2-m024-switch-symbol-specialization-v1",
+  "completed_at": "2026-09-29T08:40:05.397365+00:00",
   "ok": true,
-  "action": "m023_stage_b_session_assessment",
+  "action": "switch_branch",
   "data": {
-    "ok": true,
-    "feature_branch": "direction-session-research",
-    "feature_sha": "f5cd1111d4626bd96e11dc9b630cdac364059a04",
-    "reference": {
-      "label": "S-R",
-      "classification": "REFERENCE",
-      "economics": {
-        "closed_trades": 6630,
-        "net_realized_pl": -7453.880244800241,
-        "mean_trade_pl": -1.124265496953278,
-        "maximum_equity_drawdown": 7497.010275745217,
-        "maximum_equity_drawdown_pct": 74.97010275745217,
-        "win_rate_nonflat_pct": 36.67370962873528
+    "target_branch": "symbol-specialization-research",
+    "before_branch": "direction-session-research",
+    "after_branch": "symbol-specialization-research",
+    "before_sha": "ffd33e2ae0534d572c73840cccaa98104b3ad460",
+    "after_sha": "2a605aebee379e50df7193f9562b84bbb2edb128",
+    "reason": null,
+    "commands": [
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "direction-session-research\n",
+        "stderr": ""
       },
-      "reference_equivalence": {
-        "passes": true,
-        "checks": {
-          "closed_trades": true,
-          "net_realized_pl": true,
-          "mean_trade_pl": true,
-          "win_rate": true,
-          "max_dd": true,
-          "per_symbol": true,
-          "folds": true,
-          "eat_active": true,
-          "eat_off_hours": true,
-          "tp_safety": true
-        }
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "ffd33e2ae0534d572c73840cccaa98104b3ad460\n",
+        "stderr": ""
       },
-      "hashes": {
-        "baseline_a": "0022f3c4e62fb1a8cf380aceeeeeb66a9b7fd26255ebf15360a6462bc27a8e60",
-        "baseline_b": "0022f3c4e62fb1a8cf380aceeeeeb66a9b7fd26255ebf15360a6462bc27a8e60",
-        "diagnostic_a": "ebfb0bc4b80df3550bfa8c377365d3d94f5e36b67e64a56ada3fd9645f90e208",
-        "diagnostic_b": "ebfb0bc4b80df3550bfa8c377365d3d94f5e36b67e64a56ada3fd9645f90e208",
-        "summary_a": "1abea4d36a9a2069b651d417eab22833794b1d97e6f3803d56871fc5e2e7de66",
-        "summary_b": "1abea4d36a9a2069b651d417eab22833794b1d97e6f3803d56871fc5e2e7de66"
+      {
+        "command": [
+          "git",
+          "check-ref-format",
+          "--branch",
+          "symbol-specialization-research"
+        ],
+        "exit_code": 0,
+        "stdout": "symbol-specialization-research\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin",
+          "symbol-specialization-research:refs/remotes/origin/symbol-specialization-research"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * [new branch]      symbol-specialization-research -> origin/symbol-specialization-research\n"
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/symbol-specialization-research"
+        ],
+        "exit_code": 0,
+        "stdout": "2a605aebee379e50df7193f9562b84bbb2edb128\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/heads/symbol-specialization-research"
+        ],
+        "exit_code": 128,
+        "stdout": "",
+        "stderr": "fatal: Needed a single revision\n"
+      },
+      {
+        "command": [
+          "git",
+          "switch",
+          "--track",
+          "-c",
+          "symbol-specialization-research",
+          "origin/symbol-specialization-research"
+        ],
+        "exit_code": 0,
+        "stdout": "branch 'symbol-specialization-research' set up to track 'origin/symbol-specialization-research'.\n",
+        "stderr": "Switched to a new branch 'symbol-specialization-research'\n"
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "symbol-specialization-research\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "2a605aebee379e50df7193f9562b84bbb2edb128\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
       }
-    },
-    "assessments": {
-      "S-ACTIVE": {
-        "label": "S-ACTIVE",
-        "session": {
-          "duration_hours": 13,
-          "end_hour": 20,
-          "label": "EAT-ACTIVE",
-          "new_entry_eligibility_only": true,
-          "start_hour": 8,
-          "timezone": "Africa/Nairobi"
-        },
-        "classification": "NOT SUPPORTED",
-        "mandatory_ok": true,
-        "representation": {
-          "total_ge_60pct_same_window": true,
-          "every_symbol_ge_40pct_same_window": true,
-          "every_fold_ge_40pct_same_window": true,
-          "total_closed_ge_500": true,
-          "every_fold_closed_ge_50": true,
-          "week_presence_ge_75pct": true,
-          "ok": true,
-          "total_ratio": 1.0283518812930577,
-          "per_symbol_ratio": {
-            "EURJPY": 1.0215924426450742,
-            "EURUSD": 1.0372836218375499,
-            "GBPJPY": 1.0308370044052864,
-            "GBPUSD": 1.0225118483412323,
-            "USDJPY": 1.0303830911492735
-          },
-          "per_fold_ratio": {
-            "F1": 1.0220207253886011,
-            "F2": 1.0313778990450204,
-            "F3": 1.0272020725388602,
-            "F4": 1.031413612565445,
-            "F5": 1.030013642564802
-          },
-          "reference_window_trade_weeks": 46,
-          "represented_trade_weeks": 46,
-          "week_presence_ratio": 1.0
-        },
-        "support_checks": {
-          "net_pl_positive": false,
-          "mean_trade_pl_positive": false,
-          "max_dd_strictly_lower_than_reference": true,
-          "win_rate_within_1pp": true,
-          "fold_mean_better_ge_4": true,
-          "positive_fold_pl_ge_3": false,
-          "symbol_mean_better_ge_3": true,
-          "positive_symbol_pl_ge_3": false,
-          "weekly_mean_better_ge_60pct": false,
-          "eligible_iso_weeks_ge_30": true,
-          "positive_symbol_concentration_le_60pct": false,
-          "positive_fold_concentration_le_60pct": false
-        },
-        "support_ok": false,
-        "economics": {
-          "closed_trades": 3881,
-          "net_realized_pl": -1687.5411646782595,
-          "mean_trade_pl": -0.4348212225401392,
-          "maximum_equity_drawdown": 2095.947134067078,
-          "maximum_equity_drawdown_pct": 20.902031599902156,
-          "win_rate_nonflat_pct": 38.84020618556701
-        },
-        "robustness": {
-          "fold_mean_better": 5,
-          "positive_folds": [
-            "F4",
-            "F5"
-          ],
-          "symbol_mean_better": 4,
-          "positive_symbols": [],
-          "eligible_iso_weeks": 46,
-          "better_iso_weeks": 12,
-          "better_iso_week_ratio": 0.2608695652173913,
-          "positive_symbol_pl": {},
-          "max_positive_symbol_pl_share": null,
-          "positive_fold_pl": {
-            "F4": 12.582803717461013,
-            "F5": 120.99419473249714
-          },
-          "max_positive_fold_pl_share": 0.9058011194781046
-        }
-      },
-      "S-MORNING": {
-        "label": "S-MORNING",
-        "session": {
-          "duration_hours": 4,
-          "end_hour": 11,
-          "label": "EAT-MORNING",
-          "new_entry_eligibility_only": true,
-          "start_hour": 8,
-          "timezone": "Africa/Nairobi"
-        },
-        "classification": "NOT SUPPORTED",
-        "mandatory_ok": true,
-        "representation": {
-          "total_ge_60pct_same_window": true,
-          "every_symbol_ge_40pct_same_window": true,
-          "every_fold_ge_40pct_same_window": true,
-          "total_closed_ge_500": true,
-          "every_fold_closed_ge_50": true,
-          "week_presence_ge_75pct": true,
-          "ok": true,
-          "total_ratio": 1.0921739130434782,
-          "per_symbol_ratio": {
-            "EURJPY": 1.0632911392405062,
-            "EURUSD": 1.1457286432160805,
-            "GBPJPY": 1.090497737556561,
-            "GBPUSD": 1.0769230769230769,
-            "USDJPY": 1.0934959349593496
-          },
-          "per_fold_ratio": {
-            "F1": 1.0683760683760684,
-            "F2": 1.1116504854368932,
-            "F3": 1.0913043478260869,
-            "F4": 1.092,
-            "F5": 1.1
-          },
-          "reference_window_trade_weeks": 46,
-          "represented_trade_weeks": 46,
-          "week_presence_ratio": 1.0
-        },
-        "support_checks": {
-          "net_pl_positive": false,
-          "mean_trade_pl_positive": false,
-          "max_dd_strictly_lower_than_reference": true,
-          "win_rate_within_1pp": true,
-          "fold_mean_better_ge_4": true,
-          "positive_fold_pl_ge_3": false,
-          "symbol_mean_better_ge_3": true,
-          "positive_symbol_pl_ge_3": false,
-          "weekly_mean_better_ge_60pct": false,
-          "eligible_iso_weeks_ge_30": true,
-          "positive_symbol_concentration_le_60pct": false,
-          "positive_fold_concentration_le_60pct": false
-        },
-        "support_ok": false,
-        "economics": {
-          "closed_trades": 1256,
-          "net_realized_pl": -802.8210564365072,
-          "mean_trade_pl": -0.6391887392010304,
-          "maximum_equity_drawdown": 1063.4752298010335,
-          "maximum_equity_drawdown_pct": 10.60957107800779,
-          "win_rate_nonflat_pct": 35.85657370517929
-        },
-        "robustness": {
-          "fold_mean_better": 4,
-          "positive_folds": [
-            "F5"
-          ],
-          "symbol_mean_better": 5,
-          "positive_symbols": [
-            "USDJPY"
-          ],
-          "eligible_iso_weeks": 46,
-          "better_iso_weeks": 17,
-          "better_iso_week_ratio": 0.3695652173913043,
-          "positive_symbol_pl": {
-            "USDJPY": 91.56677786907727
-          },
-          "max_positive_symbol_pl_share": 1.0,
-          "positive_fold_pl": {
-            "F5": 213.668247712559
-          },
-          "max_positive_fold_pl_share": 1.0
-        }
-      },
-      "S-MIDDAY": {
-        "label": "S-MIDDAY",
-        "session": {
-          "duration_hours": 3,
-          "end_hour": 14,
-          "label": "EAT-MIDDAY",
-          "new_entry_eligibility_only": true,
-          "start_hour": 12,
-          "timezone": "Africa/Nairobi"
-        },
-        "classification": "NOT SUPPORTED",
-        "mandatory_ok": true,
-        "representation": {
-          "total_ge_60pct_same_window": true,
-          "every_symbol_ge_40pct_same_window": true,
-          "every_fold_ge_40pct_same_window": true,
-          "total_closed_ge_500": true,
-          "every_fold_closed_ge_50": true,
-          "week_presence_ge_75pct": true,
-          "ok": true,
-          "total_ratio": 1.0496613995485327,
-          "per_symbol_ratio": {
-            "EURJPY": 1.0774193548387097,
-            "EURUSD": 1.0204081632653061,
-            "GBPJPY": 1.1006711409395973,
-            "GBPUSD": 1.029126213592233,
-            "USDJPY": 1.038888888888889
-          },
-          "per_fold_ratio": {
-            "F1": 1.0346534653465347,
-            "F2": 1.0363636363636364,
-            "F3": 1.0595238095238095,
-            "F4": 1.0585106382978724,
-            "F5": 1.0613496932515338
-          },
-          "reference_window_trade_weeks": 46,
-          "represented_trade_weeks": 46,
-          "week_presence_ratio": 1.0
-        },
-        "support_checks": {
-          "net_pl_positive": false,
-          "mean_trade_pl_positive": false,
-          "max_dd_strictly_lower_than_reference": true,
-          "win_rate_within_1pp": true,
-          "fold_mean_better_ge_4": true,
-          "positive_fold_pl_ge_3": false,
-          "symbol_mean_better_ge_3": true,
-          "positive_symbol_pl_ge_3": true,
-          "weekly_mean_better_ge_60pct": false,
-          "eligible_iso_weeks_ge_30": true,
-          "positive_symbol_concentration_le_60pct": true,
-          "positive_fold_concentration_le_60pct": false
-        },
-        "support_ok": false,
-        "economics": {
-          "closed_trades": 930,
-          "net_realized_pl": -53.41154747229666,
-          "mean_trade_pl": -0.05743177147559057,
-          "maximum_equity_drawdown": 453.5601540925072,
-          "maximum_equity_drawdown_pct": 4.468987838157843,
-          "win_rate_nonflat_pct": 42.25806451612903
-        },
-        "robustness": {
-          "fold_mean_better": 5,
-          "positive_folds": [
-            "F2",
-            "F4"
-          ],
-          "symbol_mean_better": 4,
-          "positive_symbols": [
-            "EURJPY",
-            "GBPJPY",
-            "USDJPY"
-          ],
-          "eligible_iso_weeks": 46,
-          "better_iso_weeks": 8,
-          "better_iso_week_ratio": 0.17391304347826086,
-          "positive_symbol_pl": {
-            "EURJPY": 156.515413979795,
-            "GBPJPY": 79.29924207531351,
-            "USDJPY": 54.9273679011238
-          },
-          "max_positive_symbol_pl_share": 0.5383308950320732,
-          "positive_fold_pl": {
-            "F2": 22.931338840614192,
-            "F4": 85.97546553540272
-          },
-          "max_positive_fold_pl_share": 0.7894407151876357
-        }
-      },
-      "S-AFTERNOON": {
-        "label": "S-AFTERNOON",
-        "session": {
-          "duration_hours": 3,
-          "end_hour": 17,
-          "label": "EAT-AFTERNOON",
-          "new_entry_eligibility_only": true,
-          "start_hour": 15,
-          "timezone": "Africa/Nairobi"
-        },
-        "classification": "NOT SUPPORTED",
-        "mandatory_ok": true,
-        "representation": {
-          "total_ge_60pct_same_window": true,
-          "every_symbol_ge_40pct_same_window": true,
-          "every_fold_ge_40pct_same_window": true,
-          "total_closed_ge_500": true,
-          "every_fold_closed_ge_50": true,
-          "week_presence_ge_75pct": true,
-          "ok": true,
-          "total_ratio": 1.1129411764705883,
-          "per_symbol_ratio": {
-            "EURJPY": 1.1011904761904763,
-            "EURUSD": 1.1079545454545454,
-            "GBPJPY": 1.1418918918918919,
-            "GBPUSD": 1.0913705583756346,
-            "USDJPY": 1.1304347826086956
-          },
-          "per_fold_ratio": {
-            "F1": 1.13125,
-            "F2": 1.1277777777777778,
-            "F3": 1.072538860103627,
-            "F4": 1.1204819277108433,
-            "F5": 1.119205298013245
-          },
-          "reference_window_trade_weeks": 46,
-          "represented_trade_weeks": 46,
-          "week_presence_ratio": 1.0
-        },
-        "support_checks": {
-          "net_pl_positive": false,
-          "mean_trade_pl_positive": false,
-          "max_dd_strictly_lower_than_reference": true,
-          "win_rate_within_1pp": true,
-          "fold_mean_better_ge_4": true,
-          "positive_fold_pl_ge_3": true,
-          "symbol_mean_better_ge_3": true,
-          "positive_symbol_pl_ge_3": false,
-          "weekly_mean_better_ge_60pct": false,
-          "eligible_iso_weeks_ge_30": true,
-          "positive_symbol_concentration_le_60pct": false,
-          "positive_fold_concentration_le_60pct": false
-        },
-        "support_ok": false,
-        "economics": {
-          "closed_trades": 946,
-          "net_realized_pl": -281.72832395049045,
-          "mean_trade_pl": -0.2978100676009595,
-          "maximum_equity_drawdown": 508.0432080254577,
-          "maximum_equity_drawdown_pct": 5.054711746792603,
-          "win_rate_nonflat_pct": 39.74630021141649
-        },
-        "robustness": {
-          "fold_mean_better": 5,
-          "positive_folds": [
-            "F2",
-            "F4",
-            "F5"
-          ],
-          "symbol_mean_better": 4,
-          "positive_symbols": [
-            "GBPUSD"
-          ],
-          "eligible_iso_weeks": 45,
-          "better_iso_weeks": 20,
-          "better_iso_week_ratio": 0.4444444444444444,
-          "positive_symbol_pl": {
-            "GBPUSD": 151.31071428569064
-          },
-          "max_positive_symbol_pl_share": 1.0,
-          "positive_fold_pl": {
-            "F2": 38.4431049557767,
-            "F4": 127.7780018563717,
-            "F5": 0.006306403415812678
-          },
-          "max_positive_fold_pl_share": 0.7686939198811258
-        }
-      }
-    },
-    "supported_sessions": [],
-    "fixed_session": null,
-    "selection_reason": "zero Stage-B sessions are SUPPORTED",
-    "selection_detail": {},
-    "historical_holdout_execution_authorized": false,
-    "safety": {
-      "economic_replay_run": false,
-      "reads_existing_stage_b_artifacts_only": true,
-      "historical_holdout_economic_data_used": false,
-      "m021_post_cutoff_data_used": false,
-      "real_order_api_called": false,
-      "weekday_filter_run": false
-    }
+    ]
   }
 }
