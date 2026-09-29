@@ -531,3 +531,44 @@ Fixed local-control actions:
 
 Stage-2 validation/economics have not yet been accepted at this checkpoint.
 Historical holdout remains sealed and no holdout action exists.
+
+
+## M024 Stage 2 accepted
+
+M024 Stage 2 is fully accepted on `symbol-specialization-research`.
+
+Feature SHA:
+
+`fd9c0ec689c57c572a7318ddd54fecb8dc5e8666`
+
+Family result:
+
+`45cc718b908a28040a1907c08c8dc7382d800883`
+
+Mechanical assessment:
+
+`d99ca44882f9814d42ed5b71a86fd13150d41b8f`
+
+Final full native regression:
+
+`2a824763aab9e8b9be7eb5626cf657b857cae945`
+— **288 passed, 2 skipped**.
+
+C-R reproduced accepted M023 D-B exactly.
+
+C-UJ / USDJPY-only strategy:
+
+- 1,335 closed trades;
+- +$15.0437376424 net;
+- +$0.0112687173/trade;
+- max DD $275.4694141888 / 2.7490114456%;
+- 3/5 positive folds;
+- 23/46 positive-mean eligible weeks = 50.0%;
+- all frozen representation/support/safety gates passed.
+
+Mechanical classification:
+
+**SUPPORTED FOR HOLDOUT CHECKPOINT ONLY**
+
+Historical holdout remains sealed and unauthorized. The next task is only to
+freeze and review a separate prospective holdout-checkpoint protocol.

@@ -1,6 +1,6 @@
 # Milestone 024 — Symbol Specialization Research
 
-Status: **DIAGNOSTIC ACCEPTED — STAGE 2 CAUSAL SYMBOL PROTOCOL FROZEN; NO STAGE-2 ECONOMICS YET**
+Status: **STAGE 2 ACCEPTED — C-UJ SUPPORTED FOR HOLDOUT CHECKPOINT ONLY; HOLDOUT STILL SEALED**
 
 Protocol date: 2026-09-29
 
@@ -658,3 +658,153 @@ If resuming:
 7. run full native regression;
 8. durably document the final Stage-2 classification;
 9. stop before historical holdout even if C-UJ is supported.
+
+
+## Stage-2 final acceptance — 2026-09-29
+
+Focused Stage-2 tests result:
+
+`dfa62e1c1eb322147b571e2157403b55886348ae`
+
+Focused Stage-2 tests:
+
+**30 passed / 0 failed**
+
+Accepted Stage-2 family result:
+
+`45cc718b908a28040a1907c08c8dc7382d800883`
+
+Accepted Stage-2 mechanical assessment:
+
+`d99ca44882f9814d42ed5b71a86fd13150d41b8f`
+
+Final Stage-2 full native regression:
+
+`2a824763aab9e8b9be7eb5626cf657b857cae945`
+
+Final full native result:
+
+**288 passed / 2 skipped**
+
+Exact Stage-2 feature SHA:
+
+`fd9c0ec689c57c572a7318ddd54fecb8dc5e8666`
+
+### C-R reference result
+
+C-R reproduced accepted M023 D-B exactly.
+
+Reference-equivalence checks all passed for:
+
+- aggregate economics;
+- per-symbol economics;
+- five-fold economics;
+- ISO-week economics;
+- TP safety;
+- remaining positions;
+- source/date/replay hashes.
+
+C-R classification:
+
+**REFERENCE**
+
+### C-UJ accepted causal result
+
+Strategy-entry universe:
+
+**USDJPY only**
+
+Market-data / conversion universe:
+
+**EURUSD, EURJPY, GBPUSD, GBPJPY, USDJPY**
+
+Deterministic artifact hashes:
+
+- baseline A/B:
+  `7d88e467f6919ad3c78e7e8063085d9490e75758f303fd93e652d8090f11bf36`;
+- diagnostic A/B:
+  `82194e26a4d50faab72b2baf9dd86d35df2ffd3bed32d09d92de8890549fbe93`;
+- summary A/B:
+  `12742f6ee4b26e3630bb6208c8c606ad212d9dc5c6da419df107421612abd0a8`.
+
+C-UJ economics:
+
+- closed trades: **1,335**;
+- wins / losses / flats: **554 / 780 / 1**;
+- non-flat win rate: **41.5292353823%**;
+- net realized P/L: **+$15.0437376424**;
+- mean trade P/L: **+$0.0112687173**;
+- ending realized balance/equity: **$10,015.0437376424**;
+- maximum equity drawdown:
+  **$275.4694141888 / 2.7490114456%**;
+- remaining open positions: **0**.
+
+Fold economics:
+
+| Fold | Closed trades | Net P/L | Mean/trade |
+|---|---:|---:|---:|
+| F1 | 284 | -$125.9486 | -$0.44348 |
+| F2 | 282 | +$36.2846 | +$0.12867 |
+| F3 | 296 | +$58.6970 | +$0.19830 |
+| F4 | 261 | -$1.9899 | -$0.00762 |
+| F5 | 212 | +$48.0006 | +$0.22642 |
+
+Frozen support checks:
+
+- aggregate net P/L > 0: **PASS**;
+- aggregate mean trade P/L > 0: **PASS**;
+- positive net-P/L folds >=3/5: **PASS (3/5)**;
+- positive mean-P/L folds >=3/5: **PASS (3/5)**;
+- max positive-fold contribution <=60%:
+  **PASS (41.05198%)**;
+- eligible ISO weeks >=30:
+  **PASS (46)**;
+- positive-mean eligible weeks >=50%:
+  **PASS (23/46 = 50.0%)**.
+
+Representation checks versus descriptive SYM-UJ:
+
+- total closed-trade ratio: **100%**;
+- every fold ratio: **100%**;
+- trade-week presence ratio: **100%**.
+
+Safety/invariant checks all passed:
+
+- exact P2-08 settings;
+- BUY only;
+- SELL accepted entries: **0**;
+- C-UJ non-USDJPY closed trade rows: **0**;
+- all-five market data retained;
+- exact 225-date seen-research partition;
+- exact source/date/replay hashes;
+- M15 disabled;
+- no session filter;
+- no weekday filter;
+- wrong-side initial TP: **0**;
+- negative-P/L TP exits: **0**;
+- historical holdout unused;
+- M021 post-cutoff outcomes unused;
+- M025 outcomes unused;
+- real-order API unused.
+
+Mechanical Stage-2 classification:
+
+**C-UJ — SUPPORTED FOR HOLDOUT CHECKPOINT ONLY**
+
+### Interpretation boundary
+
+This is still not a live-trading promotion.
+
+The accepted edge is very small in absolute expectancy and sits exactly on
+several frozen minima:
+
+- 3/5 positive folds;
+- 23/46 positive-mean weeks = exactly 50%.
+
+Therefore the only authorized next research step is a **separate prospective
+historical-holdout checkpoint protocol freeze**.
+
+Historical holdout execution remains **unauthorized** until that new checkpoint
+is frozen and reviewed.
+
+Do not merge/deploy or enable real trading from this result alone.
