@@ -1,4 +1,4 @@
-"""M024 public FX benchmark Stage-1 tests."""
+"""M025 public FX benchmark Stage-1 tests."""
 
 from __future__ import annotations
 

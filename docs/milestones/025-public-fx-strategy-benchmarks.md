@@ -12,7 +12,7 @@ Base commit:
 
 `7047d5ff3fd4c74163b62f2142742a124462bb7d`
 
-M024 is intentionally independent of M023. It must not read, branch from, tune
+M025 is intentionally independent of M023. It must not read, branch from, tune
 against, or otherwise use M023 outcomes. M021 remains frozen and untouched.
 
 ## Objective
@@ -21,8 +21,8 @@ Implement public, literature-defined FX benchmark strategies beside Mamba2 so
 future research can ask whether the existing strategy adds value relative to
 simple documented anomalies.
 
-M024 is not a search for a profitable parameter combination. Strategy
-definitions are fixed from published research before any M024 economic result is
+M025 is not a search for a profitable parameter combination. Strategy
+definitions are fixed from published research before any M025 economic result is
 inspected.
 
 ## Frozen benchmark families
@@ -50,7 +50,7 @@ currency return series. A spot-price-only implementation must be labelled
 forward strategy.
 
 No alternate lookback, holding period, target volatility, or volatility
-estimator is authorized in M024.
+estimator is authorized in M025.
 
 ### B2 — MSSS-CURRENCY-MOMENTUM
 
@@ -75,7 +75,7 @@ Frozen mechanics:
 - equal weight currencies inside each extreme portfolio;
 - rebalance monthly.
 
-No formation horizon other than 1, 6, or 12 months is authorized in M024.
+No formation horizon other than 1, 6, or 12 months is authorized in M025.
 
 Publication-faithful economics require monthly spot and one-month forward data
 (or an equivalent directly observed excess-return series) and a sufficiently
@@ -117,7 +117,7 @@ The internal comparator is frozen now, before M023 completes:
 
 This comparator is the accepted M020-D research candidate, not a claim that it
 is production-safe or profitable. M023 outcomes may later be reported
-separately but may not replace this frozen M024 comparator.
+separately but may not replace this frozen M025 comparator.
 
 ## Data sufficiency gates
 
@@ -133,7 +133,7 @@ Require:
 - no forward filling across missing trading observations;
 - explicit source, timezone/calendar, instrument convention, and hashes.
 
-A 10+ year dataset is preferred, but M024 mechanically blocks only below five
+A 10+ year dataset is preferred, but M025 mechanically blocks only below five
 complete years.
 
 ### Cross-sectional momentum and carry
@@ -168,7 +168,7 @@ Stage 1 may only:
 Stage 1 must not:
 
 - run benchmark economics on historical market data;
-- inspect M022 historical holdout for M024;
+- inspect M022 historical holdout for M025;
 - inspect M021 post-cutoff data;
 - read M023 results;
 - source-select or parameter-select based on profitability;

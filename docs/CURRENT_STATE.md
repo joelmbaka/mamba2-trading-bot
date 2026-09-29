@@ -358,14 +358,14 @@ Real MT5 trading remains disabled. M020-D is not promoted to production/live
 behavior.
 
 
-## M024 independent public-benchmark research
+## M025 independent public-benchmark research
 
-M024 is **OPEN — PROTOCOL FROZEN; STAGE 1 IMPLEMENTATION ONLY** on
+M025 is **OPEN — PROTOCOL FROZEN; STAGE 1 IMPLEMENTATION ONLY** on
 `public-strategy-benchmarks`, based from the closed M022 docs SHA
 `7047d5ff3fd4c74163b62f2142742a124462bb7d`.
 
 It is intentionally isolated from M023. M023 results may not be used to choose,
-replace, or tune M024 benchmark definitions.
+replace, or tune M025 benchmark definitions.
 
 Frozen benchmark families are:
 
@@ -375,4 +375,4 @@ Frozen benchmark families are:
 - M020-D as the frozen internal Mamba comparator.
 
 Stage 1 authorizes signal/portfolio machinery, data sufficiency gates, and
-synthetic tests only. No M024 historical economics are authorized yet.
+synthetic tests only. No M025 historical economics are authorized yet.

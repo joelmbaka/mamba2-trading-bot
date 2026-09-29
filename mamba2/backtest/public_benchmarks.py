@@ -1,7 +1,7 @@
-"""M024 literature-defined public FX benchmark machinery.
+"""M025 literature-defined public FX benchmark machinery.
 
 Stage 1 is intentionally pure and research-only: this module defines benchmark
-signals, portfolio sorts, and data-sufficiency gates.  It does not run M024
+signals, portfolio sorts, and data-sufficiency gates.  It does not run M025
 historical economics or access MT5.
 """
 

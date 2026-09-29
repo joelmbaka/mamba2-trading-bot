@@ -14,7 +14,7 @@ Base:
 
 `7047d5ff3fd4c74163b62f2142742a124462bb7d`
 
-M024 is intentionally independent of M023. Do not read or use M023 outcomes.
+M025 is intentionally independent of M023. Do not read or use M023 outcomes.
 M021 remains frozen and must not be inspected early.
 
 ## Stage 1 only
@@ -50,7 +50,7 @@ Add focused synthetic tests for:
 
 ## Prohibited
 
-Do not run any M024 historical economics yet.
+Do not run any M025 historical economics yet.
 Do not add economic local-control actions.
 Do not inspect M022 holdout.
 Do not inspect M021 post-cutoff data.
