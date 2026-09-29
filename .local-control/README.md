@@ -263,3 +263,18 @@ arbitrary-shell or real-order capability.
 No M024 historical-holdout action exists. These actions do not inspect M021
 post-cutoff outcomes, do not use M025 outcomes, expose no arbitrary shell, and
 cannot place/modify/close real orders.
+
+
+## M024 historical-holdout readiness
+
+- `m024_holdout_readiness_tests` — runs only focused non-economic readiness
+  and causal-symbol contract tests.
+- `m024_holdout_readiness` — verifies the accepted source manifest and frozen
+  57-date historical-holdout coverage, derives the exact ordered date/block
+  hashes and strict replay-clock hash twice, and requires byte-identical
+  metadata artifacts.
+
+The readiness action cannot construct a broker, strategy, order, trade, P/L,
+drawdown, or win-rate result. It does not expose holdout economic execution,
+does not use M021/M025 outcomes, exposes no arbitrary shell, and cannot call
+real-order APIs.

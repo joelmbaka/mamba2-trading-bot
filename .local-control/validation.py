@@ -149,6 +149,7 @@ M023_STAGE_A_DIRECTION_DIR = REPO / "backtest_data" / "m023-stage-a-direction-v1
 M023_STAGE_B_SESSION_DIR = REPO / "backtest_data" / "m023-stage-b-session-v1"
 M024_SYMBOL_SPECIALIZATION_DIR = REPO / "backtest_data" / "m024-symbol-specialization-v1"
 M024_STAGE2_SYMBOL_DIR = REPO / "backtest_data" / "m024-stage2-symbol-v1"
+M024_HOLDOUT_READINESS_DIR = REPO / "backtest_data" / "m024-holdout-readiness-v1"
 
 
 def _safe_env(wine=False):
@@ -14104,6 +14105,187 @@ def m024_stage2_symbol_assessment():
     }
 
 
+def m024_holdout_readiness_tests():
+    """Run only the non-economic M024 holdout-readiness tests."""
+
+    feature_sha = _require_m024_branch()
+    tests = [
+        "tests/test_m024_holdout_readiness.py",
+        "tests/test_m024_symbol_causal_research.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "economic_replay_run": False,
+            "holdout_economics_computed": False,
+            "m021_post_cutoff_data_used": False,
+            "m025_outcomes_used": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m024_holdout_readiness():
+    """Publish deterministic metadata-only readiness for the frozen holdout."""
+
+    feature_sha = _require_m024_branch()
+    manifest = M022_NATIVE_INVENTORY_MANIFEST
+    if not manifest.is_file():
+        return {
+            "ok": False,
+            "reason": "accepted M022 source manifest is missing",
+            "feature_sha": feature_sha,
+        }
+
+    expected_manifest_sha = (
+        "143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558"
+    )
+    if _sha256(manifest) != expected_manifest_sha:
+        return {
+            "ok": False,
+            "reason": "accepted M022 source manifest SHA changed",
+            "feature_sha": feature_sha,
+        }
+
+    root = _ensure_baseline_path(M024_HOLDOUT_READINESS_DIR)
+    root.mkdir(parents=True, exist_ok=True)
+    output_a = root / "m024-holdout-readiness-a.json"
+    output_b = root / "m024-holdout-readiness-b.json"
+
+    exists = [output_a.is_file(), output_b.is_file()]
+    if any(exists) and not all(exists):
+        return {
+            "ok": False,
+            "reason": "partial immutable M024 holdout-readiness artifacts",
+            "feature_sha": feature_sha,
+        }
+
+    def run_one(path):
+        run = _run(
+            _native_command(
+                "-m",
+                "mamba2.backtest.m024_holdout_readiness",
+                "--manifest",
+                str(manifest.relative_to(REPO)),
+                "--output",
+                str(path.relative_to(REPO)),
+            ),
+            env=_safe_env(),
+        )
+        if run["exit_code"] != 0:
+            return False, run
+        if not path.is_file():
+            return False, {
+                **run,
+                "stderr": run["stderr"] + "\nreadiness artifact missing",
+            }
+        try:
+            json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            return False, {
+                **run,
+                "stderr": run["stderr"] + f"\ninvalid readiness JSON: {exc}",
+            }
+        return True, run
+
+    runs = []
+    if not output_a.is_file():
+        for path in (output_a, output_b):
+            ok, run = run_one(path)
+            runs.append(run)
+            if not ok:
+                return {
+                    "ok": False,
+                    "reason": "M024 holdout readiness build failed",
+                    "feature_sha": feature_sha,
+                    "run": run,
+                }
+
+    sha_a = _sha256(output_a)
+    sha_b = _sha256(output_b)
+    if sha_a != sha_b:
+        return {
+            "ok": False,
+            "reason": "M024 holdout readiness is non-deterministic",
+            "feature_sha": feature_sha,
+            "artifact": {
+                "a_sha256": sha_a,
+                "b_sha256": sha_b,
+            },
+        }
+
+    report = json.loads(output_a.read_text(encoding="utf-8"))
+    partition = report.get("partition") or {}
+    safety = report.get("safety") or {}
+    blocks = partition.get("blocks") or []
+
+    checks = {
+        "readiness_only": report.get("readiness_only") is True,
+        "economics_computed_false": report.get("economics_computed") is False,
+        "ready": report.get("ready") is True,
+        "source_manifest_sha": partition.get("source_manifest_sha256")
+        == expected_manifest_sha,
+        "start_utc": partition.get("start_utc")
+        == "2026-07-08T00:00:00Z",
+        "end_exclusive_utc": partition.get("end_exclusive_utc")
+        == "2026-09-25T00:00:00Z",
+        "trading_dates": int(partition.get("trading_dates", 0)) == 57,
+        "block_count": len(blocks) == 3,
+        "blocks_19_dates": all(
+            int(block.get("trading_dates", 0)) == 19 for block in blocks
+        ),
+        "block_labels": [block.get("label") for block in blocks]
+        == ["H1", "H2", "H3"],
+        "date_sha_present": bool(partition.get("date_list_sha256")),
+        "replay_sha_present": bool(partition.get("replay_boundary_sha256")),
+        "partition_sha_present": bool(report.get("partition_spec_sha256")),
+        "broker_not_constructed": safety.get("broker_constructed") is False,
+        "strategy_not_constructed": safety.get("strategy_constructed") is False,
+        "orders_not_constructed": safety.get("orders_constructed") is False,
+        "trades_not_computed": safety.get("trades_computed") is False,
+        "pl_not_computed": safety.get("pl_computed") is False,
+        "drawdown_not_computed": safety.get("drawdown_computed") is False,
+        "win_rate_not_computed": safety.get("win_rate_computed") is False,
+        "m021_unused": safety.get("m021_post_cutoff_outcomes_used") is False,
+        "m025_unused": safety.get("m025_outcomes_used") is False,
+        "real_order_unused": safety.get("real_order_api_called") is False,
+    }
+    if not all(checks.values()):
+        failed = [name for name, passed in checks.items() if not passed]
+        return {
+            "ok": False,
+            "reason": "M024 holdout readiness contract failed",
+            "feature_sha": feature_sha,
+            "failed_checks": failed,
+            "artifact_sha256": sha_a,
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "symbol-specialization-research",
+        "feature_sha": feature_sha,
+        "checkpoint": "m024-historical-holdout-readiness",
+        "artifact": {
+            "a_path": str(output_a.relative_to(REPO)),
+            "b_path": str(output_b.relative_to(REPO)),
+            "a_sha256": sha_a,
+            "b_sha256": sha_b,
+            "deterministic": True,
+        },
+        "partition": partition,
+        "partition_spec_sha256": report.get("partition_spec_sha256"),
+        "row_counts": report.get("row_counts"),
+        "checks": checks,
+        "runs": runs,
+        "safety": safety,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -14132,6 +14314,8 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m024_holdout_readiness_tests": m024_holdout_readiness_tests,
+    "m024_holdout_readiness": m024_holdout_readiness,
     "m024_stage2_symbol_tests": m024_stage2_symbol_tests,
     "m024_stage2_symbol_family": m024_stage2_symbol_family,
     "m024_stage2_symbol_assessment": m024_stage2_symbol_assessment,
