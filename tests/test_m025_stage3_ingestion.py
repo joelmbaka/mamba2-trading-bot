@@ -18,6 +18,8 @@ from mamba2.backtest.m025_stage3_ingestion import (
     H10_TO,
     H10_URL,
     LRV_URL,
+    OLE_XLS_MAGIC,
+    _require_file_magic,
     inspect_h10_sdmx_zip,
     inspect_xlsx_schema,
 )
@@ -135,7 +137,9 @@ def test_stage3_sources_and_snapshot_are_frozen():
     assert H10_URL.endswith("Output.aspx?filetype=zip&rel=h10")
     assert "series=" not in H10_URL
     assert AQR_URL.endswith("Time-Series-Momentum-Factors-Monthly.xlsx")
-    assert LRV_URL.endswith("CurrencyPortfolios.xls")
+    assert LRV_URL == (
+        "https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls"
+    )
     assert len(H10_SERIES) == 23
 
 
@@ -225,3 +229,23 @@ def test_h10_parser_rejects_unapproved_currency_metadata_drift(tmp_path):
 
     with pytest.raises(ValueError, match="currency metadata changed"):
         inspect_h10_sdmx_zip(raw, normalized)
+
+
+
+def test_lrv_transport_requires_real_ole_xls_signature(tmp_path):
+    good = tmp_path / "good.xls"
+    good.write_bytes(OLE_XLS_MAGIC + b"rest")
+    _require_file_magic(
+        good,
+        expected=OLE_XLS_MAGIC,
+        label="LRV XLS",
+    )
+
+    html = tmp_path / "bad.xls"
+    html.write_bytes(b"<html>not a workbook</html>")
+    with pytest.raises(ValueError, match="unexpected file signature"):
+        _require_file_magic(
+            html,
+            expected=OLE_XLS_MAGIC,
+            label="LRV XLS",
+        )

@@ -34,8 +34,7 @@ AQR_URL = (
     "Time-Series-Momentum-Factors-Monthly.xlsx"
 )
 LRV_URL = (
-    "https://finance.wharton.upenn.edu/~nroussan/"
-    "CurrencyPortfolios.xls"
+    "https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls"
 )
 
 # (ISO currency, full H.10 unique identifier, source units, invert to USD/FX)
@@ -74,6 +73,8 @@ H10_SYMBOLS = tuple(row[0] for row in H10_SERIES)
 H10_SDMX_CURRENCY_ALIASES = {
     "RXI_N.B.VES": frozenset({"VES", "VEB"}),
 }
+OLE_XLS_MAGIC = bytes.fromhex("D0CF11E0A1B11AE1")
+XLSX_ZIP_MAGIC = b"PK"
 
 
 def _sha256(path: str | Path) -> str:
@@ -82,6 +83,20 @@ def _sha256(path: str | Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _require_file_magic(
+    path: str | Path,
+    *,
+    expected: bytes,
+    label: str,
+) -> None:
+    with Path(path).open("rb") as handle:
+        observed = handle.read(len(expected))
+    if observed != expected:
+        raise ValueError(
+            f"{label} download has unexpected file signature"
+        )
 
 
 def _download(url: str, path: str | Path) -> Path:
@@ -559,9 +574,19 @@ def run_ingestion(
         AQR_URL,
         root / "Time-Series-Momentum-Factors-Monthly.xlsx",
     )
+    _require_file_magic(
+        aqr_raw,
+        expected=XLSX_ZIP_MAGIC,
+        label="AQR XLSX",
+    )
     lrv_raw = _download(
         LRV_URL,
         root / "CurrencyPortfolios.xls",
+    )
+    _require_file_magic(
+        lrv_raw,
+        expected=OLE_XLS_MAGIC,
+        label="LRV XLS",
     )
 
     normalized = root / "h10-normalized-usd-per-foreign.csv"
