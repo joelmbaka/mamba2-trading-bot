@@ -14778,6 +14778,34 @@ def m025_public_benchmark_tests():
     }
 
 
+def m025_stage3_runtime_probe():
+    """Probe only the fixed parser/converter capabilities needed by Stage 3."""
+
+    import importlib.util
+
+    feature_sha = _require_m025_branch()
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "executables": {
+            "libreoffice": shutil.which("libreoffice"),
+            "soffice": shutil.which("soffice"),
+            "ssconvert": shutil.which("ssconvert"),
+        },
+        "python_modules": {
+            "openpyxl": importlib.util.find_spec("openpyxl") is not None,
+            "xlrd": importlib.util.find_spec("xlrd") is not None,
+        },
+        "safety": {
+            "download_run": False,
+            "file_conversion_run": False,
+            "economic_computation_run": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -14806,6 +14834,7 @@ ACTION_HANDLERS = {
     "m021_historical_regression": m021_historical_regression,
     "m021_primary_export": m021_primary_export,
     "m021_primary_pair": m021_primary_pair,
+    "m025_stage3_runtime_probe": m025_stage3_runtime_probe,
     "m025_switch_public_benchmarks": m025_switch_public_benchmarks,
     "m025_public_benchmark_tests": m025_public_benchmark_tests,
     "m024_holdout_tests": m024_holdout_tests,
