@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m024-stage2-full-native-v1",
-  "action": "test_full_native",
+  "id": "mamba2-m024-holdout-readiness-sync-v1",
+  "action": "sync",
   "args": {},
   "requested_by": "chatgpt"
 }
