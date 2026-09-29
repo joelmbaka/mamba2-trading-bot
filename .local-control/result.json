@@ -1,27 +1,15 @@
 {
   "version": 1,
-  "command_id": "mamba2-m024-switch-symbol-specialization-v1",
-  "completed_at": "2026-09-29T08:40:05.397365+00:00",
+  "command_id": "mamba2-m024-sync-documented-head-v1",
+  "completed_at": "2026-09-29T08:41:58.572165+00:00",
   "ok": true,
-  "action": "switch_branch",
+  "action": "sync",
   "data": {
-    "target_branch": "symbol-specialization-research",
-    "before_branch": "direction-session-research",
-    "after_branch": "symbol-specialization-research",
-    "before_sha": "ffd33e2ae0534d572c73840cccaa98104b3ad460",
-    "after_sha": "2a605aebee379e50df7193f9562b84bbb2edb128",
+    "branch": "symbol-specialization-research",
+    "before_sha": "f403124a31464f6b42768f6a1d985abe290cbc4c",
+    "after_sha": "f403124a31464f6b42768f6a1d985abe290cbc4c",
     "reason": null,
     "commands": [
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "direction-session-research\n",
-        "stderr": ""
-      },
       {
         "command": [
           "git",
@@ -29,19 +17,18 @@
           "HEAD"
         ],
         "exit_code": 0,
-        "stdout": "ffd33e2ae0534d572c73840cccaa98104b3ad460\n",
+        "stdout": "f403124a31464f6b42768f6a1d985abe290cbc4c\n",
         "stderr": ""
       },
       {
         "command": [
           "git",
-          "check-ref-format",
-          "--branch",
-          "symbol-specialization-research"
+          "fetch",
+          "origin"
         ],
         "exit_code": 0,
-        "stdout": "symbol-specialization-research\n",
-        "stderr": ""
+        "stdout": "",
+        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * [new branch]      public-strategy-benchmarks -> origin/public-strategy-benchmarks\n"
       },
       {
         "command": [
@@ -52,6 +39,16 @@
         ],
         "exit_code": 0,
         "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "symbol-specialization-research\n",
         "stderr": ""
       },
       {
@@ -63,7 +60,7 @@
         ],
         "exit_code": 0,
         "stdout": "",
-        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * [new branch]      symbol-specialization-research -> origin/symbol-specialization-research\n"
+        "stderr": ""
       },
       {
         "command": [
@@ -73,62 +70,19 @@
           "refs/remotes/origin/symbol-specialization-research"
         ],
         "exit_code": 0,
-        "stdout": "2a605aebee379e50df7193f9562b84bbb2edb128\n",
+        "stdout": "f403124a31464f6b42768f6a1d985abe290cbc4c\n",
         "stderr": ""
       },
       {
         "command": [
           "git",
-          "rev-parse",
-          "--verify",
-          "refs/heads/symbol-specialization-research"
-        ],
-        "exit_code": 128,
-        "stdout": "",
-        "stderr": "fatal: Needed a single revision\n"
-      },
-      {
-        "command": [
-          "git",
-          "switch",
-          "--track",
-          "-c",
-          "symbol-specialization-research",
-          "origin/symbol-specialization-research"
+          "rev-list",
+          "--left-right",
+          "--count",
+          "HEAD...refs/remotes/origin/symbol-specialization-research"
         ],
         "exit_code": 0,
-        "stdout": "branch 'symbol-specialization-research' set up to track 'origin/symbol-specialization-research'.\n",
-        "stderr": "Switched to a new branch 'symbol-specialization-research'\n"
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "symbol-specialization-research\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "2a605aebee379e50df7193f9562b84bbb2edb128\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
+        "stdout": "0\t0\n",
         "stderr": ""
       }
     ]
