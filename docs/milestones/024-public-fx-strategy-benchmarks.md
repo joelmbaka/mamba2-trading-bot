@@ -85,7 +85,7 @@ six-portfolio currency universe and must fail the data gate.
 ### B3 — HML-FX-CARRY
 
 Source definition: the standard carry construction used by
-Lustig/Verifier collaborators: sort currencies on the one-month forward
+Lustig and Verdelhan: sort currencies on the one-month forward
 discount or corresponding short-term interest-rate differential.
 
 Frozen mechanics:
