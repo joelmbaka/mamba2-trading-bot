@@ -1,90 +1,38 @@
 {
   "version": 1,
-  "command_id": "mamba2-m024-holdout-readiness-sync-v1",
-  "completed_at": "2026-09-29T14:24:35.665313+00:00",
+  "command_id": "mamba2-m024-holdout-readiness-tests-v1",
+  "completed_at": "2026-09-29T14:25:18.113358+00:00",
   "ok": true,
-  "action": "sync",
+  "action": "m024_holdout_readiness_tests",
   "data": {
-    "branch": "symbol-specialization-research",
-    "before_sha": "57f58ee1f6f0809fd945fd412ce9e0ea22967473",
-    "after_sha": "57f58ee1f6f0809fd945fd412ce9e0ea22967473",
-    "reason": null,
-    "commands": [
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "HEAD"
-        ],
-        "exit_code": 0,
-        "stdout": "57f58ee1f6f0809fd945fd412ce9e0ea22967473\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "status",
-          "--porcelain",
-          "--untracked-files=all"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "branch",
-          "--show-current"
-        ],
-        "exit_code": 0,
-        "stdout": "symbol-specialization-research\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "fetch",
-          "origin",
-          "symbol-specialization-research:refs/remotes/origin/symbol-specialization-research"
-        ],
-        "exit_code": 0,
-        "stdout": "",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-parse",
-          "--verify",
-          "refs/remotes/origin/symbol-specialization-research"
-        ],
-        "exit_code": 0,
-        "stdout": "57f58ee1f6f0809fd945fd412ce9e0ea22967473\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-list",
-          "--left-right",
-          "--count",
-          "HEAD...refs/remotes/origin/symbol-specialization-research"
-        ],
-        "exit_code": 0,
-        "stdout": "0\t0\n",
-        "stderr": ""
-      }
-    ]
+    "ok": true,
+    "feature_branch": "symbol-specialization-research",
+    "feature_sha": "57f58ee1f6f0809fd945fd412ce9e0ea22967473",
+    "tests": [
+      "tests/test_m024_holdout_readiness.py",
+      "tests/test_m024_symbol_causal_research.py"
+    ],
+    "run": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_m024_holdout_readiness.py",
+        "tests/test_m024_symbol_causal_research.py"
+      ],
+      "exit_code": 0,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 9 items\n\ntests/test_m024_holdout_readiness.py ....                                [ 44%]\ntests/test_m024_symbol_causal_research.py .....                          [100%]\n\n============================== 9 passed in 0.19s ===============================\n",
+      "stderr": ""
+    },
+    "safety": {
+      "economic_replay_run": false,
+      "holdout_economics_computed": false,
+      "m021_post_cutoff_data_used": false,
+      "m025_outcomes_used": false,
+      "real_order_api_called": false
+    }
   }
 }
