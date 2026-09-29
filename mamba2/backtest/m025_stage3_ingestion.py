@@ -31,7 +31,7 @@ H10_URL = (
     "filetype=csv&from=01%2F04%2F1971&label=include&lastObs=&"
     "layout=seriescolumn&rel=H10&series="
     + H10_PACKAGE_ID
-    + "&to=08%2F31%2F2026&type=package"
+    + "&to=08%2F31%2F2026"
 )
 AQR_URL = (
     "https://www.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/"
