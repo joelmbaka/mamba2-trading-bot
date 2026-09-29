@@ -532,3 +532,15 @@ MIT mirror:
 and must pass an OLE-XLS magic-byte check before conversion.
 
 No Stage-3 economics have run.
+
+
+## M025 Stage-3 LRV conversion-path repair
+
+Ingestion v6 proved the MIT payload is a real OLE XLS but LibreOffice failed on
+relative temp paths.
+
+Repair:
+
+`26de5ae69742a7913ab56e0f5f73af2084e2c511`
+
+Conversion now uses verified absolute paths. No economics have run.

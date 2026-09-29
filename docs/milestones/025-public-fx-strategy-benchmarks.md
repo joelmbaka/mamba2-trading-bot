@@ -946,3 +946,32 @@ schema inspection.
 
 This transport repair changes no reference identity, portfolio definition,
 sample-selection rule, benchmark formula, metric, or economic authorization.
+
+
+## Stage-3 LRV local conversion-path repair — 2026-09-29
+
+The sixth non-economic ingestion attempt successfully passed the LRV OLE-XLS
+magic-byte guard, proving that the MIT transport payload is a real legacy Excel
+workbook.
+
+It then failed in the local LibreOffice conversion step with
+`source file could not be loaded` while using repository-relative temp paths.
+
+Failed local-control result:
+
+`mamba2-m025-stage3-ingestion-v6`
+
+No immutable ingestion result was published and no economics ran.
+
+Local execution repair:
+
+`26de5ae69742a7913ab56e0f5f73af2084e2c511`
+
+LibreOffice conversion now:
+
+- resolves the source workbook to an absolute path;
+- requires that absolute source path to exist before execution;
+- resolves the output directory to an absolute path.
+
+No source bytes, workbook identity, schema rule, benchmark definition, or
+economic rule changed.
