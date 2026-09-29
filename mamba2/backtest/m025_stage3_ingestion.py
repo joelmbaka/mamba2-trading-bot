@@ -534,8 +534,12 @@ def _convert_xls_to_xlsx(
     *,
     libreoffice: str,
 ) -> Path:
-    source_path = Path(source)
-    target_dir = Path(output_dir)
+    source_path = Path(source).resolve()
+    if not source_path.is_file():
+        raise FileNotFoundError(
+            f"LRV source workbook does not exist: {source_path}"
+        )
+    target_dir = Path(output_dir).resolve()
     target_dir.mkdir(parents=True, exist_ok=True)
     expected = target_dir / f"{source_path.stem}.xlsx"
     result = subprocess.run(

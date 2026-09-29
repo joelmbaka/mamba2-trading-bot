@@ -249,3 +249,16 @@ def test_lrv_transport_requires_real_ole_xls_signature(tmp_path):
             expected=OLE_XLS_MAGIC,
             label="LRV XLS",
         )
+
+
+
+def test_lrv_converter_uses_resolvable_source_contract(tmp_path):
+    import mamba2.backtest.m025_stage3_ingestion as ingestion
+
+    missing = tmp_path / "missing.xls"
+    with pytest.raises(FileNotFoundError, match="source workbook does not exist"):
+        ingestion._convert_xls_to_xlsx(
+            missing,
+            tmp_path / "out",
+            libreoffice="/usr/bin/libreoffice",
+        )
