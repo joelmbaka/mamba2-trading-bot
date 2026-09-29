@@ -1,6 +1,6 @@
 # Milestone 024 — Symbol Specialization Research
 
-Status: **STAGE 2 ACCEPTED — HISTORICAL HOLDOUT CHECKPOINT PROTOCOL FROZEN; NO HOLDOUT ECONOMICS YET**
+Status: **CLOSED — H-UJ HISTORICAL HOLDOUT NOT SUPPORTED**
 
 Protocol date: 2026-09-29
 
@@ -1229,3 +1229,142 @@ Next exact sequence:
 8. run full native regression;
 9. durably document the terminal M024 classification;
 10. stop — no second candidate or retuning on this holdout.
+
+
+## Final M024 closeout — 2026-09-29
+
+Focused one-shot holdout tests:
+
+- result commit:
+  `d14bdeb746641c42d5787c191c85d47d60815b5d`;
+- **16 passed / 0 failed**;
+- holdout economics during test gate: **no**.
+
+Accepted one-shot H-UJ holdout result:
+
+`6a944355dbd7ab026f3e04ffa8e7102a60b27077`
+
+Accepted holdout mechanical assessment:
+
+`83caeb3f93e7165a79c9408a8496185b45c39d5a`
+
+Final full native regression:
+
+`4bb6591beb91015b9d76287a04776cf4b037cfa9`
+
+Final regression result:
+
+**299 passed / 2 skipped**
+
+Exact holdout feature SHA:
+
+`add0c420af98e581975389eb7bdac370bed16f14`
+
+### Determinism and invariants
+
+H-UJ A/B artifacts were deterministic:
+
+- baseline A/B:
+  `a9f9db9bea6e9e649e4332c12805e2f7eaa86dd8a6121ae60b845bcba29c1024`;
+- diagnostic A/B:
+  `4c2367ecd08532e20e51fa6da1b38cd593bfe2de5aa731c632706ce5cf62a9b2`;
+- summary A/B:
+  `edafc57e10552c2fa3cf59dc449fb6293d97cd4e0b8ba9f44a2894f56604ff93`.
+
+All frozen execution invariants passed:
+
+- USDJPY strategy only;
+- all-five market/conversion data retained;
+- BUY only;
+- exact P2-08 parameters;
+- all hours;
+- M15 disabled;
+- position size 0.1;
+- exact cost contract;
+- exact readiness/source/date/block/replay hashes;
+- zero excluded-symbol trade rows;
+- zero accepted SELL entries;
+- zero wrong-side initial TP;
+- zero negative-P/L take-profit exits;
+- M021 post-cutoff outcomes unused;
+- M025 outcomes unused;
+- real-order API unused.
+
+### Holdout economics
+
+Window:
+
+`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`
+
+Closed trades:
+
+**308**
+
+Net realized P/L:
+
+**-$228.6339056692**
+
+Mean trade P/L:
+
+**-$0.7423178755**
+
+Win rate, non-flat:
+
+**39.6103896104%**
+
+Maximum equity drawdown:
+
+**$278.5948775851 / 2.7738900072%**
+
+Chronological blocks:
+
+| Block | Closed trades | Net P/L | Mean/trade |
+|---|---:|---:|---:|
+| H1 | 89 | -$100.0054 | -$1.12366 |
+| H2 | 106 | +$51.2710 | +$0.48369 |
+| H3 | 113 | -$179.8995 | -$1.59203 |
+
+Weekly support:
+
+- eligible ISO weeks: **12**;
+- positive-mean eligible weeks: **3/12 = 25%**.
+
+Representation gate:
+
+**PASS**
+
+- total closed trades >=200: PASS;
+- each block >=50 trades: PASS;
+- represented trading dates: **57/57 = 100%**;
+- eligible ISO weeks >=8: PASS.
+
+Frozen economic support gates:
+
+- aggregate net P/L >0: **FAIL**;
+- aggregate mean trade P/L >0: **FAIL**;
+- >=2/3 positive-net blocks: **FAIL**;
+- >=2/3 positive-mean blocks: **FAIL**;
+- positive-block concentration <=70%: **FAIL**;
+- >=50% positive-mean eligible weeks: **FAIL (25%)**.
+
+Mechanical terminal classification:
+
+**HOLDOUT NOT SUPPORTED**
+
+### Final interpretation
+
+The seen-research USDJPY signal did not validate prospectively on the sealed
+historical holdout under the prospectively frozen rules.
+
+M024 is therefore closed.
+
+Do not:
+
+- tune H-UJ using this holdout;
+- add another symbol subset on this holdout;
+- add a session/weekday/spread/M15 filter from these results;
+- change direction or P2-08 parameters and rerun this holdout;
+- promote this candidate to production/live trading.
+
+This holdout is consumed for M024 and may not be reused as a fresh validation
+set for a modified descendant of H-UJ.

@@ -1,51 +1,34 @@
 # Next Authorized Task
 
-## M024 — execute the one-shot H-UJ historical holdout
+## Milestone 025 — public FX strategy benchmark fidelity review
 
-Branch:
+M024 is closed.
 
-`symbol-specialization-research`
+Terminal M024 assessment:
 
-Prospective holdout protocol:
+**HOLDOUT NOT SUPPORTED**
 
-`b8f54de8f79f84c6f913515231e46453106a6cc7`
+Do not retune or rerun H-UJ on the consumed M024 holdout.
 
-Accepted readiness documentation:
+The next independent research track is M025:
 
-`62f1bb0d0151e0cd8b2e29a824881107b0649e95`
+`public-strategy-benchmarks`
 
-H-UJ economic implementation:
+Current M025 work is not yet accepted.
 
-`ee6bec3e93b507a9c7ac61a0c43fb485e2028357`
+Before any M025 historical benchmark economics, perform a science-fidelity
+review of the benchmark definitions and data gates, especially:
 
-Assessment hardening:
+1. verify the exact Moskowitz/Ooi/Pedersen TSMOM ex-ante volatility formula
+   against the original source;
+2. confirm whether the implementation must use EWMA of squared returns rather
+   than weighted variance around a weighted mean;
+3. verify exact sign/formation/holding conventions;
+4. verify Menkhoff et al. currency-momentum portfolio construction;
+5. verify HML-FX carry requirements and reject any price-only substitute;
+6. confirm minimum cross-sectional-universe and evaluation-history data gates;
+7. patch tests/docs before accepting Stage 1 machinery;
+8. run no historical benchmark economics until those definitions are frozen.
 
-`58e9a13b94598e4435c81637a476774abe096863`
-
-Fixed local-control support:
-
-`04ae5bbb0168c44d54b74bfc2bde37c6abc0a254`
-
-Control invariant hardening:
-
-`2acd2e73e78f27a2c50d837ba96cae36dd5efc08`
-
-## Execute exactly
-
-1. sync Dell to exact current remote feature HEAD;
-2. run `m024_holdout_tests`;
-3. require focused PASS;
-4. run `m024_holdout_h_uj_pair` exactly once;
-5. require deterministic A/B hashes and every frozen invariant;
-6. run `m024_holdout_assessment` exactly once;
-7. mechanically accept its terminal classification;
-8. run `test_full_native`;
-9. durably document M024 closeout;
-10. stop.
-
-No alternate candidate, partition, symbol set, direction, session, weekday,
-spread filter, M15 setting, parameter, or position-size change is authorized.
-
-Do not use M021 post-cutoff outcomes.
-Do not use M025 outcomes.
+Do not use M024 holdout outcomes to tune M025 benchmark definitions.
 Do not merge/deploy or enable real trading.

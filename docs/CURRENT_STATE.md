@@ -667,3 +667,34 @@ Fixed local-control support/hardening:
 
 No H-UJ holdout economics have run yet. The next gate is focused tests, then
 the one-shot deterministic H-UJ A/B evaluation.
+
+
+## M024 closed — holdout not supported
+
+M024 Symbol Specialization Research is closed.
+
+One-shot holdout result:
+
+`6a944355dbd7ab026f3e04ffa8e7102a60b27077`
+
+Mechanical assessment:
+
+`83caeb3f93e7165a79c9408a8496185b45c39d5a`
+
+Final full native regression:
+
+`4bb6591beb91015b9d76287a04776cf4b037cfa9`
+— **299 passed, 2 skipped**.
+
+Terminal result:
+
+**HOLDOUT NOT SUPPORTED**
+
+H-UJ produced 308 closed trades, -$228.6339 net, -$0.7423/trade, 39.61%
+non-flat win rate, and 2.77% max equity drawdown. Only H2 was positive; H1 and
+H3 were negative. Positive-mean eligible weeks were 3/12 = 25%.
+
+The M024 holdout is consumed and must not be reused to tune/retest a modified
+H-UJ descendant.
+
+No production/live promotion is authorized.
