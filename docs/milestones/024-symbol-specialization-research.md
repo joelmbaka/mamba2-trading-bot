@@ -242,3 +242,72 @@ Never in the diagnostic gate:
 8. review and mechanically apply the frozen descriptive screens;
 9. durably record the diagnostic result;
 10. stop before any causal symbol-filtered replay.
+
+
+## Implementation checkpoint — 2026-09-29
+
+Protocol-freeze commit:
+
+`12c8b93af164f24a719fa6151efb54f838659619`
+
+Read-only analyzer implementation commit:
+
+`2a605aebee379e50df7193f9562b84bbb2edb128`
+
+Implemented files:
+
+- `mamba2/backtest/m024_symbol_specialization.py`;
+- `tests/test_m024_symbol_specialization.py`.
+
+The analyzer is deliberately unable to replay the strategy. It reads only:
+
+- `backtest_data/m023-stage-a-direction-v1/D-B/M023-A-D-B-a-summary.json`;
+- `backtest_data/m023-stage-a-direction-v1/D-B/M023-A-D-B-b-summary.json`.
+
+Both source summaries must match the accepted SHA-256:
+
+`7f16803e8174ffddc7afe6d7d273cc04a4b2859dd61753f6fae1f272ce28551c`
+
+It also revalidates the frozen M023 D-B metadata, exact 225-date partition,
+BUY-only invariant, TP safety, holdout isolation, M021 isolation, and absence
+of session/weekday filters before producing any M024 attribution.
+
+Fixed local-control support was added on `local-control` at:
+
+`b0acf22ff8271a96f926dd9250b85418034053c4`
+
+New allowlisted actions:
+
+- `m024_symbol_specialization_tests`;
+- `m024_symbol_specialization_diagnostic`.
+
+The diagnostic action builds A/B artifacts under:
+
+`backtest_data/m024-symbol-specialization-v1/`
+
+and requires byte-identical SHA-256 output before publishing a result.
+
+### Recovery state at this checkpoint
+
+A branch-switch command has been published:
+
+`mamba2-m024-switch-symbol-specialization-v1`
+
+No M024 diagnostic result has yet been accepted at the time of this checkpoint.
+
+No M024 economic replay has run.
+
+If resuming from a fresh chat:
+
+1. read `AGENTS.md`, `docs/CURRENT_STATE.md`,
+   `docs/NEXT_TASK.md`, and this milestone file;
+2. inspect `local-control-results` for the branch-switch result;
+3. sync Dell to the exact current `symbol-specialization-research` HEAD if
+   needed;
+4. run `m024_symbol_specialization_tests`;
+5. if focused tests pass, run `m024_symbol_specialization_diagnostic`;
+6. independently review the published subset classifications and artifact hash;
+7. run full native regression before closing the diagnostic gate;
+8. durably document the accepted result before authorizing any causal replay.
+
+Do not skip directly to fresh symbol-filtered economics.

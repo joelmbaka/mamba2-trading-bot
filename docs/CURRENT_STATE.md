@@ -443,3 +443,30 @@ hypothesis generator only.
 
 Historical holdout and M021 remain sealed. M025 public benchmark research is
 independent and may not be used to tune M024.
+
+
+## M024 implementation checkpoint
+
+M024 diagnostic machinery is implemented on
+`symbol-specialization-research`.
+
+Protocol freeze:
+
+`12c8b93af164f24a719fa6151efb54f838659619`
+
+Analyzer implementation:
+
+`2a605aebee379e50df7193f9562b84bbb2edb128`
+
+Fixed local-control support:
+
+`b0acf22ff8271a96f926dd9250b85418034053c4`
+
+The analyzer reads only the accepted M023 Stage-A D-B deterministic summary
+pair, requires source SHA-256
+`7f16803e8174ffddc7afe6d7d273cc04a4b2859dd61753f6fae1f272ce28551c`,
+and cannot run strategy replay.
+
+Focused native tests and the deterministic M024 diagnostic remain the next
+acceptance gates. No M024 economic replay has run and historical holdout/M021
+remain untouched.
