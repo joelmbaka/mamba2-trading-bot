@@ -67,6 +67,14 @@ H10_SERIES = (
 H10_EXPECTED_IDS = tuple(row[1] for row in H10_SERIES)
 H10_SYMBOLS = tuple(row[0] for row in H10_SERIES)
 
+# The Federal Reserve's release-wide H.10 SDMX archive uses legacy metadata
+# code VEB for the exact frozen RXI_N.B.VES Venezuelan Bolivar series.  The
+# public DDP identifier remains RXI_N.B.VES.  This is a transport/schema alias
+# only; it does not change the frozen source series, normalization, or universe.
+H10_SDMX_CURRENCY_ALIASES = {
+    "RXI_N.B.VES": frozenset({"VES", "VEB"}),
+}
+
 
 def _sha256(path: str | Path) -> str:
     digest = hashlib.sha256()
@@ -180,9 +188,13 @@ def inspect_h10_sdmx_zip(
 
                 definition = expected[short_name]
                 source_currency = elem.attrib.get("CURRENCY")
+                allowed_currencies = H10_SDMX_CURRENCY_ALIASES.get(
+                    short_name,
+                    frozenset({definition["symbol"]}),
+                )
                 if (
                     source_currency
-                    and source_currency != definition["symbol"]
+                    and source_currency not in allowed_currencies
                 ):
                     raise ValueError(
                         f"H.10 currency metadata changed for {short_name}: "

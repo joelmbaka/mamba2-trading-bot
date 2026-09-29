@@ -14,6 +14,7 @@ from mamba2.backtest.m025_stage3_ingestion import (
     H10_EXPECTED_IDS,
     H10_FROM,
     H10_SERIES,
+    H10_SDMX_CURRENCY_ALIASES,
     H10_TO,
     H10_URL,
     LRV_URL,
@@ -35,14 +36,21 @@ def _month_rows(count: int = 73):
     return rows
 
 
-def _write_h10_zip(path: Path, *, omit_last_id: bool = False):
+def _write_h10_zip(
+    path: Path,
+    *,
+    omit_last_id: bool = False,
+    currency_overrides: dict[str, str] | None = None,
+):
     rows = list(H10_SERIES)
     if omit_last_id:
         rows = rows[:-1]
 
     series_xml = []
+    overrides = currency_overrides or {}
     for symbol, full_id, _, _ in rows:
         short_name = full_id.rsplit("/", 1)[-1]
+        source_currency = overrides.get(short_name, symbol)
         observations = "".join(
             (
                 f'<Obs TIME_PERIOD="{date_text}" '
@@ -53,7 +61,7 @@ def _write_h10_zip(path: Path, *, omit_last_id: bool = False):
         series_xml.append(
             (
                 f'<Series SERIES_NAME="{short_name}" '
-                f'CURRENCY="{symbol}" FREQ="B" FX="{symbol}" '
+                f'CURRENCY="{source_currency}" FREQ="B" FX="{symbol}" '
                 'UNIT="Currency" UNIT_MULT="1">'
                 f"{observations}</Series>"
             )
@@ -188,3 +196,32 @@ def test_ingestion_module_has_no_economic_benchmark_imports():
         "carry_weights",
     }
     assert forbidden.isdisjoint(ingestion.__dict__)
+
+
+
+def test_h10_parser_accepts_only_documented_ves_vEB_alias(tmp_path):
+    raw = tmp_path / "h10-ves-alias.zip"
+    normalized = tmp_path / "normalized.csv"
+    _write_h10_zip(
+        raw,
+        currency_overrides={"RXI_N.B.VES": "VEB"},
+    )
+
+    result = inspect_h10_sdmx_zip(raw, normalized)
+
+    assert result["gate_72_consecutive_months_all_series"] is True
+    assert H10_SDMX_CURRENCY_ALIASES["RXI_N.B.VES"] == frozenset(
+        {"VES", "VEB"}
+    )
+
+
+def test_h10_parser_rejects_unapproved_currency_metadata_drift(tmp_path):
+    raw = tmp_path / "h10-bad-currency.zip"
+    normalized = tmp_path / "normalized.csv"
+    _write_h10_zip(
+        raw,
+        currency_overrides={"RXI_N.B.CA": "USD"},
+    )
+
+    with pytest.raises(ValueError, match="currency metadata changed"):
+        inspect_h10_sdmx_zip(raw, normalized)
