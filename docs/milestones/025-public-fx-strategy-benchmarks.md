@@ -909,3 +909,40 @@ Repair commit:
 This repair does not change source, universe, sample dates, quote
 normalization, missing-data treatment, strategy definition, or any economic
 rule.
+
+
+## Stage-3 LRV workbook transport repair — 2026-09-29
+
+The fifth non-economic ingestion attempt passed the H.10 parser and then failed
+before LRV schema inspection because the previously inventoried Wharton-hosted
+`CurrencyPortfolios.xls` URL did not yield a LibreOffice-loadable workbook in
+the deterministic ingestion environment.
+
+Failed local-control result:
+
+`mamba2-m025-stage3-ingestion-v5`
+
+No immutable Stage-3 ingestion artifact was published and no benchmark return
+or economic metric was calculated.
+
+The frozen scientific reference remains exactly:
+
+**Lustig / Roussanov / Verdelhan — CurrencyPortfolios.xls**
+
+Transport is changed only to the historical MIT-hosted mirror:
+
+`https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls`
+
+This mirror is independently cited in published research as the downloadable
+LRV global currency-risk-factor data file and responds as an Excel workbook.
+
+The ingestion implementation must require the legacy OLE Compound File magic
+bytes:
+
+`D0 CF 11 E0 A1 B1 1A E1`
+
+before LibreOffice conversion. HTML/error payloads must hard-fail before
+schema inspection.
+
+This transport repair changes no reference identity, portfolio definition,
+sample-selection rule, benchmark formula, metric, or economic authorization.

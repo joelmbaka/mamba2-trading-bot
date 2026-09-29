@@ -63,3 +63,14 @@ H.10 exact-series VES/VEB metadata alias repair:
 Before the next ingestion attempt, sync Dell to this exact feature HEAD and
 rerun `m025_stage3_ingestion_tests`. Only if focused tests pass may the fixed
 `m025_stage3_ingestion` action run again.
+
+
+### LRV transport addendum
+
+Use only the frozen MIT transport mirror for the already-selected
+`CurrencyPortfolios.xls` reference:
+
+`https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls`
+
+Require OLE magic `D0 CF 11 E0 A1 B1 1A E1` before LibreOffice schema
+conversion. This is transport/schema validation only.

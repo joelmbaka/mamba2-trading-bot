@@ -517,3 +517,18 @@ Repair:
 `82c9665f9dd29f7985b71dd2fa0e70422efba9fc`
 
 No Stage-3 economics have run.
+
+
+## M025 Stage-3 LRV transport repair
+
+Non-economic ingestion v5 reached the LRV workbook step but the prior
+Wharton-hosted URL did not produce a loadable XLS.
+
+The same frozen `CurrencyPortfolios.xls` reference will use the historical
+MIT mirror:
+
+`https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls`
+
+and must pass an OLE-XLS magic-byte check before conversion.
+
+No Stage-3 economics have run.
