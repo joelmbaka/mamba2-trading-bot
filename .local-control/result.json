@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage3-sync-v1",
-  "completed_at": "2026-09-29T16:48:58.103647+00:00",
+  "command_id": "mamba2-m025-stage3-sync-v2",
+  "completed_at": "2026-09-29T16:50:14.907000+00:00",
   "ok": true,
   "action": "m025_switch_public_benchmarks",
   "data": {
     "ok": true,
     "feature_branch": "public-strategy-benchmarks",
-    "feature_sha": "e862be806a83805ef498e02905825628f2edf746",
+    "feature_sha": "9c46c46993425ed428d4562fb40800647092c1c6",
     "divergence": {
       "ahead": 0,
       "behind": 0
