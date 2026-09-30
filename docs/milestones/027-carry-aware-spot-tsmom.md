@@ -356,3 +356,232 @@ daily excess-log-return construction.
 Stage 1 remains non-strategy and non-economic: no 12-month signal, portfolio
 return, P/L, Sharpe, drawdown, or contribution analysis is authorized.
 
+## Stage-1 immutable ingestion checkpoint — 2026-09-30
+
+Immutable ingestion feature SHA:
+
+`30d4e845df0bed16915cd24f62447d22efc5388e`
+
+Immutable local result:
+
+`8744c7bd96f04129fd99cb2ab9f8ee1df1179331`
+
+Report SHA-256:
+
+`2c35506424bf8dae520f1dcf32fa5406a87f970faa7eebd9e44b1bf660a01308`
+
+Frozen source hashes:
+
+- BIS XRU raw:
+  `cdf288e5a3bfe69cd8a797c4c15124b480a63a9099c1fb9853413f456f4ac890`
+- OECD IR3TIB raw:
+  `af54f1cf8677a0b2bd9c204210ad9b1f72d7bb669dce2e6e3c23f513be6cbed9`
+- normalized BIS spot panel:
+  `c01ac4cf5a1f85fbf0e3db9945bb80278546ff9e86a926f454bb838439d97ad0`
+- normalized OECD rate panel:
+  `fbfbe69b7aea4738be95668bebab2113416a62d534d4b8931dddf2e5920c1d2a`
+- frozen approximate daily excess-log-return panel:
+  `c0f166957d8879ba05cdfeb457ab8874657cd72900528856d81563d786b4848e`
+
+Snapshot metadata:
+
+- spot first / last date: **1945-01-01 / 2026-09-22**
+- rate first / last month: **1956-01 / 2026-08**
+- approximation rows: **28,024**
+- frozen currencies: **25**
+- strategy signal computed: **false**
+- portfolio economics computed: **false**
+
+Two parser-only commits after the first Stage-1 test pass repaired and pinned
+the publisher's real BIS observation-value column capitalization. They did not
+change source selection, universe, quote direction, rate units, carry timing,
+signal parameters, or economics.
+
+Stage-1 acceptance requires focused and full-native regression on the exact
+ingestion SHA before Stage-2 economics may execute.
+
+## Stage-2 economic protocol freeze — 2026-09-30
+
+Status: **FROZEN BEFORE ANY M027 MOMENTUM SIGNAL OR PORTFOLIO ECONOMICS**
+
+Stage 2 may proceed only after exact-SHA Stage-1 validation passes.
+
+### Immutable input
+
+Stage-2 uses only:
+
+`backtest_data/m027-stage1-ingestion-v1/m027-approx-excess-log-returns.csv`
+
+with required SHA-256:
+
+`c0f166957d8879ba05cdfeb457ab8874657cd72900528856d81563d786b4848e`
+
+No source refresh is allowed inside Stage 2.
+
+### Monthly instrument return
+
+For each currency and calendar month:
+
+1. sum the available frozen daily approximate **log** excess returns in that
+   month with no filling;
+2. if the month has no valid daily approximate return, the monthly value is
+   missing;
+3. convert the realized monthly log excess return to arithmetic form for
+   portfolio accounting as `exp(monthly_log_rx) - 1`.
+
+No missing daily observation may be forward-filled, backward-filled, or
+interpolated.
+
+### Formation signal
+
+At month-end `t`:
+
+- require the prior **12 completed calendar months** of monthly approximate log
+  excess returns for the currency;
+- the formation statistic is their additive sum;
+- positive => long;
+- negative => short;
+- exactly zero => flat.
+
+The position formed at month-end `t` is applied only to month `t+1`.
+
+### Volatility scaling
+
+Use the already frozen M027 rule on the daily approximate excess-log-return
+panel:
+
+- centered exponentially weighted variance;
+- decay `60 / 61`;
+- annualization **261**;
+- shift one daily observation so decision-time volatility uses information only
+  through `t-1`;
+- month-end volatility is the last available lagged daily estimate in the
+  formation month;
+- valid volatility must be finite and strictly positive;
+- target annualized volatility: **40%**;
+- no leverage cap, volatility floor, or volatility ceiling.
+
+Per-currency formation weight:
+
+`sign(12m_log_rx) * 0.40 / ex_ante_volatility`.
+
+### Portfolio aggregation
+
+For realized month `t+1`, a currency is mechanically eligible only when:
+
+- its shifted formation weight is finite;
+- its realized monthly arithmetic approximate excess return is finite.
+
+Portfolio return is the equal-weight mean of eligible currency
+weight × realized return contributions.
+
+Minimum eligible currencies per reported portfolio month:
+
+**4**
+
+Months with fewer than 4 are not part of the evaluation sample.
+
+No currency subset may be selected from performance.
+
+### Availability-only evaluation window
+
+Stage-2 readiness must compute only presence/eligibility metadata, never return
+magnitudes or strategy economics.
+
+Candidate realized months are capped at:
+
+**2026-08-31**
+
+This is the final complete rate month in the immutable Stage-1 snapshot and
+precedes the partially observed September spot month.
+
+The exact evaluation window is defined mechanically as:
+
+1. identify every calendar month with at least 4 mechanically eligible
+   currencies under the frozen formation/volatility/realization-presence rules;
+2. find the **longest consecutive calendar-month block** of such months;
+3. if multiple blocks tie, choose the **latest** tied block;
+4. require at least **60 consecutive evaluation months** or stop M027 before
+   economics;
+5. freeze the resulting ordered month list and SHA-256 before the first
+   economic execution.
+
+This rule is based only on data availability and the already frozen strategy
+mechanics. Return sign/magnitude may not influence the window.
+
+### Frozen stability partitions
+
+After readiness fixes the ordered evaluation-month list, split it into exactly
+three consecutive blocks as evenly as possible using deterministic
+`numpy.array_split` semantics:
+
+- F1 — earliest third;
+- F2 — middle third;
+- F3 — latest third.
+
+These folds may not be moved after economics.
+
+### Frozen report metrics
+
+The first and sole Stage-2 economic report must include:
+
+Portfolio:
+
+- first / last evaluation month;
+- number of months;
+- mean monthly return;
+- annualized arithmetic mean = 12 × monthly mean;
+- annualized volatility = sqrt(12) × sample monthly standard deviation;
+- annualized Sharpe = annualized mean / annualized volatility, risk-free
+  adjustment zero because the modeled series is already an approximate excess
+  return;
+- maximum cumulative-wealth drawdown;
+- positive-month fraction;
+- terminal cumulative wealth from 1.0;
+- eligible-currency count min / median / max.
+
+Stability:
+
+- the same annualized mean for F1/F2/F3;
+- positive-calendar-year count / eligible-year count;
+- per-currency cumulative contribution over the fixed sample;
+- largest positive-currency contribution share.
+
+No lag search, sign search, subperiod search, or post-result currency removal
+is authorized.
+
+### Mechanical research classification
+
+Classify **SUPPORTED AS A GROSS PUBLIC-DATA APPROXIMATION** only if all are true:
+
+1. full-sample annualized arithmetic mean > 0;
+2. full-sample annualized Sharpe > 0;
+3. terminal cumulative wealth > 1.0;
+4. at least **2 of 3** frozen chronological folds have positive annualized
+   arithmetic mean;
+5. at least **50%** of eligible calendar years have positive total return;
+6. no single currency contributes more than **50%** of total positive currency
+   contribution.
+
+Otherwise classify:
+
+**NOT SUPPORTED**
+
+This classification does not authorize live trading because transaction costs,
+direct forwards/futures, execution slippage, and real broker financing remain
+unmodeled.
+
+### Economic execution rule
+
+After readiness freezes the exact month list:
+
+1. focused Stage-2 tests must pass;
+2. full native regression must pass;
+3. execute the deterministic economic report twice from the same immutable
+   inputs;
+4. A/B report bytes must match exactly;
+5. inspect the first accepted economic output once;
+6. stop M027—no retuning.
+
+No real MT5 order API may be called.
+
