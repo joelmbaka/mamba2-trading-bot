@@ -16357,6 +16357,257 @@ print(json.dumps({
     }
 
 
+
+def m027_stage0_universe_probe():
+    """Derive the frozen M027 universe from metadata coverage only."""
+
+    feature_sha = _require_m027_branch()
+
+    code = r"""
+import csv
+import hashlib
+import io
+import json
+import urllib.request
+import zipfile
+from collections import defaultdict
+
+USER_AGENT = "Mozilla/5.0 Mamba2-M027-Universe-Metadata/1.0"
+
+IDENTITIES = {
+    "AUS": ("AU", "AUD"),
+    "CAN": ("CA", "CAD"),
+    "CHE": ("CH", "CHF"),
+    "CHL": ("CL", "CLP"),
+    "CHN": ("CN", "CNY"),
+    "COL": ("CO", "COP"),
+    "CRI": ("CR", "CRC"),
+    "CZE": ("CZ", "CZK"),
+    "DNK": ("DK", "DKK"),
+    "EA20": ("XM", "EUR"),
+    "GBR": ("GB", "GBP"),
+    "HUN": ("HU", "HUF"),
+    "IDN": ("ID", "IDR"),
+    "IND": ("IN", "INR"),
+    "ISL": ("IS", "ISK"),
+    "ISR": ("IL", "ILS"),
+    "JPN": ("JP", "JPY"),
+    "KOR": ("KR", "KRW"),
+    "MEX": ("MX", "MXN"),
+    "NOR": ("NO", "NOK"),
+    "NZL": ("NZ", "NZD"),
+    "POL": ("PL", "PLN"),
+    "ROU": ("RO", "RON"),
+    "RUS": ("RU", "RUB"),
+    "SWE": ("SE", "SEK"),
+    "ZAF": ("ZA", "ZAR"),
+}
+
+def fetch(url, accept=None, timeout=180):
+    headers = {"User-Agent": USER_AGENT}
+    if accept:
+        headers["Accept"] = accept
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        return response.read()
+
+def code_prefix(value):
+    text = str(value or "").strip()
+    return text.split(":", 1)[0].strip() if ":" in text else text
+
+def month_index(period):
+    text = str(period or "").strip()
+    if len(text) < 7 or text[4] != "-":
+        return None
+    try:
+        year = int(text[:4])
+        month = int(text[5:7])
+    except ValueError:
+        return None
+    if not 1 <= month <= 12:
+        return None
+    return year * 12 + month - 1
+
+def render_month(idx):
+    year, month0 = divmod(idx, 12)
+    return f"{year:04d}-{month0 + 1:02d}"
+
+def longest_run(months):
+    vals = sorted(set(months))
+    if not vals:
+        return None
+    best_start = vals[0]
+    best_end = vals[0]
+    current_start = vals[0]
+    previous = vals[0]
+    for value in vals[1:]:
+        if value != previous + 1:
+            current_start = value
+        previous = value
+        if value - current_start > best_end - best_start:
+            best_start = current_start
+            best_end = value
+    return {
+        "start": render_month(best_start),
+        "end": render_month(best_end),
+        "months": best_end - best_start + 1,
+    }
+
+# BIS daily metadata presence, using only dimensions and TIME_PERIOD.
+bis_url = "https://data.bis.org/static/bulk/WS_XRU_csv_flat.zip"
+bis_body = fetch(bis_url)
+bis_months = defaultdict(set)
+with zipfile.ZipFile(io.BytesIO(bis_body), "r") as zf:
+    csv_names = [n for n in zf.namelist() if n.lower().endswith(".csv")]
+    if not csv_names:
+        raise RuntimeError("BIS XRU ZIP contains no CSV")
+    with zf.open(csv_names[0], "r") as raw:
+        reader = csv.DictReader(
+            io.TextIOWrapper(raw, encoding="utf-8-sig", newline="")
+        )
+        for row in reader:
+            if code_prefix(row.get("FREQ:Frequency")) != "D":
+                continue
+            if code_prefix(row.get("COLLECTION:Collection")) != "A":
+                continue
+            ref_area = code_prefix(row.get("REF_AREA:Reference area"))
+            currency = code_prefix(row.get("CURRENCY:Currency"))
+            month = month_index(row.get("TIME_PERIOD:Time period or range"))
+            if month is not None:
+                bis_months[(ref_area, currency)].add(month)
+
+# OECD monthly rate metadata presence, using only REF_AREA/TIME_PERIOD.
+oecd_url = (
+    "https://sdmx.oecd.org/public/rest/data/"
+    "OECD.SDD.STES,DSD_STES@DF_FINMARK,4.0/"
+    ".M.IR3TIB.PA....."
+    "?startPeriod=1950-01&dimensionAtObservation=AllDimensions"
+)
+oecd_body = fetch(
+    oecd_url,
+    accept="text/csv,application/vnd.sdmx.data+csv;version=2.0.0",
+)
+oecd_months = defaultdict(set)
+reader = csv.DictReader(
+    io.StringIO(oecd_body.decode("utf-8-sig", errors="replace"))
+)
+for row in reader:
+    ref_area = str(row.get("REF_AREA", "")).strip()
+    month = month_index(row.get("TIME_PERIOD"))
+    if ref_area and month is not None:
+        oecd_months[ref_area].add(month)
+
+usd_rate_months = oecd_months.get("USA", set())
+if not usd_rate_months:
+    raise RuntimeError("OECD USA short-rate metadata missing")
+
+accepted = []
+rejected = []
+for oecd_ref, (bis_ref, currency) in sorted(IDENTITIES.items()):
+    spot_months = bis_months.get((bis_ref, currency), set())
+    foreign_rate_months = oecd_months.get(oecd_ref, set())
+
+    eligible = {
+        month
+        for month in spot_months
+        if (month - 1) in foreign_rate_months
+        and (month - 1) in usd_rate_months
+    }
+    run = longest_run(eligible)
+    item = {
+        "oecd_ref": oecd_ref,
+        "bis_ref": bis_ref,
+        "currency": currency,
+        "bis_daily_collection": "A",
+        "longest_eligible_run": run,
+    }
+    if run is not None and run["months"] >= 72:
+        accepted.append(item)
+    else:
+        reasons = []
+        if not spot_months:
+            reasons.append("BIS daily spot metadata absent")
+        if not foreign_rate_months:
+            reasons.append("OECD short-rate metadata absent")
+        if run is None:
+            reasons.append("no lag-aligned eligible months")
+        elif run["months"] < 72:
+            reasons.append(f"longest lag-aligned run is {run['months']} months")
+        item["reason"] = "; ".join(reasons) or "72-month gate failed"
+        rejected.append(item)
+
+canonical = {
+    "usd_rate_ref": "USA",
+    "rate_lag_months": 1,
+    "bis_collection": "A",
+    "accepted": accepted,
+}
+canonical_bytes = (
+    json.dumps(canonical, sort_keys=True, separators=(",", ":"))
+    .encode("utf-8")
+)
+
+print(json.dumps({
+    "bis_url": bis_url,
+    "oecd_url": oecd_url,
+    "usd_rate_ref": "USA",
+    "candidate_count": len(IDENTITIES),
+    "accepted_count": len(accepted),
+    "rejected_count": len(rejected),
+    "accepted": accepted,
+    "rejected": rejected,
+    "universe_sha256": hashlib.sha256(canonical_bytes).hexdigest(),
+}, sort_keys=True))
+"""
+
+    run = _run_process_group_bounded(
+        _native_command("-c", code),
+        env=_safe_env(),
+        timeout_seconds=240,
+    )
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M027 metadata-only universe probe failed",
+            "feature_sha": feature_sha,
+            "run": run,
+            "safety": {
+                "observation_values_reported": False,
+                "observation_values_used": False,
+                "returns_computed": False,
+                "economic_summary_computed": False,
+                "real_order_api_called": False,
+            },
+        }
+
+    try:
+        result = json.loads(run["stdout"].strip())
+    except json.JSONDecodeError as exc:
+        return {
+            "ok": False,
+            "reason": f"M027 universe probe emitted invalid JSON: {exc}",
+            "feature_sha": feature_sha,
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "carry-aware-spot-tsmom",
+        "feature_sha": feature_sha,
+        **result,
+        "stage0_gate_passed": result["accepted_count"] >= 4,
+        "safety": {
+            "observation_values_reported": False,
+            "observation_values_used": False,
+            "returns_computed": False,
+            "momentum_signals_computed": False,
+            "economic_summary_computed": False,
+            "m021_post_cutoff_outcomes_used": False,
+            "m024_holdout_reused": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def recovery_remove_accidental_systemctl_file():
     """Remove only the known accidental root-level systemctl-name artifact."""
 
@@ -16421,6 +16672,7 @@ def recovery_remove_accidental_systemctl_file():
 
 
 ACTION_HANDLERS = {
+    "m027_stage0_universe_probe": m027_stage0_universe_probe,
     "m027_switch_carry_aware_spot_tsmom": m027_switch_carry_aware_spot_tsmom,
     "m027_stage0_coverage_probe": m027_stage0_coverage_probe,
     "m025_stage41_lrv_notes_probe": m025_stage41_lrv_notes_probe,
