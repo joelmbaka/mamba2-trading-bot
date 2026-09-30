@@ -1482,3 +1482,69 @@ economic result.
 5. rerun focused Stage-4 tests and full native regression after any code repair;
 6. rerun the immutable deterministic Stage-4 A/B economic action exactly once;
 7. do not retune after economics.
+
+## Stage-4 LRV metadata probe resolution — 2026-09-30
+
+Dell local-control recovery completed and the metadata-only probe was rerun as
+`mamba2-m025-stage4-lrv-unit-probe-v3`.
+
+Accepted result branch commit:
+
+`14f863cba3e64c25a45754c0a74ebda8431ca4f5`
+
+The probe ran against feature checkout:
+
+`039f2e5d9c8536eae1c765c2d5775049d1ac6225`
+
+Observed non-economic workbook metadata for `All currencies (net)`:
+
+- date column: zero-based column 0;
+- P1-P6 columns: zero-based columns 1-6;
+- 2,706 inspected portfolio numeric cells use Excel format `General`;
+- sampled P1-P6 cells use the same non-percentage format/style;
+- sheet text contains `HML = P6 - P1`;
+- admitted workbook metadata does not explicitly state percent or percentage
+  units.
+
+The probe did not report return values or economic summaries.
+
+Under the frozen Stage-4 unit rule, this evidence does not establish an LRV
+scale. Magnitude-based inference remains prohibited. No parser-only scaling
+repair is authorized from this probe.
+
+### Stage-4.1 metadata-evidence extension protocol
+
+Status: **FROZEN BEFORE ANY NEW SOURCE INSPECTION OR ECONOMIC RERUN**
+
+The sole question is whether an authoritative non-value source explicitly
+states the unit used by the exact LRV `CurrencyPortfolios.xls` return series.
+
+Admissible evidence, in order:
+
+1. non-value metadata embedded in the same immutable workbook, including hidden
+   sheets, comments/notes, named ranges, document properties, and textual cells
+   outside the admitted return values;
+2. an author-controlled page, README, data description, appendix, or paper
+   text for the exact LRV currency-portfolio dataset;
+3. the publisher-hosted paper or official supplementary material for the exact
+   dataset.
+
+Not admissible:
+
+- observed return magnitudes;
+- secondary summaries, blogs, forums, or reconstructed datasets;
+- correlation or fit against another return series;
+- choosing a unit because it produces plausible economics;
+- changing the workbook, sheet, P1/P6 definition, sign, lag, source universe,
+  lookback, holding period, volatility target, estimator, or frozen metrics.
+
+Mechanical decision:
+
+- an explicit statement that the dataset values are percentages/percent points
+  authorizes scale `0.01`;
+- an explicit statement that values are decimal returns authorizes scale
+  `1.0`;
+- absent either statement, LRV remains `UNIT SCHEMA INELIGIBLE`.
+
+No Stage-4 economics may run until this metadata-only gate is resolved.
+
