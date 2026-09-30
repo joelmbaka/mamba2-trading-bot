@@ -262,3 +262,23 @@ def test_lrv_converter_uses_resolvable_source_contract(tmp_path):
             tmp_path / "out",
             libreoffice="/usr/bin/libreoffice",
         )
+
+
+
+def test_lrv_binary_schema_classifier_finds_frozen_portfolios_without_numbers():
+    schema = _classify_lrv_schema_strings([
+        "All currencies",
+        "Portfolio1",
+        "Portfolio2",
+        "Portfolio3",
+        "Portfolio4",
+        "Portfolio5",
+        "Portfolio6%",
+        "HML = P6 - P1",
+    ])
+
+    assert schema["p1_through_p6_schema_present"] is True
+    assert schema["hml_schema_present"] is True
+    assert schema["currency_specific_schema_present"] is True
+    assert schema["numeric_cells_inspected"] is False
+    assert schema["schema_method"] == "ole-binary-strings-only"
