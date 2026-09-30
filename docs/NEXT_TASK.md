@@ -1,34 +1,33 @@
 # Next Authorized Task
 
-## M025 is closed
+## M026 is closed at the source-fidelity gate
 
-M025 public FX benchmark research is complete on
-`public-strategy-benchmarks`.
+M026 did not run economics.
 
-Final economic feature SHA:
+Protocol freeze:
 
-`2aed0444c8f0e214d14f9dc90d4c2813388555db`
+`c9dbe03e7f08f2c7c26355d7bf3761684622fb90`
 
-Accepted validation:
+Source inventory:
 
-- focused Stage-4: **43 passed / 0 failed**;
-- full native: **280 passed / 2 skipped**.
+`0f72b1928f06d90f12409396982867db92ca037f`
 
-Accepted deterministic Stage-4 economics:
+Result:
 
-`mamba2-m025-stage4-economics-after-unit-evidence-v1`
+**NO PUBLIC/FREE RAW FUTURES/FORWARD SOURCE PASSED**
 
-Result branch commit:
+Do not weaken M026 or rerun the M025 H.10 spot proxy.
 
-`c01ab5df81bdf31b3279b2c0d7e99843c7437ef7`
+The next research milestone, if continuing without purchasing data, must be a
+separately named **explicit approximation** whose market object, financing/carry
+approximation, data sources, signal, risk scaling, universe, evaluation window,
+and cost treatment are frozen before economics.
 
-Report SHA-256:
+It must not:
 
-`633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9`
-
-Do not rerun or retune M025 economics.
-
-Any additional benchmark investigation must begin under a separately named,
-prospectively frozen milestone before inspecting new economic outputs.
-
-Do not merge/deploy or enable real trading as part of M025 closeout.
+- reuse the consumed M024 holdout;
+- use M021 post-cutoff outcomes;
+- search symbols/sessions/sides after results;
+- alter M025 or M026 definitions;
+- merge/deploy;
+- enable real trading.
