@@ -16169,6 +16169,10 @@ def month_index(period):
         return None
     return None
 
+def code_prefix(value):
+    text = str(value or "").strip()
+    return text.split(":", 1)[0].strip() if ":" in text else text
+
 def summarize_months(months):
     vals = sorted(set(m for m in months if m is not None))
     if not vals:
@@ -16213,16 +16217,16 @@ with zipfile.ZipFile(io.BytesIO(bis_body), "r") as zf:
                     "collection": str(row.get("COLLECTION:Collection", "")).strip(),
                     "time_period": str(row.get("TIME_PERIOD:Time period or range", "")).strip(),
                 })
-            if str(row.get("FREQ:Frequency", "")).strip() != "D":
+            if code_prefix(row.get("FREQ:Frequency", "")) != "D":
                 continue
             period = row.get("TIME_PERIOD:Time period or range")
             idx = month_index(period)
             if idx is None:
                 continue
             key = (
-                str(row.get("REF_AREA:Reference area", "")).strip(),
-                str(row.get("CURRENCY:Currency", "")).strip(),
-                str(row.get("COLLECTION:Collection", "")).strip(),
+                code_prefix(row.get("REF_AREA:Reference area", "")),
+                code_prefix(row.get("CURRENCY:Currency", "")),
+                code_prefix(row.get("COLLECTION:Collection", "")),
             )
             bis_series[key].append(idx)
 
