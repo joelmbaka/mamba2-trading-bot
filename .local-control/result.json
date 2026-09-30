@@ -1,23 +1,26 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage4-full-native-v1",
-  "completed_at": "2026-09-30T05:56:30.541416+00:00",
-  "ok": true,
-  "action": "test_full_native",
+  "command_id": "mamba2-m025-stage4-economics-v1",
+  "completed_at": "2026-09-30T05:58:35.653195+00:00",
+  "ok": false,
+  "action": "m025_stage4_economics",
   "data": {
-    "ok": true,
+    "ok": false,
+    "reason": "M025 Stage-4 deterministic pair failed",
+    "feature_sha": "6583584797617b7f5542704e905b67fb24ea9be6",
     "run": {
       "command": [
         "/home/joel/.local/bin/uv",
         "run",
         "--locked",
         "python",
-        "-m",
-        "pytest"
+        "-c",
+        "import json;from mamba2.backtest.m025_stage4_economics import run_stage4_pair;r=run_stage4_pair(ingestion_dir='/home/joel/Dev/mamba2-trading-bot/backtest_data/m025-stage3-ingestion-v1',output_dir='/home/joel/Dev/mamba2-trading-bot/backtest_data/m025-stage4-economics-v1.tmp');print(json.dumps(r,sort_keys=True));raise SystemExit(0 if r.get('ok') else 1)"
       ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 278 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  1%]\ntests/test_backtest_account_currency.py ............                     [  5%]\ntests/test_backtest_baseline_reporting.py ....                           [  7%]\ntests/test_backtest_diagnostics.py ....                                  [  8%]\ntests/test_backtest_execution.py .........                               [ 11%]\ntests/test_backtest_execution_costs.py ............                      [ 16%]\ntests/test_backtest_experiments.py .....                                 [ 17%]\ntests/test_backtest_foundation.py ..........                             [ 21%]\ntests/test_backtest_native_runtime.py ....                               [ 23%]\ntests/test_backtest_portfolio_runner.py .........                        [ 26%]\ntests/test_backtest_spread_execution.py ........                         [ 29%]\ntests/test_backtest_strategy_integration.py ..                           [ 29%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 31%]\ntests/test_cache_manager_security.py .........                           [ 34%]\ntests/test_config_security.py ...                                        [ 35%]\ntests/test_detect_trend.py ...                                           [ 37%]\ntests/test_m020_decision_spread.py ...                                   [ 38%]\ntests/test_m020_diagnostics.py ....                                      [ 39%]\ntests/test_m020_spread_treatment.py ...                                  [ 40%]\ntests/test_m021_forward_validation.py ...........                        [ 44%]\ntests/test_m025_stage3_ingestion.py ..........                           [ 48%]\ntests/test_m025_stage4_economics.py ........                             [ 51%]\ntests/test_mt5__broker.py ......                                         [ 53%]\ntests/test_mt5_dataset.py ..............                                 [ 58%]\ntests/test_parameter_research.py .............................           [ 68%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 76%]\n.                                                                        [ 76%]\ntests/test_public_benchmarks.py .......................                  [ 85%]\ntests/test_rates.py .......                                              [ 87%]\ntests/test_replay_indicator_cache.py ..                                  [ 88%]\ntests/test_stochastic_indicator.py ....                                  [ 89%]\ntests/test_trend_line.py ..                                              [ 90%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n=============================== warnings summary ===============================\ntests/test_m025_stage4_economics.py::test_h10_proxy_uses_exact_23_series_and_reports_valid_counts\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_monthly_summary_formulas_are_frozen\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_canonical_monthly_series_refuses_duplicate_months\n  /home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py:87: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.\n    return index.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\n  /home/joel/Dev/mamba2-trading-bot/tests/test_m025_stage4_economics.py:65: UserWarning: Converting to Period representation will drop timezone information.\n    earlier = control.index < cutoff.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n================== 278 passed, 2 skipped, 8 warnings in 4.35s ==================\n",
-      "stderr": ""
+      "exit_code": 1,
+      "timed_out": false,
+      "stdout": "",
+      "stderr": "/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py:87: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.\n  return index.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py:87: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.\n  return index.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\nTraceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py\", line 753, in run_stage4_pair\n    report = build_stage4_report(ingestion_dir=ingestion_dir)\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py\", line 660, in build_stage4_report\n    aqr_returns = parse_aqr_tsmom_fx(\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py\", line 348, in parse_aqr_tsmom_fx\n    return _canonical_monthly_series(series, name=AQR_LABEL)\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py\", line 100, in _canonical_monthly_series\n    raise ValueError(f\"{name} contains duplicate calendar months\")\nValueError: AQR TSMOM^FX \u2014 DERIVED REFERENCE contains duplicate calendar months\n"
     }
   }
 }
