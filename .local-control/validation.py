@@ -16840,6 +16840,127 @@ print(json.dumps(result, sort_keys=True))
     }
 
 
+
+def m027_stage2_economics():
+    """Run the frozen M027 Stage-2 economic report twice and require byte identity."""
+
+    feature_sha = _require_m027_branch()
+    input_path = _ensure_baseline_path(
+        REPO
+        / "backtest_data"
+        / "m027-stage1-ingestion-v1"
+        / "m027-approx-excess-log-returns.csv"
+    )
+    if not input_path.is_file():
+        return {
+            "ok": False,
+            "reason": "M027 immutable Stage-1 input missing",
+            "feature_sha": feature_sha,
+        }
+
+    final_dir = _ensure_baseline_path(
+        REPO / "backtest_data" / "m027-stage2-economics-v1"
+    )
+    a_path = final_dir / "m027-stage2-a.json"
+    b_path = final_dir / "m027-stage2-b.json"
+
+    if final_dir.exists():
+        required = {a_path.name, b_path.name}
+        actual = {
+            path.name for path in final_dir.iterdir()
+            if path.is_file()
+        }
+        if actual != required or not a_path.is_file() or not b_path.is_file():
+            return {
+                "ok": False,
+                "reason": "partial immutable M027 Stage-2 economic artifacts",
+                "feature_sha": feature_sha,
+                "actual_files": sorted(actual),
+            }
+        a_sha = _sha256(a_path)
+        b_sha = _sha256(b_path)
+        report = json.loads(a_path.read_text(encoding="utf-8"))
+        return {
+            "ok": a_sha == b_sha,
+            "feature_branch": "carry-aware-spot-tsmom",
+            "feature_sha": feature_sha,
+            "reused_immutable_artifacts": True,
+            "artifact": {
+                "a_path": str(a_path.relative_to(REPO)),
+                "b_path": str(b_path.relative_to(REPO)),
+                "a_sha256": a_sha,
+                "b_sha256": b_sha,
+                "deterministic": a_sha == b_sha,
+            },
+            "report": report,
+            "safety": report.get("safety"),
+        }
+
+    temp_dir = _ensure_baseline_path(
+        REPO / "backtest_data" / "m027-stage2-economics-v1.tmp"
+    )
+    if temp_dir.exists():
+        shutil.rmtree(temp_dir)
+    temp_dir.mkdir(parents=True, exist_ok=False)
+
+    temp_a = temp_dir / a_path.name
+    temp_b = temp_dir / b_path.name
+
+    runs = []
+    for output in (temp_a, temp_b):
+        run = _run_process_group_bounded(
+            _native_command(
+                "-m",
+                "mamba2.backtest.m027_stage2_runner",
+                "--input",
+                str(input_path),
+                "--output",
+                str(output),
+            ),
+            env=_safe_env(),
+            timeout_seconds=180,
+        )
+        runs.append(run)
+        if run["exit_code"] != 0:
+            shutil.rmtree(temp_dir)
+            return {
+                "ok": False,
+                "reason": "M027 Stage-2 economic execution failed",
+                "feature_sha": feature_sha,
+                "runs": runs,
+            }
+
+    a_sha = _sha256(temp_a)
+    b_sha = _sha256(temp_b)
+    if a_sha != b_sha:
+        shutil.rmtree(temp_dir)
+        return {
+            "ok": False,
+            "reason": "M027 Stage-2 A/B reports are not byte-identical",
+            "feature_sha": feature_sha,
+            "a_sha256": a_sha,
+            "b_sha256": b_sha,
+        }
+
+    temp_dir.rename(final_dir)
+    report = json.loads(a_path.read_text(encoding="utf-8"))
+    return {
+        "ok": True,
+        "feature_branch": "carry-aware-spot-tsmom",
+        "feature_sha": feature_sha,
+        "reused_immutable_artifacts": False,
+        "artifact": {
+            "a_path": str(a_path.relative_to(REPO)),
+            "b_path": str(b_path.relative_to(REPO)),
+            "a_sha256": a_sha,
+            "b_sha256": b_sha,
+            "deterministic": True,
+        },
+        "report": report,
+        "safety": report.get("safety"),
+    }
+
+
 def recovery_remove_accidental_systemctl_file():
     """Remove only the known accidental root-level systemctl-name artifact."""
 
@@ -16904,6 +17025,7 @@ def recovery_remove_accidental_systemctl_file():
 
 
 ACTION_HANDLERS = {
+    "m027_stage2_economics": m027_stage2_economics,
     "m027_stage2_tests": m027_stage2_tests,
     "m027_stage2_readiness": m027_stage2_readiness,
     "m027_stage1_ingestion": m027_stage1_ingestion,
