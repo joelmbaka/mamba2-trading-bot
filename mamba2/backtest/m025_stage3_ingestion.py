@@ -528,6 +528,69 @@ def inspect_xlsx_schema(
     }
 
 
+def _classify_lrv_schema_strings(values: Iterable[str]) -> dict[str, Any]:
+    cleaned = sorted({" ".join(str(v).split()) for v in values if str(v).strip()})
+    portfolio_tokens: dict[str, list[str]] = {}
+    for number in range(1, 7):
+        pattern = re.compile(
+            rf"(^|\\b)(p\\s*{number}|portfolio\\s*{number})(\\b|$)",
+            re.IGNORECASE,
+        )
+        portfolio_tokens[f"P{number}"] = [
+            value for value in cleaned if pattern.search(value)
+        ]
+    hml_tokens = [value for value in cleaned if "hml" in value.lower()]
+    currency_tokens = [
+        value for value in cleaned
+        if re.search(r"\\b(currency|currencies|fx|foreign exchange)\\b",
+                     value, re.IGNORECASE)
+    ]
+    return {
+        "sheet_or_schema_strings": cleaned,
+        "currency_or_fx_schema_tokens": currency_tokens,
+        "currency_specific_schema_present": bool(currency_tokens),
+        "portfolio_schema_tokens": portfolio_tokens,
+        "p1_through_p6_schema_present": all(
+            portfolio_tokens[f"P{number}"] for number in range(1, 7)
+        ),
+        "hml_schema_tokens": hml_tokens,
+        "hml_schema_present": bool(hml_tokens),
+        "numeric_cells_inspected": False,
+        "schema_method": "ole-binary-strings-only",
+    }
+
+
+def inspect_lrv_binary_schema(path: str | Path) -> dict[str, Any]:
+    source = Path(path)
+    _require_file_magic(source, expected=OLE_XLS_MAGIC, label="LRV XLS")
+    selected: list[str] = []
+    for args in (
+        ["strings", "-a", "-n", "4", str(source)],
+        ["strings", "-a", "-e", "l", "-n", "4", str(source)],
+    ):
+        result = subprocess.run(
+            args, text=True, capture_output=True, timeout=60, check=False
+        )
+        if result.returncode != 0:
+            continue
+        for line in result.stdout.splitlines():
+            clean = line.strip()
+            lower = clean.lower()
+            if clean and any(token in lower for token in (
+                "portfolio", "currency", "currencies", "hml",
+                "developed", "all countries", "all currencies",
+            )):
+                selected.append(clean[:300])
+    if not selected:
+        raise ValueError("LRV OLE workbook exposed no schema strings")
+    result = _classify_lrv_schema_strings(selected)
+    if not result["p1_through_p6_schema_present"]:
+        raise ValueError("LRV schema does not identify P1 through P6")
+    if not result["hml_schema_present"]:
+        raise ValueError("LRV schema does not identify HML")
+    return result
+
+
 def _convert_xls_to_xlsx(
     source: str | Path,
     output_dir: str | Path,
@@ -597,12 +660,7 @@ def run_ingestion(
     h10 = inspect_h10_sdmx_zip(h10_raw, normalized)
 
     aqr_schema = inspect_xlsx_schema(aqr_raw)
-    lrv_xlsx = _convert_xls_to_xlsx(
-        lrv_raw,
-        root,
-        libreoffice=libreoffice,
-    )
-    lrv_schema = inspect_xlsx_schema(lrv_xlsx)
+    lrv_schema = inspect_lrv_binary_schema(lrv_raw)
 
     report = {
         "schema_version": 1,
@@ -628,7 +686,6 @@ def run_ingestion(
                 "url": LRV_URL,
                 "raw_artifact": lrv_raw.name,
                 "raw_sha256": _sha256(lrv_raw),
-                "converted_schema_artifact": lrv_xlsx.name,
                 "schema": lrv_schema,
             },
         },
