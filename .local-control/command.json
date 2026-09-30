@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m025-stage41-lrv-metadata-probe-v1",
-  "action": "m025_stage41_lrv_metadata_probe",
+  "id": "mamba2-m025-stage41-lrv-notes-probe-v1",
+  "action": "m025_stage41_lrv_notes_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
