@@ -1,19 +1,24 @@
 {
   "version": 1,
-  "command_id": "mamba2-recovery-dirty-worktree-status-v1",
-  "completed_at": "2026-09-30T14:09:18.512587+00:00",
+  "command_id": "mamba2-recovery-remove-accidental-systemctl-file-v1",
+  "completed_at": "2026-09-30T14:11:49.097919+00:00",
   "ok": true,
-  "action": "status",
+  "action": "recovery_remove_accidental_systemctl_file",
   "data": {
-    "hostname": "joel-OptiPlex-7080",
-    "repo": "/home/joel/Dev/mamba2-trading-bot",
-    "branch": "public-strategy-benchmarks",
-    "head": "636478bf0ac6c55e138df418686b48492ee47486",
-    "clean": false,
-    "changed_paths": [
-      "?? \"ystemctl --user start chatgpt-mamba2-local-agent.service\""
-    ],
-    "divergence": "0\t1",
-    "time": "2026-09-30T14:09:14.565478+00:00"
+    "ok": true,
+    "relative_path": "ystemctl --user start chatgpt-mamba2-local-agent.service",
+    "removed": true,
+    "clean_after": true,
+    "status_after": {
+      "command": [
+        "git",
+        "status",
+        "--porcelain=v1",
+        "--untracked-files=all"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
   }
 }
