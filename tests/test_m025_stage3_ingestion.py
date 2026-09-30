@@ -11,6 +11,7 @@ import pytest
 
 from mamba2.backtest.m025_stage3_ingestion import (
     AQR_URL,
+    _classify_lrv_schema_strings,
     H10_EXPECTED_IDS,
     H10_FROM,
     H10_SERIES,
