@@ -274,8 +274,8 @@ def stage2_economics(
     fold_results = []
     for fold in readiness["folds"]:
         fold_series = portfolio.loc[
-            pd.Timestamp(fold["first_month"]):
-            pd.Timestamp(fold["last_month"])
+            pd.Timestamp(fold["first_month"], tz="UTC"):
+            pd.Timestamp(fold["last_month"], tz="UTC")
         ]
         fold_results.append({
             "name": fold["name"],
