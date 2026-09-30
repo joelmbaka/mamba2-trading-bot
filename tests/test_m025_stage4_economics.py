@@ -9,12 +9,16 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import xml.etree.ElementTree as ET
+
 from mamba2.backtest.m025_stage4_economics import (
     AQR_LABEL,
     H10_LABEL,
     H10_SYMBOLS,
     LRV_LABEL,
+    _MAIN_NS,
     _canonical_monthly_series,
+    _xlsx_cell_number,
     compare_monthly_returns,
     h10_tsmom_spot_proxy,
     locate_lrv_layout,
@@ -179,3 +183,16 @@ def test_canonical_monthly_series_refuses_duplicate_months():
     ])
     with pytest.raises(ValueError, match="duplicate calendar months"):
         _canonical_monthly_series(pd.Series([0.1, 0.2], index=index), name="X")
+
+
+
+def test_xlsx_numeric_reader_refuses_shared_string_index():
+    string_cell = ET.fromstring(
+        f'<c xmlns="{_MAIN_NS}" r="A516" t="s"><v>22</v></c>'
+    )
+    numeric_cell = ET.fromstring(
+        f'<c xmlns="{_MAIN_NS}" r="A19"><v>31078</v></c>'
+    )
+
+    assert _xlsx_cell_number(string_cell) is None
+    assert _xlsx_cell_number(numeric_cell) == pytest.approx(31078.0)

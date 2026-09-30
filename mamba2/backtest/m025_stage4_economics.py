@@ -260,6 +260,9 @@ def _xlsx_cell_text(
 
 
 def _xlsx_cell_number(cell: ET.Element) -> float | None:
+    cell_type = cell.attrib.get("t")
+    if cell_type not in (None, "n"):
+        return None
     node = cell.find(f"{{{_MAIN_NS}}}v")
     if node is None or node.text is None or not node.text.strip():
         return None
