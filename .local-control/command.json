@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m025-stage4-runtime-probe-v1",
-  "action": "m025_stage4_runtime_probe",
+  "id": "mamba2-m025-stage4-add-xlrd-v1",
+  "action": "m025_stage4_add_xlrd_dependency",
   "args": {},
   "requested_by": "chatgpt"
 }
