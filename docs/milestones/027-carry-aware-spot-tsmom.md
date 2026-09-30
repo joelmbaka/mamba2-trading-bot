@@ -297,3 +297,62 @@ at least **72 consecutive eligible months**.
 
 This coverage check does not inspect or use `OBS_VALUE`.
 
+## Stage-0 accepted universe — 2026-09-30
+
+Pre-intersection identity-map freeze:
+
+`b45bea061411b273e2f30130d2224e2f84293d8d`
+
+Metadata-only universe result:
+
+`f06a777e48a96572beebcce9b96e76ac072ee318`
+
+Durable inventory:
+
+`docs/research/m027-stage0-source-universe.md`
+
+Inventory commit:
+
+`cea651e699ae9ad02001f51fa2b5f51d0a311468`
+
+Mechanical result:
+
+- candidates: **26**
+- admitted: **25**
+- rejected: **1 (CRC)**
+- minimum gate: **4**
+- Stage-0 gate: **PASS**
+
+Frozen universe SHA-256:
+
+`db9e1f4438fd582a0c2903f2459e290e30450bfc76365f2bbe91553d45b51c00`
+
+Frozen admitted currencies:
+
+`AUD, CAD, CHF, CLP, CNY, COP, CZK, DKK, EUR, GBP, HUF, IDR, INR, ISK, ILS, JPY, KRW, MXN, NOK, NZD, PLN, RON, RUB, SEK, ZAR`
+
+No observation values or economics were used to form this universe.
+
+### Stage-1 source-value contract
+
+Before any Stage-1 value ingestion:
+
+- BIS XRU is interpreted according to the publisher definition as the nominal
+  value of **one USD relative to the foreign currency**, i.e. foreign-currency
+  units per USD;
+- therefore every admitted foreign series is normalized mechanically as
+  `USD per foreign unit = 1 / BIS observation`;
+- OECD `IR3TIB` is measured in **percent per annum**;
+- therefore raw OECD observations are converted to annual decimal rates by
+  dividing by 100;
+- month M daily carry uses only completed-month M-1 foreign and USA rates;
+- missing spot or prior-month rates remain missing; no interpolation,
+  forward-fill, or backward-fill is authorized.
+
+Stage 1 may now implement and validate deterministic source parsing, immutable
+snapshot hashing, quote/rate normalization, lag alignment, and approximate
+daily excess-log-return construction.
+
+Stage 1 remains non-strategy and non-economic: no 12-month signal, portfolio
+return, P/L, Sharpe, drawdown, or contribution analysis is authorized.
+
