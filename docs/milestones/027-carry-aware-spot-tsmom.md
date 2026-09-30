@@ -585,3 +585,57 @@ After readiness freezes the exact month list:
 
 No real MT5 order API may be called.
 
+## Stage-2 readiness accepted — 2026-09-30
+
+Focused Stage-2 validation:
+
+- command: `mamba2-m027-stage2-tests-v1`
+- result commit:
+  `4efe732ba9e884ea091415b05f98a17eb9a7d794`
+- result: **15 passed / 0 failed**
+- feature SHA:
+  `7a5cfcdb90fc0118397ac55edf5d19ca9bab8ea3`
+
+Metadata-only readiness:
+
+- command: `mamba2-m027-stage2-readiness-v1`
+- feature SHA:
+  `7a5cfcdb90fc0118397ac55edf5d19ca9bab8ea3`
+- return values reported: **false**
+- portfolio returns computed: **false**
+- economic summary computed: **false**
+
+Frozen evaluation window:
+
+- first month: **1980-02-29**
+- last month: **2020-04-30**
+- months: **483**
+- ordered month-list SHA-256:
+  `c5cda6bb68904213dc46aa338887c19e7575e31cba8ab816e44469b81a3b4b40`
+
+Frozen eligible-currency counts:
+
+- minimum: **4**
+- median: **22**
+- maximum: **25**
+
+Frozen chronological folds:
+
+- F1: **1980-02-29 → 1993-06-30**, 161 months,
+  SHA-256
+  `015357895f4f4bae39566ed3467b67eb87c29876044a2b0a0e86010f451e55ee`
+- F2: **1993-07-31 → 2006-11-30**, 161 months,
+  SHA-256
+  `d776c84d6088e2e21a9702e2d986381acbfd44e20426e8a2d4f9c050149232a3`
+- F3: **2006-12-31 → 2020-04-30**, 161 months,
+  SHA-256
+  `145c93355905d15eb7946ab1c67ab52454c68ef23146f8b611053b2cd551ea6b`
+
+The evaluation end is earlier than the 2026-08 cap because the frozen
+availability rule selects the longest consecutive block with at least four
+mechanically eligible currencies. No return sign or magnitude influenced this
+choice.
+
+This month list is now immutable for M027. No date, fold, or currency may be
+changed after economics.
+
