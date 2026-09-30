@@ -1,314 +1,34 @@
 {
   "version": 1,
-  "command_id": "mamba2-m027-stage0-universe-probe-v1",
-  "completed_at": "2026-09-30T17:57:43.019172+00:00",
+  "command_id": "mamba2-m027-stage1-tests-v1",
+  "completed_at": "2026-09-30T18:11:48.666886+00:00",
   "ok": true,
-  "action": "m027_stage0_universe_probe",
+  "action": "m027_stage1_tests",
   "data": {
     "ok": true,
     "feature_branch": "carry-aware-spot-tsmom",
-    "feature_sha": "b45bea061411b273e2f30130d2224e2f84293d8d",
-    "accepted": [
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "AU",
-        "currency": "AUD",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 592,
-          "start": "1971-01"
-        },
-        "oecd_ref": "AUS"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "CA",
-        "currency": "CAD",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 670,
-          "start": "1964-07"
-        },
-        "oecd_ref": "CAN"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "CH",
-        "currency": "CHF",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 249,
-          "start": "1999-08"
-        },
-        "oecd_ref": "CHE"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "CL",
-        "currency": "CLP",
-        "longest_eligible_run": {
-          "end": "2008-08",
-          "months": 118,
-          "start": "1998-11"
-        },
-        "oecd_ref": "CHL"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "CN",
-        "currency": "CNY",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 170,
-          "start": "2006-03"
-        },
-        "oecd_ref": "CHN"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "CO",
-        "currency": "COP",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 411,
-          "start": "1986-02"
-        },
-        "oecd_ref": "COL"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "CZ",
-        "currency": "CZK",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 327,
-          "start": "1993-02"
-        },
-        "oecd_ref": "CZE"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "DK",
-        "currency": "DKK",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 399,
-          "start": "1987-02"
-        },
-        "oecd_ref": "DNK"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "XM",
-        "currency": "EUR",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 315,
-          "start": "1994-02"
-        },
-        "oecd_ref": "EA20"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "GB",
-        "currency": "GBP",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 411,
-          "start": "1986-02"
-        },
-        "oecd_ref": "GBR"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "HU",
-        "currency": "HUF",
-        "longest_eligible_run": {
-          "end": "2004-04",
-          "months": 159,
-          "start": "1991-02"
-        },
-        "oecd_ref": "HUN"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "ID",
-        "currency": "IDR",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 267,
-          "start": "1998-02"
-        },
-        "oecd_ref": "IDN"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "IN",
-        "currency": "INR",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 101,
-          "start": "2011-12"
-        },
-        "oecd_ref": "IND"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "IS",
-        "currency": "ISK",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 389,
-          "start": "1987-12"
-        },
-        "oecd_ref": "ISL"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "IL",
-        "currency": "ILS",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 339,
-          "start": "1992-02"
-        },
-        "oecd_ref": "ISR"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "JP",
-        "currency": "JPY",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 216,
-          "start": "2002-05"
-        },
-        "oecd_ref": "JPN"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "KR",
-        "currency": "KRW",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 351,
-          "start": "1991-02"
-        },
-        "oecd_ref": "KOR"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "MX",
-        "currency": "MXN",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 279,
-          "start": "1997-02"
-        },
-        "oecd_ref": "MEX"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "NO",
-        "currency": "NOK",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 495,
-          "start": "1979-02"
-        },
-        "oecd_ref": "NOR"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "NZ",
-        "currency": "NZD",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 556,
-          "start": "1974-01"
-        },
-        "oecd_ref": "NZL"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "PL",
-        "currency": "PLN",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 346,
-          "start": "1991-07"
-        },
-        "oecd_ref": "POL"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "RO",
-        "currency": "RON",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 296,
-          "start": "1995-09"
-        },
-        "oecd_ref": "ROU"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "RU",
-        "currency": "RUB",
-        "longest_eligible_run": {
-          "end": "2020-01",
-          "months": 276,
-          "start": "1997-02"
-        },
-        "oecd_ref": "RUS"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "SE",
-        "currency": "SEK",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 459,
-          "start": "1982-02"
-        },
-        "oecd_ref": "SWE"
-      },
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "ZA",
-        "currency": "ZAR",
-        "longest_eligible_run": {
-          "end": "2020-04",
-          "months": 472,
-          "start": "1981-01"
-        },
-        "oecd_ref": "ZAF"
-      }
+    "feature_sha": "e90171f613149afa38fbe73522c162001947d5c7",
+    "tests": [
+      "tests/test_m027_carry_aware_tsmom.py"
     ],
-    "accepted_count": 25,
-    "bis_url": "https://data.bis.org/static/bulk/WS_XRU_csv_flat.zip",
-    "candidate_count": 26,
-    "oecd_url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_FINMARK,4.0/.M.IR3TIB.PA.....?startPeriod=1950-01&dimensionAtObservation=AllDimensions",
-    "rejected": [
-      {
-        "bis_daily_collection": "A",
-        "bis_ref": "CR",
-        "currency": "CRC",
-        "longest_eligible_run": null,
-        "oecd_ref": "CRI",
-        "reason": "BIS daily spot metadata absent; no lag-aligned eligible months"
-      }
-    ],
-    "rejected_count": 1,
-    "universe_sha256": "db9e1f4438fd582a0c2903f2459e290e30450bfc76365f2bbe91553d45b51c00",
-    "usd_rate_ref": "USA",
-    "stage0_gate_passed": true,
+    "run": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_m027_carry_aware_tsmom.py"
+      ],
+      "exit_code": 0,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 9 items\n\ntests/test_m027_carry_aware_tsmom.py .........                           [100%]\n\n============================== 9 passed in 0.25s ===============================\n",
+      "stderr": ""
+    },
     "safety": {
-      "observation_values_reported": false,
-      "observation_values_used": false,
-      "returns_computed": false,
-      "momentum_signals_computed": false,
-      "economic_summary_computed": false,
+      "source_download_run": false,
+      "strategy_signal_computed": false,
+      "portfolio_economics_computed": false,
       "m021_post_cutoff_outcomes_used": false,
       "m024_holdout_reused": false,
       "real_order_api_called": false
