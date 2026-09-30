@@ -1,8 +1,19 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage4-lrv-unit-probe-v2",
-  "completed_at": "2026-09-30T13:51:58.743360+00:00",
-  "ok": false,
-  "action": "m025_stage4_lrv_unit_probe",
-  "error": "RuntimeError: M025 action refuses a dirty worktree"
+  "command_id": "mamba2-recovery-dirty-worktree-status-v1",
+  "completed_at": "2026-09-30T14:09:18.512587+00:00",
+  "ok": true,
+  "action": "status",
+  "data": {
+    "hostname": "joel-OptiPlex-7080",
+    "repo": "/home/joel/Dev/mamba2-trading-bot",
+    "branch": "public-strategy-benchmarks",
+    "head": "636478bf0ac6c55e138df418686b48492ee47486",
+    "clean": false,
+    "changed_paths": [
+      "?? \"ystemctl --user start chatgpt-mamba2-local-agent.service\""
+    ],
+    "divergence": "0\t1",
+    "time": "2026-09-30T14:09:14.565478+00:00"
+  }
 }
