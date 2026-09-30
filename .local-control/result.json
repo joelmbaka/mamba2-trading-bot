@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "command_id": "mamba2-m027-stage0-coverage-probe-v2",
-  "completed_at": "2026-09-30T17:46:45.273843+00:00",
+  "command_id": "mamba2-m027-stage0-coverage-probe-v3",
+  "completed_at": "2026-09-30T17:49:07.117435+00:00",
   "ok": true,
   "action": "m027_stage0_coverage_probe",
   "data": {
@@ -27,6 +27,148 @@
         "OBS_STATUS:Observation Status",
         "OBS_PRE_BREAK:Pre-Break Observation",
         "OBS_CONF:Observation confidentiality"
+      ],
+      "row_samples_no_values": [
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1953"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1954"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1955"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1956"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1957"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1958"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1959"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1960"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1961"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1962"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1963"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1964"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1965"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1966"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1967"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1968"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1969"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1970"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1971"
+        },
+        {
+          "collection": "E: End of period",
+          "currency": "CHF: Swiss franc",
+          "freq": "A: Annual",
+          "ref_area": "CH: Switzerland",
+          "time_period": "1972"
+        }
       ],
       "series_with_72_month_run": [],
       "status": 200,
