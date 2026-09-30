@@ -1,68 +1,871 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage3-ingestion-v5",
-  "completed_at": "2026-09-30T05:01:45.792194+00:00",
+  "command_id": "mamba2-m025-stage3-ingestion-inspect-v1",
+  "completed_at": "2026-09-30T05:03:21.924965+00:00",
   "ok": true,
   "action": "m025_stage3_ingestion",
   "data": {
     "ok": true,
     "feature_branch": "public-strategy-benchmarks",
     "feature_sha": "554ab3a827163732f4dec335c716fec2f386bfe8",
-    "reused_immutable_artifacts": false,
+    "reused_immutable_artifacts": true,
     "report_sha256": "d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505",
-    "h10": {
-      "raw_sha256": "38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046",
-      "normalized_panel_sha256": "015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419",
-      "gate_72_consecutive_months_all_series": true,
-      "first_source_date": "1971-01-04",
-      "last_source_date": "2026-08-31"
-    },
-    "aqr": {
-      "raw_sha256": "33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb",
-      "sheet_names": [
-        "TSMOM Factors",
-        "Definitions",
-        "Data Sources",
-        "Disclosures"
-      ],
-      "currency_specific_schema_present": true,
-      "currency_or_fx_schema_tokens": [
-        "We report the monthly excess returns of the time series momentum factors for all assets (no superscript), global equity indices (EQ), currencies (FX), fixed income (FI), and commodities (CM)",
-        "TSMOM^FX"
-      ]
-    },
-    "lrv": {
-      "raw_sha256": "e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74",
-      "schema_method": "ole-binary-strings-only",
-      "schema_strings": [
-        "3) they correspond to our large sample of developed and emerging countries (Sheet labelled `all currencies') or to our sample of developed countries (Sheet labelled `developed currencies').",
-        "All currencies",
-        "All currencies (net)",
-        "Asset Pricing - Developed",
-        "Betas HML",
-        "Chart - Developed",
-        "Chart - Developed (2)",
-        "Common Risk Factors in Currency Markets",
-        "Currency",
-        "Currency [0]",
-        "Developed currencies",
-        "Developed currencies (net)",
-        "HML",
-        "HML = P5 - P1",
-        "HML = P6 - P1",
-        "Portfolio1",
-        "Portfolio2",
-        "Portfolio3",
-        "Portfolio4",
-        "Portfolio5",
-        "Portfolio6%",
-        "Portfolios of Currency Excess Returns",
-        "Realized and Predicted Average Currency Excess Returns",
-        "Using RX and HML(FX)",
-        "for details about the construction of these currency portfolios.P"
-      ],
-      "p1_through_p6_schema_present": true,
-      "hml_schema_present": true
+    "report": {
+      "economic_computation_performed": false,
+      "milestone": "M025",
+      "safety": {
+        "correlation_computed": false,
+        "drawdown_computed": false,
+        "economic_ranking_computed": false,
+        "m021_post_cutoff_outcomes_used": false,
+        "m023_outcomes_used": false,
+        "m024_outcomes_used_to_tune_definitions": false,
+        "pl_computed": false,
+        "real_order_api_called": false,
+        "returns_computed": false,
+        "sharpe_computed": false,
+        "tracking_error_computed": false
+      },
+      "schema_version": 1,
+      "sources": {
+        "aqr_tsmom": {
+          "raw_artifact": "Time-Series-Momentum-Factors-Monthly.xlsx",
+          "raw_sha256": "33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb",
+          "schema": {
+            "currency_or_fx_schema_tokens": [
+              "We report the monthly excess returns of the time series momentum factors for all assets (no superscript), global equity indices (EQ), currencies (FX), fixed income (FI), and commodities (CM)",
+              "TSMOM^FX"
+            ],
+            "currency_specific_schema_present": true,
+            "hml_schema_present": false,
+            "hml_schema_tokens": [],
+            "numeric_cells_inspected": false,
+            "p1_through_p6_schema_present": false,
+            "portfolio_schema_tokens": {
+              "P1": [],
+              "P2": [],
+              "P3": [],
+              "P4": [],
+              "P5": [],
+              "P6": []
+            },
+            "sheet_names": [
+              "TSMOM Factors",
+              "Definitions",
+              "Data Sources",
+              "Disclosures"
+            ],
+            "string_schema_cells": {
+              "Data Sources": [
+                {
+                  "cell": "A1",
+                  "text": "Not all data described here may be shown on the data tab based on the user's request. Please see www.aqr.com for the full selection of available data."
+                },
+                {
+                  "cell": "A3",
+                  "text": "Data Sources"
+                }
+              ],
+              "Definitions": [
+                {
+                  "cell": "A1",
+                  "text": "For more information, please see: Moskowitz, Tobias J., Yao Hua Ooi and Lasse. H. Pedersen, 2012, \u201cTime Series Momentum,\" Journal of Financial Economics, 104(2), 228-250."
+                },
+                {
+                  "cell": "A2",
+                  "text": "Not all data described here may be shown on the data tab based on the user's request. Please see www.aqr.com for the full selection of available data."
+                },
+                {
+                  "cell": "A4",
+                  "text": "Constructing the TSMOM Factor"
+                }
+              ],
+              "Disclosures": [
+                {
+                  "cell": "B2",
+                  "text": "Disclosures"
+                }
+              ],
+              "TSMOM Factors": [
+                {
+                  "cell": "A1",
+                  "text": "AQR Capital Management, LLC \u2014 Time Series Momentum: Factors, Monthly"
+                },
+                {
+                  "cell": "A3",
+                  "text": "This file contains the excess returns of the long/short Time Series Momentum (TSMOM) factors."
+                },
+                {
+                  "cell": "A4",
+                  "text": "The portfolios are an updated and extended version of the factors used in Moskowitz, Tobias J., Yao Hua Ooi and Lasse H. Pedersen, 2012, \u201cTime Series Momentum,\" Journal of Financial Economics, 104(2), 228-250."
+                },
+                {
+                  "cell": "A5",
+                  "text": "The portfolio construction is based on Moskowitz, Ooi and Pedersen (2012), however there can be differences in data sources and methodology. See the Data Sources and Definition tabs for details."
+                },
+                {
+                  "cell": "A7",
+                  "text": "We report the monthly excess returns of the time series momentum factors for all assets (no superscript), global equity indices (EQ), currencies (FX), fixed income (FI), and commodities (CM)"
+                },
+                {
+                  "cell": "A8",
+                  "text": "The TSMOM factor here is a 12-month time series momentum strategy with a 1-month holding period."
+                },
+                {
+                  "cell": "A9",
+                  "text": "Not all available data may be displayed below based on the user's selection. Please see www.aqr.com for the full selection of available data."
+                },
+                {
+                  "cell": "A11",
+                  "text": "Data are updated and maintained by AQR, www.aqr.com."
+                },
+                {
+                  "cell": "A12",
+                  "text": "Data are updated as they become available. AQR reconstructs the full history each time the returns are updated."
+                },
+                {
+                  "cell": "A13",
+                  "text": "Copyright \u00a92012 Tobias Moskowitz, Yao Hua Ooi, and Lasse Heje Pedersen"
+                },
+                {
+                  "cell": "A15",
+                  "text": "Please see disclosures on the Disclosures tab."
+                },
+                {
+                  "cell": "B18",
+                  "text": "TSMOM"
+                },
+                {
+                  "cell": "C18",
+                  "text": "TSMOM^CM"
+                },
+                {
+                  "cell": "D18",
+                  "text": "TSMOM^EQ"
+                },
+                {
+                  "cell": "E18",
+                  "text": "TSMOM^FI"
+                },
+                {
+                  "cell": "F18",
+                  "text": "TSMOM^FX"
+                }
+              ]
+            }
+          },
+          "url": "https://www.aqr.com/-/media/AQR/Documents/Insights/Data-Sets/Time-Series-Momentum-Factors-Monthly.xlsx"
+        },
+        "h10": {
+          "archive_members": [
+            "H10_H10.xsd",
+            "H10_data.xml",
+            "H10_struct.xml",
+            "frb_common.xsd"
+          ],
+          "first_source_date": "1971-01-04",
+          "gate_72_consecutive_months_all_series": true,
+          "last_source_date": "2026-08-31",
+          "normalized_panel_sha256": "015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419",
+          "normalized_symbols": [
+            "AUD",
+            "EUR",
+            "NZD",
+            "GBP",
+            "BRL",
+            "CAD",
+            "CNY",
+            "DKK",
+            "HKD",
+            "INR",
+            "JPY",
+            "MYR",
+            "MXN",
+            "NOK",
+            "ZAR",
+            "SGD",
+            "KRW",
+            "LKR",
+            "SEK",
+            "CHF",
+            "TWD",
+            "THB",
+            "VES"
+          ],
+          "per_series": {
+            "AUD": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": false,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 570,
+              "normalized_quote": "USD per AUD",
+              "observation_status_counts_in_window": {
+                "A": 13951,
+                "ND": 570
+              },
+              "series_attributes": {
+                "CURRENCY": "AUD",
+                "FREQ": "9",
+                "FX": "AUD",
+                "SERIES_NAME": "RXI$US_N.B.AL",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI$US_N.B.AL",
+              "source_quote": "USD per AUD",
+              "unique_identifier": "H10/H10/RXI$US_N.B.AL"
+            },
+            "BRL": {
+              "first_nonmissing_date": "1995-01-02",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 380,
+              "missing_observations_on_union_calendar": 6580,
+              "normalized_quote": "USD per BRL",
+              "observation_status_counts_in_window": {
+                "A": 7941,
+                "ND": 320
+              },
+              "series_attributes": {
+                "CURRENCY": "BRL",
+                "FREQ": "9",
+                "FX": "BRL",
+                "SERIES_NAME": "RXI_N.B.BZ",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.BZ",
+              "source_quote": "BRL per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.BZ"
+            },
+            "CAD": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 557,
+              "normalized_quote": "USD per CAD",
+              "observation_status_counts_in_window": {
+                "A": 13964,
+                "ND": 557
+              },
+              "series_attributes": {
+                "CURRENCY": "CAD",
+                "FREQ": "9",
+                "FX": "CAD",
+                "SERIES_NAME": "RXI_N.B.CA",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.CA",
+              "source_quote": "CAD per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.CA"
+            },
+            "CHF": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 563,
+              "normalized_quote": "USD per CHF",
+              "observation_status_counts_in_window": {
+                "A": 13958,
+                "ND": 563
+              },
+              "series_attributes": {
+                "CURRENCY": "CHF",
+                "FREQ": "9",
+                "FX": "CHF",
+                "SERIES_NAME": "RXI_N.B.SZ",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.SZ",
+              "source_quote": "CHF per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.SZ"
+            },
+            "CNY": {
+              "first_nonmissing_date": "1981-01-02",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 548,
+              "missing_observations_on_union_calendar": 3123,
+              "normalized_quote": "USD per CNY",
+              "observation_status_counts_in_window": {
+                "A": 11398,
+                "ND": 514
+              },
+              "series_attributes": {
+                "CURRENCY": "CNY",
+                "FREQ": "9",
+                "FX": "CNY",
+                "SERIES_NAME": "RXI_N.B.CH",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.CH",
+              "source_quote": "CNY per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.CH"
+            },
+            "DKK": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 564,
+              "normalized_quote": "USD per DKK",
+              "observation_status_counts_in_window": {
+                "A": 13957,
+                "ND": 564
+              },
+              "series_attributes": {
+                "CURRENCY": "DKK",
+                "FREQ": "9",
+                "FX": "DKK",
+                "SERIES_NAME": "RXI_N.B.DN",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.DN",
+              "source_quote": "DKK per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.DN"
+            },
+            "EUR": {
+              "first_nonmissing_date": "1999-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": false,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 332,
+              "missing_observations_on_union_calendar": 7584,
+              "normalized_quote": "USD per EUR",
+              "observation_status_counts_in_window": {
+                "A": 6937,
+                "ND": 279
+              },
+              "series_attributes": {
+                "CURRENCY": "EUR",
+                "FREQ": "9",
+                "FX": "EUR",
+                "SERIES_NAME": "RXI$US_N.B.EU",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI$US_N.B.EU",
+              "source_quote": "USD per EUR",
+              "unique_identifier": "H10/H10/RXI$US_N.B.EU"
+            },
+            "GBP": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": false,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 563,
+              "normalized_quote": "USD per GBP",
+              "observation_status_counts_in_window": {
+                "A": 13958,
+                "ND": 563
+              },
+              "series_attributes": {
+                "CURRENCY": "GBP",
+                "FREQ": "9",
+                "FX": "GBP",
+                "SERIES_NAME": "RXI$US_N.B.UK",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI$US_N.B.UK",
+              "source_quote": "USD per GBP",
+              "unique_identifier": "H10/H10/RXI$US_N.B.UK"
+            },
+            "HKD": {
+              "first_nonmissing_date": "1981-01-02",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 548,
+              "missing_observations_on_union_calendar": 3063,
+              "normalized_quote": "USD per HKD",
+              "observation_status_counts_in_window": {
+                "A": 11458,
+                "ND": 454
+              },
+              "series_attributes": {
+                "CURRENCY": "HKD",
+                "FREQ": "9",
+                "FX": "HKD",
+                "SERIES_NAME": "RXI_N.B.HK",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.HK",
+              "source_quote": "HKD per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.HK"
+            },
+            "INR": {
+              "first_nonmissing_date": "1973-01-02",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 644,
+              "missing_observations_on_union_calendar": 1071,
+              "normalized_quote": "USD per INR",
+              "observation_status_counts_in_window": {
+                "A": 13450,
+                "ND": 550
+              },
+              "series_attributes": {
+                "CURRENCY": "INR",
+                "FREQ": "9",
+                "FX": "INR",
+                "SERIES_NAME": "RXI_N.B.IN",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.IN",
+              "source_quote": "INR per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.IN"
+            },
+            "JPY": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 569,
+              "normalized_quote": "USD per JPY",
+              "observation_status_counts_in_window": {
+                "A": 13952,
+                "ND": 569
+              },
+              "series_attributes": {
+                "CURRENCY": "JPY",
+                "FREQ": "9",
+                "FX": "JPY",
+                "SERIES_NAME": "RXI_N.B.JA",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.JA",
+              "source_quote": "JPY per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.JA"
+            },
+            "KRW": {
+              "first_nonmissing_date": "1981-04-13",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 545,
+              "missing_observations_on_union_calendar": 3177,
+              "normalized_quote": "USD per KRW",
+              "observation_status_counts_in_window": {
+                "A": 11344,
+                "ND": 497
+              },
+              "series_attributes": {
+                "CURRENCY": "KRW",
+                "FREQ": "9",
+                "FX": "KRW",
+                "SERIES_NAME": "RXI_N.B.KO",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.KO",
+              "source_quote": "KRW per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.KO"
+            },
+            "LKR": {
+              "first_nonmissing_date": "1973-01-02",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 644,
+              "missing_observations_on_union_calendar": 1423,
+              "normalized_quote": "USD per LKR",
+              "observation_status_counts_in_window": {
+                "A": 13098,
+                "ND": 902
+              },
+              "series_attributes": {
+                "CURRENCY": "LKR",
+                "FREQ": "9",
+                "FX": "LKR",
+                "SERIES_NAME": "RXI_N.B.SL",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.SL",
+              "source_quote": "LKR per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.SL"
+            },
+            "MXN": {
+              "first_nonmissing_date": "1993-11-08",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 394,
+              "missing_observations_on_union_calendar": 6295,
+              "normalized_quote": "USD per MXN",
+              "observation_status_counts_in_window": {
+                "A": 8226,
+                "ND": 335
+              },
+              "series_attributes": {
+                "CURRENCY": "MXN",
+                "FREQ": "9",
+                "FX": "MXN",
+                "SERIES_NAME": "RXI_N.B.MX",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.MX",
+              "source_quote": "MXN per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.MX"
+            },
+            "MYR": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 585,
+              "normalized_quote": "USD per MYR",
+              "observation_status_counts_in_window": {
+                "A": 13936,
+                "ND": 585
+              },
+              "series_attributes": {
+                "CURRENCY": "MYR",
+                "FREQ": "9",
+                "FX": "MYR",
+                "SERIES_NAME": "RXI_N.B.MA",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.MA",
+              "source_quote": "MYR per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.MA"
+            },
+            "NOK": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 564,
+              "normalized_quote": "USD per NOK",
+              "observation_status_counts_in_window": {
+                "A": 13957,
+                "ND": 564
+              },
+              "series_attributes": {
+                "CURRENCY": "NOK",
+                "FREQ": "9",
+                "FX": "NOK",
+                "SERIES_NAME": "RXI_N.B.NO",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.NO",
+              "source_quote": "NOK per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.NO"
+            },
+            "NZD": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": false,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 579,
+              "normalized_quote": "USD per NZD",
+              "observation_status_counts_in_window": {
+                "A": 13942,
+                "ND": 579
+              },
+              "series_attributes": {
+                "CURRENCY": "NZD",
+                "FREQ": "9",
+                "FX": "NZD",
+                "SERIES_NAME": "RXI$US_N.B.NZ",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI$US_N.B.NZ",
+              "source_quote": "USD per NZD",
+              "unique_identifier": "H10/H10/RXI$US_N.B.NZ"
+            },
+            "SEK": {
+              "first_nonmissing_date": "1971-01-04",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 668,
+              "missing_observations_on_union_calendar": 564,
+              "normalized_quote": "USD per SEK",
+              "observation_status_counts_in_window": {
+                "A": 13957,
+                "ND": 564
+              },
+              "series_attributes": {
+                "CURRENCY": "SEK",
+                "FREQ": "9",
+                "FX": "SEK",
+                "SERIES_NAME": "RXI_N.B.SD",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.SD",
+              "source_quote": "SEK per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.SD"
+            },
+            "SGD": {
+              "first_nonmissing_date": "1981-01-02",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 548,
+              "missing_observations_on_union_calendar": 3064,
+              "normalized_quote": "USD per SGD",
+              "observation_status_counts_in_window": {
+                "A": 11457,
+                "ND": 455
+              },
+              "series_attributes": {
+                "CURRENCY": "SGD",
+                "FREQ": "9",
+                "FX": "SGD",
+                "SERIES_NAME": "RXI_N.B.SI",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.SI",
+              "source_quote": "SGD per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.SI"
+            },
+            "THB": {
+              "first_nonmissing_date": "1981-01-02",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 548,
+              "missing_observations_on_union_calendar": 3144,
+              "normalized_quote": "USD per THB",
+              "observation_status_counts_in_window": {
+                "A": 11377,
+                "ND": 535
+              },
+              "series_attributes": {
+                "CURRENCY": "THB",
+                "FREQ": "9",
+                "FX": "THB",
+                "SERIES_NAME": "RXI_N.B.TH",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.TH",
+              "source_quote": "THB per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.TH"
+            },
+            "TWD": {
+              "first_nonmissing_date": "1983-10-03",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 515,
+              "missing_observations_on_union_calendar": 4050,
+              "normalized_quote": "USD per TWD",
+              "observation_status_counts_in_window": {
+                "A": 10471,
+                "ND": 725
+              },
+              "series_attributes": {
+                "CURRENCY": "TWD",
+                "FREQ": "9",
+                "FX": "TWD",
+                "SERIES_NAME": "RXI_N.B.TA",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.TA",
+              "source_quote": "TWD per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.TA"
+            },
+            "VES": {
+              "first_nonmissing_date": "2000-01-03",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 320,
+              "missing_observations_on_union_calendar": 7842,
+              "normalized_quote": "USD per VES",
+              "observation_status_counts_in_window": {
+                "A": 6679,
+                "ND": 1582
+              },
+              "series_attributes": {
+                "CURRENCY": "VEB",
+                "FREQ": "9",
+                "FX": "VEB",
+                "SERIES_NAME": "RXI_N.B.VES",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.VES",
+              "source_quote": "VES per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.VES"
+            },
+            "ZAR": {
+              "first_nonmissing_date": "1980-01-02",
+              "gate_72_consecutive_months": true,
+              "inverted": true,
+              "last_nonmissing_date": "2026-08-31",
+              "longest_consecutive_months_with_observation": 560,
+              "missing_observations_on_union_calendar": 2820,
+              "normalized_quote": "USD per ZAR",
+              "observation_status_counts_in_window": {
+                "A": 11701,
+                "ND": 473
+              },
+              "series_attributes": {
+                "CURRENCY": "ZAR",
+                "FREQ": "9",
+                "FX": "ZAL",
+                "SERIES_NAME": "RXI_N.B.SF",
+                "UNIT": "Currency",
+                "UNIT_MULT": "1"
+              },
+              "series_name": "RXI_N.B.SF",
+              "source_quote": "ZAR per USD",
+              "unique_identifier": "H10/H10/RXI_N.B.SF"
+            }
+          },
+          "post_cutoff_observations_ignored": true,
+          "raw_artifact": "h10-all-data.zip",
+          "raw_sha256": "38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046",
+          "snapshot_from": "1971-01-04",
+          "snapshot_through": "2026-08-31",
+          "source_ids": [
+            "H10/H10/RXI$US_N.B.AL",
+            "H10/H10/RXI$US_N.B.EU",
+            "H10/H10/RXI$US_N.B.NZ",
+            "H10/H10/RXI$US_N.B.UK",
+            "H10/H10/RXI_N.B.BZ",
+            "H10/H10/RXI_N.B.CA",
+            "H10/H10/RXI_N.B.CH",
+            "H10/H10/RXI_N.B.DN",
+            "H10/H10/RXI_N.B.HK",
+            "H10/H10/RXI_N.B.IN",
+            "H10/H10/RXI_N.B.JA",
+            "H10/H10/RXI_N.B.MA",
+            "H10/H10/RXI_N.B.MX",
+            "H10/H10/RXI_N.B.NO",
+            "H10/H10/RXI_N.B.SF",
+            "H10/H10/RXI_N.B.SI",
+            "H10/H10/RXI_N.B.KO",
+            "H10/H10/RXI_N.B.SL",
+            "H10/H10/RXI_N.B.SD",
+            "H10/H10/RXI_N.B.SZ",
+            "H10/H10/RXI_N.B.TA",
+            "H10/H10/RXI_N.B.TH",
+            "H10/H10/RXI_N.B.VES"
+          ],
+          "source_rows_union_calendar": 14521,
+          "transport": "Federal Reserve H.10 release-wide SDMX/XML ZIP",
+          "url": "https://www.federalreserve.gov/datadownload/Output.aspx?filetype=zip&rel=h10"
+        },
+        "lrv_currency_portfolios": {
+          "raw_artifact": "CurrencyPortfolios.xls",
+          "raw_sha256": "e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74",
+          "schema": {
+            "currency_or_fx_schema_tokens": [
+              "3) they correspond to our large sample of developed and emerging countries (Sheet labelled `all currencies') or to our sample of developed countries (Sheet labelled `developed currencies').",
+              "All currencies",
+              "All currencies (net)",
+              "Common Risk Factors in Currency Markets",
+              "Currency",
+              "Currency [0]",
+              "Developed currencies",
+              "Developed currencies (net)",
+              "Portfolios of Currency Excess Returns",
+              "Realized and Predicted Average Currency Excess Returns",
+              "Using RX and HML(FX)",
+              "for details about the construction of these currency portfolios.P"
+            ],
+            "currency_specific_schema_present": true,
+            "hml_schema_present": true,
+            "hml_schema_tokens": [
+              "Betas HML",
+              "HML",
+              "HML = P5 - P1",
+              "HML = P6 - P1",
+              "Using RX and HML(FX)"
+            ],
+            "numeric_cells_inspected": false,
+            "p1_through_p6_schema_present": true,
+            "portfolio_schema_tokens": {
+              "P1": [
+                "HML = P5 - P1",
+                "HML = P6 - P1",
+                "Portfolio1"
+              ],
+              "P2": [
+                "Portfolio2"
+              ],
+              "P3": [
+                "Portfolio3"
+              ],
+              "P4": [
+                "Portfolio4"
+              ],
+              "P5": [
+                "HML = P5 - P1",
+                "Portfolio5"
+              ],
+              "P6": [
+                "HML = P6 - P1",
+                "Portfolio6%"
+              ]
+            },
+            "schema_method": "ole-binary-strings-only",
+            "sheet_or_schema_strings": [
+              "3) they correspond to our large sample of developed and emerging countries (Sheet labelled `all currencies') or to our sample of developed countries (Sheet labelled `developed currencies').",
+              "All currencies",
+              "All currencies (net)",
+              "Asset Pricing - Developed",
+              "Betas HML",
+              "Chart - Developed",
+              "Chart - Developed (2)",
+              "Common Risk Factors in Currency Markets",
+              "Currency",
+              "Currency [0]",
+              "Developed currencies",
+              "Developed currencies (net)",
+              "HML",
+              "HML = P5 - P1",
+              "HML = P6 - P1",
+              "Portfolio1",
+              "Portfolio2",
+              "Portfolio3",
+              "Portfolio4",
+              "Portfolio5",
+              "Portfolio6%",
+              "Portfolios of Currency Excess Returns",
+              "Realized and Predicted Average Currency Excess Returns",
+              "Using RX and HML(FX)",
+              "for details about the construction of these currency portfolios.P"
+            ]
+          },
+          "url": "https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls"
+        }
+      },
+      "stage": "stage3-ingestion"
     },
     "safety": {
       "correlation_computed": false,
@@ -76,24 +879,6 @@
       "returns_computed": false,
       "sharpe_computed": false,
       "tracking_error_computed": false
-    },
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "mamba2.backtest.m025_stage3_ingestion",
-        "--output-dir",
-        "backtest_data/m025-stage3-ingestion-v1.tmp",
-        "--libreoffice",
-        "/usr/bin/libreoffice"
-      ],
-      "exit_code": 0,
-      "timed_out": false,
-      "stdout": "{\"economic_computation_performed\": false, \"ok\": true, \"report_path\": \"backtest_data/m025-stage3-ingestion-v1.tmp/m025-stage3-ingestion.json\", \"report_sha256\": \"d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505\"}\n",
-      "stderr": ""
     }
   }
 }
