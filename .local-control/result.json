@@ -1,1313 +1,308 @@
 {
   "version": 1,
-  "command_id": "mamba2-m027-stage0-coverage-probe-v4",
-  "completed_at": "2026-09-30T17:51:41.042214+00:00",
+  "command_id": "mamba2-m027-stage0-universe-probe-v1",
+  "completed_at": "2026-09-30T17:57:43.019172+00:00",
   "ok": true,
-  "action": "m027_stage0_coverage_probe",
+  "action": "m027_stage0_universe_probe",
   "data": {
     "ok": true,
     "feature_branch": "carry-aware-spot-tsmom",
-    "feature_sha": "ecb5b1fca55d1392cb240bdee34cf81c961d8aba",
-    "bis": {
-      "content_type": "application/zip",
-      "csv_fields": [
-        "STRUCTURE",
-        "STRUCTURE_ID",
-        "ACTION",
-        "FREQ:Frequency",
-        "REF_AREA:Reference area",
-        "CURRENCY:Currency",
-        "COLLECTION:Collection",
-        "TIME_PERIOD:Time period or range",
-        "OBS_VALUE:Observation Value",
-        "UNIT_MULT:Unit Multiplier",
-        "DECIMALS:Decimals",
-        "AVAILABILITY:Availability",
-        "TITLE:Title",
-        "OBS_STATUS:Observation Status",
-        "OBS_PRE_BREAK:Pre-Break Observation",
-        "OBS_CONF:Observation confidentiality"
-      ],
-      "row_samples_no_values": [
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1953"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1954"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1955"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1956"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1957"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1958"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1959"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1960"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1961"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1962"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1963"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1964"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1965"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1966"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1967"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1968"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1969"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1970"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1971"
-        },
-        {
-          "collection": "E: End of period",
-          "currency": "CHF: Swiss franc",
-          "freq": "A: Annual",
-          "ref_area": "CH: Switzerland",
-          "time_period": "1972"
-        }
-      ],
-      "series_with_72_month_run": [
-        {
-          "collection": "A",
-          "currency": "AED",
-          "first_month": "1994-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 393,
-          "months": 393,
-          "ref_area": "AE"
-        },
-        {
-          "collection": "A",
-          "currency": "ALL",
-          "first_month": "1998-12",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 334,
-          "months": 334,
-          "ref_area": "AL"
-        },
-        {
-          "collection": "A",
-          "currency": "ARS",
-          "first_month": "1992-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 417,
-          "months": 417,
-          "ref_area": "AR"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1957-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 837,
-          "months": 837,
-          "ref_area": "AT"
-        },
-        {
-          "collection": "A",
-          "currency": "AUD",
-          "first_month": "1971-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 669,
-          "months": 669,
-          "ref_area": "AU"
-        },
-        {
-          "collection": "A",
-          "currency": "BAM",
-          "first_month": "1998-01",
-          "last_month": "2026-08",
-          "longest_consecutive_months": 344,
-          "months": 344,
-          "ref_area": "BA"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1953-09",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 877,
-          "months": 877,
-          "ref_area": "BE"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1991-02",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 428,
-          "months": 428,
-          "ref_area": "BG"
-        },
-        {
-          "collection": "A",
-          "currency": "BHD",
-          "first_month": "1994-01",
-          "last_month": "2019-01",
-          "longest_consecutive_months": 301,
-          "months": 301,
-          "ref_area": "BH"
-        },
-        {
-          "collection": "A",
-          "currency": "BND",
-          "first_month": "1998-09",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 337,
-          "months": 337,
-          "ref_area": "BN"
-        },
-        {
-          "collection": "A",
-          "currency": "BRL",
-          "first_month": "1984-12",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 502,
-          "months": 502,
-          "ref_area": "BR"
-        },
-        {
-          "collection": "A",
-          "currency": "CAD",
-          "first_month": "1945-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 981,
-          "months": 981,
-          "ref_area": "CA"
-        },
-        {
-          "collection": "A",
-          "currency": "CHF",
-          "first_month": "1953-09",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 877,
-          "months": 877,
-          "ref_area": "CH"
-        },
-        {
-          "collection": "A",
-          "currency": "CLP",
-          "first_month": "1982-08",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 530,
-          "months": 530,
-          "ref_area": "CL"
-        },
-        {
-          "collection": "A",
-          "currency": "CNY",
-          "first_month": "1981-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 549,
-          "months": 549,
-          "ref_area": "CN"
-        },
-        {
-          "collection": "A",
-          "currency": "COP",
-          "first_month": "1967-03",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 715,
-          "months": 715,
-          "ref_area": "CO"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1990-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 441,
-          "months": 441,
-          "ref_area": "CY"
-        },
-        {
-          "collection": "A",
-          "currency": "CZK",
-          "first_month": "1993-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 405,
-          "months": 405,
-          "ref_area": "CZ"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1953-09",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 877,
-          "months": 877,
-          "ref_area": "DE"
-        },
-        {
-          "collection": "A",
-          "currency": "DKK",
-          "first_month": "1953-09",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 877,
-          "months": 877,
-          "ref_area": "DK"
-        },
-        {
-          "collection": "A",
-          "currency": "DZD",
-          "first_month": "1995-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 381,
-          "months": 381,
-          "ref_area": "DZ"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1992-06",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 412,
-          "months": 412,
-          "ref_area": "EE"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1962-05",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 773,
-          "months": 773,
-          "ref_area": "ES"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1971-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 669,
-          "months": 669,
-          "ref_area": "FI"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1953-09",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 877,
-          "months": 877,
-          "ref_area": "FR"
-        },
-        {
-          "collection": "A",
-          "currency": "GBP",
-          "first_month": "1953-08",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 878,
-          "months": 878,
-          "ref_area": "GB"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1977-06",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 592,
+    "feature_sha": "b45bea061411b273e2f30130d2224e2f84293d8d",
+    "accepted": [
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "AU",
+        "currency": "AUD",
+        "longest_eligible_run": {
+          "end": "2020-04",
           "months": 592,
-          "ref_area": "GR"
+          "start": "1971-01"
         },
-        {
-          "collection": "A",
-          "currency": "HKD",
-          "first_month": "1981-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 549,
-          "months": 549,
-          "ref_area": "HK"
+        "oecd_ref": "AUS"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "CA",
+        "currency": "CAD",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 670,
+          "start": "1964-07"
         },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1992-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 417,
-          "months": 417,
-          "ref_area": "HR"
+        "oecd_ref": "CAN"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "CH",
+        "currency": "CHF",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 249,
+          "start": "1999-08"
         },
-        {
-          "collection": "A",
-          "currency": "HUF",
-          "first_month": "1949-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 933,
-          "months": 933,
-          "ref_area": "HU"
+        "oecd_ref": "CHE"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "CL",
+        "currency": "CLP",
+        "longest_eligible_run": {
+          "end": "2008-08",
+          "months": 118,
+          "start": "1998-11"
         },
-        {
-          "collection": "A",
-          "currency": "IDR",
-          "first_month": "1988-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 465,
-          "months": 465,
-          "ref_area": "ID"
+        "oecd_ref": "CHL"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "CN",
+        "currency": "CNY",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 170,
+          "start": "2006-03"
         },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1971-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 669,
-          "months": 669,
-          "ref_area": "IE"
-        },
-        {
-          "collection": "A",
-          "currency": "ILS",
-          "first_month": "1977-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 597,
-          "months": 597,
-          "ref_area": "IL"
-        },
-        {
-          "collection": "A",
-          "currency": "INR",
-          "first_month": "1973-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 645,
-          "months": 645,
-          "ref_area": "IN"
-        },
-        {
-          "collection": "A",
-          "currency": "IRR",
-          "first_month": "1994-01",
-          "last_month": "2019-01",
-          "longest_consecutive_months": 301,
-          "months": 301,
-          "ref_area": "IR"
-        },
-        {
-          "collection": "A",
-          "currency": "ISK",
-          "first_month": "1981-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 549,
-          "months": 549,
-          "ref_area": "IS"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1955-08",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 854,
-          "months": 854,
-          "ref_area": "IT"
-        },
-        {
-          "collection": "A",
-          "currency": "JPY",
-          "first_month": "1969-12",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 682,
-          "months": 682,
-          "ref_area": "JP"
-        },
-        {
-          "collection": "A",
-          "currency": "KRW",
-          "first_month": "1964-05",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 749,
-          "months": 749,
-          "ref_area": "KR"
-        },
-        {
-          "collection": "A",
-          "currency": "KWD",
-          "first_month": "1994-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 393,
-          "months": 393,
-          "ref_area": "KW"
-        },
-        {
-          "collection": "A",
-          "currency": "KZT",
-          "first_month": "2006-04",
-          "last_month": "2019-03",
-          "longest_consecutive_months": 156,
-          "months": 156,
-          "ref_area": "KZ"
-        },
-        {
-          "collection": "A",
-          "currency": "LKR",
-          "first_month": "1973-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 645,
-          "months": 645,
-          "ref_area": "LK"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1993-06",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 400,
-          "months": 400,
-          "ref_area": "LT"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1978-12",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 574,
-          "months": 574,
-          "ref_area": "LU"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1992-02",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 416,
-          "months": 416,
-          "ref_area": "LV"
-        },
-        {
-          "collection": "A",
-          "currency": "MAD",
-          "first_month": "1996-04",
-          "last_month": "2026-08",
-          "longest_consecutive_months": 365,
-          "months": 365,
-          "ref_area": "MA"
-        },
-        {
-          "collection": "A",
-          "currency": "MKD",
-          "first_month": "1993-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 405,
-          "months": 405,
-          "ref_area": "MK"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1989-11",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 443,
-          "months": 443,
-          "ref_area": "MT"
-        },
-        {
-          "collection": "A",
-          "currency": "MUR",
-          "first_month": "2003-03",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 283,
-          "months": 283,
-          "ref_area": "MU"
-        },
-        {
-          "collection": "A",
-          "currency": "MXN",
-          "first_month": "1954-04",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 870,
-          "months": 870,
-          "ref_area": "MX"
-        },
-        {
-          "collection": "A",
-          "currency": "MYR",
-          "first_month": "1971-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 669,
-          "months": 669,
-          "ref_area": "MY"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1953-09",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 877,
-          "months": 877,
-          "ref_area": "NL"
-        },
-        {
-          "collection": "A",
-          "currency": "NOK",
-          "first_month": "1953-12",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 874,
-          "months": 874,
-          "ref_area": "NO"
-        },
-        {
-          "collection": "A",
-          "currency": "NPR",
-          "first_month": "1994-01",
-          "last_month": "2019-01",
-          "longest_consecutive_months": 301,
-          "months": 301,
-          "ref_area": "NP"
-        },
-        {
-          "collection": "A",
-          "currency": "NZD",
-          "first_month": "1971-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 669,
-          "months": 669,
-          "ref_area": "NZ"
-        },
-        {
-          "collection": "A",
-          "currency": "OMR",
-          "first_month": "1994-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 393,
-          "months": 393,
-          "ref_area": "OM"
-        },
-        {
-          "collection": "A",
-          "currency": "PEN",
-          "first_month": "1990-08",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 434,
-          "months": 434,
-          "ref_area": "PE"
-        },
-        {
-          "collection": "A",
-          "currency": "PHP",
-          "first_month": "1978-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 585,
-          "months": 585,
-          "ref_area": "PH"
-        },
-        {
-          "collection": "A",
-          "currency": "PKR",
-          "first_month": "1994-01",
-          "last_month": "2019-03",
-          "longest_consecutive_months": 303,
-          "months": 303,
-          "ref_area": "PK"
-        },
-        {
-          "collection": "A",
-          "currency": "PLN",
-          "first_month": "1984-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 513,
-          "months": 513,
-          "ref_area": "PL"
-        },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1958-12",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 814,
-          "months": 814,
-          "ref_area": "PT"
-        },
-        {
-          "collection": "A",
-          "currency": "QAR",
-          "first_month": "1994-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 393,
-          "months": 393,
-          "ref_area": "QA"
-        },
-        {
-          "collection": "A",
-          "currency": "RON",
-          "first_month": "1990-02",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 440,
-          "months": 440,
-          "ref_area": "RO"
-        },
-        {
-          "collection": "A",
-          "currency": "RSD",
-          "first_month": "1994-02",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 392,
-          "months": 392,
-          "ref_area": "RS"
-        },
-        {
-          "collection": "A",
-          "currency": "RUB",
-          "first_month": "1992-07",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 411,
+        "oecd_ref": "CHN"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "CO",
+        "currency": "COP",
+        "longest_eligible_run": {
+          "end": "2020-04",
           "months": 411,
-          "ref_area": "RU"
+          "start": "1986-02"
         },
-        {
-          "collection": "A",
-          "currency": "SAR",
-          "first_month": "1988-12",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 431,
-          "months": 452,
-          "ref_area": "SA"
+        "oecd_ref": "COL"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "CZ",
+        "currency": "CZK",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 327,
+          "start": "1993-02"
         },
-        {
-          "collection": "A",
-          "currency": "SEK",
-          "first_month": "1953-09",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 877,
-          "months": 877,
-          "ref_area": "SE"
+        "oecd_ref": "CZE"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "DK",
+        "currency": "DKK",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 399,
+          "start": "1987-02"
         },
-        {
-          "collection": "A",
-          "currency": "SGD",
-          "first_month": "1981-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 549,
-          "months": 549,
-          "ref_area": "SG"
+        "oecd_ref": "DNK"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "XM",
+        "currency": "EUR",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 315,
+          "start": "1994-02"
         },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1991-10",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 420,
-          "months": 420,
-          "ref_area": "SI"
+        "oecd_ref": "EA20"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "GB",
+        "currency": "GBP",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 411,
+          "start": "1986-02"
         },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1993-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 405,
-          "months": 405,
-          "ref_area": "SK"
+        "oecd_ref": "GBR"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "HU",
+        "currency": "HUF",
+        "longest_eligible_run": {
+          "end": "2004-04",
+          "months": 159,
+          "start": "1991-02"
         },
-        {
-          "collection": "A",
-          "currency": "THB",
-          "first_month": "1981-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 549,
-          "months": 549,
-          "ref_area": "TH"
+        "oecd_ref": "HUN"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "ID",
+        "currency": "IDR",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 267,
+          "start": "1998-02"
         },
-        {
-          "collection": "A",
-          "currency": "TND",
-          "first_month": "2010-06",
-          "last_month": "2019-01",
-          "longest_consecutive_months": 104,
-          "months": 104,
-          "ref_area": "TN"
+        "oecd_ref": "IDN"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "IN",
+        "currency": "INR",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 101,
+          "start": "2011-12"
         },
-        {
-          "collection": "A",
-          "currency": "TRY",
-          "first_month": "1950-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 921,
-          "months": 921,
-          "ref_area": "TR"
+        "oecd_ref": "IND"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "IS",
+        "currency": "ISK",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 389,
+          "start": "1987-12"
         },
-        {
-          "collection": "A",
-          "currency": "TTD",
-          "first_month": "1994-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 393,
-          "months": 393,
-          "ref_area": "TT"
+        "oecd_ref": "ISL"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "IL",
+        "currency": "ILS",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 339,
+          "start": "1992-02"
         },
-        {
-          "collection": "A",
-          "currency": "TWD",
-          "first_month": "1983-10",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 516,
-          "months": 516,
-          "ref_area": "TW"
+        "oecd_ref": "ISR"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "JP",
+        "currency": "JPY",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 216,
+          "start": "2002-05"
         },
-        {
-          "collection": "A",
-          "currency": "UAH",
-          "first_month": "1996-09",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 361,
-          "months": 361,
-          "ref_area": "UA"
+        "oecd_ref": "JPN"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "KR",
+        "currency": "KRW",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 351,
+          "start": "1991-02"
         },
-        {
-          "collection": "A",
-          "currency": "USD",
-          "first_month": "1949-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 933,
-          "months": 933,
-          "ref_area": "US"
+        "oecd_ref": "KOR"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "MX",
+        "currency": "MXN",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 279,
+          "start": "1997-02"
         },
-        {
-          "collection": "A",
-          "currency": "UYU",
-          "first_month": "1993-03",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 403,
-          "months": 403,
-          "ref_area": "UY"
+        "oecd_ref": "MEX"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "NO",
+        "currency": "NOK",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 495,
+          "start": "1979-02"
         },
-        {
-          "collection": "A",
-          "currency": "VEF",
-          "first_month": "1994-01",
-          "last_month": "2018-08",
-          "longest_consecutive_months": 296,
+        "oecd_ref": "NOR"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "NZ",
+        "currency": "NZD",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 556,
+          "start": "1974-01"
+        },
+        "oecd_ref": "NZL"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "PL",
+        "currency": "PLN",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 346,
+          "start": "1991-07"
+        },
+        "oecd_ref": "POL"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "RO",
+        "currency": "RON",
+        "longest_eligible_run": {
+          "end": "2020-04",
           "months": 296,
-          "ref_area": "VE"
+          "start": "1995-09"
         },
-        {
-          "collection": "A",
-          "currency": "EUR",
-          "first_month": "1974-06",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 628,
-          "months": 628,
-          "ref_area": "XM"
+        "oecd_ref": "ROU"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "RU",
+        "currency": "RUB",
+        "longest_eligible_run": {
+          "end": "2020-01",
+          "months": 276,
+          "start": "1997-02"
         },
-        {
-          "collection": "A",
-          "currency": "XDR",
-          "first_month": "1974-07",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 627,
-          "months": 627,
-          "ref_area": "XW"
+        "oecd_ref": "RUS"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "SE",
+        "currency": "SEK",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 459,
+          "start": "1982-02"
         },
-        {
-          "collection": "A",
-          "currency": "ZAR",
-          "first_month": "1970-01",
-          "last_month": "2026-09",
-          "longest_consecutive_months": 681,
-          "months": 681,
-          "ref_area": "ZA"
-        }
-      ],
-      "status": 200,
-      "url": "https://data.bis.org/static/bulk/WS_XRU_csv_flat.zip"
-    },
-    "oecd": {
-      "content_type": "application/vnd.sdmx.data+csv; charset=utf-8; version=2.0.0",
-      "csv_fields": [
-        "STRUCTURE",
-        "STRUCTURE_ID",
-        "ACTION",
-        "REF_AREA",
-        "FREQ",
-        "MEASURE",
-        "UNIT_MEASURE",
-        "ACTIVITY",
-        "ADJUSTMENT",
-        "TRANSFORMATION",
-        "TIME_HORIZ",
-        "METHODOLOGY",
-        "TIME_PERIOD",
-        "OBS_VALUE",
-        "OBS_STATUS",
-        "UNIT_MULT",
-        "DECIMALS",
-        "BASE_PER"
-      ],
-      "series_with_73_month_run": [
-        {
-          "first_month": "1968-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 704,
-          "months": 704,
-          "ref_area": "AUS"
+        "oecd_ref": "SWE"
+      },
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "ZA",
+        "currency": "ZAR",
+        "longest_eligible_run": {
+          "end": "2020-04",
+          "months": 472,
+          "start": "1981-01"
         },
-        {
-          "first_month": "1989-06",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 447,
-          "months": 447,
-          "ref_area": "AUT"
-        },
-        {
-          "first_month": "1957-11",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 826,
-          "months": 826,
-          "ref_area": "BEL"
-        },
-        {
-          "first_month": "2004-02",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 271,
-          "months": 271,
-          "ref_area": "BGR"
-        },
-        {
-          "first_month": "1956-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 848,
-          "months": 848,
-          "ref_area": "CAN"
-        },
-        {
-          "first_month": "1999-07",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 326,
-          "months": 326,
-          "ref_area": "CHE"
-        },
-        {
-          "first_month": "1997-07",
-          "label": null,
-          "last_month": "2026-07",
-          "longest_consecutive_months": 151,
-          "months": 330,
-          "ref_area": "CHL"
-        },
-        {
-          "first_month": "1997-06",
-          "label": null,
-          "last_month": "2026-07",
-          "longest_consecutive_months": 246,
-          "months": 349,
-          "ref_area": "CHN"
-        },
-        {
-          "first_month": "1986-01",
-          "label": null,
-          "last_month": "2026-07",
-          "longest_consecutive_months": 487,
-          "months": 487,
-          "ref_area": "COL"
-        },
-        {
-          "first_month": "1997-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 356,
-          "months": 356,
-          "ref_area": "CRI"
-        },
-        {
-          "first_month": "1993-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 404,
-          "months": 404,
-          "ref_area": "CZE"
-        },
-        {
-          "first_month": "1960-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 800,
-          "months": 800,
-          "ref_area": "DEU"
-        },
-        {
-          "first_month": "1987-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 476,
-          "months": 476,
-          "ref_area": "DNK"
-        },
-        {
-          "first_month": "1994-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 392,
-          "months": 392,
-          "ref_area": "EA20"
-        },
-        {
-          "first_month": "1977-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 596,
-          "months": 596,
-          "ref_area": "ESP"
-        },
-        {
-          "first_month": "1996-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 368,
-          "months": 368,
-          "ref_area": "EST"
-        },
-        {
-          "first_month": "1987-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 476,
-          "months": 476,
-          "ref_area": "FIN"
-        },
-        {
-          "first_month": "1970-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 680,
-          "months": 680,
-          "ref_area": "FRA"
-        },
-        {
-          "first_month": "1986-01",
-          "label": null,
-          "last_month": "2026-02",
-          "longest_consecutive_months": 482,
-          "months": 482,
-          "ref_area": "GBR"
-        },
-        {
-          "first_month": "1994-03",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 390,
-          "months": 390,
-          "ref_area": "GRC"
-        },
-        {
-          "first_month": "2002-09",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 288,
-          "months": 288,
-          "ref_area": "HRV"
-        },
-        {
-          "first_month": "1991-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 159,
-          "months": 400,
-          "ref_area": "HUN"
-        },
-        {
-          "first_month": "1998-01",
-          "label": null,
-          "last_month": "2025-12",
-          "longest_consecutive_months": 336,
-          "months": 336,
-          "ref_area": "IDN"
-        },
-        {
-          "first_month": "2011-11",
-          "label": null,
-          "last_month": "2026-07",
-          "longest_consecutive_months": 177,
-          "months": 177,
-          "ref_area": "IND"
-        },
-        {
-          "first_month": "1984-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 512,
-          "months": 512,
-          "ref_area": "IRL"
-        },
-        {
-          "first_month": "1987-11",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 466,
-          "months": 466,
-          "ref_area": "ISL"
-        },
-        {
-          "first_month": "1992-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 416,
-          "months": 416,
-          "ref_area": "ISR"
-        },
-        {
-          "first_month": "1978-10",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 575,
-          "months": 575,
-          "ref_area": "ITA"
-        },
-        {
-          "first_month": "2002-04",
-          "label": null,
-          "last_month": "2026-07",
-          "longest_consecutive_months": 292,
-          "months": 292,
-          "ref_area": "JPN"
-        },
-        {
-          "first_month": "1991-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 428,
-          "months": 428,
-          "ref_area": "KOR"
-        },
-        {
-          "first_month": "1999-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 332,
-          "months": 332,
-          "ref_area": "LTU"
-        },
-        {
-          "first_month": "1999-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 332,
-          "months": 332,
-          "ref_area": "LUX"
-        },
-        {
-          "first_month": "1998-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 344,
-          "months": 344,
-          "ref_area": "LVA"
-        },
-        {
-          "first_month": "1997-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 356,
-          "months": 356,
-          "ref_area": "MEX"
-        },
-        {
-          "first_month": "1982-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 536,
-          "months": 536,
-          "ref_area": "NLD"
-        },
-        {
-          "first_month": "1979-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 572,
-          "months": 572,
-          "ref_area": "NOR"
-        },
-        {
-          "first_month": "1973-12",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 633,
-          "months": 633,
-          "ref_area": "NZL"
-        },
-        {
-          "first_month": "1991-06",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 423,
-          "months": 423,
-          "ref_area": "POL"
-        },
-        {
-          "first_month": "1985-08",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 446,
-          "months": 490,
-          "ref_area": "PRT"
-        },
-        {
-          "first_month": "1995-08",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 373,
-          "months": 373,
-          "ref_area": "ROU"
-        },
-        {
-          "first_month": "1997-01",
-          "label": null,
-          "last_month": "2022-02",
-          "longest_consecutive_months": 276,
-          "months": 299,
-          "ref_area": "RUS"
-        },
-        {
-          "first_month": "1995-07",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 327,
-          "months": 365,
-          "ref_area": "SVK"
-        },
-        {
-          "first_month": "2002-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 296,
-          "months": 296,
-          "ref_area": "SVN"
-        },
-        {
-          "first_month": "1982-01",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 536,
-          "months": 536,
-          "ref_area": "SWE"
-        },
-        {
-          "first_month": "1964-06",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 670,
-          "months": 746,
-          "ref_area": "USA"
-        },
-        {
-          "first_month": "1980-12",
-          "label": null,
-          "last_month": "2026-08",
-          "longest_consecutive_months": 549,
-          "months": 549,
-          "ref_area": "ZAF"
-        }
-      ],
-      "status": 200,
-      "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_FINMARK,4.0/.M.IR3TIB.PA.....?startPeriod=1950-01&dimensionAtObservation=AllDimensions"
-    },
+        "oecd_ref": "ZAF"
+      }
+    ],
+    "accepted_count": 25,
+    "bis_url": "https://data.bis.org/static/bulk/WS_XRU_csv_flat.zip",
+    "candidate_count": 26,
+    "oecd_url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_FINMARK,4.0/.M.IR3TIB.PA.....?startPeriod=1950-01&dimensionAtObservation=AllDimensions",
+    "rejected": [
+      {
+        "bis_daily_collection": "A",
+        "bis_ref": "CR",
+        "currency": "CRC",
+        "longest_eligible_run": null,
+        "oecd_ref": "CRI",
+        "reason": "BIS daily spot metadata absent; no lag-aligned eligible months"
+      }
+    ],
+    "rejected_count": 1,
+    "universe_sha256": "db9e1f4438fd582a0c2903f2459e290e30450bfc76365f2bbe91553d45b51c00",
+    "usd_rate_ref": "USA",
+    "stage0_gate_passed": true,
     "safety": {
       "observation_values_reported": false,
       "observation_values_used": false,
