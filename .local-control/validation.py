@@ -14855,7 +14855,6 @@ def m025_stage3_ingestion():
             final_dir / "h10-normalized-usd-per-foreign.csv",
             final_dir / "Time-Series-Momentum-Factors-Monthly.xlsx",
             final_dir / "CurrencyPortfolios.xls",
-            final_dir / "CurrencyPortfolios.xlsx",
         ]
         if not all(path.is_file() for path in required):
             return {
