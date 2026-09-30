@@ -976,6 +976,49 @@ def _require_m025_branch():
     return head["stdout"].strip()
 
 
+
+
+def _require_m027_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "carry-aware-spot-tsmom":
+        raise RuntimeError(
+            "M027 action requires branch carry-aware-spot-tsmom"
+        )
+
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("M027 action refuses a dirty worktree")
+
+    target = "carry-aware-spot-tsmom"
+    refresh = _run([
+        "git",
+        "fetch",
+        "origin",
+        f"{target}:refs/remotes/origin/{target}",
+    ])
+    if refresh["exit_code"] != 0:
+        raise RuntimeError("M027 action could not refresh remote branch")
+
+    head = _run(["git", "rev-parse", "HEAD"])
+    remote = _run([
+        "git",
+        "rev-parse",
+        "--verify",
+        f"refs/remotes/origin/{target}",
+    ])
+    if (
+        head["exit_code"] != 0
+        or remote["exit_code"] != 0
+        or head["stdout"].strip() != remote["stdout"].strip()
+    ):
+        raise RuntimeError(
+            "M027 action requires local HEAD to match "
+            "origin/carry-aware-spot-tsmom"
+        )
+    return head["stdout"].strip()
+
+
 def _ensure_baseline_path(path):
     root = (REPO / "backtest_data").resolve()
     resolved = Path(path).resolve()
@@ -15983,6 +16026,323 @@ print(json.dumps({"sheet_name": "Notes", "text_rows": rows}, sort_keys=True))
     }
 
 
+
+def m027_switch_carry_aware_spot_tsmom():
+    """Switch clean Dell checkout to the exact M027 feature branch safely."""
+
+    target = "carry-aware-spot-tsmom"
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        return {
+            "ok": False,
+            "reason": "M027 branch switch refuses a dirty worktree",
+            "changed_paths": status["stdout"].splitlines(),
+        }
+
+    fetch = _run([
+        "git",
+        "fetch",
+        "origin",
+        f"{target}:refs/remotes/origin/{target}",
+    ])
+    if fetch["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "could not fetch M027 remote branch",
+            "run": fetch,
+        }
+
+    local_ref = _run(["git", "show-ref", "--verify", f"refs/heads/{target}"])
+    if local_ref["exit_code"] == 0:
+        switch = _run(["git", "switch", target])
+    else:
+        switch = _run([
+            "git",
+            "switch",
+            "--track",
+            "-c",
+            target,
+            f"origin/{target}",
+        ])
+    if switch["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "could not switch to M027 branch",
+            "run": switch,
+        }
+
+    divergence = _run([
+        "git",
+        "rev-list",
+        "--left-right",
+        "--count",
+        f"HEAD...refs/remotes/origin/{target}",
+    ])
+    if divergence["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "could not measure M027 divergence",
+            "run": divergence,
+        }
+    left, right = [
+        int(value)
+        for value in divergence["stdout"].strip().split()
+    ]
+    if left > 0:
+        return {
+            "ok": False,
+            "reason": "local M027 branch has unpushed/divergent commits",
+            "divergence": {"ahead": left, "behind": right},
+        }
+
+    ff = None
+    if right > 0:
+        ff = _run([
+            "git",
+            "merge",
+            "--ff-only",
+            f"refs/remotes/origin/{target}",
+        ])
+        if ff["exit_code"] != 0:
+            return {
+                "ok": False,
+                "reason": "M027 fast-forward failed",
+                "run": ff,
+            }
+
+    feature_sha = _require_m027_branch()
+    return {
+        "ok": True,
+        "feature_branch": target,
+        "feature_sha": feature_sha,
+        "divergence": {"ahead": 0, "behind": 0},
+        "switch": switch,
+        "fast_forward": ff,
+        "safety": {
+            "dirty_worktree_refused": True,
+            "force_reset_used": False,
+            "economic_replay_run": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m027_stage0_coverage_probe():
+    """Inspect BIS/OECD coverage metadata only; do not use observation values."""
+
+    feature_sha = _require_m027_branch()
+
+    code = r"""
+import csv
+import io
+import json
+import urllib.request
+import zipfile
+from collections import defaultdict
+from datetime import datetime
+
+USER_AGENT = "Mozilla/5.0 Mamba2-M027-Metadata/1.0"
+
+def fetch(url, accept=None, timeout=180):
+    headers = {"User-Agent": USER_AGENT}
+    if accept:
+        headers["Accept"] = accept
+    req = urllib.request.Request(url, headers=headers)
+    with urllib.request.urlopen(req, timeout=timeout) as response:
+        return (
+            response.read(),
+            getattr(response, "status", None),
+            response.headers.get("Content-Type"),
+        )
+
+def month_index(period):
+    text = str(period).strip()
+    if not text:
+        return None
+    try:
+        if len(text) >= 7 and text[4] == "-":
+            year = int(text[:4])
+            month = int(text[5:7])
+            if 1 <= month <= 12:
+                return year * 12 + month - 1
+    except Exception:
+        return None
+    return None
+
+def summarize_months(months):
+    vals = sorted(set(m for m in months if m is not None))
+    if not vals:
+        return {"months": 0, "first_month": None, "last_month": None, "longest_consecutive_months": 0}
+    best = 1
+    cur = 1
+    for prev, now in zip(vals, vals[1:]):
+        if now == prev + 1:
+            cur += 1
+            best = max(best, cur)
+        else:
+            cur = 1
+    def render(idx):
+        y, m0 = divmod(idx, 12)
+        return f"{y:04d}-{m0+1:02d}"
+    return {
+        "months": len(vals),
+        "first_month": render(vals[0]),
+        "last_month": render(vals[-1]),
+        "longest_consecutive_months": best,
+    }
+
+# BIS bilateral exchange-rate bulk flat CSV.
+bis_url = "https://data.bis.org/static/bulk/WS_XRU_csv_flat.zip"
+bis_body, bis_status, bis_type = fetch(bis_url)
+with zipfile.ZipFile(io.BytesIO(bis_body), "r") as zf:
+    names = [n for n in zf.namelist() if n.lower().endswith(".csv")]
+    if not names:
+        raise RuntimeError("BIS XRU ZIP contains no CSV")
+    with zf.open(names[0], "r") as raw:
+        text = io.TextIOWrapper(raw, encoding="utf-8-sig", newline="")
+        reader = csv.DictReader(text)
+        bis_fields = reader.fieldnames or []
+        bis_series = defaultdict(list)
+        for row in reader:
+            if str(row.get("FREQ", "")).strip() != "D":
+                continue
+            period = row.get("TIME_PERIOD")
+            idx = month_index(period)
+            if idx is None:
+                continue
+            key = (
+                str(row.get("REF_AREA", "")).strip(),
+                str(row.get("CURRENCY", "")).strip(),
+                str(row.get("COLLECTION", row.get("COLLECTION_INDICATOR", ""))).strip(),
+            )
+            bis_series[key].append(idx)
+
+bis_summary = []
+for (ref_area, currency, collection), months in sorted(bis_series.items()):
+    summary = summarize_months(months)
+    if summary["longest_consecutive_months"] >= 72:
+        bis_summary.append({
+            "ref_area": ref_area,
+            "currency": currency,
+            "collection": collection,
+            **summary,
+        })
+
+# OECD monthly short-term interest rates, 3-month interbank/money-market measure.
+oecd_url = (
+    "https://sdmx.oecd.org/public/rest/data/"
+    "OECD.SDD.STES,DSD_STES@DF_FINMARK,4.0/"
+    ".M.IR3TIB.PA....."
+    "?startPeriod=1950-01&dimensionAtObservation=AllDimensions"
+)
+oecd_body, oecd_status, oecd_type = fetch(
+    oecd_url,
+    accept="text/csv,application/vnd.sdmx.data+csv;version=2.0.0",
+)
+oecd_text = oecd_body.decode("utf-8-sig", errors="replace")
+oecd_reader = csv.DictReader(io.StringIO(oecd_text))
+oecd_fields = oecd_reader.fieldnames or []
+if "TIME_PERIOD" not in oecd_fields:
+    raise RuntimeError(
+        "OECD response is not the expected SDMX CSV schema: "
+        + ",".join(oecd_fields[:20])
+    )
+
+oecd_series = defaultdict(list)
+oecd_names = {}
+for row in oecd_reader:
+    period = row.get("TIME_PERIOD")
+    idx = month_index(period)
+    if idx is None:
+        continue
+    ref = str(row.get("REF_AREA", "")).strip()
+    if not ref:
+        continue
+    oecd_series[ref].append(idx)
+    label = (
+        row.get("Reference area")
+        or row.get("REF_AREA_NAME")
+        or row.get("Reference Area")
+        or ""
+    )
+    if label:
+        oecd_names[ref] = str(label).strip()
+
+oecd_summary = []
+for ref, months in sorted(oecd_series.items()):
+    summary = summarize_months(months)
+    if summary["longest_consecutive_months"] >= 73:
+        oecd_summary.append({
+            "ref_area": ref,
+            "label": oecd_names.get(ref),
+            **summary,
+        })
+
+print(json.dumps({
+    "bis": {
+        "url": bis_url,
+        "status": bis_status,
+        "content_type": bis_type,
+        "csv_fields": bis_fields,
+        "series_with_72_month_run": bis_summary,
+    },
+    "oecd": {
+        "url": oecd_url,
+        "status": oecd_status,
+        "content_type": oecd_type,
+        "csv_fields": oecd_fields,
+        "series_with_73_month_run": oecd_summary,
+    },
+}, sort_keys=True))
+"""
+
+    run = _run_process_group_bounded(
+        _native_command("-c", code),
+        env=_safe_env(),
+        timeout_seconds=240,
+    )
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M027 metadata coverage probe failed",
+            "feature_sha": feature_sha,
+            "run": run,
+            "safety": {
+                "observation_values_reported": False,
+                "observation_values_used": False,
+                "returns_computed": False,
+                "economic_summary_computed": False,
+                "real_order_api_called": False,
+            },
+        }
+
+    try:
+        metadata = json.loads(run["stdout"].strip())
+    except json.JSONDecodeError as exc:
+        return {
+            "ok": False,
+            "reason": f"M027 metadata probe emitted invalid JSON: {exc}",
+            "feature_sha": feature_sha,
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "carry-aware-spot-tsmom",
+        "feature_sha": feature_sha,
+        **metadata,
+        "safety": {
+            "observation_values_reported": False,
+            "observation_values_used": False,
+            "returns_computed": False,
+            "momentum_signals_computed": False,
+            "economic_summary_computed": False,
+            "m021_post_cutoff_outcomes_used": False,
+            "m024_holdout_reused": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def recovery_remove_accidental_systemctl_file():
     """Remove only the known accidental root-level systemctl-name artifact."""
 
@@ -16047,6 +16407,8 @@ def recovery_remove_accidental_systemctl_file():
 
 
 ACTION_HANDLERS = {
+    "m027_switch_carry_aware_spot_tsmom": m027_switch_carry_aware_spot_tsmom,
+    "m027_stage0_coverage_probe": m027_stage0_coverage_probe,
     "m025_stage41_lrv_notes_probe": m025_stage41_lrv_notes_probe,
     "m025_stage41_lrv_metadata_probe": m025_stage41_lrv_metadata_probe,
     "recovery_remove_accidental_systemctl_file": recovery_remove_accidental_systemctl_file,
