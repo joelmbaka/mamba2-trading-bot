@@ -41,6 +41,13 @@ AQR_RAW_SHA256 = (
 LRV_RAW_SHA256 = (
     "e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74"
 )
+LRV_FROZEN_UNIT_SCALE_TO_DECIMAL = 0.01
+LRV_FROZEN_UNIT_EVIDENCE = (
+    "author data page identifies CurrencyPortfolios.xls as monthly currency "
+    "excess returns; workbook Notes identifies the series as returns in levels; "
+    "the author paper states those level returns are reported in percentage "
+    "points and annualized by multiplying excess returns by 12"
+)
 
 H10_LABEL = "TSMOM SPOT PROXY — FED H.10"
 H10_COST_LABEL = (
@@ -468,6 +475,14 @@ def _lrv_unit_scale(
     )
 
 
+def _lrv_scale_from_frozen_external_evidence(*, workbook_sha256: str) -> float:
+    """Return the prospectively frozen unit scale for the exact LRV workbook."""
+
+    if workbook_sha256 != LRV_RAW_SHA256:
+        raise ValueError("LRV external unit evidence is authorized only for the frozen workbook")
+    return LRV_FROZEN_UNIT_SCALE_TO_DECIMAL
+
+
 def parse_lrv_hml_fx(path: str | Path) -> tuple[pd.Series, dict[str, Any]]:
     workbook_path = _require_sha(path, LRV_RAW_SHA256, label="LRV workbook")
     book = xlrd.open_workbook(
@@ -477,7 +492,16 @@ def parse_lrv_hml_fx(path: str | Path) -> tuple[pd.Series, dict[str, Any]]:
     )
     layout = locate_lrv_layout(book)
     sheet = book.sheet_by_name(layout.sheet_name)
-    scale = _lrv_unit_scale(book, sheet, layout)
+    try:
+        scale = _lrv_unit_scale(book, sheet, layout)
+        unit_evidence = "workbook metadata"
+    except ValueError as exc:
+        if str(exc) != "UNIT SCHEMA INELIGIBLE: LRV return unit is not explicit":
+            raise
+        scale = _lrv_scale_from_frozen_external_evidence(
+            workbook_sha256=LRV_RAW_SHA256,
+        )
+        unit_evidence = LRV_FROZEN_UNIT_EVIDENCE
 
     dates: list[pd.Timestamp] = []
     p1_values: list[float] = []
@@ -550,6 +574,7 @@ def parse_lrv_hml_fx(path: str | Path) -> tuple[pd.Series, dict[str, Any]]:
         "portfolio_cols_zero_based": list(layout.portfolio_cols),
         "hml_col_zero_based": layout.hml_col,
         "unit_scale_to_decimal": scale,
+        "unit_evidence": unit_evidence,
         "canonical_definition": "P6 - P1",
     }
     return hml, metadata
