@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m025-stage4-full-native-v2",
-  "action": "test_full_native",
+  "id": "mamba2-m025-stage4-economics-v2",
+  "action": "m025_stage4_economics",
   "args": {},
   "requested_by": "chatgpt"
 }
