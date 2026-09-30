@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "command_id": "mamba2-m027-stage0-coverage-probe-v1",
-  "completed_at": "2026-09-30T17:43:34.867704+00:00",
+  "command_id": "mamba2-m027-stage0-coverage-probe-v2",
+  "completed_at": "2026-09-30T17:46:45.273843+00:00",
   "ok": true,
   "action": "m027_stage0_coverage_probe",
   "data": {
