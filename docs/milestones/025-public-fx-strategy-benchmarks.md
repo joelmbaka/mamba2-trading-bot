@@ -1086,3 +1086,279 @@ Stage 3 is accepted.
 
 No economic calculation is authorized until a separate Stage-4 execution
 protocol is frozen against the exact hashes above.
+
+
+## Stage-4 economic execution protocol freeze — 2026-09-30
+
+Status: **FROZEN BEFORE ANY M025 ECONOMIC VALUE IS PARSED OR CALCULATED**
+
+Stage-3 accepted ingestion result:
+
+`61bb9c5d591e8519f5bebc024d670204d9a71eab`
+
+Stage-3 ingestion report SHA-256:
+
+`d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505`
+
+Stage 4 may consume only these immutable inputs:
+
+- H.10 raw SHA:
+  `38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046`;
+- H.10 normalized-panel SHA:
+  `015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419`;
+- AQR workbook SHA:
+  `33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb`;
+- LRV workbook SHA:
+  `e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74`.
+
+No source replacement is authorized after this freeze.
+
+### E1 — TSMOM SPOT PROXY — FED H.10
+
+Input:
+
+the exact normalized H.10 panel above, containing all 23 frozen source
+currencies and only dates through 2026-08-31.
+
+Daily spot returns:
+
+- simple return `p_t / p_(t-1) - 1`;
+- `pct_change(fill_method=None)` semantics;
+- if either current or immediately previous union-calendar observation is
+  missing for an instrument, that daily return is missing;
+- no forward/back fill;
+- no interpolation;
+- no synthetic weekend/holiday rows.
+
+Signal and volatility:
+
+- exact accepted Stage-1 `tsmom_spot_proxy_weights` mechanics;
+- 12-month formation;
+- one-month holding period;
+- sign of trailing compounded monthly spot return;
+- centered ex-ante EWM variance of daily spot returns;
+- `delta = 60/61`;
+- annualization scalar 261;
+- 40% per-instrument target volatility;
+- volatility at date t may use information only through t-1;
+- no volatility floor;
+- no leverage cap;
+- non-finite/non-positive volatility means no valid weight for that
+  instrument/month.
+
+Monthly instrument return:
+
+`(1 + daily_return).prod(min_count=1) - 1`
+
+within each calendar month.
+
+The month-end formation weight is shifted exactly once and is applied only to
+the following calendar month's instrument return.
+
+Portfolio return for month m:
+
+the arithmetic mean of `weight_i,m * monthly_spot_return_i,m` across the
+frozen 23-series source universe for instruments having both a finite shifted
+weight and a finite realized monthly return in m.
+
+A currency may be absent from a month only because the prospectively frozen
+source/missingness/volatility gates make its exposure invalid. It may never be
+removed because of realized performance.
+
+The artifact must report the valid-instrument count for every output month.
+
+Label:
+
+**TSMOM SPOT PROXY — FED H.10**
+
+Cost label:
+
+**GROSS SPOT-PRICE PROXY / TRANSACTION COSTS UNMODELED / CARRY AND FINANCING UNMODELED**
+
+### E2 — AQR currency TSMOM derived reference
+
+Immutable workbook:
+
+`33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb`
+
+Exact sheet:
+
+`TSMOM Factors`
+
+Exact admitted factor header:
+
+`TSMOM^FX`
+
+Stage-3 schema located that header at:
+
+`F18`
+
+The monthly date field must be taken from column A on the data rows beneath
+the frozen header row.
+
+No other AQR factor column is admitted.
+
+Unit/scaling rule:
+
+- inspect workbook number-format/style metadata only;
+- if the TSMOM^FX data cells use an Excel percentage number format, preserve
+  the stored numeric value as the decimal return; do **not** divide again;
+- if the cells are not percentage-formatted, execution must stop
+  **UNIT SCHEMA INELIGIBLE** unless non-value workbook metadata explicitly
+  establishes the unit;
+- no scaling may be chosen from observed return magnitudes.
+
+Duplicate months, non-finite values, or non-monthly date ordering are hard
+failures.
+
+Label:
+
+**AQR TSMOM^FX — DERIVED REFERENCE**
+
+### E3 — LRV HML-FX derived reference
+
+Immutable workbook:
+
+`e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74`
+
+Exact admitted sample:
+
+**All currencies (net)**
+
+Rationale fixed before economics: the LRV paper's main currency excess-return
+portfolios account for transaction costs; the gross `All currencies` sheet
+is not the Stage-4 reference.
+
+The parser must identify in that exact sheet:
+
+- a monthly date field;
+- Portfolio1;
+- Portfolio2;
+- Portfolio3;
+- Portfolio4;
+- Portfolio5;
+- Portfolio6.
+
+No developed-only or gross sheet may substitute.
+
+Canonical Stage-4 HML-FX return is always:
+
+`P6 - P1`
+
+If the exact sheet also contains a published HML series, normalize it under the
+same unit rule and verify it equals `P6 - P1` within absolute tolerance
+`1e-10` on overlapping non-missing months. A mismatch is a hard failure.
+
+Unit/scaling rule:
+
+- establish unit from workbook cell-format metadata or explicit workbook text;
+- percentage-formatted cells are already stored as decimal fractions and are
+  not divided again;
+- if a non-percentage numeric format is used, explicit workbook metadata must
+  establish whether values are percent points before any scaling;
+- observed return magnitudes may never be used to infer units.
+
+Legacy-XLS parsing may use a deterministic library/tool, but parser choice may
+not change the admitted sheet, columns, dates, or scaling rules.
+
+Label:
+
+**LRV HML-FX — DERIVED REFERENCE — ALL CURRENCIES NET**
+
+### E4 — deterministic monthly-series rules
+
+For E1/E2/E3:
+
+- index is canonical calendar month end;
+- at most one observation per calendar month;
+- rows sorted chronologically;
+- no future values may affect earlier output;
+- missing months remain missing and are not synthesized;
+- deterministic A/B runs must produce byte-identical canonical JSON artifacts.
+
+### E5 — frozen summary metrics
+
+For each admitted monthly return series, report exactly:
+
+- first included month;
+- last included month;
+- observation count;
+- arithmetic mean monthly return;
+- annualized arithmetic mean = `12 * mean_monthly`;
+- annualized volatility = `sqrt(12) * sample_std(ddof=1)`;
+- annualized Sharpe = annualized mean / annualized volatility;
+- cumulative wealth from 1.0 via `cumprod(1 + r)`;
+- maximum drawdown of that cumulative-wealth series;
+- positive-month fraction.
+
+No alternate statistic may trigger parameter or source changes.
+
+### E6 — frozen cross-series comparison
+
+Only E1 versus E2 is compared directly.
+
+On their exact calendar-month intersection, report:
+
+- common start month;
+- common end month;
+- common observation count;
+- zero-lag Pearson correlation;
+- annualized mean-return difference:
+  `12 * mean(E1 - E2)`;
+- annualized tracking error:
+  `sqrt(12) * sample_std(E1 - E2, ddof=1)`.
+
+No lag search, sign flip, rescaling, subperiod search, or currency-subset search
+is allowed.
+
+E3 is a standalone derived carry reference; no price-only carry proxy is
+authorized.
+
+### E7 — M020-D internal comparator
+
+Do not rerun M020-D.
+
+Stage 4 may repeat only already-accepted M020-D snapshot/economic fields with
+their existing artifact/result hashes, clearly labelled as an internal
+historical comparator. It is not forced into monthly correlation analysis.
+
+### E8 — execution/acceptance order
+
+1. freeze this protocol;
+2. implement value parsers and pure economic functions;
+3. add synthetic tests for:
+   - H.10 no-fill semantics;
+   - one-shift 12/1 timing;
+   - future-value mutation invariance;
+   - AQR exact sheet/header/date column;
+   - workbook-unit metadata refusal when ambiguous;
+   - LRV exact `All currencies (net)` selection;
+   - P6-P1 identity;
+   - deterministic summary/comparison formulas;
+4. add fixed local-control focused-test action only;
+5. run focused tests;
+6. run full native regression;
+7. only after both pass, add/enable the fixed Stage-4 A/B economic action;
+8. execute E1/E2/E3 exactly once as deterministic A/B;
+9. mechanically publish the frozen summaries/comparison;
+10. durably close M025 or record the resulting evidence;
+11. stop.
+
+### E9 — contamination / stop rules
+
+After the first Stage-4 economic output:
+
+- do not change H.10 universe;
+- do not drop losing currencies;
+- do not change lookback/hold/volatility target/estimator;
+- do not add a leverage cap or volatility floor;
+- do not change AQR factor;
+- do not switch LRV sample/sheet;
+- do not change units/scaling;
+- do not tune sign, lag, or comparison window;
+- do not add transaction-cost estimates to E1;
+- do not use M021 post-cutoff outcomes;
+- do not use M023/M024 outcomes to alter M025;
+- do not promote any result to production/live trading.
+
+Stage-4 results are research evidence, not a production trading recommendation.
