@@ -29,7 +29,7 @@ def _bis_zip(rows: list[dict[str, str]]) -> bytes:
         "CURRENCY:Currency",
         "COLLECTION:Collection",
         "TIME_PERIOD:Time period or range",
-        "OBS_VALUE:Observation value",
+        "OBS_VALUE:Observation Value",
     ]
     buf = io.StringIO()
     writer = csv.DictWriter(buf, fieldnames=fields)
@@ -79,7 +79,7 @@ def test_bis_parser_inverts_foreign_per_usd_quote():
             "CURRENCY:Currency": "AUD:Australian dollar",
             "COLLECTION:Collection": "A:Average",
             "TIME_PERIOD:Time period or range": "2020-01-02",
-            "OBS_VALUE:Observation value": "2.0",
+            "OBS_VALUE:Observation Value": "2.0",
         },
         {
             "FREQ:Frequency": "D:Daily",
@@ -87,7 +87,7 @@ def test_bis_parser_inverts_foreign_per_usd_quote():
             "CURRENCY:Currency": "JPY:Yen",
             "COLLECTION:Collection": "A:Average",
             "TIME_PERIOD:Time period or range": "2020-01-02",
-            "OBS_VALUE:Observation value": "100.0",
+            "OBS_VALUE:Observation Value": "100.0",
         },
     ])
 
@@ -105,7 +105,7 @@ def test_bis_parser_refuses_duplicate_currency_date():
         "CURRENCY:Currency": "AUD:Australian dollar",
         "COLLECTION:Collection": "A:Average",
         "TIME_PERIOD:Time period or range": "2020-01-02",
-        "OBS_VALUE:Observation value": "2.0",
+        "OBS_VALUE:Observation Value": "2.0",
     }
     with pytest.raises(ValueError, match="duplicate BIS daily observation"):
         parse_bis_daily_spot_zip(_bis_zip([row, row]))
