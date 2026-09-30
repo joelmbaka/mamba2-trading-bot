@@ -1,44 +1,58 @@
 # Next Authorized Task
 
-## M025 — validate frozen Stage-4 machinery
+## M025 — recover Dell local-agent and finish LRV unit gate
 
-Branch:
+Do **not** overwrite the active command:
+
+`mamba2-m025-stage4-lrv-unit-probe-v2`
+
+Active local-control command commit:
+
+`b61a2b6caeac49dd200d067678a28a2ec718ca72`
+
+The corrected probe action itself was repaired at:
+
+`6aa1f79bb67274e9b6dafd6971df397fa809ff83`
+
+Current feature branch:
 
 `public-strategy-benchmarks`
 
-Stage-4 protocol:
+Current accepted Stage-4 feature SHA:
 
-`6511131792e32e74b6c98ce9de1d11dded5522b7`
+`636478bf0ac6c55e138df418686b48492ee47486`
 
-Locked parser dependency:
+Already accepted:
 
-`07facca9a04cc5f8154b7c648208f186326c0f2e`
+- focused Stage-4 tests: **42 passed**
+  (`d95bf9911368d11c79e0e247247bc991c49a06dd`);
+- full native: **279 passed / 2 skipped**
+  (`f77ba7f1e424058a52d3c6f139b86347b1714852`).
 
-Stage-4 implementation:
+Latest economic attempt:
 
-`f74bd6606b91f38a4255d38af6d4770500004ec5`
+`d1703515dd09c7eff147aecac45772769f8d85a6`
 
-Fixed focused-test control:
+stopped at:
 
-`7ab842c005e45d07c6790ba037a0bd9c1ce86599`
+`UNIT SCHEMA INELIGIBLE: LRV return unit is not explicit`
 
 ## Execute exactly
 
-1. sync Dell to exact remote feature HEAD;
-2. run `m025_stage4_tests`;
-3. if focused tests fail, repair only implementation/test defects;
-4. require focused PASS;
-5. run `test_full_native`;
-6. require full native PASS;
-7. only then add a fixed immutable `m025_stage4_economics` A/B action;
-8. execute that action exactly once;
-9. inspect only the frozen summaries/comparison;
-10. document and stop.
+1. restore/restart the existing Dell
+   `chatgpt-mamba2-local-agent.timer` /
+   `chatgpt-mamba2-local-agent.service` if required;
+2. let the already-queued v2 probe run;
+3. inspect only LRV sheet labels/style/format metadata — no return values;
+4. preserve the frozen Stage-4 unit rule;
+5. if a parser-only repair is required, make it narrowly;
+6. rerun `m025_stage4_tests`;
+7. rerun `test_full_native`;
+8. rerun deterministic `m025_stage4_economics` A/B exactly once;
+9. durably document results and stop.
 
-Do not change any source, universe, sign, scale, lookback, hold period,
-volatility target, estimator, sheet, column, missing-data treatment, lag,
-comparison window, or metric after economics.
-
-Do not inspect M021 post-cutoff outcomes.
-Do not use M023/M024 outcomes to tune M025.
+Do not infer LRV units from observed return magnitudes.
+Do not change source, sheet, universe, scaling rule, sign, lag, lookback,
+holding period, volatility target, estimator, or metrics.
+Do not use M021/M023/M024 outcomes to tune M025.
 Do not merge/deploy or enable real trading.

@@ -617,3 +617,26 @@ Focused-test control:
 
 No Stage-4 economics have run. Economic execution remains disabled pending
 focused tests and full native regression.
+
+
+## M025 Stage-4 validated; blocked on LRV unit metadata probe
+
+Accepted focused Stage-4 tests:
+
+`d95bf9911368d11c79e0e247247bc991c49a06dd`
+— **42 passed**.
+
+Accepted full native regression:
+
+`f77ba7f1e424058a52d3c6f139b86347b1714852`
+— **279 passed, 2 skipped**.
+
+Stage-4 economics attempt `d1703515...` stopped at the frozen LRV unit gate
+before a successful report; no unit was inferred from return magnitude.
+
+Corrected metadata-only probe command
+`mamba2-m025-stage4-lrv-unit-probe-v2` is queued on `local-control` at
+`b61a2b6caeac49dd200d067678a28a2ec718ca72`, but the Dell local-agent has not
+consumed it. Latest result remains the v1 environment failure.
+
+No Stage-4 terminal economic result is accepted yet.

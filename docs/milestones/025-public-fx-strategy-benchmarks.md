@@ -1403,3 +1403,82 @@ Next exact gate:
 4. run `test_full_native`;
 5. only after both pass, add the fixed Stage-4 A/B economic action;
 6. execute economics once and stop before any retuning.
+
+
+## Stage-4 validation + current blocker — 2026-09-30
+
+Current accepted Stage-4 feature SHA:
+
+`636478bf0ac6c55e138df418686b48492ee47486`
+
+This includes the AQR footer-string parser repair:
+
+`fix: ignore AQR footer strings in Stage-4 parser`
+
+Accepted focused Stage-4 test result:
+
+`d95bf9911368d11c79e0e247247bc991c49a06dd`
+
+Focused result:
+
+**42 passed / 0 failed**
+
+Accepted full native regression:
+
+`f77ba7f1e424058a52d3c6f139b86347b1714852`
+
+Full native result:
+
+**279 passed / 2 skipped**
+
+The second deterministic Stage-4 economic attempt:
+
+`d1703515dd09c7eff147aecac45772769f8d85a6`
+
+stopped before a successful Stage-4 report because the frozen LRV parser
+correctly refused to infer units:
+
+`UNIT SCHEMA INELIGIBLE: LRV return unit is not explicit`
+
+No definition, source, sheet, sign, scale, lag, universe, lookback, hold,
+volatility target, or metric was changed in response.
+
+A fixed metadata-only LRV probe was added. Its first run:
+
+`b11b9e46a11d661c7f84e3d5fce57e9f4aaf76f8`
+
+failed before workbook inspection because it imported `xlrd` outside the
+locked project environment:
+
+`ModuleNotFoundError: No module named 'xlrd'`
+
+The control action was repaired to run through the locked `uv` environment:
+
+local-control commit:
+
+`6aa1f79bb67274e9b6dafd6971df397fa809ff83`
+
+Corrected probe command:
+
+`mamba2-m025-stage4-lrv-unit-probe-v2`
+
+local-control command commit:
+
+`b61a2b6caeac49dd200d067678a28a2ec718ca72`
+
+As of this checkpoint the corrected v2 command has not been consumed by the
+Dell local-agent timer. The latest published result remains the failed v1
+probe. Treat this as a control-plane availability issue, not a scientific or
+economic result.
+
+### Recovery
+
+1. do not overwrite `mamba2-m025-stage4-lrv-unit-probe-v2`;
+2. restore/restart the existing Dell local-agent timer/service if it is not
+   polling;
+3. require the v2 metadata-only probe result;
+4. if workbook metadata explicitly proves a unit under the already-frozen
+   Stage-4 rule, repair only the parser's unit-schema handling if necessary;
+5. rerun focused Stage-4 tests and full native regression after any code repair;
+6. rerun the immutable deterministic Stage-4 A/B economic action exactly once;
+7. do not retune after economics.
