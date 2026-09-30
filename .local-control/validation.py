@@ -15280,6 +15280,126 @@ def m025_stage4_runtime_probe():
     }
 
 
+def m025_stage4_add_xlrd_dependency():
+    """Add the fixed xlrd parser dependency and push only lock metadata."""
+
+    feature_sha = _require_m025_branch()
+    uv = shutil.which("uv") or "/home/joel/.local/bin/uv"
+    if not Path(uv).is_file():
+        return {
+            "ok": False,
+            "reason": "uv executable unavailable",
+            "feature_sha": feature_sha,
+        }
+
+    before = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if before["exit_code"] != 0 or before["stdout"].strip():
+        return {
+            "ok": False,
+            "reason": "dependency action refuses dirty worktree",
+            "feature_sha": feature_sha,
+        }
+
+    add = _run_process_group_bounded(
+        [uv, "add", "xlrd==2.0.2"],
+        env=_safe_env(),
+        timeout_seconds=180,
+    )
+    if add["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "uv add xlrd failed",
+            "feature_sha": feature_sha,
+            "run": add,
+        }
+
+    diff = _run(["git", "diff", "--name-only"])
+    changed = sorted(
+        line.strip()
+        for line in diff["stdout"].splitlines()
+        if line.strip()
+    )
+    if changed != ["pyproject.toml", "uv.lock"]:
+        return {
+            "ok": False,
+            "reason": "unexpected dependency-action file changes",
+            "feature_sha": feature_sha,
+            "changed_files": changed,
+        }
+
+    verify = _run_process_group_bounded(
+        [
+            uv,
+            "run",
+            "--locked",
+            "python",
+            "-c",
+            (
+                "import xlrd;"
+                "assert xlrd.__version__ == '2.0.2';"
+                "print(xlrd.__version__)"
+            ),
+        ],
+        env=_safe_env(),
+        timeout_seconds=120,
+    )
+    if verify["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "locked xlrd verification failed",
+            "feature_sha": feature_sha,
+            "verify": verify,
+        }
+
+    add_git = _run(["git", "add", "pyproject.toml", "uv.lock"])
+    if add_git["exit_code"] != 0:
+        return {"ok": False, "reason": "git add failed"}
+
+    commit = _run([
+        "git",
+        "commit",
+        "-m",
+        "build: add xlrd for M025 Stage-4 workbook parsing",
+    ])
+    if commit["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "dependency commit failed",
+            "commit": commit,
+        }
+
+    new_sha = _run(["git", "rev-parse", "HEAD"])["stdout"].strip()
+    push = _run([
+        "git",
+        "push",
+        "origin",
+        "HEAD:public-strategy-benchmarks",
+    ])
+    if push["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "dependency push failed",
+            "new_sha": new_sha,
+            "push": push,
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "previous_feature_sha": feature_sha,
+        "new_feature_sha": new_sha,
+        "changed_files": changed,
+        "xlrd_version": "2.0.2",
+        "uv_add": add,
+        "verify": verify,
+        "safety": {
+            "economic_computation_run": False,
+            "market_values_parsed": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -15310,6 +15430,7 @@ ACTION_HANDLERS = {
     "m021_primary_pair": m021_primary_pair,
     "m025_stage3_h10_transport_probe": m025_stage3_h10_transport_probe,
     "m025_stage3_lrv_binary_probe": m025_stage3_lrv_binary_probe,
+    "m025_stage4_add_xlrd_dependency": m025_stage4_add_xlrd_dependency,
     "m025_stage4_runtime_probe": m025_stage4_runtime_probe,
     "m025_stage3_ingestion_tests": m025_stage3_ingestion_tests,
     "m025_stage3_ingestion": m025_stage3_ingestion,
