@@ -16740,6 +16740,106 @@ def m027_stage1_ingestion():
     }
 
 
+
+def m027_stage2_tests():
+    """Run the frozen M027 Stage-2 machinery tests only."""
+
+    feature_sha = _require_m027_branch()
+    tests = [
+        "tests/test_m027_stage2.py",
+        "tests/test_m027_carry_aware_tsmom.py",
+        "tests/test_m027_stage1_ingestion.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "carry-aware-spot-tsmom",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "historical_economics_run": False,
+            "return_values_reported": False,
+            "m021_post_cutoff_outcomes_used": False,
+            "m024_holdout_reused": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
+def m027_stage2_readiness():
+    """Compute only the frozen M027 Stage-2 evaluation calendar metadata."""
+
+    feature_sha = _require_m027_branch()
+    approximate_path = _ensure_baseline_path(
+        REPO
+        / "backtest_data"
+        / "m027-stage1-ingestion-v1"
+        / "m027-approx-excess-log-returns.csv"
+    )
+    if not approximate_path.is_file():
+        return {
+            "ok": False,
+            "reason": "M027 immutable approximate-return artifact missing",
+            "feature_sha": feature_sha,
+        }
+
+    code = r"""
+import json
+from mamba2.backtest.m027_stage2 import (
+    load_frozen_approximate_returns,
+    stage2_readiness,
+)
+
+path = r"__APPROX_PATH__"
+daily = load_frozen_approximate_returns(path)
+result = stage2_readiness(daily)
+print(json.dumps(result, sort_keys=True))
+""".replace("__APPROX_PATH__", str(approximate_path))
+
+    run = _run_process_group_bounded(
+        _native_command("-c", code),
+        env=_safe_env(),
+        timeout_seconds=120,
+    )
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "M027 Stage-2 readiness failed",
+            "feature_sha": feature_sha,
+            "run": run,
+            "safety": {
+                "return_values_reported": False,
+                "portfolio_economics_computed": False,
+                "real_order_api_called": False,
+            },
+        }
+
+    try:
+        readiness = json.loads(run["stdout"].strip())
+    except json.JSONDecodeError as exc:
+        return {
+            "ok": False,
+            "reason": f"M027 readiness emitted invalid JSON: {exc}",
+            "feature_sha": feature_sha,
+        }
+
+    return {
+        "ok": True,
+        "feature_branch": "carry-aware-spot-tsmom",
+        "feature_sha": feature_sha,
+        "readiness": readiness,
+        "safety": {
+            "return_values_reported": False,
+            "signal_signs_reported": False,
+            "portfolio_economics_computed": False,
+            "m021_post_cutoff_outcomes_used": False,
+            "m024_holdout_reused": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def recovery_remove_accidental_systemctl_file():
     """Remove only the known accidental root-level systemctl-name artifact."""
 
@@ -16804,6 +16904,8 @@ def recovery_remove_accidental_systemctl_file():
 
 
 ACTION_HANDLERS = {
+    "m027_stage2_tests": m027_stage2_tests,
+    "m027_stage2_readiness": m027_stage2_readiness,
     "m027_stage1_ingestion": m027_stage1_ingestion,
     "m027_stage1_tests": m027_stage1_tests,
     "m027_stage0_universe_probe": m027_stage0_universe_probe,
