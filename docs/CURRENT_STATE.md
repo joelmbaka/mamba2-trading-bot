@@ -685,3 +685,29 @@ replacement, universe pruning, or production/live promotion is authorized
 inside M025. Any further benchmark work requires a new prospectively frozen
 milestone.
 
+## M026 closed at source-fidelity gate
+
+Branch:
+
+`tradeable-fx-tsmom-reconstruction`
+
+Protocol freeze:
+
+`c9dbe03e7f08f2c7c26355d7bf3761684622fb90`
+
+Source inventory:
+
+`0f72b1928f06d90f12409396982867db92ca037f`
+
+Result:
+
+**DATA GATE NOT PASSED — NO ECONOMICS RUN**
+
+CME continuous FX futures were the strongest raw-data path, but historical
+access is licensed/purchased. No public/free direct forward source survived,
+and the reviewed official rate datasets were insufficient to turn spot into
+the exact frozen futures/forward excess-return process without introducing a
+new proxy.
+
+M026 is closed. Do not weaken it after the inventory.
+
