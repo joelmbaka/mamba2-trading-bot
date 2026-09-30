@@ -16,7 +16,9 @@ from mamba2.backtest.m025_stage4_economics import (
     H10_LABEL,
     H10_SYMBOLS,
     LRV_LABEL,
+    LRV_RAW_SHA256,
     _MAIN_NS,
+    _lrv_scale_from_frozen_external_evidence,
     _canonical_monthly_series,
     _xlsx_cell_number,
     compare_monthly_returns,
@@ -174,6 +176,20 @@ def test_lrv_layout_refuses_gross_only_workbook():
     sheet = _Sheet("All currencies", [[_Cell("", 0)]])
     with pytest.raises(ValueError, match="All currencies \\(net\\)"):
         locate_lrv_layout(_Book([sheet]))
+
+
+def test_lrv_frozen_external_unit_evidence_is_exact_hash_only():
+    assert _lrv_scale_from_frozen_external_evidence(
+        workbook_sha256=LRV_RAW_SHA256,
+    ) == pytest.approx(0.01)
+
+    with pytest.raises(
+        ValueError,
+        match="authorized only for the frozen workbook",
+    ):
+        _lrv_scale_from_frozen_external_evidence(
+            workbook_sha256="0" * 64,
+        )
 
 
 def test_canonical_monthly_series_refuses_duplicate_months():
