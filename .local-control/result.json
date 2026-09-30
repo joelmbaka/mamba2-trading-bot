@@ -1,17 +1,82 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage3-ingestion-tests-v7",
-  "completed_at": "2026-09-30T05:00:27.250382+00:00",
+  "command_id": "mamba2-m025-stage3-ingestion-v5",
+  "completed_at": "2026-09-30T05:01:45.792194+00:00",
   "ok": true,
-  "action": "m025_stage3_ingestion_tests",
+  "action": "m025_stage3_ingestion",
   "data": {
     "ok": true,
     "feature_branch": "public-strategy-benchmarks",
     "feature_sha": "554ab3a827163732f4dec335c716fec2f386bfe8",
-    "tests": [
-      "tests/test_m025_stage3_ingestion.py",
-      "tests/test_public_benchmarks.py"
-    ],
+    "reused_immutable_artifacts": false,
+    "report_sha256": "d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505",
+    "h10": {
+      "raw_sha256": "38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046",
+      "normalized_panel_sha256": "015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419",
+      "gate_72_consecutive_months_all_series": true,
+      "first_source_date": "1971-01-04",
+      "last_source_date": "2026-08-31"
+    },
+    "aqr": {
+      "raw_sha256": "33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb",
+      "sheet_names": [
+        "TSMOM Factors",
+        "Definitions",
+        "Data Sources",
+        "Disclosures"
+      ],
+      "currency_specific_schema_present": true,
+      "currency_or_fx_schema_tokens": [
+        "We report the monthly excess returns of the time series momentum factors for all assets (no superscript), global equity indices (EQ), currencies (FX), fixed income (FI), and commodities (CM)",
+        "TSMOM^FX"
+      ]
+    },
+    "lrv": {
+      "raw_sha256": "e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74",
+      "schema_method": "ole-binary-strings-only",
+      "schema_strings": [
+        "3) they correspond to our large sample of developed and emerging countries (Sheet labelled `all currencies') or to our sample of developed countries (Sheet labelled `developed currencies').",
+        "All currencies",
+        "All currencies (net)",
+        "Asset Pricing - Developed",
+        "Betas HML",
+        "Chart - Developed",
+        "Chart - Developed (2)",
+        "Common Risk Factors in Currency Markets",
+        "Currency",
+        "Currency [0]",
+        "Developed currencies",
+        "Developed currencies (net)",
+        "HML",
+        "HML = P5 - P1",
+        "HML = P6 - P1",
+        "Portfolio1",
+        "Portfolio2",
+        "Portfolio3",
+        "Portfolio4",
+        "Portfolio5",
+        "Portfolio6%",
+        "Portfolios of Currency Excess Returns",
+        "Realized and Predicted Average Currency Excess Returns",
+        "Using RX and HML(FX)",
+        "for details about the construction of these currency portfolios.P"
+      ],
+      "p1_through_p6_schema_present": true,
+      "hml_schema_present": true
+    },
+    "safety": {
+      "correlation_computed": false,
+      "drawdown_computed": false,
+      "economic_ranking_computed": false,
+      "m021_post_cutoff_outcomes_used": false,
+      "m023_outcomes_used": false,
+      "m024_outcomes_used_to_tune_definitions": false,
+      "pl_computed": false,
+      "real_order_api_called": false,
+      "returns_computed": false,
+      "sharpe_computed": false,
+      "tracking_error_computed": false
+    },
     "run": {
       "command": [
         "/home/joel/.local/bin/uv",
@@ -19,21 +84,16 @@
         "--locked",
         "python",
         "-m",
-        "pytest",
-        "tests/test_m025_stage3_ingestion.py",
-        "tests/test_public_benchmarks.py"
+        "mamba2.backtest.m025_stage3_ingestion",
+        "--output-dir",
+        "backtest_data/m025-stage3-ingestion-v1.tmp",
+        "--libreoffice",
+        "/usr/bin/libreoffice"
       ],
       "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 33 items\n\ntests/test_m025_stage3_ingestion.py ..........                           [ 30%]\ntests/test_public_benchmarks.py .......................                  [100%]\n\n============================== 33 passed in 0.76s ==============================\n",
+      "timed_out": false,
+      "stdout": "{\"economic_computation_performed\": false, \"ok\": true, \"report_path\": \"backtest_data/m025-stage3-ingestion-v1.tmp/m025-stage3-ingestion.json\", \"report_sha256\": \"d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505\"}\n",
       "stderr": ""
-    },
-    "safety": {
-      "download_run": false,
-      "economic_computation_run": false,
-      "m021_post_cutoff_data_used": false,
-      "m023_outcomes_used": false,
-      "m024_outcomes_used_to_tune_definitions": false,
-      "real_order_api_called": false
     }
   }
 }
