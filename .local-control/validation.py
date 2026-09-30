@@ -15915,6 +15915,74 @@ print(json.dumps({
     }
 
 
+
+def m025_stage41_lrv_notes_probe():
+    """Read only textual cells from the LRV Notes sheet."""
+
+    feature_sha = _require_m025_branch()
+    workbook = M025_STAGE3_INGESTION_DIR / "CurrencyPortfolios.xls"
+    if not workbook.is_file():
+        return {"ok": False, "reason": "LRV workbook missing"}
+
+    code = r"""
+import json
+import xlrd
+
+workbook = r"__WORKBOOK__"
+book = xlrd.open_workbook(workbook, formatting_info=True, on_demand=False)
+if "Notes" not in book.sheet_names():
+    raise RuntimeError("LRV workbook Notes sheet missing")
+sheet = book.sheet_by_name("Notes")
+
+rows = []
+for row in range(sheet.nrows):
+    texts = []
+    for col in range(sheet.ncols):
+        cell = sheet.cell(row, col)
+        if cell.ctype == xlrd.XL_CELL_TEXT:
+            clean = " ".join(str(cell.value).split())
+            if clean:
+                texts.append({"col": col, "text": clean[:1000]})
+    if texts:
+        rows.append({"row": row, "texts": texts})
+
+print(json.dumps({"sheet_name": "Notes", "text_rows": rows}, sort_keys=True))
+"""
+    code = code.replace("__WORKBOOK__", str(workbook))
+    run = _run_process_group_bounded(
+        _native_command("-c", code),
+        env=_safe_env(),
+        timeout_seconds=120,
+    )
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "LRV Notes metadata probe failed",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+    try:
+        metadata = json.loads(run["stdout"].strip())
+    except json.JSONDecodeError as exc:
+        return {
+            "ok": False,
+            "reason": f"LRV Notes probe emitted invalid JSON: {exc}",
+            "feature_sha": feature_sha,
+        }
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        **metadata,
+        "safety": {
+            "numeric_values_reported": False,
+            "returns_computed": False,
+            "economic_summary_computed": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def recovery_remove_accidental_systemctl_file():
     """Remove only the known accidental root-level systemctl-name artifact."""
 
@@ -15979,6 +16047,7 @@ def recovery_remove_accidental_systemctl_file():
 
 
 ACTION_HANDLERS = {
+    "m025_stage41_lrv_notes_probe": m025_stage41_lrv_notes_probe,
     "m025_stage41_lrv_metadata_probe": m025_stage41_lrv_metadata_probe,
     "recovery_remove_accidental_systemctl_file": recovery_remove_accidental_systemctl_file,
     "repo_checks": repo_checks,
