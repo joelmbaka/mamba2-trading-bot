@@ -15799,6 +15799,122 @@ print(json.dumps({
 
 
 
+
+def m025_stage41_lrv_metadata_probe():
+    """Inspect only non-value LRV workbook metadata for an explicit unit statement."""
+
+    feature_sha = _require_m025_branch()
+    workbook = M025_STAGE3_INGESTION_DIR / "CurrencyPortfolios.xls"
+    if not workbook.is_file():
+        return {"ok": False, "reason": "LRV workbook missing"}
+
+    code = r"""
+import json
+import re
+import xlrd
+
+workbook = r"__WORKBOOK__"
+book = xlrd.open_workbook(workbook, formatting_info=True, on_demand=False)
+
+unit_re = re.compile(
+    r"\b(percent(?:age)?|percentage points?|percent points?|basis points?|"
+    r"decimal returns?|return units?|units?)\b",
+    re.IGNORECASE,
+)
+
+sheet_text_hits = []
+sheet_inventory = []
+for sheet_index, sheet_name in enumerate(book.sheet_names()):
+    sheet = book.sheet_by_index(sheet_index)
+    visibility = None
+    if hasattr(book, "sheet_visibility") and sheet_index < len(book.sheet_visibility):
+        visibility = book.sheet_visibility[sheet_index]
+    sheet_inventory.append({
+        "index": sheet_index,
+        "name": sheet_name,
+        "visibility": visibility,
+        "nrows": sheet.nrows,
+        "ncols": sheet.ncols,
+    })
+    for row in range(sheet.nrows):
+        for col in range(sheet.ncols):
+            cell = sheet.cell(row, col)
+            if cell.ctype != xlrd.XL_CELL_TEXT:
+                continue
+            clean = " ".join(str(cell.value).split())
+            if clean and unit_re.search(clean):
+                sheet_text_hits.append({
+                    "sheet": sheet_name,
+                    "row": row,
+                    "col": col,
+                    "text": clean[:500],
+                })
+
+named_unit_hits = []
+for name_obj in getattr(book, "name_obj_list", []):
+    name = str(getattr(name_obj, "name", "") or "")
+    formula = str(getattr(name_obj, "formula_text", "") or "")
+    combined = f"{name} {formula}".strip()
+    if combined and unit_re.search(combined):
+        named_unit_hits.append({
+            "name": name[:300],
+            "formula_text": formula[:500],
+            "scope": getattr(name_obj, "scope", None),
+        })
+
+unit_format_strings = sorted({
+    str(fmt.format_str)
+    for fmt in getattr(book, "format_map", {}).values()
+    if getattr(fmt, "format_str", None)
+    and (
+        "%" in str(fmt.format_str)
+        or unit_re.search(str(fmt.format_str))
+    )
+})
+
+print(json.dumps({
+    "sheet_inventory": sheet_inventory,
+    "sheet_text_unit_hits": sheet_text_hits,
+    "named_unit_hits": named_unit_hits,
+    "unit_format_strings": unit_format_strings,
+}, sort_keys=True))
+"""
+    code = code.replace("__WORKBOOK__", str(workbook))
+    run = _run_process_group_bounded(
+        _native_command("-c", code),
+        env=_safe_env(),
+        timeout_seconds=120,
+    )
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "LRV Stage-4.1 metadata probe failed",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+    try:
+        metadata = json.loads(run["stdout"].strip())
+    except json.JSONDecodeError as exc:
+        return {
+            "ok": False,
+            "reason": f"LRV Stage-4.1 metadata probe emitted invalid JSON: {exc}",
+            "feature_sha": feature_sha,
+        }
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        **metadata,
+        "safety": {
+            "numeric_values_reported": False,
+            "return_values_read_for_inference": False,
+            "returns_computed": False,
+            "economic_summary_computed": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def recovery_remove_accidental_systemctl_file():
     """Remove only the known accidental root-level systemctl-name artifact."""
 
@@ -15863,6 +15979,7 @@ def recovery_remove_accidental_systemctl_file():
 
 
 ACTION_HANDLERS = {
+    "m025_stage41_lrv_metadata_probe": m025_stage41_lrv_metadata_probe,
     "recovery_remove_accidental_systemctl_file": recovery_remove_accidental_systemctl_file,
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
