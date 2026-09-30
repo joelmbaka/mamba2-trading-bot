@@ -1,113 +1,41 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage4-economics-after-unit-evidence-v1",
-  "completed_at": "2026-09-30T16:06:45.495474+00:00",
+  "command_id": "mamba2-m025-stage41-focused-tests-v1",
+  "completed_at": "2026-09-30T16:30:24.828414+00:00",
   "ok": true,
-  "action": "m025_stage4_economics",
+  "action": "m025_stage4_tests",
   "data": {
     "ok": true,
     "feature_branch": "public-strategy-benchmarks",
-    "feature_sha": "2aed0444c8f0e214d14f9dc90d4c2813388555db",
-    "artifact": {
-      "a_path": "backtest_data/m025-stage4-economics-v1/m025-stage4-a.json",
-      "b_path": "backtest_data/m025-stage4-economics-v1/m025-stage4-b.json",
-      "a_sha256": "633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9",
-      "b_sha256": "633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9",
-      "deterministic": true
-    },
-    "h10_spot_proxy": {
-      "label": "TSMOM SPOT PROXY \u2014 FED H.10",
-      "cost_label": "GROSS SPOT-PRICE PROXY / TRANSACTION COSTS UNMODELED / CARRY AND FINANCING UNMODELED",
-      "summary": {
-        "annualized_arithmetic_mean": -1.6058975079063509,
-        "annualized_sharpe": -0.1569126427343951,
-        "annualized_volatility": 10.234341095284732,
-        "first_month": "1972-01-31",
-        "label": "TSMOM SPOT PROXY \u2014 FED H.10",
-        "last_month": "2026-08-31",
-        "maximum_drawdown": -24.360847720745745,
-        "mean_monthly_return": -0.13382479232552924,
-        "observations": 656,
-        "positive_month_fraction": 0.5838414634146342,
-        "terminal_cumulative_wealth": 32932171.490252238
-      },
-      "first_valid_instrument_count": {
-        "count": 10,
-        "month": "1972-01-31"
-      },
-      "last_valid_instrument_count": {
-        "count": 23,
-        "month": "2026-08-31"
-      }
-    },
-    "aqr_tsmom_fx": {
-      "label": "AQR TSMOM^FX \u2014 DERIVED REFERENCE",
-      "summary": {
-        "annualized_arithmetic_mean": 0.10093357261356833,
-        "annualized_sharpe": 0.5498577517028513,
-        "annualized_volatility": 0.1835630620846714,
-        "first_month": "1985-01-31",
-        "label": "AQR TSMOM^FX \u2014 DERIVED REFERENCE",
-        "last_month": "2026-05-31",
-        "maximum_drawdown": -0.4709897364931771,
-        "mean_monthly_return": 0.008411131051130694,
-        "observations": 497,
-        "positive_month_fraction": 0.5754527162977867,
-        "terminal_cumulative_wealth": 32.37616876346366
-      }
-    },
-    "lrv_hml_fx": {
-      "label": "LRV HML-FX \u2014 DERIVED REFERENCE \u2014 ALL CURRENCIES NET",
-      "summary": {
-        "annualized_arithmetic_mean": 0.0003586837489041334,
-        "annualized_sharpe": 0.4195409532126127,
-        "annualized_volatility": 0.0008549433521508009,
-        "first_month": "1983-11-30",
-        "label": "LRV HML-FX \u2014 DERIVED REFERENCE \u2014 ALL CURRENCIES NET",
-        "last_month": "2021-05-31",
-        "maximum_drawdown": -0.0029366212487740295,
-        "mean_monthly_return": 2.9890312408677785e-05,
-        "observations": 451,
-        "positive_month_fraction": 0.5831485587583148,
-        "terminal_cumulative_wealth": 1.013557707308836
-      },
-      "parser_metadata": {
-        "canonical_definition": "P6 - P1",
-        "date_col_zero_based": 0,
-        "header_row_zero_based": 0,
-        "hml_col_zero_based": null,
-        "portfolio_cols_zero_based": [
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
-        "sheet_name": "All currencies (net)",
-        "unit_evidence": "author data page identifies CurrencyPortfolios.xls as monthly currency excess returns; workbook Notes identifies the series as returns in levels; the author paper states those level returns are reported in percentage points and annualized by multiplying excess returns by 12",
-        "unit_scale_to_decimal": 0.01
-      }
-    },
-    "comparison": {
-      "annualized_mean_return_difference": -2.2772122401222,
-      "annualized_tracking_error": 11.770051121804197,
-      "common_end_month": "2026-05-31",
-      "common_observations": 497,
-      "common_start_month": "1985-01-31",
-      "pearson_correlation": -0.07400075645466087
+    "feature_sha": "b1cfd2de7388e3240fc9515d48bb74113e668368",
+    "tests": [
+      "tests/test_m025_stage4_economics.py",
+      "tests/test_m025_stage3_ingestion.py",
+      "tests/test_public_benchmarks.py"
+    ],
+    "run": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_m025_stage4_economics.py",
+        "tests/test_m025_stage3_ingestion.py",
+        "tests/test_public_benchmarks.py"
+      ],
+      "exit_code": 0,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 43 items\n\ntests/test_m025_stage4_economics.py ..........                           [ 23%]\ntests/test_m025_stage3_ingestion.py ..........                           [ 46%]\ntests/test_public_benchmarks.py .......................                  [100%]\n\n=============================== warnings summary ===============================\ntests/test_m025_stage4_economics.py::test_h10_proxy_uses_exact_23_series_and_reports_valid_counts\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_monthly_summary_formulas_are_frozen\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_canonical_monthly_series_refuses_duplicate_months\n  /home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py:94: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.\n    return index.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\n  /home/joel/Dev/mamba2-trading-bot/tests/test_m025_stage4_economics.py:71: UserWarning: Converting to Period representation will drop timezone information.\n    earlier = control.index < cutoff.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 43 passed, 8 warnings in 0.84s ========================\n",
+      "stderr": ""
     },
     "safety": {
-      "currency_subset_search_run": false,
-      "definitions_tuned_after_economics": false,
-      "lag_search_run": false,
-      "m021_post_cutoff_outcomes_used": false,
+      "economic_execution_run": false,
+      "stage4_artifacts_written": false,
+      "m021_post_cutoff_data_used": false,
       "m023_outcomes_used": false,
       "m024_outcomes_used_to_tune_m025": false,
-      "real_order_api_called": false,
-      "sign_search_run": false,
-      "source_replaced_after_economics": false,
-      "subperiod_search_run": false
+      "real_order_api_called": false
     }
   }
 }
