@@ -35,6 +35,9 @@ M027_MIN_ELIGIBLE_CURRENCIES = 4
 M027_MIN_EVALUATION_MONTHS = 60
 M027_FORMATION_MONTHS = 12
 M027_LABEL = "CARRY-AWARE SPOT TSMOM — PUBLIC-DATA APPROXIMATION"
+M027_FROZEN_MONTH_LIST_SHA256 = (
+    "c5cda6bb68904213dc46aa338887c19e7575e31cba8ab816e44469b81a3b4b40"
+)
 
 
 def _sha256(path: str | Path) -> str:
@@ -228,7 +231,7 @@ def _summary(series: pd.Series) -> dict[str, Any]:
 def stage2_economics(
     daily: pd.DataFrame,
     *,
-    expected_month_list_sha256: str,
+    expected_month_list_sha256: str = M027_FROZEN_MONTH_LIST_SHA256,
 ) -> dict[str, Any]:
     """Run the frozen M027 Stage-2 portfolio once readiness is frozen."""
 
