@@ -152,6 +152,7 @@ M024_STAGE2_SYMBOL_DIR = REPO / "backtest_data" / "m024-stage2-symbol-v1"
 M024_HOLDOUT_READINESS_DIR = REPO / "backtest_data" / "m024-holdout-readiness-v1"
 M024_HOLDOUT_DIR = REPO / "backtest_data" / "m024-holdout-h-uj-v1"
 M025_STAGE3_INGESTION_DIR = REPO / "backtest_data" / "m025-stage3-ingestion-v1"
+M025_STAGE4_ECONOMICS_DIR = REPO / "backtest_data" / "m025-stage4-economics-v1"
 
 
 def _safe_env(wine=False):
@@ -15427,6 +15428,168 @@ def m025_stage4_tests():
     }
 
 
+def m025_stage4_economics():
+    """Run the sole frozen M025 Stage-4 deterministic A/B economics."""
+
+    feature_sha = _require_m025_branch()
+    input_dir = _ensure_baseline_path(M025_STAGE3_INGESTION_DIR)
+    output_dir = _ensure_baseline_path(M025_STAGE4_ECONOMICS_DIR)
+    a_path = output_dir / "m025-stage4-a.json"
+    b_path = output_dir / "m025-stage4-b.json"
+
+    required_inputs = [
+        input_dir / "m025-stage3-ingestion.json",
+        input_dir / "h10-all-data.zip",
+        input_dir / "h10-normalized-usd-per-foreign.csv",
+        input_dir / "Time-Series-Momentum-Factors-Monthly.xlsx",
+        input_dir / "CurrencyPortfolios.xls",
+    ]
+    if not all(path.is_file() for path in required_inputs):
+        return {
+            "ok": False,
+            "reason": "accepted Stage-3 immutable inputs are missing",
+            "feature_sha": feature_sha,
+        }
+
+    if output_dir.exists():
+        if not a_path.is_file() or not b_path.is_file():
+            return {
+                "ok": False,
+                "reason": "partial immutable M025 Stage-4 artifacts",
+                "feature_sha": feature_sha,
+            }
+    else:
+        temp_dir = _ensure_baseline_path(
+            Path(str(output_dir) + ".tmp")
+        )
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
+        temp_dir.mkdir(parents=True, exist_ok=False)
+
+        code = (
+            "import json;"
+            "from mamba2.backtest.m025_stage4_economics import run_stage4_pair;"
+            f"r=run_stage4_pair(ingestion_dir={str(input_dir)!r},"
+            f"output_dir={str(temp_dir)!r});"
+            "print(json.dumps(r,sort_keys=True));"
+            "raise SystemExit(0 if r.get('ok') else 1)"
+        )
+        run = _run_process_group_bounded(
+            _native_command("-c", code),
+            env=_safe_env(),
+            timeout_seconds=300,
+        )
+        if run["exit_code"] != 0:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            return {
+                "ok": False,
+                "reason": "M025 Stage-4 deterministic pair failed",
+                "feature_sha": feature_sha,
+                "run": run,
+            }
+
+        temp_a = temp_dir / "m025-stage4-a.json"
+        temp_b = temp_dir / "m025-stage4-b.json"
+        if not temp_a.is_file() or not temp_b.is_file():
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            return {
+                "ok": False,
+                "reason": "M025 Stage-4 A/B artifacts missing",
+                "feature_sha": feature_sha,
+            }
+        if _sha256(temp_a) != _sha256(temp_b):
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            return {
+                "ok": False,
+                "reason": "M025 Stage-4 A/B artifacts are nondeterministic",
+                "feature_sha": feature_sha,
+            }
+        temp_dir.rename(output_dir)
+
+    sha_a = _sha256(a_path)
+    sha_b = _sha256(b_path)
+    if sha_a != sha_b:
+        return {
+            "ok": False,
+            "reason": "M025 Stage-4 immutable A/B hashes differ",
+            "feature_sha": feature_sha,
+            "a_sha256": sha_a,
+            "b_sha256": sha_b,
+        }
+
+    report = json.loads(a_path.read_text(encoding="utf-8"))
+    if report.get("stage") != "stage4-economics":
+        return {
+            "ok": False,
+            "reason": "unexpected M025 Stage-4 report stage",
+            "feature_sha": feature_sha,
+        }
+    safety = report.get("safety") or {}
+    forbidden_true = [
+        "definitions_tuned_after_economics",
+        "source_replaced_after_economics",
+        "lag_search_run",
+        "sign_search_run",
+        "subperiod_search_run",
+        "currency_subset_search_run",
+        "m021_post_cutoff_outcomes_used",
+        "m023_outcomes_used",
+        "m024_outcomes_used_to_tune_m025",
+        "real_order_api_called",
+    ]
+    failed_safety = [
+        key for key in forbidden_true
+        if safety.get(key) is not False
+    ]
+    if failed_safety:
+        return {
+            "ok": False,
+            "reason": "M025 Stage-4 safety contract failed",
+            "failed_safety": failed_safety,
+            "feature_sha": feature_sha,
+        }
+
+    series = report["series"]
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "artifact": {
+            "a_path": str(a_path.relative_to(REPO)),
+            "b_path": str(b_path.relative_to(REPO)),
+            "a_sha256": sha_a,
+            "b_sha256": sha_b,
+            "deterministic": True,
+        },
+        "h10_spot_proxy": {
+            "label": series["h10_spot_proxy"]["label"],
+            "cost_label": series["h10_spot_proxy"]["cost_label"],
+            "summary": series["h10_spot_proxy"]["summary"],
+            "first_valid_instrument_count": (
+                series["h10_spot_proxy"]["valid_instrument_count"][0]
+                if series["h10_spot_proxy"]["valid_instrument_count"]
+                else None
+            ),
+            "last_valid_instrument_count": (
+                series["h10_spot_proxy"]["valid_instrument_count"][-1]
+                if series["h10_spot_proxy"]["valid_instrument_count"]
+                else None
+            ),
+        },
+        "aqr_tsmom_fx": {
+            "label": series["aqr_tsmom_fx"]["label"],
+            "summary": series["aqr_tsmom_fx"]["summary"],
+        },
+        "lrv_hml_fx": {
+            "label": series["lrv_hml_fx"]["label"],
+            "summary": series["lrv_hml_fx"]["summary"],
+            "parser_metadata": series["lrv_hml_fx"]["parser_metadata"],
+        },
+        "comparison": report["comparisons"]["h10_vs_aqr_tsmom_fx"],
+        "safety": safety,
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -15457,6 +15620,7 @@ ACTION_HANDLERS = {
     "m021_primary_pair": m021_primary_pair,
     "m025_stage3_h10_transport_probe": m025_stage3_h10_transport_probe,
     "m025_stage3_lrv_binary_probe": m025_stage3_lrv_binary_probe,
+    "m025_stage4_economics": m025_stage4_economics,
     "m025_stage4_tests": m025_stage4_tests,
     "m025_stage4_add_xlrd_dependency": m025_stage4_add_xlrd_dependency,
     "m025_stage4_runtime_probe": m025_stage4_runtime_probe,
