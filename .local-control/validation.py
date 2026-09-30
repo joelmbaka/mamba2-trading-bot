@@ -16204,16 +16204,16 @@ with zipfile.ZipFile(io.BytesIO(bis_body), "r") as zf:
         bis_fields = reader.fieldnames or []
         bis_series = defaultdict(list)
         for row in reader:
-            if str(row.get("FREQ", "")).strip() != "D":
+            if str(row.get("FREQ:Frequency", "")).strip() != "D":
                 continue
-            period = row.get("TIME_PERIOD")
+            period = row.get("TIME_PERIOD:Time period or range")
             idx = month_index(period)
             if idx is None:
                 continue
             key = (
-                str(row.get("REF_AREA", "")).strip(),
-                str(row.get("CURRENCY", "")).strip(),
-                str(row.get("COLLECTION", row.get("COLLECTION_INDICATOR", ""))).strip(),
+                str(row.get("REF_AREA:Reference area", "")).strip(),
+                str(row.get("CURRENCY:Currency", "")).strip(),
+                str(row.get("COLLECTION:Collection", "")).strip(),
             )
             bis_series[key].append(idx)
 
