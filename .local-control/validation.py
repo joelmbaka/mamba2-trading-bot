@@ -15593,6 +15593,7 @@ def m025_stage4_economics():
 def m025_stage4_aqr_date_probe():
     """Inspect only AQR TSMOM Factors date-column structure; no returns."""
 
+    import re
     import zipfile
     import xml.etree.ElementTree as ET
     from datetime import datetime, timedelta
