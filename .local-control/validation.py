@@ -15249,6 +15249,37 @@ def m025_stage3_lrv_binary_probe():
     return result
 
 
+def m025_stage4_runtime_probe():
+    """Probe only fixed XLS parsing capabilities for M025 Stage 4."""
+
+    import importlib.util
+
+    feature_sha = _require_m025_branch()
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "executables": {
+            "xls2csv": shutil.which("xls2csv"),
+            "in2csv": shutil.which("in2csv"),
+            "ssconvert": shutil.which("ssconvert"),
+            "libreoffice": shutil.which("libreoffice"),
+            "soffice": shutil.which("soffice"),
+        },
+        "python_modules": {
+            "xlrd": importlib.util.find_spec("xlrd") is not None,
+            "olefile": importlib.util.find_spec("olefile") is not None,
+            "python_calamine": importlib.util.find_spec("python_calamine") is not None,
+            "openpyxl": importlib.util.find_spec("openpyxl") is not None,
+        },
+        "safety": {
+            "numeric_cells_parsed": False,
+            "economic_computation_run": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -15279,6 +15310,7 @@ ACTION_HANDLERS = {
     "m021_primary_pair": m021_primary_pair,
     "m025_stage3_h10_transport_probe": m025_stage3_h10_transport_probe,
     "m025_stage3_lrv_binary_probe": m025_stage3_lrv_binary_probe,
+    "m025_stage4_runtime_probe": m025_stage4_runtime_probe,
     "m025_stage3_ingestion_tests": m025_stage3_ingestion_tests,
     "m025_stage3_ingestion": m025_stage3_ingestion,
     "m025_stage3_runtime_probe": m025_stage3_runtime_probe,
