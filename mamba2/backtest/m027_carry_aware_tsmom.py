@@ -152,6 +152,7 @@ def parse_bis_daily_spot_zip(raw_bytes: bytes) -> pd.DataFrame:
                 observed = _parse_float(
                     _row_value(
                         row,
+                        "OBS_VALUE:Observation Value",
                         "OBS_VALUE:Observation value",
                         "OBS_VALUE",
                     )
