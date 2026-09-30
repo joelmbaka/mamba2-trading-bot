@@ -21,8 +21,24 @@ TIMER="$UNIT_DIR/chatgpt-mamba2-local-agent.timer"
 
 mkdir -p "$BASE" "$UNIT_DIR" "$HOME/.local/state/chatgpt-mamba2-local-agent"
 
+fetch_github() {
+  local repo_dir="$1"
+  shift
+  local primary_ssh="ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 -o ServerAliveInterval=5 -o ServerAliveCountMax=2"
+  local fallback_ssh="ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o HostName=ssh.github.com -o HostKeyAlias=github.com -p 443"
+
+  if GIT_SSH_COMMAND="$primary_ssh" /usr/bin/timeout 35s git -C "$repo_dir" fetch "$@"; then
+    return 0
+  fi
+
+  echo "Primary GitHub fetch failed or timed out; retrying SSH via port 443..."
+  GIT_SSH_COMMAND="$fallback_ssh" /usr/bin/timeout 35s git -C "$repo_dir" fetch "$@"
+}
+
 echo "Fetching Mamba2 control branches..."
-git fetch origin   local-control:refs/remotes/origin/local-control   local-control-results:refs/remotes/origin/local-control-results
+fetch_github "$REPO" origin \
+  local-control:refs/remotes/origin/local-control \
+  local-control-results:refs/remotes/origin/local-control-results
 
 echo "Installing isolated Mamba2 local-control agent..."
 git show origin/local-control:.local-control/agent.py > "$AGENT"
@@ -61,7 +77,7 @@ if [[ ! -d "$RESULTS/.git" && ! -f "$RESULTS/.git" ]]; then
   rm -rf "$RESULTS"
   git worktree add --detach "$RESULTS" origin/local-control-results
 else
-  git -C "$RESULTS" fetch origin local-control-results
+  fetch_github "$RESULTS" origin local-control-results
   git -C "$RESULTS" reset --hard origin/local-control-results
 fi
 
@@ -73,8 +89,21 @@ REPO="$REPO"
 AGENT="$AGENT"
 VALIDATION="$VALIDATION"
 
-git -C "\$REPO" fetch origin \\
-  local-control:refs/remotes/origin/local-control
+fetch_control() {
+  local primary_ssh="ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 -o ServerAliveInterval=5 -o ServerAliveCountMax=2"
+  local fallback_ssh="ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o HostName=ssh.github.com -o HostKeyAlias=github.com -p 443"
+
+  if GIT_SSH_COMMAND="\$primary_ssh" /usr/bin/timeout 35s git -C "\$REPO" fetch origin \\
+    local-control:refs/remotes/origin/local-control; then
+    return 0
+  fi
+
+  echo "Primary GitHub fetch failed or timed out; retrying SSH via port 443..."
+  GIT_SSH_COMMAND="\$fallback_ssh" /usr/bin/timeout 35s git -C "\$REPO" fetch origin \\
+    local-control:refs/remotes/origin/local-control
+}
+
+fetch_control
 
 AGENT_TMP="\${AGENT}.tmp"
 VALIDATION_TMP="\${VALIDATION}.tmp"
