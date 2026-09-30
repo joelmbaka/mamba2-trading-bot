@@ -16203,7 +16203,16 @@ with zipfile.ZipFile(io.BytesIO(bis_body), "r") as zf:
         reader = csv.DictReader(text)
         bis_fields = reader.fieldnames or []
         bis_series = defaultdict(list)
+        bis_row_samples = []
         for row in reader:
+            if len(bis_row_samples) < 20:
+                bis_row_samples.append({
+                    "freq": str(row.get("FREQ:Frequency", "")).strip(),
+                    "ref_area": str(row.get("REF_AREA:Reference area", "")).strip(),
+                    "currency": str(row.get("CURRENCY:Currency", "")).strip(),
+                    "collection": str(row.get("COLLECTION:Collection", "")).strip(),
+                    "time_period": str(row.get("TIME_PERIOD:Time period or range", "")).strip(),
+                })
             if str(row.get("FREQ:Frequency", "")).strip() != "D":
                 continue
             period = row.get("TIME_PERIOD:Time period or range")
@@ -16284,6 +16293,7 @@ print(json.dumps({
         "status": bis_status,
         "content_type": bis_type,
         "csv_fields": bis_fields,
+        "row_samples_no_values": bis_row_samples,
         "series_with_72_month_run": bis_summary,
     },
     "oecd": {
