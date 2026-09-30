@@ -16608,6 +16608,32 @@ print(json.dumps({
     }
 
 
+
+def m027_stage1_tests():
+    """Run only the M027 Stage-1 deterministic approximation tests."""
+
+    feature_sha = _require_m027_branch()
+    tests = [
+        "tests/test_m027_carry_aware_tsmom.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "carry-aware-spot-tsmom",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "source_download_run": False,
+            "strategy_signal_computed": False,
+            "portfolio_economics_computed": False,
+            "m021_post_cutoff_outcomes_used": False,
+            "m024_holdout_reused": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 def recovery_remove_accidental_systemctl_file():
     """Remove only the known accidental root-level systemctl-name artifact."""
 
@@ -16672,6 +16698,7 @@ def recovery_remove_accidental_systemctl_file():
 
 
 ACTION_HANDLERS = {
+    "m027_stage1_tests": m027_stage1_tests,
     "m027_stage0_universe_probe": m027_stage0_universe_probe,
     "m027_switch_carry_aware_spot_tsmom": m027_switch_carry_aware_spot_tsmom,
     "m027_stage0_coverage_probe": m027_stage0_coverage_probe,
