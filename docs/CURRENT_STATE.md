@@ -563,3 +563,40 @@ Control repair:
 `2ab3bceb0f1506002490f6f2a18863e872045e1a`
 
 No Stage-3 economics have run.
+
+
+## M025 Stage 3 ingestion accepted
+
+Accepted feature:
+
+`554ab3a827163732f4dec335c716fec2f386bfe8`
+
+Focused tests:
+
+`2d3e36ca14c4a277666a74d4f300a982a19d88be` — **33 passed**.
+
+Immutable ingestion:
+
+`61bb9c5d591e8519f5bebc024d670204d9a71eab`
+
+Report SHA:
+
+`d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505`
+
+H.10 raw SHA:
+
+`38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046`
+
+H.10 normalized panel SHA:
+
+`015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419`
+
+All 23 frozen H.10 currencies pass the 72-month gate.
+
+AQR exposes dedicated currency factor `TSMOM^FX`.
+
+LRV exposes P1-P6 and HML schema.
+
+No Stage-3 economics have run.
+
+Next gate: freeze Stage-4 economic execution protocol.
