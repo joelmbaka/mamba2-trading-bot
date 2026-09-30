@@ -15798,7 +15798,72 @@ print(json.dumps({
 
 
 
+
+def recovery_remove_accidental_systemctl_file():
+    """Remove only the known accidental root-level systemctl-name artifact."""
+
+    relative = "ystemctl --user start chatgpt-mamba2-local-agent.service"
+    target = REPO / relative
+
+    status_before = _run([
+        "git", "status", "--porcelain=v1", "--untracked-files=all",
+    ])
+    if status_before["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "could not inspect worktree before recovery cleanup",
+            "status_before": status_before,
+        }
+
+    dirty_lines = [
+        line for line in status_before["stdout"].splitlines()
+        if line.strip()
+    ]
+    allowed_lines = {
+        f'?? "{relative}"',
+        f"?? {relative}",
+    }
+    if len(dirty_lines) != 1 or dirty_lines[0] not in allowed_lines:
+        return {
+            "ok": False,
+            "reason": "recovery cleanup refuses any worktree state except the single known untracked artifact",
+            "changed_paths": dirty_lines,
+        }
+
+    if not target.exists() and not target.is_symlink():
+        return {
+            "ok": False,
+            "reason": "expected accidental artifact is no longer present",
+            "relative_path": relative,
+        }
+    if target.is_dir() and not target.is_symlink():
+        return {
+            "ok": False,
+            "reason": "recovery cleanup refuses to remove a directory",
+            "relative_path": relative,
+        }
+
+    target.unlink()
+
+    status_after = _run([
+        "git", "status", "--porcelain=v1", "--untracked-files=all",
+    ])
+    clean = (
+        status_after["exit_code"] == 0
+        and not status_after["stdout"].strip()
+    )
+    return {
+        "ok": clean,
+        "relative_path": relative,
+        "removed": True,
+        "clean_after": clean,
+        "status_after": status_after,
+    }
+
+
+
 ACTION_HANDLERS = {
+    "recovery_remove_accidental_systemctl_file": recovery_remove_accidental_systemctl_file,
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
     "bootstrap_wine_test_env": bootstrap_wine_test_env,
