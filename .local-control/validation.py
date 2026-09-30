@@ -15694,6 +15694,85 @@ def m025_stage4_aqr_date_probe():
     }
 
 
+def m025_stage4_lrv_unit_probe():
+    """Inspect only LRV sheet labels/styles needed to prove return units."""
+
+    feature_sha = _require_m025_branch()
+    workbook = M025_STAGE3_INGESTION_DIR / "CurrencyPortfolios.xls"
+    if not workbook.is_file():
+        return {"ok": False, "reason": "LRV workbook missing"}
+
+    import xlrd
+    from mamba2.backtest.m025_stage4_economics import locate_lrv_layout
+
+    book = xlrd.open_workbook(
+        str(workbook),
+        formatting_info=True,
+        on_demand=False,
+    )
+    layout = locate_lrv_layout(book)
+    sheet = book.sheet_by_name(layout.sheet_name)
+
+    text_rows = []
+    for row in range(min(sheet.nrows, 100)):
+        texts = []
+        for col in range(sheet.ncols):
+            cell = sheet.cell(row, col)
+            if cell.ctype == xlrd.XL_CELL_TEXT:
+                clean = " ".join(str(cell.value).split())
+                if clean:
+                    texts.append({"col": col, "text": clean[:300]})
+        if texts:
+            text_rows.append({"row": row, "texts": texts})
+
+    format_counts = {}
+    sampled_cells = []
+    for row in range(layout.header_row + 1, sheet.nrows):
+        for portfolio_number, col in enumerate(layout.portfolio_cols, start=1):
+            cell = sheet.cell(row, col)
+            if cell.ctype != xlrd.XL_CELL_NUMBER:
+                continue
+            xf_index = getattr(cell, "xf_index", None)
+            format_code = None
+            format_key = None
+            if xf_index is not None and xf_index < len(book.xf_list):
+                format_key = book.xf_list[xf_index].format_key
+                fmt = book.format_map.get(format_key)
+                format_code = None if fmt is None else fmt.format_str
+            key = str(format_code)
+            format_counts[key] = format_counts.get(key, 0) + 1
+            if len(sampled_cells) < 24:
+                sampled_cells.append({
+                    "row": row,
+                    "portfolio": portfolio_number,
+                    "col": col,
+                    "cell_type": cell.ctype,
+                    "xf_index": xf_index,
+                    "format_key": format_key,
+                    "format_code": format_code,
+                })
+
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "sheet_name": layout.sheet_name,
+        "header_row_zero_based": layout.header_row,
+        "date_col_zero_based": layout.date_col,
+        "portfolio_cols_zero_based": list(layout.portfolio_cols),
+        "hml_col_zero_based": layout.hml_col,
+        "text_rows_first_100": text_rows,
+        "portfolio_numeric_format_counts": format_counts,
+        "sampled_portfolio_cell_metadata": sampled_cells,
+        "safety": {
+            "numeric_values_reported": False,
+            "returns_computed": False,
+            "economic_summary_computed": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -15724,6 +15803,7 @@ ACTION_HANDLERS = {
     "m021_primary_pair": m021_primary_pair,
     "m025_stage3_h10_transport_probe": m025_stage3_h10_transport_probe,
     "m025_stage3_lrv_binary_probe": m025_stage3_lrv_binary_probe,
+    "m025_stage4_lrv_unit_probe": m025_stage4_lrv_unit_probe,
     "m025_stage4_aqr_date_probe": m025_stage4_aqr_date_probe,
     "m025_stage4_economics": m025_stage4_economics,
     "m025_stage4_tests": m025_stage4_tests,
