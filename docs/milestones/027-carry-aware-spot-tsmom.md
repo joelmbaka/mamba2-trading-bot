@@ -221,3 +221,79 @@ lookback, signal sign, rate lag, volatility target, EWMA constant, aggregation
 rule, or cost treatment may change inside M027.
 
 Any such change requires a separately named milestone.
+
+## Stage-0 currency-identity map — frozen before universe intersection
+
+The BIS/OECD Stage-0 schema probes have inspected only identifiers and coverage
+dates. No observation values, approximate returns, signals, or economics have
+been inspected.
+
+To prevent country-level rate series from being paired with an economically
+different or duplicated currency, the admissible identity map is frozen now.
+
+### USD funding leg
+
+- OECD `USA` supplies the USD short-rate leg.
+- USD is not a foreign-currency portfolio member.
+
+### Euro
+
+The euro enters exactly once:
+
+- OECD rate area: `EA20`
+- BIS reference area: `XM`
+- BIS currency: `EUR`
+
+Individual euro-area country rate series are not separate currencies and are
+excluded from the portfolio identity map. This also avoids pairing a historical
+national money-market rate with BIS's back-calculated EUR series.
+
+### Non-euro candidate identities
+
+| OECD ref | BIS ref | Currency |
+|---|---|---|
+| AUS | AU | AUD |
+| CAN | CA | CAD |
+| CHE | CH | CHF |
+| CHL | CL | CLP |
+| CHN | CN | CNY |
+| COL | CO | COP |
+| CRI | CR | CRC |
+| CZE | CZ | CZK |
+| DNK | DK | DKK |
+| GBR | GB | GBP |
+| HUN | HU | HUF |
+| IDN | ID | IDR |
+| IND | IN | INR |
+| ISL | IS | ISK |
+| ISR | IL | ILS |
+| JPN | JP | JPY |
+| KOR | KR | KRW |
+| MEX | MX | MXN |
+| NOR | NO | NOK |
+| NZL | NZ | NZD |
+| POL | PL | PLN |
+| ROU | RO | RON |
+| RUS | RU | RUB |
+| SWE | SE | SEK |
+| ZAF | ZA | ZAR |
+
+No other country/currency identity may enter M027 without starting a new
+milestone.
+
+### Mechanical eligible-month rule
+
+For a foreign-currency identity and calendar month `M`, Stage-0 coverage marks
+the month eligible only when:
+
+1. the BIS daily spot series has at least one observation date in month `M`;
+2. the foreign OECD short-rate series has an observation for completed month
+   `M-1`;
+3. the USA OECD short-rate series has an observation for completed month
+   `M-1`.
+
+The candidate passes Stage 0 only if those metadata conditions contain a run of
+at least **72 consecutive eligible months**.
+
+This coverage check does not inspect or use `OBS_VALUE`.
+
