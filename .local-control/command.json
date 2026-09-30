@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m027-switch-carry-aware-spot-tsmom-v1",
-  "action": "m027_switch_carry_aware_spot_tsmom",
+  "id": "mamba2-m027-stage0-coverage-probe-v1",
+  "action": "m027_stage0_coverage_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
