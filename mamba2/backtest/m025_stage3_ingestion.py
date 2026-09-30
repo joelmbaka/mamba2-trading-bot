@@ -533,7 +533,7 @@ def _classify_lrv_schema_strings(values: Iterable[str]) -> dict[str, Any]:
     portfolio_tokens: dict[str, list[str]] = {}
     for number in range(1, 7):
         pattern = re.compile(
-            rf"(^|\\b)(p\\s*{number}|portfolio\\s*{number})(\\b|$)",
+            rf"(^|\b)(p\s*{number}|portfolio\s*{number})(\b|$)",
             re.IGNORECASE,
         )
         portfolio_tokens[f"P{number}"] = [
@@ -542,8 +542,11 @@ def _classify_lrv_schema_strings(values: Iterable[str]) -> dict[str, Any]:
     hml_tokens = [value for value in cleaned if "hml" in value.lower()]
     currency_tokens = [
         value for value in cleaned
-        if re.search(r"\\b(currency|currencies|fx|foreign exchange)\\b",
-                     value, re.IGNORECASE)
+        if re.search(
+            r"\b(currency|currencies|fx|foreign exchange)\b",
+            value,
+            re.IGNORECASE,
+        )
     ]
     return {
         "sheet_or_schema_strings": cleaned,
