@@ -15702,68 +15702,92 @@ def m025_stage4_lrv_unit_probe():
     if not workbook.is_file():
         return {"ok": False, "reason": "LRV workbook missing"}
 
-    import xlrd
-    from mamba2.backtest.m025_stage4_economics import locate_lrv_layout
+    code = r"""
+import json
+import xlrd
+from mamba2.backtest.m025_stage4_economics import locate_lrv_layout
 
-    book = xlrd.open_workbook(
-        str(workbook),
-        formatting_info=True,
-        on_demand=False,
+workbook = r"__WORKBOOK__"
+book = xlrd.open_workbook(workbook, formatting_info=True, on_demand=False)
+layout = locate_lrv_layout(book)
+sheet = book.sheet_by_name(layout.sheet_name)
+
+text_rows = []
+for row in range(min(sheet.nrows, 100)):
+    texts = []
+    for col in range(sheet.ncols):
+        cell = sheet.cell(row, col)
+        if cell.ctype == xlrd.XL_CELL_TEXT:
+            clean = " ".join(str(cell.value).split())
+            if clean:
+                texts.append({"col": col, "text": clean[:300]})
+    if texts:
+        text_rows.append({"row": row, "texts": texts})
+
+format_counts = {}
+sampled_cells = []
+for row in range(layout.header_row + 1, sheet.nrows):
+    for portfolio_number, col in enumerate(layout.portfolio_cols, start=1):
+        cell = sheet.cell(row, col)
+        if cell.ctype != xlrd.XL_CELL_NUMBER:
+            continue
+        xf_index = getattr(cell, "xf_index", None)
+        format_code = None
+        format_key = None
+        if xf_index is not None and xf_index < len(book.xf_list):
+            format_key = book.xf_list[xf_index].format_key
+            fmt = book.format_map.get(format_key)
+            format_code = None if fmt is None else fmt.format_str
+        key = str(format_code)
+        format_counts[key] = format_counts.get(key, 0) + 1
+        if len(sampled_cells) < 24:
+            sampled_cells.append({
+                "row": row,
+                "portfolio": portfolio_number,
+                "col": col,
+                "cell_type": cell.ctype,
+                "xf_index": xf_index,
+                "format_key": format_key,
+                "format_code": format_code,
+            })
+
+print(json.dumps({
+    "sheet_name": layout.sheet_name,
+    "header_row_zero_based": layout.header_row,
+    "date_col_zero_based": layout.date_col,
+    "portfolio_cols_zero_based": list(layout.portfolio_cols),
+    "hml_col_zero_based": layout.hml_col,
+    "text_rows_first_100": text_rows,
+    "portfolio_numeric_format_counts": format_counts,
+    "sampled_portfolio_cell_metadata": sampled_cells,
+}, sort_keys=True))
+"""
+    code = code.replace("__WORKBOOK__", str(workbook))
+    run = _run_process_group_bounded(
+        _native_command("-c", code),
+        env=_safe_env(),
+        timeout_seconds=120,
     )
-    layout = locate_lrv_layout(book)
-    sheet = book.sheet_by_name(layout.sheet_name)
-
-    text_rows = []
-    for row in range(min(sheet.nrows, 100)):
-        texts = []
-        for col in range(sheet.ncols):
-            cell = sheet.cell(row, col)
-            if cell.ctype == xlrd.XL_CELL_TEXT:
-                clean = " ".join(str(cell.value).split())
-                if clean:
-                    texts.append({"col": col, "text": clean[:300]})
-        if texts:
-            text_rows.append({"row": row, "texts": texts})
-
-    format_counts = {}
-    sampled_cells = []
-    for row in range(layout.header_row + 1, sheet.nrows):
-        for portfolio_number, col in enumerate(layout.portfolio_cols, start=1):
-            cell = sheet.cell(row, col)
-            if cell.ctype != xlrd.XL_CELL_NUMBER:
-                continue
-            xf_index = getattr(cell, "xf_index", None)
-            format_code = None
-            format_key = None
-            if xf_index is not None and xf_index < len(book.xf_list):
-                format_key = book.xf_list[xf_index].format_key
-                fmt = book.format_map.get(format_key)
-                format_code = None if fmt is None else fmt.format_str
-            key = str(format_code)
-            format_counts[key] = format_counts.get(key, 0) + 1
-            if len(sampled_cells) < 24:
-                sampled_cells.append({
-                    "row": row,
-                    "portfolio": portfolio_number,
-                    "col": col,
-                    "cell_type": cell.ctype,
-                    "xf_index": xf_index,
-                    "format_key": format_key,
-                    "format_code": format_code,
-                })
-
+    if run["exit_code"] != 0:
+        return {
+            "ok": False,
+            "reason": "LRV unit metadata probe failed",
+            "feature_sha": feature_sha,
+            "run": run,
+        }
+    try:
+        metadata = json.loads(run["stdout"].strip())
+    except json.JSONDecodeError as exc:
+        return {
+            "ok": False,
+            "reason": f"LRV unit metadata probe emitted invalid JSON: {exc}",
+            "feature_sha": feature_sha,
+        }
     return {
         "ok": True,
         "feature_branch": "public-strategy-benchmarks",
         "feature_sha": feature_sha,
-        "sheet_name": layout.sheet_name,
-        "header_row_zero_based": layout.header_row,
-        "date_col_zero_based": layout.date_col,
-        "portfolio_cols_zero_based": list(layout.portfolio_cols),
-        "hml_col_zero_based": layout.hml_col,
-        "text_rows_first_100": text_rows,
-        "portfolio_numeric_format_counts": format_counts,
-        "sampled_portfolio_cell_metadata": sampled_cells,
+        **metadata,
         "safety": {
             "numeric_values_reported": False,
             "returns_computed": False,
@@ -15771,104 +15795,6 @@ def m025_stage4_lrv_unit_probe():
             "real_order_api_called": False,
         },
     }
-
-
-ACTION_HANDLERS = {
-    "repo_checks": repo_checks,
-    "configure_local_control_runtime": configure_local_control_runtime,
-    "bootstrap_wine_test_env": bootstrap_wine_test_env,
-    "runtime_discovery": runtime_discovery,
-    "runtime_versions": runtime_versions,
-    "test_core": test_core,
-    "test_full_native": test_full_native,
-    "test_full_wine": test_full_wine,
-    "first_baseline_cleanup": first_baseline_cleanup,
-    "first_baseline_export": first_baseline_export,
-    "first_baseline_run_pair": first_baseline_run_pair,
-    "baseline_diagnostic_run_pair": baseline_diagnostic_run_pair,
-    "defect_review_diagnostic_run_pair": defect_review_diagnostic_run_pair,
-    "broader_history_coverage_probe": broader_history_coverage_probe,
-    "broader_history_cleanup": broader_history_cleanup,
-    "broader_history_export": broader_history_export,
-    "broader_history_m018_regression_pair": broader_history_m018_regression_pair,
-    "broader_history_run_pair": broader_history_run_pair,
-    "controlled_experiment_control_pair": controlled_experiment_control_pair,
-    "controlled_experiment_m020a_pair": controlled_experiment_m020a_pair,
-    "controlled_experiment_m020b_diagnostic": controlled_experiment_m020b_diagnostic,
-    "controlled_experiment_m020c_pair": controlled_experiment_m020c_pair,
-    "controlled_experiment_m020d_pair": controlled_experiment_m020d_pair,
-    "m021_forward_readiness": m021_forward_readiness,
-    "m021_historical_regression": m021_historical_regression,
-    "m021_primary_export": m021_primary_export,
-    "m021_primary_pair": m021_primary_pair,
-    "m025_stage3_h10_transport_probe": m025_stage3_h10_transport_probe,
-    "m025_stage3_lrv_binary_probe": m025_stage3_lrv_binary_probe,
-    "m025_stage4_lrv_unit_probe": m025_stage4_lrv_unit_probe,
-    "m025_stage4_aqr_date_probe": m025_stage4_aqr_date_probe,
-    "m025_stage4_economics": m025_stage4_economics,
-    "m025_stage4_tests": m025_stage4_tests,
-    "m025_stage4_add_xlrd_dependency": m025_stage4_add_xlrd_dependency,
-    "m025_stage4_runtime_probe": m025_stage4_runtime_probe,
-    "m025_stage3_ingestion_tests": m025_stage3_ingestion_tests,
-    "m025_stage3_ingestion": m025_stage3_ingestion,
-    "m025_stage3_runtime_probe": m025_stage3_runtime_probe,
-    "m025_switch_public_benchmarks": m025_switch_public_benchmarks,
-    "m025_public_benchmark_tests": m025_public_benchmark_tests,
-    "m024_holdout_tests": m024_holdout_tests,
-    "m024_holdout_h_uj_pair": m024_holdout_h_uj_pair,
-    "m024_holdout_assessment": m024_holdout_assessment,
-    "m024_holdout_readiness_tests": m024_holdout_readiness_tests,
-    "m024_holdout_readiness": m024_holdout_readiness,
-    "m024_stage2_symbol_tests": m024_stage2_symbol_tests,
-    "m024_stage2_symbol_family": m024_stage2_symbol_family,
-    "m024_stage2_symbol_assessment": m024_stage2_symbol_assessment,
-    "m024_symbol_specialization_tests": m024_symbol_specialization_tests,
-    "m024_symbol_specialization_diagnostic": m024_symbol_specialization_diagnostic,
-    "m023_stage_b_session_family": m023_stage_b_session_family,
-    "m023_stage_b_session_assessment": m023_stage_b_session_assessment,
-    "m023_stage_a_direction_family": m023_stage_a_direction_family,
-    "m023_stage_a_direction_assessment": m023_stage_a_direction_assessment,
-    "m023_direction_session_review": m023_direction_session_review,
-    "m023_direction_session_tests": m023_direction_session_tests,
-    "m023_direction_session_diagnostic": m023_direction_session_diagnostic,
-    "m022_phase2_validation_invariant_diagnostic": m022_phase2_validation_invariant_diagnostic,
-    "m022_phase2_validation_assessment": m022_phase2_validation_assessment,
-    "m022_phase2_validation_family": m022_phase2_validation_family,
-    "m022_phase2_development_assessment": m022_phase2_development_assessment,
-    "m022_phase2_development_family": m022_phase2_development_family,
-    "m022_phase1_session_assessment": m022_phase1_session_assessment,
-    "m022_phase1_session_family": m022_phase1_session_family,
-    "m022_phase1_atr_tp_assessment": m022_phase1_atr_tp_assessment,
-    "m022_phase1_atr_tp_family": m022_phase1_atr_tp_family,
-    "m022_phase1_atr_sl_assessment": m022_phase1_atr_sl_assessment,
-    "m022_phase1_atr_sl_family": m022_phase1_atr_sl_family,
-    "m022_phase1_spread_assessment": m022_phase1_spread_assessment,
-    "m022_phase1_spread_family": m022_phase1_spread_family,
-    "m022_phase1_ema_assessment": m022_phase1_ema_assessment,
-    "m022_phase1_ema_family": m022_phase1_ema_family,
-    "m022_phase1_boundary_assessment": m022_phase1_boundary_assessment,
-    "m022_phase1_boundary_family": m022_phase1_boundary_family,
-    "m022_phase1_stochastic_assessment": m022_phase1_stochastic_assessment,
-    "m022_phase1_stochastic_reference_equivalence": m022_phase1_stochastic_reference_equivalence,
-    "m022_phase1_stochastic_family": m022_phase1_stochastic_family,
-    "m022_phase1_reference_pair": m022_phase1_reference_pair,
-    "m022_phase1_default_regression": m022_phase1_default_regression,
-    "m022_phase1_tests": m022_phase1_tests,
-    "m022_inventory_tests": m022_inventory_tests,
-    "m022_maxbars_recovery_probe": m022_maxbars_recovery_probe,
-    "m022_raise_mt5_maxbars": m022_raise_mt5_maxbars,
-    "m022_native_m1_file_probe": m022_native_m1_file_probe,
-    "m022_terminal_history_capacity_probe": m022_terminal_history_capacity_probe,
-    "m022_history_checkpoint_probe": m022_history_checkpoint_probe,
-    "m022_history_depth_probe": m022_history_depth_probe,
-    "m022_tick_inventory_cleanup": m022_tick_inventory_cleanup,
-    "m022_native_inventory_existing_probe": m022_native_inventory_existing_probe,
-    "m022_partition_freeze": m022_partition_freeze,
-    "m022_native_inventory": m022_native_inventory,
-    "m022_tick_inventory": m022_tick_inventory,
-    "m022_history_inventory_cleanup": m022_history_inventory_cleanup,
-    "m022_history_inventory": m022_history_inventory,
-}
 
 
 def execute(action):
