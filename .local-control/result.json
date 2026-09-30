@@ -1,38 +1,32 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage3-ingestion-tests-v6",
-  "completed_at": "2026-09-30T04:57:29.541360+00:00",
-  "ok": false,
-  "action": "m025_stage3_ingestion_tests",
+  "command_id": "mamba2-m025-stage3-sync-v9",
+  "completed_at": "2026-09-30T04:59:45.401226+00:00",
+  "ok": true,
+  "action": "m025_switch_public_benchmarks",
   "data": {
-    "ok": false,
+    "ok": true,
     "feature_branch": "public-strategy-benchmarks",
-    "feature_sha": "3d7732f8ec8bdb2a687ec0a5ef08d5f4e7ab1081",
-    "tests": [
-      "tests/test_m025_stage3_ingestion.py",
-      "tests/test_public_benchmarks.py"
-    ],
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest",
-        "tests/test_m025_stage3_ingestion.py",
-        "tests/test_public_benchmarks.py"
-      ],
-      "exit_code": 1,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 33 items\n\ntests/test_m025_stage3_ingestion.py .........F                           [ 30%]\ntests/test_public_benchmarks.py .......................                  [100%]\n\n=================================== FAILURES ===================================\n__ test_lrv_binary_schema_classifier_finds_frozen_portfolios_without_numbers ___\n\n    def test_lrv_binary_schema_classifier_finds_frozen_portfolios_without_numbers():\n>       schema = _classify_lrv_schema_strings([\n            \"All currencies\",\n            \"Portfolio1\",\n            \"Portfolio2\",\n            \"Portfolio3\",\n            \"Portfolio4\",\n            \"Portfolio5\",\n            \"Portfolio6%\",\n            \"HML = P6 - P1\",\n        ])\nE       NameError: name '_classify_lrv_schema_strings' is not defined\n\ntests/test_m025_stage3_ingestion.py:269: NameError\n=========================== short test summary info ============================\nFAILED tests/test_m025_stage3_ingestion.py::test_lrv_binary_schema_classifier_finds_frozen_portfolios_without_numbers\n========================= 1 failed, 32 passed in 0.81s =========================\n",
-      "stderr": ""
+    "feature_sha": "554ab3a827163732f4dec335c716fec2f386bfe8",
+    "divergence": {
+      "ahead": 0,
+      "behind": 0
     },
+    "switch": {
+      "command": [
+        "git",
+        "switch",
+        "public-strategy-benchmarks"
+      ],
+      "exit_code": 0,
+      "stdout": "Your branch is up to date with 'origin/public-strategy-benchmarks'.\n",
+      "stderr": "Already on 'public-strategy-benchmarks'\n"
+    },
+    "fast_forward": null,
     "safety": {
-      "download_run": false,
-      "economic_computation_run": false,
-      "m021_post_cutoff_data_used": false,
-      "m023_outcomes_used": false,
-      "m024_outcomes_used_to_tune_definitions": false,
+      "dirty_worktree_refused": true,
+      "force_reset_used": false,
+      "economic_replay_run": false,
       "real_order_api_called": false
     }
   }
