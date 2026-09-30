@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m025-stage41-focused-tests-v1",
-  "action": "m025_stage4_tests",
+  "id": "mamba2-m027-switch-carry-aware-spot-tsmom-v1",
+  "action": "m027_switch_carry_aware_spot_tsmom",
   "args": {},
   "requested_by": "chatgpt"
 }
