@@ -1,91 +1,64 @@
 # Next Authorized Task
 
-## M025 — execute Stage-3 non-economic ingestion
+## M025 — freeze Stage-4 economic execution protocol
 
 Branch:
 
 `public-strategy-benchmarks`
 
-Protocol freeze:
+Accepted Stage-3 feature SHA:
 
-`6b6592237fe4f9e087745c914e916bda6521012d`
+`554ab3a827163732f4dec335c716fec2f386bfe8`
 
-H.10 snapshot-range freeze:
+Accepted focused tests:
 
-`a7fa66244e57c9f0e214526ab8dee9b96537f87c`
+`2d3e36ca14c4a277666a74d4f300a982a19d88be`
 
-Ingestion implementation:
+Accepted immutable ingestion:
 
-`184f0fbd0e58e0d451120232a2cb9295c729f7f2`
+`61bb9c5d591e8519f5bebc024d670204d9a71eab`
 
-Fixed local-control support:
+Accepted ingestion report SHA:
 
-`cd985e2f29d6814b1aec54ffff1b57b2c9a1ab6a`
+`d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505`
 
-Runtime probe:
+Immutable source hashes:
 
-`315a03a0ba1967d30a884b0fc0d33c39543f6e70`
+- H.10 raw:
+  `38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046`
+- H.10 normalized:
+  `015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419`
+- AQR workbook:
+  `33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb`
+- LRV workbook:
+  `e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74`
 
-## Execute exactly
+## Freeze before any economics
 
-1. sync/fast-forward Dell to exact current M025 feature HEAD;
-2. run `m025_stage3_ingestion_tests`;
-3. require focused PASS;
-4. run `m025_stage3_ingestion` once;
-5. require non-economic safety flags;
-6. freeze:
-   - H.10 raw SHA;
-   - H.10 normalized-panel SHA;
-   - AQR raw SHA and schema classification;
-   - LRV raw SHA and schema classification;
-   - ingestion report SHA;
-7. stop before returns/economics;
-8. freeze a separate Stage-3 economic-execution checkpoint only after
-   ingestion acceptance.
+Write a separate Stage-4 protocol that fixes:
 
-## Forbidden
+1. exact H.10 normalized-price parsing into
+   `TSMOM SPOT PROXY — FED H.10`;
+2. exact missing-observation treatment with no fill/interpolation;
+3. exact 12/1 signal timing and accepted centered MOP volatility estimator;
+4. exact 40% target-volatility scaling and equal-weight aggregation;
+5. exact admitted H.10 universe — all 23 frozen currencies;
+6. exact AQR `TSMOM^FX` sheet/column and unit convention;
+7. exact LRV P1-P6/HML extraction and unit convention;
+8. deterministic A/B economic artifact requirements;
+9. exact summary/comparison metrics already frozen in the milestone;
+10. stop/no-retuning rules after the first economic output.
 
-Do not compute returns, P/L, Sharpe, drawdown, wealth, correlations, tracking
-error, or rankings.
+Add parser/timing tests before execution.
 
-Do not modify benchmark/proxy definitions after source ingestion.
+## Still forbidden
+
+Do not compute returns, P/L, Sharpe, drawdown, cumulative wealth, correlation,
+tracking error, or economic rankings until the Stage-4 protocol is committed.
+
+Do not change source, universe, sign, scale, lookback, holding period,
+volatility target, estimator, or missing-data treatment after economics.
+
 Do not inspect M021 post-cutoff outcomes.
-Do not use M023/M024 outcomes to alter definitions.
+Do not use M023/M024 outcomes to tune M025.
 Do not merge/deploy or enable real trading.
-
-
-### Latest non-economic ingestion repair
-
-H.10 exact-series VES/VEB metadata alias repair:
-
-`82c9665f9dd29f7985b71dd2fa0e70422efba9fc`
-
-Before the next ingestion attempt, sync Dell to this exact feature HEAD and
-rerun `m025_stage3_ingestion_tests`. Only if focused tests pass may the fixed
-`m025_stage3_ingestion` action run again.
-
-
-### LRV transport addendum
-
-Use only the frozen MIT transport mirror for the already-selected
-`CurrencyPortfolios.xls` reference:
-
-`https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls`
-
-Require OLE magic `D0 CF 11 E0 A1 B1 1A E1` before LibreOffice schema
-conversion. This is transport/schema validation only.
-
-
-### Latest LRV schema-ingestion repair
-
-Use conversion-free deterministic OLE schema-string inspection.
-
-Feature:
-
-`a267f626ad13281a0976e78c6f50fa3773efb042`
-
-Control:
-
-`2ab3bceb0f1506002490f6f2a18863e872045e1a`
-
-Require focused ingestion tests before rerunning immutable ingestion.
