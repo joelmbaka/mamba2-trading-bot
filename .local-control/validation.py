@@ -15400,6 +15400,33 @@ def m025_stage4_add_xlrd_dependency():
     }
 
 
+def m025_stage4_tests():
+    """Run frozen M025 Stage-4 machinery tests only; no economics."""
+
+    feature_sha = _require_m025_branch()
+    tests = [
+        "tests/test_m025_stage4_economics.py",
+        "tests/test_m025_stage3_ingestion.py",
+        "tests/test_public_benchmarks.py",
+    ]
+    result = _pytest_native(tests)
+    return {
+        "ok": result["exit_code"] == 0,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "run": result,
+        "safety": {
+            "economic_execution_run": False,
+            "stage4_artifacts_written": False,
+            "m021_post_cutoff_data_used": False,
+            "m023_outcomes_used": False,
+            "m024_outcomes_used_to_tune_m025": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -15430,6 +15457,7 @@ ACTION_HANDLERS = {
     "m021_primary_pair": m021_primary_pair,
     "m025_stage3_h10_transport_probe": m025_stage3_h10_transport_probe,
     "m025_stage3_lrv_binary_probe": m025_stage3_lrv_binary_probe,
+    "m025_stage4_tests": m025_stage4_tests,
     "m025_stage4_add_xlrd_dependency": m025_stage4_add_xlrd_dependency,
     "m025_stage4_runtime_probe": m025_stage4_runtime_probe,
     "m025_stage3_ingestion_tests": m025_stage3_ingestion_tests,
