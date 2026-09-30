@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-recovery-dirty-worktree-status-v1",
-  "action": "status",
+  "id": "mamba2-recovery-remove-accidental-systemctl-file-v1",
+  "action": "recovery_remove_accidental_systemctl_file",
   "args": {},
   "requested_by": "chatgpt"
 }
