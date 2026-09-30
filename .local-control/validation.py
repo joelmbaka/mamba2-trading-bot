@@ -16615,6 +16615,7 @@ def m027_stage1_tests():
     feature_sha = _require_m027_branch()
     tests = [
         "tests/test_m027_carry_aware_tsmom.py",
+        "tests/test_m027_stage1_ingestion.py",
     ]
     result = _pytest_native(tests)
     return {
@@ -16631,6 +16632,111 @@ def m027_stage1_tests():
             "m024_holdout_reused": False,
             "real_order_api_called": False,
         },
+    }
+
+
+
+def m027_stage1_ingestion():
+    """Run the immutable non-economic M027 Stage-1 source ingestion."""
+
+    feature_sha = _require_m027_branch()
+    final_dir = _ensure_baseline_path(
+        REPO / "backtest_data" / "m027-stage1-ingestion-v1"
+    )
+    report_path = final_dir / "m027-stage1-ingestion.json"
+    required_names = {
+        "bis-ws-xru.csv-flat.zip",
+        "oecd-ir3tib-monthly.csv",
+        "bis-spot-usd-per-fx.csv",
+        "oecd-short-rates-annual-decimal.csv",
+        "m027-approx-excess-log-returns.csv",
+        "m027-stage1-ingestion.json",
+    }
+
+    if final_dir.exists():
+        existing = {
+            path.name for path in final_dir.iterdir()
+            if path.is_file()
+        }
+        if existing != required_names or not report_path.is_file():
+            return {
+                "ok": False,
+                "reason": "partial immutable M027 Stage-1 ingestion artifacts",
+                "feature_sha": feature_sha,
+                "existing_files": sorted(existing),
+            }
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        return {
+            "ok": True,
+            "feature_branch": "carry-aware-spot-tsmom",
+            "feature_sha": feature_sha,
+            "reused_immutable_artifacts": True,
+            "report_sha256": _sha256(report_path),
+            "report": report,
+            "safety": report.get("safety"),
+        }
+
+    temp_dir = _ensure_baseline_path(
+        REPO / "backtest_data" / "m027-stage1-ingestion-v1.tmp"
+    )
+    if temp_dir.exists():
+        shutil.rmtree(temp_dir)
+
+    run = _run_process_group_bounded(
+        _native_command(
+            "-m",
+            "mamba2.backtest.m027_stage1_ingestion",
+            "--output-dir",
+            str(temp_dir.relative_to(REPO)),
+        ),
+        env=_safe_env(),
+        timeout_seconds=300,
+    )
+    if run["exit_code"] != 0:
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
+        return {
+            "ok": False,
+            "reason": "M027 Stage-1 ingestion failed",
+            "feature_sha": feature_sha,
+            "run": run,
+            "safety": {
+                "strategy_signal_computed": False,
+                "portfolio_economics_computed": False,
+                "real_order_api_called": False,
+            },
+        }
+
+    if not temp_dir.is_dir():
+        return {
+            "ok": False,
+            "reason": "M027 Stage-1 ingestion did not create output directory",
+            "feature_sha": feature_sha,
+        }
+
+    actual_names = {
+        path.name for path in temp_dir.iterdir()
+        if path.is_file()
+    }
+    if actual_names != required_names:
+        shutil.rmtree(temp_dir)
+        return {
+            "ok": False,
+            "reason": "M027 Stage-1 ingestion file contract changed",
+            "feature_sha": feature_sha,
+            "actual_files": sorted(actual_names),
+        }
+
+    temp_dir.rename(final_dir)
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    return {
+        "ok": True,
+        "feature_branch": "carry-aware-spot-tsmom",
+        "feature_sha": feature_sha,
+        "reused_immutable_artifacts": False,
+        "report_sha256": _sha256(report_path),
+        "report": report,
+        "safety": report.get("safety"),
     }
 
 
@@ -16698,6 +16804,7 @@ def recovery_remove_accidental_systemctl_file():
 
 
 ACTION_HANDLERS = {
+    "m027_stage1_ingestion": m027_stage1_ingestion,
     "m027_stage1_tests": m027_stage1_tests,
     "m027_stage0_universe_probe": m027_stage0_universe_probe,
     "m027_switch_carry_aware_spot_tsmom": m027_switch_carry_aware_spot_tsmom,
