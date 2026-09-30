@@ -640,3 +640,48 @@ Corrected metadata-only probe command
 consumed it. Latest result remains the v1 environment failure.
 
 No Stage-4 terminal economic result is accepted yet.
+
+## M025 closed — Stage-4 terminal economics accepted
+
+M025 is **CLOSED**.
+
+Final repaired economic feature SHA:
+
+`2aed0444c8f0e214d14f9dc90d4c2813388555db`
+
+Post-repair validation:
+
+- focused Stage-4: **43 passed / 0 failed**
+  (`894ce65d5a1a83910fcacc3d3dfd5ccf551c1a8d`);
+- full native: **280 passed / 2 skipped**
+  (`d5f85857a3f4014f44b3f5970f16bca2090c87ca`).
+
+Sole accepted Stage-4 economic execution:
+
+`mamba2-m025-stage4-economics-after-unit-evidence-v1`
+
+Result branch commit:
+
+`c01ab5df81bdf31b3279b2c0d7e99843c7437ef7`
+
+Deterministic A/B report SHA-256:
+
+`633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9`
+
+A/B byte identity: **PASS**.
+
+Accepted headline references:
+
+- H.10 TSMOM spot proxy annualized mean: **-1.6058975079063509**
+- AQR TSMOM^FX annualized mean: **0.10093357261356833**
+- LRV HML-FX annualized mean: **0.0003586837489041334**
+- H.10 vs AQR zero-lag correlation: **-0.07400075645466087**
+
+The LRV scale `0.01` was established through the prospectively frozen
+Stage-4.1 evidence rule, not by return-magnitude inference.
+
+Stop rule is active: no retuning, rescaling, lag/sign search, source
+replacement, universe pruning, or production/live promotion is authorized
+inside M025. Any further benchmark work requires a new prospectively frozen
+milestone.
+
