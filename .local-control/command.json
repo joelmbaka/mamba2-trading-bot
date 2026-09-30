@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-recovery-remove-accidental-systemctl-file-v1",
-  "action": "recovery_remove_accidental_systemctl_file",
+  "id": "mamba2-m025-stage4-lrv-unit-probe-v3",
+  "action": "m025_stage4_lrv_unit_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
