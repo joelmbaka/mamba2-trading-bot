@@ -1,26 +1,8 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage4-economics-v1",
-  "completed_at": "2026-09-30T05:58:35.653195+00:00",
+  "command_id": "mamba2-m025-stage4-aqr-date-probe-v1",
+  "completed_at": "2026-09-30T06:00:13.780460+00:00",
   "ok": false,
-  "action": "m025_stage4_economics",
-  "data": {
-    "ok": false,
-    "reason": "M025 Stage-4 deterministic pair failed",
-    "feature_sha": "6583584797617b7f5542704e905b67fb24ea9be6",
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-c",
-        "import json;from mamba2.backtest.m025_stage4_economics import run_stage4_pair;r=run_stage4_pair(ingestion_dir='/home/joel/Dev/mamba2-trading-bot/backtest_data/m025-stage3-ingestion-v1',output_dir='/home/joel/Dev/mamba2-trading-bot/backtest_data/m025-stage4-economics-v1.tmp');print(json.dumps(r,sort_keys=True));raise SystemExit(0 if r.get('ok') else 1)"
-      ],
-      "exit_code": 1,
-      "timed_out": false,
-      "stdout": "",
-      "stderr": "/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py:87: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.\n  return index.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py:87: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.\n  return index.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\nTraceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py\", line 753, in run_stage4_pair\n    report = build_stage4_report(ingestion_dir=ingestion_dir)\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py\", line 660, in build_stage4_report\n    aqr_returns = parse_aqr_tsmom_fx(\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py\", line 348, in parse_aqr_tsmom_fx\n    return _canonical_monthly_series(series, name=AQR_LABEL)\n  File \"/home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py\", line 100, in _canonical_monthly_series\n    raise ValueError(f\"{name} contains duplicate calendar months\")\nValueError: AQR TSMOM^FX \u2014 DERIVED REFERENCE contains duplicate calendar months\n"
-    }
-  }
+  "action": "m025_stage4_aqr_date_probe",
+  "error": "NameError: name 're' is not defined"
 }
