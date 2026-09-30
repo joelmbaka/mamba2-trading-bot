@@ -1,24 +1,294 @@
 {
   "version": 1,
-  "command_id": "mamba2-recovery-remove-accidental-systemctl-file-v1",
-  "completed_at": "2026-09-30T14:11:49.097919+00:00",
+  "command_id": "mamba2-m025-stage4-lrv-unit-probe-v3",
+  "completed_at": "2026-09-30T14:13:02.037018+00:00",
   "ok": true,
-  "action": "recovery_remove_accidental_systemctl_file",
+  "action": "m025_stage4_lrv_unit_probe",
   "data": {
     "ok": true,
-    "relative_path": "ystemctl --user start chatgpt-mamba2-local-agent.service",
-    "removed": true,
-    "clean_after": true,
-    "status_after": {
-      "command": [
-        "git",
-        "status",
-        "--porcelain=v1",
-        "--untracked-files=all"
-      ],
-      "exit_code": 0,
-      "stdout": "",
-      "stderr": ""
+    "feature_branch": "public-strategy-benchmarks",
+    "feature_sha": "039f2e5d9c8536eae1c765c2d5775049d1ac6225",
+    "date_col_zero_based": 0,
+    "header_row_zero_based": 0,
+    "hml_col_zero_based": null,
+    "portfolio_cols_zero_based": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+    ],
+    "portfolio_numeric_format_counts": {
+      "General": 2706
+    },
+    "sampled_portfolio_cell_metadata": [
+      {
+        "cell_type": 2,
+        "col": 1,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 1,
+        "row": 1,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 2,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 2,
+        "row": 1,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 3,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 3,
+        "row": 1,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 4,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 4,
+        "row": 1,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 5,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 5,
+        "row": 1,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 6,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 6,
+        "row": 1,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 1,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 1,
+        "row": 2,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 2,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 2,
+        "row": 2,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 3,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 3,
+        "row": 2,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 4,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 4,
+        "row": 2,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 5,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 5,
+        "row": 2,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 6,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 6,
+        "row": 2,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 1,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 1,
+        "row": 3,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 2,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 2,
+        "row": 3,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 3,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 3,
+        "row": 3,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 4,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 4,
+        "row": 3,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 5,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 5,
+        "row": 3,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 6,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 6,
+        "row": 3,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 1,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 1,
+        "row": 4,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 2,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 2,
+        "row": 4,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 3,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 3,
+        "row": 4,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 4,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 4,
+        "row": 4,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 5,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 5,
+        "row": 4,
+        "xf_index": 15
+      },
+      {
+        "cell_type": 2,
+        "col": 6,
+        "format_code": "General",
+        "format_key": 0,
+        "portfolio": 6,
+        "row": 4,
+        "xf_index": 15
+      }
+    ],
+    "sheet_name": "All currencies (net)",
+    "text_rows_first_100": [
+      {
+        "row": 0,
+        "texts": [
+          {
+            "col": 0,
+            "text": "Dates"
+          },
+          {
+            "col": 1,
+            "text": "Portfolio1"
+          },
+          {
+            "col": 2,
+            "text": "Portfolio2"
+          },
+          {
+            "col": 3,
+            "text": "Portfolio3"
+          },
+          {
+            "col": 4,
+            "text": "Portfolio4"
+          },
+          {
+            "col": 5,
+            "text": "Portfolio5"
+          },
+          {
+            "col": 6,
+            "text": "Portfolio6"
+          },
+          {
+            "col": 9,
+            "text": "RX = Mean"
+          },
+          {
+            "col": 10,
+            "text": "HML = P6 - P1"
+          }
+        ]
+      }
+    ],
+    "safety": {
+      "numeric_values_reported": false,
+      "returns_computed": false,
+      "economic_summary_computed": false,
+      "real_order_api_called": false
     }
   }
 }
