@@ -14991,9 +14991,12 @@ def m025_stage3_ingestion():
             "raw_sha256": report["sources"][
                 "lrv_currency_portfolios"
             ]["raw_sha256"],
-            "sheet_names": report["sources"][
+            "schema_method": report["sources"][
                 "lrv_currency_portfolios"
-            ]["schema"]["sheet_names"],
+            ]["schema"]["schema_method"],
+            "schema_strings": report["sources"][
+                "lrv_currency_portfolios"
+            ]["schema"]["sheet_or_schema_strings"],
             "p1_through_p6_schema_present": report["sources"][
                 "lrv_currency_portfolios"
             ]["schema"]["p1_through_p6_schema_present"],
