@@ -1,23 +1,94 @@
 {
   "version": 1,
-  "command_id": "mamba2-m027-stage1-full-native-v3",
-  "completed_at": "2026-09-30T18:26:05.081463+00:00",
+  "command_id": "mamba2-m027-stage1-ingestion-v2",
+  "completed_at": "2026-09-30T18:28:27.195138+00:00",
   "ok": true,
-  "action": "test_full_native",
+  "action": "m027_stage1_ingestion",
   "data": {
     "ok": true,
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest"
+    "feature_branch": "carry-aware-spot-tsmom",
+    "feature_sha": "30d4e845df0bed16915cd24f62447d22efc5388e",
+    "reused_immutable_artifacts": false,
+    "report_sha256": "2c35506424bf8dae520f1dcf32fa5406a87f970faa7eebd9e44b1bf660a01308",
+    "report": {
+      "approx_first_date": "1945-01-01",
+      "approx_last_date": "2026-09-22",
+      "approximate_rows": 28024,
+      "bis_raw_sha256": "cdf288e5a3bfe69cd8a797c4c15124b480a63a9099c1fb9853413f456f4ac890",
+      "bis_url": "https://data.bis.org/static/bulk/WS_XRU_csv_flat.zip",
+      "currencies": [
+        "AUD",
+        "CAD",
+        "CHF",
+        "CLP",
+        "CNY",
+        "COP",
+        "CZK",
+        "DKK",
+        "EUR",
+        "GBP",
+        "HUF",
+        "IDR",
+        "INR",
+        "ISK",
+        "ILS",
+        "JPY",
+        "KRW",
+        "MXN",
+        "NOK",
+        "NZD",
+        "PLN",
+        "RON",
+        "RUB",
+        "SEK",
+        "ZAR"
       ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 291 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  1%]\ntests/test_backtest_account_currency.py ............                     [  5%]\ntests/test_backtest_baseline_reporting.py ....                           [  6%]\ntests/test_backtest_diagnostics.py ....                                  [  8%]\ntests/test_backtest_execution.py .........                               [ 11%]\ntests/test_backtest_execution_costs.py ............                      [ 15%]\ntests/test_backtest_experiments.py .....                                 [ 17%]\ntests/test_backtest_foundation.py ..........                             [ 20%]\ntests/test_backtest_native_runtime.py ....                               [ 21%]\ntests/test_backtest_portfolio_runner.py .........                        [ 25%]\ntests/test_backtest_spread_execution.py ........                         [ 27%]\ntests/test_backtest_strategy_integration.py ..                           [ 28%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 30%]\ntests/test_cache_manager_security.py .........                           [ 33%]\ntests/test_config_security.py ...                                        [ 34%]\ntests/test_detect_trend.py ...                                           [ 35%]\ntests/test_m020_decision_spread.py ...                                   [ 36%]\ntests/test_m020_diagnostics.py ....                                      [ 37%]\ntests/test_m020_spread_treatment.py ...                                  [ 38%]\ntests/test_m021_forward_validation.py ...........                        [ 42%]\ntests/test_m025_stage3_ingestion.py ..........                           [ 46%]\ntests/test_m025_stage4_economics.py ..........                           [ 49%]\ntests/test_m027_carry_aware_tsmom.py .........                           [ 52%]\ntests/test_m027_stage1_ingestion.py ..                                   [ 53%]\ntests/test_mt5__broker.py ......                                         [ 55%]\ntests/test_mt5_dataset.py ..............                                 [ 60%]\ntests/test_parameter_research.py .............................           [ 70%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 77%]\n.                                                                        [ 78%]\ntests/test_public_benchmarks.py .......................                  [ 85%]\ntests/test_rates.py .......                                              [ 88%]\ntests/test_replay_indicator_cache.py ..                                  [ 89%]\ntests/test_stochastic_indicator.py ....                                  [ 90%]\ntests/test_trend_line.py ..                                              [ 91%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n=============================== warnings summary ===============================\ntests/test_m025_stage4_economics.py::test_h10_proxy_uses_exact_23_series_and_reports_valid_counts\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_monthly_summary_formulas_are_frozen\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_canonical_monthly_series_refuses_duplicate_months\n  /home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py:94: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.\n    return index.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\n  /home/joel/Dev/mamba2-trading-bot/tests/test_m025_stage4_economics.py:71: UserWarning: Converting to Period representation will drop timezone information.\n    earlier = control.index < cutoff.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n================== 291 passed, 2 skipped, 8 warnings in 4.08s ==================\n",
-      "stderr": ""
+      "currency_count": 25,
+      "label": "CARRY-AWARE SPOT TSMOM \u2014 PUBLIC-DATA APPROXIMATION",
+      "observation_values_reported": false,
+      "oecd_raw_sha256": "af54f1cf8677a0b2bd9c204210ad9b1f72d7bb669dce2e6e3c23f513be6cbed9",
+      "oecd_url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_FINMARK,4.0/.M.IR3TIB.PA.....?startPeriod=1950-01&dimensionAtObservation=AllDimensions",
+      "output_files": {
+        "approximate_returns": "m027-approx-excess-log-returns.csv",
+        "bis_raw": "bis-ws-xru.csv-flat.zip",
+        "oecd_raw": "oecd-ir3tib-monthly.csv",
+        "rate_panel": "oecd-short-rates-annual-decimal.csv",
+        "spot_panel": "bis-spot-usd-per-fx.csv"
+      },
+      "output_sha256": {
+        "approximate_returns": "c0f166957d8879ba05cdfeb457ab8874657cd72900528856d81563d786b4848e",
+        "bis_raw": "cdf288e5a3bfe69cd8a797c4c15124b480a63a9099c1fb9853413f456f4ac890",
+        "oecd_raw": "af54f1cf8677a0b2bd9c204210ad9b1f72d7bb669dce2e6e3c23f513be6cbed9",
+        "rate_panel": "fbfbe69b7aea4738be95668bebab2113416a62d534d4b8931dddf2e5920c1d2a",
+        "spot_panel": "c01ac4cf5a1f85fbf0e3db9945bb80278546ff9e86a926f454bb838439d97ad0"
+      },
+      "portfolio_economics_computed": false,
+      "rate_first_month": "1956-01",
+      "rate_last_month": "2026-08",
+      "rate_months": 848,
+      "safety": {
+        "m021_post_cutoff_outcomes_used": false,
+        "m024_holdout_reused": false,
+        "observation_values_reported": false,
+        "portfolio_economics_computed": false,
+        "real_order_api_called": false,
+        "strategy_signal_computed": false
+      },
+      "spot_first_date": "1945-01-01",
+      "spot_last_date": "2026-09-22",
+      "spot_rows": 28024,
+      "stage": "M027 Stage 1",
+      "strategy_signal_computed": false,
+      "universe_sha256": "db9e1f4438fd582a0c2903f2459e290e30450bfc76365f2bbe91553d45b51c00",
+      "version": 1
+    },
+    "safety": {
+      "m021_post_cutoff_outcomes_used": false,
+      "m024_holdout_reused": false,
+      "observation_values_reported": false,
+      "portfolio_economics_computed": false,
+      "real_order_api_called": false,
+      "strategy_signal_computed": false
     }
   }
 }
