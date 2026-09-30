@@ -1,35 +1,440 @@
 {
   "version": 1,
-  "command_id": "mamba2-m027-switch-carry-aware-spot-tsmom-v1",
-  "completed_at": "2026-09-30T17:40:38.846505+00:00",
+  "command_id": "mamba2-m027-stage0-coverage-probe-v1",
+  "completed_at": "2026-09-30T17:43:34.867704+00:00",
   "ok": true,
-  "action": "m027_switch_carry_aware_spot_tsmom",
+  "action": "m027_stage0_coverage_probe",
   "data": {
     "ok": true,
     "feature_branch": "carry-aware-spot-tsmom",
     "feature_sha": "ecb5b1fca55d1392cb240bdee34cf81c961d8aba",
-    "divergence": {
-      "ahead": 0,
-      "behind": 0
-    },
-    "switch": {
-      "command": [
-        "git",
-        "switch",
-        "--track",
-        "-c",
-        "carry-aware-spot-tsmom",
-        "origin/carry-aware-spot-tsmom"
+    "bis": {
+      "content_type": "application/zip",
+      "csv_fields": [
+        "STRUCTURE",
+        "STRUCTURE_ID",
+        "ACTION",
+        "FREQ:Frequency",
+        "REF_AREA:Reference area",
+        "CURRENCY:Currency",
+        "COLLECTION:Collection",
+        "TIME_PERIOD:Time period or range",
+        "OBS_VALUE:Observation Value",
+        "UNIT_MULT:Unit Multiplier",
+        "DECIMALS:Decimals",
+        "AVAILABILITY:Availability",
+        "TITLE:Title",
+        "OBS_STATUS:Observation Status",
+        "OBS_PRE_BREAK:Pre-Break Observation",
+        "OBS_CONF:Observation confidentiality"
       ],
-      "exit_code": 0,
-      "stdout": "branch 'carry-aware-spot-tsmom' set up to track 'origin/carry-aware-spot-tsmom'.\n",
-      "stderr": "Switched to a new branch 'carry-aware-spot-tsmom'\n"
+      "series_with_72_month_run": [],
+      "status": 200,
+      "url": "https://data.bis.org/static/bulk/WS_XRU_csv_flat.zip"
     },
-    "fast_forward": null,
+    "oecd": {
+      "content_type": "application/vnd.sdmx.data+csv; charset=utf-8; version=2.0.0",
+      "csv_fields": [
+        "STRUCTURE",
+        "STRUCTURE_ID",
+        "ACTION",
+        "REF_AREA",
+        "FREQ",
+        "MEASURE",
+        "UNIT_MEASURE",
+        "ACTIVITY",
+        "ADJUSTMENT",
+        "TRANSFORMATION",
+        "TIME_HORIZ",
+        "METHODOLOGY",
+        "TIME_PERIOD",
+        "OBS_VALUE",
+        "OBS_STATUS",
+        "UNIT_MULT",
+        "DECIMALS",
+        "BASE_PER"
+      ],
+      "series_with_73_month_run": [
+        {
+          "first_month": "1968-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 704,
+          "months": 704,
+          "ref_area": "AUS"
+        },
+        {
+          "first_month": "1989-06",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 447,
+          "months": 447,
+          "ref_area": "AUT"
+        },
+        {
+          "first_month": "1957-11",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 826,
+          "months": 826,
+          "ref_area": "BEL"
+        },
+        {
+          "first_month": "2004-02",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 271,
+          "months": 271,
+          "ref_area": "BGR"
+        },
+        {
+          "first_month": "1956-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 848,
+          "months": 848,
+          "ref_area": "CAN"
+        },
+        {
+          "first_month": "1999-07",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 326,
+          "months": 326,
+          "ref_area": "CHE"
+        },
+        {
+          "first_month": "1997-07",
+          "label": null,
+          "last_month": "2026-07",
+          "longest_consecutive_months": 151,
+          "months": 330,
+          "ref_area": "CHL"
+        },
+        {
+          "first_month": "1997-06",
+          "label": null,
+          "last_month": "2026-07",
+          "longest_consecutive_months": 246,
+          "months": 349,
+          "ref_area": "CHN"
+        },
+        {
+          "first_month": "1986-01",
+          "label": null,
+          "last_month": "2026-07",
+          "longest_consecutive_months": 487,
+          "months": 487,
+          "ref_area": "COL"
+        },
+        {
+          "first_month": "1997-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 356,
+          "months": 356,
+          "ref_area": "CRI"
+        },
+        {
+          "first_month": "1993-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 404,
+          "months": 404,
+          "ref_area": "CZE"
+        },
+        {
+          "first_month": "1960-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 800,
+          "months": 800,
+          "ref_area": "DEU"
+        },
+        {
+          "first_month": "1987-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 476,
+          "months": 476,
+          "ref_area": "DNK"
+        },
+        {
+          "first_month": "1994-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 392,
+          "months": 392,
+          "ref_area": "EA20"
+        },
+        {
+          "first_month": "1977-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 596,
+          "months": 596,
+          "ref_area": "ESP"
+        },
+        {
+          "first_month": "1996-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 368,
+          "months": 368,
+          "ref_area": "EST"
+        },
+        {
+          "first_month": "1987-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 476,
+          "months": 476,
+          "ref_area": "FIN"
+        },
+        {
+          "first_month": "1970-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 680,
+          "months": 680,
+          "ref_area": "FRA"
+        },
+        {
+          "first_month": "1986-01",
+          "label": null,
+          "last_month": "2026-02",
+          "longest_consecutive_months": 482,
+          "months": 482,
+          "ref_area": "GBR"
+        },
+        {
+          "first_month": "1994-03",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 390,
+          "months": 390,
+          "ref_area": "GRC"
+        },
+        {
+          "first_month": "2002-09",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 288,
+          "months": 288,
+          "ref_area": "HRV"
+        },
+        {
+          "first_month": "1991-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 159,
+          "months": 400,
+          "ref_area": "HUN"
+        },
+        {
+          "first_month": "1998-01",
+          "label": null,
+          "last_month": "2025-12",
+          "longest_consecutive_months": 336,
+          "months": 336,
+          "ref_area": "IDN"
+        },
+        {
+          "first_month": "2011-11",
+          "label": null,
+          "last_month": "2026-07",
+          "longest_consecutive_months": 177,
+          "months": 177,
+          "ref_area": "IND"
+        },
+        {
+          "first_month": "1984-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 512,
+          "months": 512,
+          "ref_area": "IRL"
+        },
+        {
+          "first_month": "1987-11",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 466,
+          "months": 466,
+          "ref_area": "ISL"
+        },
+        {
+          "first_month": "1992-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 416,
+          "months": 416,
+          "ref_area": "ISR"
+        },
+        {
+          "first_month": "1978-10",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 575,
+          "months": 575,
+          "ref_area": "ITA"
+        },
+        {
+          "first_month": "2002-04",
+          "label": null,
+          "last_month": "2026-07",
+          "longest_consecutive_months": 292,
+          "months": 292,
+          "ref_area": "JPN"
+        },
+        {
+          "first_month": "1991-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 428,
+          "months": 428,
+          "ref_area": "KOR"
+        },
+        {
+          "first_month": "1999-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 332,
+          "months": 332,
+          "ref_area": "LTU"
+        },
+        {
+          "first_month": "1999-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 332,
+          "months": 332,
+          "ref_area": "LUX"
+        },
+        {
+          "first_month": "1998-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 344,
+          "months": 344,
+          "ref_area": "LVA"
+        },
+        {
+          "first_month": "1997-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 356,
+          "months": 356,
+          "ref_area": "MEX"
+        },
+        {
+          "first_month": "1982-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 536,
+          "months": 536,
+          "ref_area": "NLD"
+        },
+        {
+          "first_month": "1979-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 572,
+          "months": 572,
+          "ref_area": "NOR"
+        },
+        {
+          "first_month": "1973-12",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 633,
+          "months": 633,
+          "ref_area": "NZL"
+        },
+        {
+          "first_month": "1991-06",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 423,
+          "months": 423,
+          "ref_area": "POL"
+        },
+        {
+          "first_month": "1985-08",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 446,
+          "months": 490,
+          "ref_area": "PRT"
+        },
+        {
+          "first_month": "1995-08",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 373,
+          "months": 373,
+          "ref_area": "ROU"
+        },
+        {
+          "first_month": "1997-01",
+          "label": null,
+          "last_month": "2022-02",
+          "longest_consecutive_months": 276,
+          "months": 299,
+          "ref_area": "RUS"
+        },
+        {
+          "first_month": "1995-07",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 327,
+          "months": 365,
+          "ref_area": "SVK"
+        },
+        {
+          "first_month": "2002-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 296,
+          "months": 296,
+          "ref_area": "SVN"
+        },
+        {
+          "first_month": "1982-01",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 536,
+          "months": 536,
+          "ref_area": "SWE"
+        },
+        {
+          "first_month": "1964-06",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 670,
+          "months": 746,
+          "ref_area": "USA"
+        },
+        {
+          "first_month": "1980-12",
+          "label": null,
+          "last_month": "2026-08",
+          "longest_consecutive_months": 549,
+          "months": 549,
+          "ref_area": "ZAF"
+        }
+      ],
+      "status": 200,
+      "url": "https://sdmx.oecd.org/public/rest/data/OECD.SDD.STES,DSD_STES@DF_FINMARK,4.0/.M.IR3TIB.PA.....?startPeriod=1950-01&dimensionAtObservation=AllDimensions"
+    },
     "safety": {
-      "dirty_worktree_refused": true,
-      "force_reset_used": false,
-      "economic_replay_run": false,
+      "observation_values_reported": false,
+      "observation_values_used": false,
+      "returns_computed": false,
+      "momentum_signals_computed": false,
+      "economic_summary_computed": false,
+      "m021_post_cutoff_outcomes_used": false,
+      "m024_holdout_reused": false,
       "real_order_api_called": false
     }
   }
