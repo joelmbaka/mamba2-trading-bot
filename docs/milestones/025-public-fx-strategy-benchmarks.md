@@ -1362,3 +1362,44 @@ After the first Stage-4 economic output:
 - do not promote any result to production/live trading.
 
 Stage-4 results are research evidence, not a production trading recommendation.
+
+
+## Stage-4 implementation checkpoint — 2026-09-30
+
+Protocol freeze:
+
+`6511131792e32e74b6c98ce9de1d11dded5522b7`
+
+Locked XLS parser dependency:
+
+`07facca9a04cc5f8154b7c648208f186326c0f2e`
+
+Stage-4 implementation:
+
+`f74bd6606b91f38a4255d38af6d4770500004ec5`
+
+Fixed Stage-4 focused-test control:
+
+`7ab842c005e45d07c6790ba037a0bd9c1ce86599`
+
+Implemented:
+
+- exact H.10 23-series TSMOM spot-proxy monthly series;
+- exact AQR `TSMOM Factors!TSMOM^FX` parser with percentage-format unit gate;
+- exact LRV `All currencies (net)` P1-P6 parser with canonical HML = P6-P1;
+- unit-schema refusal rather than magnitude inference;
+- frozen summary metrics;
+- H.10 versus AQR zero-lag comparison;
+- deterministic Stage-4 A/B report builder;
+- synthetic timing/no-fill/future-mutation/layout/metric tests.
+
+No Stage-4 economic action exists at this checkpoint.
+
+Next exact gate:
+
+1. sync Dell to exact current feature HEAD;
+2. run `m025_stage4_tests`;
+3. repair only implementation/test defects without changing frozen economics;
+4. run `test_full_native`;
+5. only after both pass, add the fixed Stage-4 A/B economic action;
+6. execute economics once and stop before any retuning.

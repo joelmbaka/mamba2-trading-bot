@@ -600,3 +600,20 @@ LRV exposes P1-P6 and HML schema.
 No Stage-3 economics have run.
 
 Next gate: freeze Stage-4 economic execution protocol.
+
+
+## M025 Stage-4 implementation checkpoint
+
+Protocol: `6511131792e32e74b6c98ce9de1d11dded5522b7`
+
+Locked `xlrd==2.0.2` dependency:
+`07facca9a04cc5f8154b7c648208f186326c0f2e`
+
+Implementation:
+`f74bd6606b91f38a4255d38af6d4770500004ec5`
+
+Focused-test control:
+`7ab842c005e45d07c6790ba037a0bd9c1ce86599`
+
+No Stage-4 economics have run. Economic execution remains disabled pending
+focused tests and full native regression.
