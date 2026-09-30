@@ -15590,6 +15590,109 @@ def m025_stage4_economics():
     }
 
 
+def m025_stage4_aqr_date_probe():
+    """Inspect only AQR TSMOM Factors date-column structure; no returns."""
+
+    import zipfile
+    import xml.etree.ElementTree as ET
+    from datetime import datetime, timedelta
+
+    feature_sha = _require_m025_branch()
+    workbook = (
+        M025_STAGE3_INGESTION_DIR
+        / "Time-Series-Momentum-Factors-Monthly.xlsx"
+    )
+    if not workbook.is_file():
+        return {"ok": False, "reason": "AQR workbook missing"}
+
+    main_ns = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    doc_rel_ns = (
+        "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    )
+    pkg_rel_ns = (
+        "http://schemas.openxmlformats.org/package/2006/relationships"
+    )
+
+    with zipfile.ZipFile(workbook, "r") as archive:
+        wb = ET.fromstring(archive.read("xl/workbook.xml"))
+        rels = ET.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
+        rel_map = {
+            item.attrib["Id"]: item.attrib["Target"]
+            for item in rels.findall(f"{{{pkg_rel_ns}}}Relationship")
+        }
+        target = None
+        for sheet in wb.findall(f".//{{{main_ns}}}sheet"):
+            if sheet.attrib.get("name") == "TSMOM Factors":
+                rel_id = sheet.attrib[f"{{{doc_rel_ns}}}id"]
+                target = rel_map[rel_id].lstrip("/")
+                break
+        if target is None:
+            return {"ok": False, "reason": "TSMOM Factors sheet missing"}
+        if not target.startswith("xl/"):
+            target = "xl/" + target
+
+        workbook_pr = wb.find(f"{{{main_ns}}}workbookPr")
+        date1904 = (
+            workbook_pr is not None
+            and workbook_pr.attrib.get("date1904", "0")
+            in {"1", "true", "True"}
+        )
+        root = ET.fromstring(archive.read(target))
+        date_rows = []
+        for cell in root.findall(f".//{{{main_ns}}}c"):
+            ref = cell.attrib.get("r", "")
+            match = re.fullmatch(r"A(\d+)", ref)
+            if not match or int(match.group(1)) <= 18:
+                continue
+            value_node = cell.find(f"{{{main_ns}}}v")
+            if value_node is None or value_node.text is None:
+                continue
+            try:
+                serial = float(value_node.text)
+            except ValueError:
+                continue
+            base = (
+                datetime(1904, 1, 1)
+                if date1904
+                else datetime(1899, 12, 30)
+            )
+            converted = base + timedelta(days=serial)
+            month = converted.strftime("%Y-%m")
+            date_rows.append({
+                "row": int(match.group(1)),
+                "serial": serial,
+                "converted_date": converted.date().isoformat(),
+                "month": month,
+                "cell_type": cell.attrib.get("t"),
+                "style": cell.attrib.get("s"),
+            })
+
+    by_month = {}
+    for row in date_rows:
+        by_month.setdefault(row["month"], []).append(row)
+    duplicates = {
+        month: rows
+        for month, rows in by_month.items()
+        if len(rows) > 1
+    }
+
+    return {
+        "ok": True,
+        "feature_branch": "public-strategy-benchmarks",
+        "feature_sha": feature_sha,
+        "date1904": date1904,
+        "date_rows_count": len(date_rows),
+        "first_rows": date_rows[:8],
+        "last_rows": date_rows[-8:],
+        "duplicate_months": duplicates,
+        "safety": {
+            "aqr_return_values_read": False,
+            "economic_summary_computed": False,
+            "real_order_api_called": False,
+        },
+    }
+
+
 ACTION_HANDLERS = {
     "repo_checks": repo_checks,
     "configure_local_control_runtime": configure_local_control_runtime,
@@ -15620,6 +15723,7 @@ ACTION_HANDLERS = {
     "m021_primary_pair": m021_primary_pair,
     "m025_stage3_h10_transport_probe": m025_stage3_h10_transport_probe,
     "m025_stage3_lrv_binary_probe": m025_stage3_lrv_binary_probe,
+    "m025_stage4_aqr_date_probe": m025_stage4_aqr_date_probe,
     "m025_stage4_economics": m025_stage4_economics,
     "m025_stage4_tests": m025_stage4_tests,
     "m025_stage4_add_xlrd_dependency": m025_stage4_add_xlrd_dependency,
