@@ -1,29 +1,47 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage4-runtime-probe-v1",
-  "completed_at": "2026-09-30T05:47:12.286209+00:00",
+  "command_id": "mamba2-m025-stage4-add-xlrd-v1",
+  "completed_at": "2026-09-30T05:49:26.186625+00:00",
   "ok": true,
-  "action": "m025_stage4_runtime_probe",
+  "action": "m025_stage4_add_xlrd_dependency",
   "data": {
     "ok": true,
     "feature_branch": "public-strategy-benchmarks",
-    "feature_sha": "6511131792e32e74b6c98ce9de1d11dded5522b7",
-    "executables": {
-      "xls2csv": null,
-      "in2csv": null,
-      "ssconvert": null,
-      "libreoffice": "/usr/bin/libreoffice",
-      "soffice": "/usr/bin/soffice"
+    "previous_feature_sha": "6511131792e32e74b6c98ce9de1d11dded5522b7",
+    "new_feature_sha": "07facca9a04cc5f8154b7c648208f186326c0f2e",
+    "changed_files": [
+      "pyproject.toml",
+      "uv.lock"
+    ],
+    "xlrd_version": "2.0.2",
+    "uv_add": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "add",
+        "xlrd==2.0.2"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "stdout": "",
+      "stderr": "Resolved 59 packages in 3.68s\nPrepared 1 package in 874ms\nInstalled 1 package in 2ms\n + xlrd==2.0.2\n"
     },
-    "python_modules": {
-      "xlrd": false,
-      "olefile": true,
-      "python_calamine": false,
-      "openpyxl": false
+    "verify": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-c",
+        "import xlrd;assert xlrd.__version__ == '2.0.2';print(xlrd.__version__)"
+      ],
+      "exit_code": 0,
+      "timed_out": false,
+      "stdout": "2.0.2\n",
+      "stderr": ""
     },
     "safety": {
-      "numeric_cells_parsed": false,
       "economic_computation_run": false,
+      "market_values_parsed": false,
       "real_order_api_called": false
     }
   }
