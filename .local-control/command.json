@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m027-stage0-coverage-probe-v4",
-  "action": "m027_stage0_coverage_probe",
+  "id": "mamba2-m027-stage0-universe-probe-v1",
+  "action": "m027_stage0_universe_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
