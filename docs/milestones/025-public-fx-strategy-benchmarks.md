@@ -1,6 +1,6 @@
 # Milestone 025 — Public FX Strategy Benchmarks
 
-Status: **STAGE 2 INVENTORY ACCEPTED — NO PUBLIC/FREE RAW-ELIGIBLE SOURCE; NO ECONOMIC RESULTS AUTHORIZED**
+Status: **STAGE 3 INGESTION ACCEPTED — ECONOMICS NOT YET AUTHORIZED**
 
 Protocol date: 2026-09-29
 
@@ -1012,3 +1012,77 @@ Control-plane repair:
 
 This changes only schema-ingestion mechanics. It does not change source,
 workbook, series definitions, HML rule, sample, or any economic rule.
+
+
+## Stage-3 ingestion acceptance — 2026-09-30
+
+Accepted feature SHA:
+
+`554ab3a827163732f4dec335c716fec2f386bfe8`
+
+Accepted focused tests:
+
+`2d3e36ca14c4a277666a74d4f300a982a19d88be` — **33 passed / 0 failed**
+
+Accepted immutable ingestion result:
+
+`61bb9c5d591e8519f5bebc024d670204d9a71eab`
+
+Metadata reinspection result:
+
+`2f82b6d955cb8c4d5a80e692c0b89489383a40e0`
+
+Ingestion report SHA-256:
+
+`d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505`
+
+### H.10
+
+Raw ZIP SHA-256:
+
+`38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046`
+
+Normalized USD-per-foreign panel SHA-256:
+
+`015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419`
+
+Window: **1971-01-04 through 2026-08-31**.
+
+All **23/23** frozen H.10 currency series pass the 72-consecutive-month gate.
+
+### AQR derived reference
+
+Raw workbook SHA-256:
+
+`33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb`
+
+The `TSMOM Factors` sheet explicitly exposes currency factor
+`TSMOM^FX` at cell `F18`.
+
+Classification: **SCHEMA ELIGIBLE** for a later execution gate.
+
+### LRV derived reference
+
+Raw workbook SHA-256:
+
+`e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74`
+
+String-only OLE schema inspection identifies P1 through P6 and HML, including
+`HML = P6 - P1`.
+
+Numeric cells were not parsed.
+
+Classification: **SCHEMA ELIGIBLE** for a later execution gate.
+
+### Safety
+
+Stage 3 computed no returns, P/L, Sharpe, drawdown, cumulative wealth,
+correlation, tracking error, or economic ranking.
+
+M021 post-cutoff outcomes were unused. M023/M024 outcomes were not used to
+alter definitions. Real-order APIs were unused.
+
+Stage 3 is accepted.
+
+No economic calculation is authorized until a separate Stage-4 execution
+protocol is frozen against the exact hashes above.
