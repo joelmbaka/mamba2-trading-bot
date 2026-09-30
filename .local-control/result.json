@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "command_id": "mamba2-m025-stage4-lrv-unit-probe-v1",
-  "completed_at": "2026-09-30T06:10:57.385779+00:00",
+  "command_id": "mamba2-m025-stage4-lrv-unit-probe-v2",
+  "completed_at": "2026-09-30T13:51:58.743360+00:00",
   "ok": false,
   "action": "m025_stage4_lrv_unit_probe",
-  "error": "ModuleNotFoundError: No module named 'xlrd'"
+  "error": "RuntimeError: M025 action refuses a dirty worktree"
 }
