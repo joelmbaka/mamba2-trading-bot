@@ -1548,3 +1548,198 @@ Mechanical decision:
 
 No Stage-4 economics may run until this metadata-only gate is resolved.
 
+## Stage-4 terminal economics + M025 closeout — 2026-09-30
+
+Status: **M025 CLOSED — FIRST FROZEN STAGE-4 ECONOMIC OUTPUT ACCEPTED; NO RETUNING**
+
+### Stage-4.1 unit evidence resolution
+
+The prospectively frozen metadata-evidence extension was committed before
+external unit evidence was inspected:
+
+`e2163df1bee7f598d64283669a6da08b052b1e73`
+
+The exact-workbook metadata probes established:
+
+- the P1-P6 cells on `All currencies (net)` use Excel `General` formatting;
+- no workbook named-range or text metadata states percent/percentage units;
+- the workbook `Notes` sheet identifies the data as currency excess returns
+  **in levels**, and identifies the `net` sheets as net of bid-ask transaction
+  costs;
+- the author-controlled data page identifies the exact
+  `CurrencyPortfolios.xls` workbook as the monthly currency excess-return
+  dataset for *Common Risk Factors in Currency Markets*;
+- the authors' paper states that the asset-pricing exercise uses excess returns
+  in levels and reports those returns in percentage points per annum, with
+  annualization by multiplication by 12.
+
+Under the predeclared Stage-4.1 mechanical decision rule, that chain establishes
+percent-point units for the exact frozen workbook and therefore a decimal scale
+of `0.01`.
+
+The exact-hash-only implementation repair:
+
+`664e819f0057a5dfa4abac9c54f907c81f101edf`
+
+The regression pin:
+
+`2aed0444c8f0e214d14f9dc90d4c2813388555db`
+
+The repair does not infer units from return magnitudes. It applies the external
+unit evidence only after the immutable LRV workbook SHA has been verified, and
+mixed workbook formats still fail.
+
+### Post-repair validation
+
+Focused Stage-4 command:
+
+`mamba2-m025-stage4-tests-after-unit-evidence-v1`
+
+Result branch commit:
+
+`894ce65d5a1a83910fcacc3d3dfd5ccf551c1a8d`
+
+Focused result:
+
+**43 passed / 0 failed**
+
+Full-native command:
+
+`mamba2-m025-full-native-after-unit-evidence-v1`
+
+Result branch commit:
+
+`d5f85857a3f4014f44b3f5970f16bca2090c87ca`
+
+Full-native result:
+
+**280 passed / 2 skipped**
+
+No Stage-4 economics ran in either validation gate.
+
+### Sole frozen Stage-4 economic execution
+
+Command:
+
+`mamba2-m025-stage4-economics-after-unit-evidence-v1`
+
+Economic feature SHA:
+
+`2aed0444c8f0e214d14f9dc90d4c2813388555db`
+
+Result branch commit:
+
+`c01ab5df81bdf31b3279b2c0d7e99843c7437ef7`
+
+Deterministic artifacts:
+
+- A SHA-256:
+  `633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9`
+- B SHA-256:
+  `633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9`
+- A/B byte identity: **PASS**
+
+#### E1 — TSMOM SPOT PROXY — FED H.10
+
+Cost/fidelity label:
+
+`GROSS SPOT-PRICE PROXY / TRANSACTION COSTS UNMODELED / CARRY AND FINANCING UNMODELED`
+
+- first / last month: **1972-01 / 2026-08**
+- observations: **656**
+- annualized arithmetic mean: **-1.6058975079063509**
+- annualized volatility: **10.234341095284732**
+- annualized Sharpe: **-0.1569126427343951**
+- maximum drawdown: **-24.360847720745745**
+- positive-month fraction: **0.5838414634146342**
+- terminal cumulative wealth from 1.0: **32932171.490252238**
+- first valid instrument count: **10**
+- last valid instrument count: **23**
+
+These are the frozen proxy outputs, not a publication-faithful forward/futures
+reconstruction. Their extreme scale is not grounds for post-result leverage,
+volatility-floor, universe, or other tuning.
+
+#### E2 — AQR TSMOM^FX — DERIVED REFERENCE
+
+- first / last month: **1985-01 / 2026-05**
+- observations: **497**
+- annualized arithmetic mean: **0.10093357261356833**
+- annualized volatility: **0.1835630620846714**
+- annualized Sharpe: **0.5498577517028513**
+- maximum drawdown: **-0.4709897364931771**
+- positive-month fraction: **0.5754527162977867**
+- terminal cumulative wealth from 1.0: **32.37616876346366**
+
+#### E3 — LRV HML-FX — DERIVED REFERENCE — ALL CURRENCIES NET
+
+- first / last month: **1983-11 / 2021-05**
+- observations: **451**
+- frozen unit scale to decimal: **0.01**
+- canonical definition: **P6 - P1**
+- annualized arithmetic mean: **0.0003586837489041334**
+- annualized volatility: **0.0008549433521508009**
+- annualized Sharpe: **0.4195409532126127**
+- maximum drawdown: **-0.0029366212487740295**
+- positive-month fraction: **0.5831485587583148**
+- terminal cumulative wealth from 1.0: **1.013557707308836**
+
+The small observed magnitude may not be used to revisit scaling after the first
+economic output. E9 prohibits post-result unit/scaling changes.
+
+#### Frozen E1 versus E2 comparison
+
+Common window:
+
+**1985-01 through 2026-05, 497 observations**
+
+- Pearson correlation: **-0.07400075645466087**
+- annualized mean-return difference E1-E2:
+  **-2.2772122401222**
+- annualized tracking error: **11.770051121804197**
+
+No lag search, sign flip, rescaling, subperiod search, or currency-subset search
+was run.
+
+### E7 — frozen M020-D internal historical comparator
+
+M020-D is repeated only as already-accepted historical evidence; it was not
+rerun for M025:
+
+- accepted/closed trades: **4,664 / 4,664**
+- non-flat win rate: **39.91416309012876%**
+- net realized P/L: **USD -677.647148799515**
+- ending realized balance/equity: **USD 9,322.352851200485**
+- maximum equity drawdown:
+  **USD 1,067.1062318369404 / 10.629228567139583%**
+- treatment baseline SHA-256:
+  `94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`
+- treatment diagnostic SHA-256:
+  `45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`
+- treatment evidence SHA-256:
+  `e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`
+
+It remains a loss-making historical internal comparator and is not forced into
+the monthly reference-series correlation analysis.
+
+### Stop rule
+
+The first accepted Stage-4 economic output has now been inspected.
+
+Therefore M025 stops here:
+
+- no H.10 universe changes;
+- no losing-currency removal;
+- no lookback/hold/volatility-target/estimator change;
+- no leverage cap or volatility floor;
+- no AQR factor replacement;
+- no LRV sheet, sign, unit, or scale change;
+- no lag/subperiod/currency-subset search;
+- no transaction-cost invention for the H.10 proxy;
+- no M021/M023/M024 outcome reuse to alter M025;
+- no production/live promotion.
+
+M025 is closed as research evidence. Any further benchmark investigation must
+start as a separately prospectively frozen milestone rather than modifying
+M025 after seeing these results.
+
