@@ -1,0 +1,223 @@
+# Milestone 027 — Carry-Aware Spot TSMOM Approximation
+
+Status: **STAGE 0 DATA-COVERAGE PROTOCOL FROZEN — NO ECONOMICS AUTHORIZED**
+
+Protocol date: 2026-09-30
+
+Branch:
+
+`carry-aware-spot-tsmom`
+
+Base commit:
+
+`885d9d898292d46cb6c65093cd2fc0d28908791f`
+
+## Objective
+
+Test one explicitly approximate, public/free FX trend strategy after M026 proved
+that publication-faithful raw futures/forward history is not available under the
+current no-purchase boundary.
+
+M027 is not MOP publication-faithful futures TSMOM.
+
+It is labelled:
+
+**CARRY-AWARE SPOT TSMOM — PUBLIC-DATA APPROXIMATION**
+
+The research question is:
+
+> Does a transparent spot-plus-short-rate approximation of currency excess
+> returns retain a positive time-series-momentum effect before invented costs
+> or parameter tuning?
+
+## Frozen market object
+
+For each admitted foreign currency versus USD, normalize spot to:
+
+**USD value of one foreign-currency unit**
+
+The daily approximate excess log return is frozen as:
+
+`rx_t = Δlog(S_t) + carry_t / 261`
+
+where:
+
+- `S_t` is normalized spot;
+- `carry_t = r_foreign - r_usd`;
+- rates are annualized decimal short-term rates;
+- `261` is the fixed daily accrual divisor;
+- the rate observation used on day `t` must have been fully observable before
+  that day under the frozen lag rule below.
+
+This is an approximation. It is not a directly observed futures or forward
+return.
+
+## Frozen rate source hierarchy
+
+Primary rate source:
+
+**OECD Short-Term Interest Rates**
+
+The source describes these rates as short-term borrowing/government-paper
+market rates and states that they are generally based on three-month
+money-market rates where available.
+
+If an admitted currency has no qualifying OECD short-term-rate history, it is
+not silently substituted with a policy rate inside the same run.
+
+BIS central-bank policy rates may be used only in a separately labelled
+sensitivity analysis under a future milestone, not M027.
+
+## Frozen spot source hierarchy
+
+Primary spot source:
+
+**BIS bilateral exchange rates versus USD**
+
+Fallback only when BIS lacks a required historical segment:
+
+**Federal Reserve H.10 bilateral FX rate**
+
+Fallback use must be documented before economics and may not be chosen based on
+returns.
+
+No broker/MT5 history is used to define the M027 research universe.
+
+## Frozen rate lag / no-lookahead rule
+
+OECD short-term rates are monthly averages.
+
+For every calendar day in month `M`, the carry input is the rate differential
+from the **previous completed calendar month M-1**.
+
+No current-month average may be used within its own month.
+
+Missing prior-month rate data make that currency ineligible for the affected
+month. No interpolation or forward-fill across missing monthly rate
+observations is permitted.
+
+## Frozen signal
+
+Only one signal is admitted:
+
+**12-month time-series momentum**
+
+At each month-end decision point:
+
+- sum the prior 12 completed calendar months of approximate excess log returns;
+- long next month when the 12-month sum is positive;
+- short next month when the 12-month sum is negative;
+- zero is flat.
+
+No skip-month, alternate lookback, sign inversion, threshold, ensemble, or
+multi-horizon signal is authorized in M027.
+
+## Frozen risk scaling
+
+Per admitted instrument:
+
+- ex-ante annualized volatility target: **40%**;
+- daily estimator: centered exponentially weighted variance of lagged daily
+  approximate excess returns;
+- annualization scalar: **261**;
+- EWMA decay: **60 / 61**;
+- estimate at decision time `t` may use information only through `t-1`.
+
+No volatility floor/cap or leverage cap is authorized unless it is frozen in a
+separate future milestone before any economics.
+
+## Frozen portfolio aggregation
+
+At each monthly rebalance:
+
+1. compute each eligible currency's signed, volatility-scaled return stream;
+2. equal-weight across all eligible currencies for that month;
+3. do not reweight based on historical performance;
+4. do not select or drop currencies based on P/L.
+
+The portfolio must report the eligible-currency count each month.
+
+## Universe selection — metadata only
+
+The M027 universe is not named in advance.
+
+It is selected mechanically from the intersection of currencies with:
+
+- BIS USD bilateral spot history;
+- OECD short-term-rate history;
+- at least **72 consecutive eligible months** after applying the lag rule;
+- unambiguous currency identity and quote normalization.
+
+The final admitted universe must be frozen and hashed before any M027 strategy
+return is computed.
+
+The USD funding leg must also satisfy the same rate-availability rule.
+
+No currency may be added/removed based on return performance.
+
+## Evaluation partition
+
+Stage 0 and Stage 1 are metadata/ingestion only.
+
+Before first economics, a later protocol must freeze:
+
+- immutable source snapshot end date;
+- warmup;
+- development/evaluation window;
+- any holdout if enough later data exist.
+
+No window may be chosen after looking at strategy returns.
+
+The consumed M024 holdout is unrelated and must not be reused.
+
+## Cost contract
+
+First M027 economics, if reached, will be labelled:
+
+**GROSS SPOT-PLUS-CARRY APPROXIMATION / TRANSACTION COSTS UNMODELED**
+
+unless a public, deterministic historical bid/ask/cost dataset is frozen before
+economics.
+
+Do not invent spreads, commissions, slippage, or swaps.
+
+## Stage 0 authorized work
+
+Stage 0 may only:
+
+1. inspect BIS/OECD/Fed source metadata and access paths;
+2. establish exact series identifiers and quote/rate conventions;
+3. establish coverage dates;
+4. derive the coverage-based candidate universe;
+5. publish a deterministic source/universe inventory;
+6. freeze the admitted universe before strategy-return calculation.
+
+Stage 0 must not:
+
+- compute approximate excess returns;
+- compute momentum signals;
+- compute P/L, Sharpe, drawdown, win rate, or symbol contributions;
+- inspect M021 post-cutoff economics;
+- reuse M024 holdout economics to alter M027;
+- tune source, universe, lookback, side, session, weekday, volatility target,
+  or rate lag;
+- merge/deploy;
+- enable real trading.
+
+## Stage 0 stop rule
+
+If the public spot/rate intersection cannot produce at least **4 non-USD
+currencies** with 72 consecutive eligible months under one coherent source
+contract, M027 stops before economics.
+
+If the gate passes, Stage 1 may implement deterministic ingestion and
+no-lookahead proxy-return construction only. Stage 2 must then freeze the exact
+evaluation partition and report schema before the first economic run.
+
+## Terminal anti-retuning rule
+
+After the first M027 economic output is inspected, no source, universe,
+lookback, signal sign, rate lag, volatility target, EWMA constant, aggregation
+rule, or cost treatment may change inside M027.
+
+Any such change requires a separately named milestone.
