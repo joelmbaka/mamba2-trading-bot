@@ -10,6 +10,7 @@ from mamba2.backtest.m027_carry_aware_tsmom import M027_CURRENCIES
 from mamba2.backtest.m027_stage2 import (
     _month_list_sha,
     _summary,
+    stage2_economics,
     stage2_readiness,
 )
 
@@ -64,3 +65,48 @@ def test_readiness_refuses_short_sample():
     daily = pd.DataFrame(0.0001, index=index, columns=M027_CURRENCIES)
     with pytest.raises(ValueError, match="at least 60 consecutive months"):
         stage2_readiness(daily)
+
+
+
+def _synthetic_stage2_daily():
+    index = pd.date_range("1980-01-01", "2020-12-31", freq="B", tz="UTC")
+    step = np.arange(len(index), dtype=float)
+    data = {}
+    for i, currency in enumerate(M027_CURRENCIES):
+        if i < 6:
+            data[currency] = (
+                0.00008
+                + (i + 1) * 0.000001
+                + np.sin(step / (19.0 + i)) * 0.00015
+            )
+        else:
+            data[currency] = np.nan
+    return pd.DataFrame(data, index=index)
+
+
+def test_stage2_economics_is_deterministic_on_synthetic_data():
+    daily = _synthetic_stage2_daily()
+    readiness = stage2_readiness(daily)
+
+    first = stage2_economics(
+        daily,
+        expected_month_list_sha256=readiness["month_list_sha256"],
+    )
+    second = stage2_economics(
+        daily,
+        expected_month_list_sha256=readiness["month_list_sha256"],
+    )
+
+    assert first == second
+    assert first["evaluation_month_list_sha256"] == readiness["month_list_sha256"]
+    assert first["eligible_currency_count"]["min"] >= 4
+    assert first["safety"]["currency_subset_search_run"] is False
+
+
+def test_stage2_economics_refuses_month_list_hash_mismatch():
+    daily = _synthetic_stage2_daily()
+    with pytest.raises(ValueError, match="month-list SHA changed"):
+        stage2_economics(
+            daily,
+            expected_month_list_sha256="0" * 64,
+        )
