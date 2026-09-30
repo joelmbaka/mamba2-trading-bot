@@ -213,3 +213,36 @@ change its source, universe, signal constants, roll rule, leverage/volatility
 target, cost rule, sign, or calendar based on that result.
 
 Any such change requires a separately named future milestone.
+
+## Stage-0 result and closeout — 2026-09-30
+
+Source inventory:
+
+`docs/research/m026-tsmom-source-inventory.md`
+
+Inventory commit:
+
+`0f72b1928f06d90f12409396982867db92ca037f`
+
+Mechanical result:
+
+**DATA GATE NOT PASSED**
+
+No public/free source survived as an A/B/C candidate:
+
+- CME Group continuous FX futures are the strongest fidelity source but
+  historical access is licensed/purchased;
+- no public/free direct one-month forward/excess-return raw source was
+  established;
+- official spot plus policy/short-rate sources do not establish the exact
+  investable one-month/daily excess-return mapping without creating a proxy.
+
+Therefore M026 is **CLOSED AT STAGE 0**.
+
+No M026 strategy return series, P/L, Sharpe, drawdown, sign result, symbol
+result, or other economics were computed.
+
+The M026 definition must not now be weakened to admit spot-only data or an
+unfrozen rate approximation. A future approximation must be a separately named
+prospectively frozen milestone.
+
