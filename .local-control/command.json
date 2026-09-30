@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m025-stage4-aqr-date-probe-v2",
-  "action": "m025_stage4_aqr_date_probe",
+  "id": "mamba2-m025-stage4-sync-v3",
+  "action": "m025_switch_public_benchmarks",
   "args": {},
   "requested_by": "chatgpt"
 }
