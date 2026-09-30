@@ -23,16 +23,23 @@ mkdir -p "$BASE" "$UNIT_DIR" "$HOME/.local/state/chatgpt-mamba2-local-agent"
 
 fetch_github() {
   local repo_dir="$1"
-  shift
+  local remote="$2"
+  shift 2
   local primary_ssh="ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 -o ServerAliveInterval=5 -o ServerAliveCountMax=2"
   local fallback_ssh="ssh -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 -o ServerAliveInterval=5 -o ServerAliveCountMax=2 -o HostName=ssh.github.com -o HostKeyAlias=github.com -p 443"
 
-  if GIT_SSH_COMMAND="$primary_ssh" /usr/bin/timeout 35s git -C "$repo_dir" fetch "$@"; then
+  if GIT_SSH_COMMAND="$primary_ssh" /usr/bin/timeout 35s git -C "$repo_dir" fetch "$remote" "$@"; then
     return 0
   fi
 
   echo "Primary GitHub fetch failed or timed out; retrying SSH via port 443..."
-  GIT_SSH_COMMAND="$fallback_ssh" /usr/bin/timeout 35s git -C "$repo_dir" fetch "$@"
+  if GIT_SSH_COMMAND="$fallback_ssh" /usr/bin/timeout 35s git -C "$repo_dir" fetch "$remote" "$@"; then
+    return 0
+  fi
+
+  echo "GitHub SSH fetch failed; retrying public HTTPS..."
+  /usr/bin/timeout 35s git -C "$repo_dir" fetch \
+    https://github.com/joelmbaka/mamba2-trading-bot.git "$@"
 }
 
 echo "Fetching Mamba2 control branches..."
@@ -99,7 +106,14 @@ fetch_control() {
   fi
 
   echo "Primary GitHub fetch failed or timed out; retrying SSH via port 443..."
-  GIT_SSH_COMMAND="\$fallback_ssh" /usr/bin/timeout 35s git -C "\$REPO" fetch origin \\
+  if GIT_SSH_COMMAND="\$fallback_ssh" /usr/bin/timeout 35s git -C "\$REPO" fetch origin \\
+    local-control:refs/remotes/origin/local-control; then
+    return 0
+  fi
+
+  echo "GitHub SSH fetch failed; retrying public HTTPS..."
+  /usr/bin/timeout 35s git -C "\$REPO" fetch \\
+    https://github.com/joelmbaka/mamba2-trading-bot.git \\
     local-control:refs/remotes/origin/local-control
 }
 
