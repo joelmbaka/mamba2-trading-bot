@@ -1,37 +1,61 @@
 {
   "version": 1,
-  "command_id": "mamba2-m027-stage2-tests-v1",
-  "completed_at": "2026-09-30T19:08:04.234556+00:00",
+  "command_id": "mamba2-m027-stage2-readiness-v1",
+  "completed_at": "2026-09-30T19:10:48.407972+00:00",
   "ok": true,
-  "action": "m027_stage2_tests",
+  "action": "m027_stage2_readiness",
   "data": {
     "ok": true,
     "feature_branch": "carry-aware-spot-tsmom",
     "feature_sha": "7a5cfcdb90fc0118397ac55edf5d19ca9bab8ea3",
-    "tests": [
-      "tests/test_m027_stage2.py",
-      "tests/test_m027_carry_aware_tsmom.py",
-      "tests/test_m027_stage1_ingestion.py"
-    ],
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest",
-        "tests/test_m027_stage2.py",
-        "tests/test_m027_carry_aware_tsmom.py",
-        "tests/test_m027_stage1_ingestion.py"
+    "readiness": {
+      "eligible_currency_count": {
+        "max": 25,
+        "median": 22.0,
+        "min": 4
+      },
+      "evaluation_cap": "2026-08-31",
+      "first_month": "1980-02-29",
+      "folds": [
+        {
+          "first_month": "1980-02-29",
+          "last_month": "1993-06-30",
+          "month_list_sha256": "015357895f4f4bae39566ed3467b67eb87c29876044a2b0a0e86010f451e55ee",
+          "months": 161,
+          "name": "F1"
+        },
+        {
+          "first_month": "1993-07-31",
+          "last_month": "2006-11-30",
+          "month_list_sha256": "d776c84d6088e2e21a9702e2d986381acbfd44e20426e8a2d4f9c050149232a3",
+          "months": 161,
+          "name": "F2"
+        },
+        {
+          "first_month": "2006-12-31",
+          "last_month": "2020-04-30",
+          "month_list_sha256": "145c93355905d15eb7946ab1c67ab52454c68ef23146f8b611053b2cd551ea6b",
+          "months": 161,
+          "name": "F3"
+        }
       ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 15 items\n\ntests/test_m027_stage2.py ....                                           [ 26%]\ntests/test_m027_carry_aware_tsmom.py .........                           [ 86%]\ntests/test_m027_stage1_ingestion.py ..                                   [100%]\n\n=============================== warnings summary ===============================\ntests/test_m027_stage2.py::test_readiness_reports_no_return_values_or_economics\n  /home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m027_stage2.py:111: UserWarning: Converting to Period representation will drop timezone information.\n    previous.to_period(\"M\") + 1\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n======================== 15 passed, 1 warning in 0.29s =========================\n",
-      "stderr": ""
+      "last_month": "2020-04-30",
+      "minimum_eligible_currencies": 4,
+      "minimum_evaluation_months": 60,
+      "month_list_sha256": "c5cda6bb68904213dc46aa338887c19e7575e31cba8ab816e44469b81a3b4b40",
+      "months": 483,
+      "ok": true,
+      "safety": {
+        "economic_summary_computed": false,
+        "portfolio_returns_computed": false,
+        "return_values_reported": false,
+        "signal_signs_reported": false
+      }
     },
     "safety": {
-      "historical_economics_run": false,
       "return_values_reported": false,
+      "signal_signs_reported": false,
+      "portfolio_economics_computed": false,
       "m021_post_cutoff_outcomes_used": false,
       "m024_holdout_reused": false,
       "real_order_api_called": false
