@@ -74,3 +74,18 @@ Use only the frozen MIT transport mirror for the already-selected
 
 Require OLE magic `D0 CF 11 E0 A1 B1 1A E1` before LibreOffice schema
 conversion. This is transport/schema validation only.
+
+
+### Latest LRV schema-ingestion repair
+
+Use conversion-free deterministic OLE schema-string inspection.
+
+Feature:
+
+`a267f626ad13281a0976e78c6f50fa3773efb042`
+
+Control:
+
+`2ab3bceb0f1506002490f6f2a18863e872045e1a`
+
+Require focused ingestion tests before rerunning immutable ingestion.

@@ -544,3 +544,22 @@ Repair:
 `26de5ae69742a7913ab56e0f5f73af2084e2c511`
 
 Conversion now uses verified absolute paths. No economics have run.
+
+
+## M025 Stage-3 LRV conversion-free schema repair
+
+The validated MIT LRV workbook is a genuine OLE Excel file but LibreOffice
+cannot convert it. Stage-3 now validates its schema directly from deterministic
+OLE binary strings, requiring P1-P6 and HML labels while explicitly avoiding
+numeric-cell parsing.
+
+Feature repairs:
+
+- `3302ab0fdaa698811ef549888bba5fbe1b541be6`
+- `a267f626ad13281a0976e78c6f50fa3773efb042`
+
+Control repair:
+
+`2ab3bceb0f1506002490f6f2a18863e872045e1a`
+
+No Stage-3 economics have run.

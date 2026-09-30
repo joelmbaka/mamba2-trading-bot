@@ -975,3 +975,40 @@ LibreOffice conversion now:
 
 No source bytes, workbook identity, schema rule, benchmark definition, or
 economic rule changed.
+
+
+## Stage-3 LRV conversion-free schema repair — 2026-09-30
+
+The validated LRV workbook mirror is a genuine OLE Excel workbook:
+
+- URL: `https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls`;
+- SHA-256:
+  `e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74`;
+- OLE magic: `D0CF11E0A1B11AE1`.
+
+The fixed binary probe identified schema strings including:
+
+- `All currencies`;
+- `Developed currencies`;
+- `Portfolio1` through `Portfolio6%`;
+- `HML`;
+- `HML = P6 - P1`.
+
+LibreOffice conversion is not required for Stage-3 acceptance because it fails
+to load this legacy workbook despite the file being a valid OLE Excel document.
+
+The ingestion implementation therefore uses deterministic schema-string
+extraction directly from the OLE binary and explicitly does **not** parse
+numeric cells.
+
+Feature repair commits:
+
+- `3302ab0fdaa698811ef549888bba5fbe1b541be6`
+- `a267f626ad13281a0976e78c6f50fa3773efb042`
+
+Control-plane repair:
+
+`2ab3bceb0f1506002490f6f2a18863e872045e1a`
+
+This changes only schema-ingestion mechanics. It does not change source,
+workbook, series definitions, HML rule, sample, or any economic rule.
