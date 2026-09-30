@@ -1,61 +1,37 @@
 {
   "version": 1,
-  "command_id": "mamba2-m027-stage2-readiness-v1",
-  "completed_at": "2026-09-30T19:10:48.407972+00:00",
-  "ok": true,
-  "action": "m027_stage2_readiness",
+  "command_id": "mamba2-m027-stage2-tests-v2",
+  "completed_at": "2026-09-30T19:14:13.241195+00:00",
+  "ok": false,
+  "action": "m027_stage2_tests",
   "data": {
-    "ok": true,
+    "ok": false,
     "feature_branch": "carry-aware-spot-tsmom",
-    "feature_sha": "7a5cfcdb90fc0118397ac55edf5d19ca9bab8ea3",
-    "readiness": {
-      "eligible_currency_count": {
-        "max": 25,
-        "median": 22.0,
-        "min": 4
-      },
-      "evaluation_cap": "2026-08-31",
-      "first_month": "1980-02-29",
-      "folds": [
-        {
-          "first_month": "1980-02-29",
-          "last_month": "1993-06-30",
-          "month_list_sha256": "015357895f4f4bae39566ed3467b67eb87c29876044a2b0a0e86010f451e55ee",
-          "months": 161,
-          "name": "F1"
-        },
-        {
-          "first_month": "1993-07-31",
-          "last_month": "2006-11-30",
-          "month_list_sha256": "d776c84d6088e2e21a9702e2d986381acbfd44e20426e8a2d4f9c050149232a3",
-          "months": 161,
-          "name": "F2"
-        },
-        {
-          "first_month": "2006-12-31",
-          "last_month": "2020-04-30",
-          "month_list_sha256": "145c93355905d15eb7946ab1c67ab52454c68ef23146f8b611053b2cd551ea6b",
-          "months": 161,
-          "name": "F3"
-        }
+    "feature_sha": "b1d4774da4f4206fe01caeed31526ee93523337c",
+    "tests": [
+      "tests/test_m027_stage2.py",
+      "tests/test_m027_carry_aware_tsmom.py",
+      "tests/test_m027_stage1_ingestion.py"
+    ],
+    "run": {
+      "command": [
+        "/home/joel/.local/bin/uv",
+        "run",
+        "--locked",
+        "python",
+        "-m",
+        "pytest",
+        "tests/test_m027_stage2.py",
+        "tests/test_m027_carry_aware_tsmom.py",
+        "tests/test_m027_stage1_ingestion.py"
       ],
-      "last_month": "2020-04-30",
-      "minimum_eligible_currencies": 4,
-      "minimum_evaluation_months": 60,
-      "month_list_sha256": "c5cda6bb68904213dc46aa338887c19e7575e31cba8ab816e44469b81a3b4b40",
-      "months": 483,
-      "ok": true,
-      "safety": {
-        "economic_summary_computed": false,
-        "portfolio_returns_computed": false,
-        "return_values_reported": false,
-        "signal_signs_reported": false
-      }
+      "exit_code": 1,
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 17 items\n\ntests/test_m027_stage2.py ....F.                                         [ 35%]\ntests/test_m027_carry_aware_tsmom.py .........                           [ 88%]\ntests/test_m027_stage1_ingestion.py ..                                   [100%]\n\n=================================== FAILURES ===================================\n___________ test_stage2_economics_is_deterministic_on_synthetic_data ___________\n\n    def test_stage2_economics_is_deterministic_on_synthetic_data():\n        daily = _synthetic_stage2_daily()\n        readiness = stage2_readiness(daily)\n    \n>       first = stage2_economics(\n            daily,\n            expected_month_list_sha256=readiness[\"month_list_sha256\"],\n        )\n\ntests/test_m027_stage2.py:91: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \nmamba2/backtest/m027_stage2.py:276: in stage2_economics\n    fold_series = portfolio.loc[\n.venv-native-control/lib/python3.10/site-packages/pandas/core/indexing.py:1191: in __getitem__\n    return self._getitem_axis(maybe_callable, axis=axis)\n.venv-native-control/lib/python3.10/site-packages/pandas/core/indexing.py:1411: in _getitem_axis\n    return self._get_slice_axis(key, axis=axis)\n.venv-native-control/lib/python3.10/site-packages/pandas/core/indexing.py:1443: in _get_slice_axis\n    indexer = labels.slice_indexer(slice_obj.start, slice_obj.stop, slice_obj.step)\n.venv-native-control/lib/python3.10/site-packages/pandas/core/indexes/datetimes.py:682: in slice_indexer\n    return Index.slice_indexer(self, start, end, step)\n.venv-native-control/lib/python3.10/site-packages/pandas/core/indexes/base.py:6678: in slice_indexer\n    start_slice, end_slice = self.slice_locs(start, end, step=step)\n.venv-native-control/lib/python3.10/site-packages/pandas/core/indexes/base.py:6904: in slice_locs\n    start_slice = self.get_slice_bound(start, \"left\")\n.venv-native-control/lib/python3.10/site-packages/pandas/core/indexes/base.py:6819: in get_slice_bound\n    label = self._maybe_cast_slice_bound(label, side)\n.venv-native-control/lib/python3.10/site-packages/pandas/core/indexes/datetimes.py:643: in _maybe_cast_slice_bound\n    self._data._assert_tzawareness_compat(label)\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = <DatetimeArray>\n['1981-01-31 00:00:00+00:00', '1981-02-28 00:00:00+00:00',\n '1981-03-31 00:00:00+00:00', '1981-04-30 0...-31 00:00:00+00:00',\n '2020-11-30 00:00:00+00:00', '2020-12-31 00:00:00+00:00']\nLength: 480, dtype: datetime64[ns, UTC]\nother = Timestamp('1981-01-31 00:00:00')\n\n    def _assert_tzawareness_compat(self, other) -> None:\n        # adapted from _Timestamp._assert_tzawareness_compat\n        other_tz = getattr(other, \"tzinfo\", None)\n        other_dtype = getattr(other, \"dtype\", None)\n    \n        if isinstance(other_dtype, DatetimeTZDtype):\n            # Get tzinfo from Series dtype\n            other_tz = other.dtype.tz\n        if other is NaT:\n            # pd.NaT quacks both aware and naive\n            pass\n        elif self.tz is None:\n            if other_tz is not None:\n                raise TypeError(\n                    \"Cannot compare tz-naive and tz-aware datetime-like objects.\"\n                )\n        elif other_tz is None:\n>           raise TypeError(\n                \"Cannot compare tz-naive and tz-aware datetime-like objects\"\n            )\nE           TypeError: Cannot compare tz-naive and tz-aware datetime-like objects\n\n.venv-native-control/lib/python3.10/site-packages/pandas/core/arrays/datetimes.py:788: TypeError\n=============================== warnings summary ===============================\ntests/test_m027_stage2.py::test_readiness_reports_no_return_values_or_economics\ntests/test_m027_stage2.py::test_stage2_economics_is_deterministic_on_synthetic_data\ntests/test_m027_stage2.py::test_stage2_economics_is_deterministic_on_synthetic_data\ntests/test_m027_stage2.py::test_stage2_economics_refuses_month_list_hash_mismatch\n  /home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m027_stage2.py:114: UserWarning: Converting to Period representation will drop timezone information.\n    previous.to_period(\"M\") + 1\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nFAILED tests/test_m027_stage2.py::test_stage2_economics_is_deterministic_on_synthetic_data\n=================== 1 failed, 16 passed, 4 warnings in 0.74s ===================\n",
+      "stderr": ""
     },
     "safety": {
+      "historical_economics_run": false,
       "return_values_reported": false,
-      "signal_signs_reported": false,
-      "portfolio_economics_computed": false,
       "m021_post_cutoff_outcomes_used": false,
       "m024_holdout_reused": false,
       "real_order_api_called": false
