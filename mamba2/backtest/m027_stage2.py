@@ -283,7 +283,12 @@ def stage2_economics(
     eligible_years = int(len(yearly))
     positive_years = int((yearly > 0).sum())
 
-    currency_contribution = contributions.reindex(months).sum(axis=0, min_count=1)
+    monthly_counts = eligible_counts.reindex(months).replace(0, np.nan)
+    portfolio_contributions = contributions.reindex(months).div(
+        monthly_counts,
+        axis=0,
+    )
+    currency_contribution = portfolio_contributions.sum(axis=0, min_count=1)
     positive_currency = currency_contribution[currency_contribution > 0]
     total_positive = float(positive_currency.sum()) if not positive_currency.empty else 0.0
     if total_positive > 0:
