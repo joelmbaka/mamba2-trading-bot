@@ -745,3 +745,42 @@ Mechanical classification:
 **SUPPORTED AS A GROSS PUBLIC-DATA APPROXIMATION**
 
 This does **not** authorize live trading. Costs, executable forward/futures prices, slippage, and real broker financing remain unmodeled. M027 is closed and may not be retuned.
+## M028 Stage 0 accepted — broker availability only
+
+Branch: `execution-realism`
+
+Stage-0 result commit:
+
+`3258372afbf11aa8178cddd54c61b810c5e514d6`
+
+Stage-0 feature SHA:
+
+`de05a0207c6679e58f17fded969ab3e5401c2d68`
+
+Broker metadata result:
+
+- 22 / 25 frozen M027 currencies mapped unambiguously to direct-USD symbols;
+- unavailable: **CNY, ISK, RON**;
+- no ambiguous mappings;
+- mapped-universe SHA-256:
+  `5f1ae15c35b3b20e24b4f999c7628d3534b54e30eb535295a69e359f285dd996`;
+- terminal/server: **MetaTrader 5 / MetaQuotes-Demo**;
+- account currency: **USD**;
+- leverage: **100:1**;
+- commission: **UNPROVEN**;
+- no strategy economics or order APIs were used.
+
+Quote caveat:
+
+- six mapped symbols had same-day non-zero quotes;
+- AUDUSD/USDCAD had stale Sep-25 quotes;
+- fourteen mapped symbols returned zero/epoch quote snapshots.
+
+Therefore Stage 0 proves symbol metadata availability only, not that all 22
+symbols are currently executable.
+
+M028 Stage-1 execution-evidence protocol is frozen at:
+
+`13507ae2bb06af4daa24f4df70b97a11a8606fa9`
+
+No M028 economics are authorized yet.
