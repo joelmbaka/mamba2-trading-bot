@@ -17356,7 +17356,359 @@ finally:
         },
     }
 
+
+def m028_stage1_execution_evidence_probe():
+    """Read-only quote/tick/margin evidence for frozen M028 Stage 1."""
+
+    feature_sha = _require_m028_branch()
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    if not dedicated.is_file():
+        raise RuntimeError("established M028 Wine runtime is missing: .venv-wine")
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M028 Wine runtime")
+    wine = _wine()
+
+    probe_code = r'''
+import json
+import math
+import statistics
+from datetime import datetime, timezone
+
+import MetaTrader5 as mt5
+
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+FROZEN_MAPPING = {
+    "AUD": "AUDUSD",
+    "CAD": "USDCAD",
+    "CHF": "USDCHF",
+    "CLP": "USDCLP",
+    "COP": "USDCOP",
+    "CZK": "USDCZK",
+    "DKK": "USDDKK",
+    "EUR": "EURUSD",
+    "GBP": "GBPUSD",
+    "HUF": "USDHUF",
+    "IDR": "USDIDR",
+    "ILS": "USDILS",
+    "INR": "USDINR",
+    "JPY": "USDJPY",
+    "KRW": "USDKRW",
+    "MXN": "USDMXN",
+    "NOK": "USDNOK",
+    "NZD": "NZDUSD",
+    "PLN": "USDPLN",
+    "RUB": "USDRUB",
+    "SEK": "USDSEK",
+    "ZAR": "USDZAR",
+}
+
+CHECKPOINT_DATES = [
+    "2026-09-30",
+    "2026-09-01",
+    "2026-08-03",
+    "2026-07-01",
+    "2026-04-01",
+    "2026-01-05",
+    "2025-10-01",
+]
+
+EXPECTED_UNIVERSE_SHA = "5f1ae15c35b3b20e24b4f999c7628d3534b54e30eb535295a69e359f285dd996"
+
+
+def finite(value):
+    try:
+        return math.isfinite(float(value))
+    except (TypeError, ValueError):
+        return False
+
+
+def positive(value):
+    return finite(value) and float(value) > 0.0
+
+
+def tick_time(tick):
+    if tick is None:
+        return None
+    raw = getattr(tick, "time", None)
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+def iso_epoch(raw):
+    if raw is None:
+        return None
+    try:
+        return datetime.fromtimestamp(
+            int(raw), timezone.utc
+        ).isoformat().replace("+00:00", "Z")
+    except (TypeError, ValueError, OSError):
+        return None
+
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed for M028 Stage-1 evidence probe")
+
+temporary = []
+try:
+    snapshots = {}
+    positive_tick_times = []
+
+    for currency, symbol in FROZEN_MAPPING.items():
+        info = mt5.symbol_info(symbol)
+        if info is None:
+            snapshots[currency] = {
+                "symbol": symbol,
+                "metadata_available": False,
+                "bid": None,
+                "ask": None,
+                "tick_time": None,
+            }
+            continue
+
+        was_visible = bool(getattr(info, "visible", False))
+        tick = mt5.symbol_info_tick(symbol)
+        if tick is None:
+            selected = bool(mt5.symbol_select(symbol, True))
+            if selected and not was_visible:
+                temporary.append(symbol)
+            tick = mt5.symbol_info_tick(symbol)
+
+        bid = float(getattr(tick, "bid", 0.0) or 0.0) if tick is not None else 0.0
+        ask = float(getattr(tick, "ask", 0.0) or 0.0) if tick is not None else 0.0
+        raw_time = tick_time(tick)
+        point = float(getattr(info, "point", 0.0) or 0.0)
+        valid_positive = positive(bid) and positive(ask) and ask >= bid
+        if valid_positive and raw_time is not None and raw_time > 0:
+            positive_tick_times.append(raw_time)
+
+        snapshots[currency] = {
+            "symbol": symbol,
+            "metadata_available": True,
+            "bid": bid,
+            "ask": ask,
+            "point": point,
+            "tick_time_epoch": raw_time,
+            "tick_time_utc": iso_epoch(raw_time),
+        }
+
+    reference_tick_time = max(positive_tick_times) if positive_tick_times else None
+    quote_viable = []
+    for currency, row in snapshots.items():
+        bid = row.get("bid")
+        ask = row.get("ask")
+        raw_time = row.get("tick_time_epoch")
+        viable = (
+            reference_tick_time is not None
+            and positive(bid)
+            and positive(ask)
+            and float(ask) >= float(bid)
+            and raw_time is not None
+            and int(raw_time) > 0
+            and 0 <= int(reference_tick_time) - int(raw_time) <= 300
+        )
+        row["seconds_behind_reference"] = (
+            None
+            if reference_tick_time is None or raw_time is None
+            else int(reference_tick_time) - int(raw_time)
+        )
+        row["quote_viable"] = bool(viable)
+        if viable:
+            quote_viable.append(currency)
+
+    coverage = {}
+    margin = {}
+    margin_valid_currencies = []
+
+    for currency in quote_viable:
+        symbol = FROZEN_MAPPING[currency]
+        info = mt5.symbol_info(symbol)
+        point = float(getattr(info, "point", 0.0) or 0.0)
+        coverage[currency] = {}
+
+        for date in CHECKPOINT_DATES:
+            start = datetime.fromisoformat(date + "T12:00:00+00:00")
+            end = datetime.fromisoformat(date + "T12:59:59+00:00")
+            ticks = mt5.copy_ticks_range(
+                symbol,
+                start,
+                end,
+                mt5.COPY_TICKS_ALL,
+            )
+            count = 0 if ticks is None else int(len(ticks))
+            valid_count = 0
+            spreads = []
+            first_time = None
+            last_time = None
+            if count:
+                first_time = int(ticks[0]["time"])
+                last_time = int(ticks[-1]["time"])
+                for row in ticks:
+                    bid = float(row["bid"])
+                    ask = float(row["ask"])
+                    if (
+                        positive(bid)
+                        and positive(ask)
+                        and ask >= bid
+                    ):
+                        valid_count += 1
+                        if point > 0:
+                            spreads.append((ask - bid) / point)
+
+            coverage[currency][date] = {
+                "tick_count": count,
+                "first_tick_utc": iso_epoch(first_time),
+                "last_tick_utc": iso_epoch(last_time),
+                "valid_positive_bid_ask_count": valid_count,
+                "spread_points_min": min(spreads) if spreads else None,
+                "spread_points_median": (
+                    statistics.median(spreads) if spreads else None
+                ),
+                "spread_points_max": max(spreads) if spreads else None,
+            }
+
+        snap = snapshots[currency]
+        buy_margin = mt5.order_calc_margin(
+            mt5.ORDER_TYPE_BUY,
+            symbol,
+            1.0,
+            float(snap["ask"]),
+        )
+        sell_margin = mt5.order_calc_margin(
+            mt5.ORDER_TYPE_SELL,
+            symbol,
+            1.0,
+            float(snap["bid"]),
+        )
+        buy_value = float(buy_margin) if positive(buy_margin) else None
+        sell_value = float(sell_margin) if positive(sell_margin) else None
+        margin[currency] = {
+            "symbol": symbol,
+            "lots": 1.0,
+            "buy_margin_account_currency": buy_value,
+            "sell_margin_account_currency": sell_value,
+            "valid": buy_value is not None and sell_value is not None,
+        }
+        if margin[currency]["valid"]:
+            margin_valid_currencies.append(currency)
+
+    commission_proven = False
+    historical_swap_proven = False
+
+    if len(quote_viable) < 4 or len(margin_valid_currencies) < 4:
+        path_classification = "FORWARD_PAPER_NOT_READY"
+    elif commission_proven and historical_swap_proven:
+        path_classification = "RETROSPECTIVE_NET_EXECUTION_READY"
+    else:
+        path_classification = "FORWARD_PAPER_ONLY"
+
+    output = {
+        "stage": "m028-stage1-execution-evidence",
+        "frozen_stage0_universe_sha256": EXPECTED_UNIVERSE_SHA,
+        "frozen_mapping": FROZEN_MAPPING,
+        "reference_tick_time_epoch": reference_tick_time,
+        "reference_tick_time_utc": iso_epoch(reference_tick_time),
+        "quote_snapshots": snapshots,
+        "quote_viable_currencies": sorted(quote_viable),
+        "quote_viable_count": len(quote_viable),
+        "quote_gate_minimum": 4,
+        "quote_gate_pass": len(quote_viable) >= 4,
+        "tick_coverage_checkpoints": CHECKPOINT_DATES,
+        "tick_coverage": coverage,
+        "margin": margin,
+        "margin_valid_currencies": sorted(margin_valid_currencies),
+        "margin_valid_count": len(margin_valid_currencies),
+        "margin_gate_minimum": 4,
+        "margin_gate_pass": len(margin_valid_currencies) >= 4,
+        "commission_proven": commission_proven,
+        "historical_swap_proven": historical_swap_proven,
+        "path_classification": path_classification,
+    }
+    print(json.dumps(output, sort_keys=True), flush=True)
+finally:
+    for symbol in temporary:
+        try:
+            mt5.symbol_select(symbol, False)
+        except Exception:
+            pass
+    mt5.shutdown()
+'''
+
+    run = _run_process_group_bounded(
+        [wine, wine_python, "-c", probe_code],
+        env=_safe_env(wine=True),
+        timeout_seconds=180,
+    )
+
+    payload = None
+    if run["exit_code"] == 0 and run["stdout"].strip():
+        try:
+            payload = json.loads(run["stdout"].strip().splitlines()[-1])
+        except json.JSONDecodeError:
+            payload = None
+
+    expected_mapping = {
+        "AUD": "AUDUSD",
+        "CAD": "USDCAD",
+        "CHF": "USDCHF",
+        "CLP": "USDCLP",
+        "COP": "USDCOP",
+        "CZK": "USDCZK",
+        "DKK": "USDDKK",
+        "EUR": "EURUSD",
+        "GBP": "GBPUSD",
+        "HUF": "USDHUF",
+        "IDR": "USDIDR",
+        "ILS": "USDILS",
+        "INR": "USDINR",
+        "JPY": "USDJPY",
+        "KRW": "USDKRW",
+        "MXN": "USDMXN",
+        "NOK": "USDNOK",
+        "NZD": "NZDUSD",
+        "PLN": "USDPLN",
+        "RUB": "USDRUB",
+        "SEK": "USDSEK",
+        "ZAR": "USDZAR",
+    }
+    ok = (
+        run["exit_code"] == 0
+        and not run.get("timed_out")
+        and payload is not None
+        and payload.get("frozen_mapping") == expected_mapping
+        and payload.get("frozen_stage0_universe_sha256")
+        == "5f1ae15c35b3b20e24b4f999c7628d3534b54e30eb535295a69e359f285dd996"
+    )
+    return {
+        "ok": bool(ok),
+        "feature_branch": "execution-realism",
+        "feature_sha": feature_sha,
+        "probe": payload,
+        "run": {
+            "exit_code": run["exit_code"],
+            "timed_out": bool(run.get("timed_out")),
+            "stderr": run.get("stderr", ""),
+        },
+        "safety": {
+            "market_data_read_only": True,
+            "order_calc_margin_only": True,
+            "order_check_called": False,
+            "order_send_called": False,
+            "position_change_api_called": False,
+            "trade_history_read": False,
+            "account_balance_or_equity_returned": False,
+            "strategy_replay_run": False,
+            "m027_economics_rerun": False,
+            "m021_post_cutoff_outcomes_used": False,
+        },
+    }
+
 ACTION_HANDLERS = {
+    "m028_stage1_execution_evidence_probe": m028_stage1_execution_evidence_probe,
     "m028_stage0_broker_metadata_probe": m028_stage0_broker_metadata_probe,
     "m027_stage2_economics": m027_stage2_economics,
     "m027_stage2_tests": m027_stage2_tests,
