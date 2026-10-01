@@ -1082,3 +1082,115 @@ Focused validation safety:
 Stage 2 is closed. Its leverage, margin, timing, lot-rounding, cost-status,
 and observation rules may not be changed inside M028 after prospective
 forward outcomes begin.
+## Stage-3 prospective readiness and first-decision protocol freeze — 2026-10-01
+
+Status: **FROZEN BEFORE THE FIRST FORWARD-PAPER SIGNAL IS OBSERVED**
+
+Stage 3 operationalizes the already frozen Stage-2 contract for the first
+prospective paper decision.
+
+First permitted decision timestamp:
+
+**2026-10-07T12:00:00Z**
+
+Decision identifier:
+
+`2026-10`
+
+### Stage-3A readiness probe — allowed before decision time
+
+A pre-decision readiness probe may inspect only whether the frozen data and
+broker prerequisites are becoming available.
+
+It may:
+
+- download the same BIS XRU and OECD IR3TIB source contracts;
+- hash the raw source bytes;
+- parse source metadata and report only source maximum date/month;
+- test the frozen October source cutoffs:
+  - BIS spot through **2026-09-30**;
+  - OECD rates through **2026-08**;
+- inspect current quote freshness for the fixed eight Stage-1 currencies;
+- inspect current positive read-only margin availability;
+- report counts/lists and safety metadata.
+
+It must not report or compute:
+
+- 12-month formation values or signs;
+- ex-ante volatility values;
+- target weights;
+- broker BUY/SELL target sides;
+- target lots;
+- paper fills;
+- strategy P/L or any performance statistic.
+
+Readiness classification is mechanical:
+
+- source cutoff fails -> `SOURCE_NOT_READY`;
+- source cutoff passes but fewer than 4 quote+margin viable currencies ->
+  `BROKER_NOT_READY`;
+- both gates pass -> `READY_FOR_SCHEDULED_DECISION`.
+
+A readiness pass does not permit an early paper decision.
+
+### Stage-3B first-decision runtime — code may be built/tested now
+
+The decision runtime must refuse to emit the October paper decision before
+`2026-10-07T12:00:00Z`.
+
+At or after that timestamp it may execute exactly one October decision under
+the frozen Stage-2 rules.
+
+At the actual decision:
+
+1. fetch the same BIS/OECD source contracts once;
+2. hash raw bytes and normalized panels;
+3. require source completeness through Sep-2026 spot / Aug-2026 rates;
+4. construct the M027-compatible approximate return history without changing
+   source identity, quote direction, units, or carry lag;
+5. compute formation through **2026-09-30** only;
+6. compute the frozen lagged EWMA ex-ante volatility;
+7. restrict to the fixed eight Stage-1 currencies;
+8. take one broker quote/margin snapshot;
+9. apply the Stage-2 execution-eligibility, equal-weight, 4.0x gross-cap,
+   lot-rounding, and 25% margin-cap rules;
+10. write one immutable `2026-10` decision record.
+
+If any gate leaves fewer than four non-zero executable targets, the immutable
+October decision is flat with `FORWARD_PAPER_NOT_READY`.
+
+There is no later October retry or late entry after the decision timestamp.
+
+### Append-only first-decision record
+
+The runtime must refuse to overwrite an existing `2026-10` decision record.
+
+Decision output is signal/position evidence only. It must not calculate a
+holding-period return at decision creation.
+
+Cost fields remain:
+
+- commission: null / `UNPROVEN`;
+- slippage: null / `UNOBSERVED`;
+- financing: null until prospectively verified;
+- net P/L: null.
+
+### Test boundary before October 7
+
+Before the first decision timestamp, tests may use synthetic formation,
+volatility, quote, and margin fixtures only.
+
+No live/source-derived October signal sign, weight, side, lot, or paper P/L may
+be inspected early.
+
+### Safety
+
+- no real order placement;
+- no order validation endpoint;
+- no position modification;
+- no trade-history read;
+- no balance/equity return;
+- no retrospective M028 net economics;
+- no M027 rerun;
+- no M021 post-cutoff outcomes;
+- no live promotion.
