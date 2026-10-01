@@ -784,3 +784,33 @@ M028 Stage-1 execution-evidence protocol is frozen at:
 `13507ae2bb06af4daa24f4df70b97a11a8606fa9`
 
 No M028 economics are authorized yet.
+## M028 Stage 1 accepted — forward paper only
+
+Accepted result commit:
+
+`bf90b33409aa78d303d0928404e73f3d1a7da1bf`
+
+Accepted feature SHA:
+
+`2dcbdb5e05c5f7e9a1a06fb711f0c9f85bfd7455`
+
+Mechanical result:
+
+- quote-viable currencies: **8** — AUD, CAD, CHF, EUR, GBP, JPY, NZD, SEK;
+- quote gate: **PASS** (8 >= 4);
+- valid current margin calculations: **8**;
+- margin gate: **PASS** (8 >= 4);
+- commission: **UNPROVEN**;
+- historical swap/financing: **UNPROVEN**;
+- path: **FORWARD_PAPER_ONLY**.
+
+Frozen historical tick checkpoints completed for AUD, CAD, EUR, GBP, and
+JPY. CHF, NZD, and SEK history probes timed out and are retained as missing
+execution-history evidence.
+
+No retrospective net-execution backtest is authorized. No M028 strategy
+economics have been run.
+
+Stage-1 closeout commit:
+
+`08e795a1ce90563642c0403c0266fffa4307fc4d`
