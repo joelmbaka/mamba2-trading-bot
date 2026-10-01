@@ -406,3 +406,146 @@ Before any executable-performance calculation, M028 must now establish:
 
 Today's MetaQuotes-Demo costs must not be retrofitted onto M027's 1980–2020
 history and presented as historical executable costs.
+## Stage-1 execution-evidence protocol freeze — 2026-10-01
+
+Status: **FROZEN BEFORE ANY M028 STRATEGY ECONOMICS**
+
+Stage 1 answers only:
+
+> Does the currently authenticated MetaQuotes-Demo environment provide enough
+> mechanically usable quote, tick-history, and margin evidence to support a
+> forward paper implementation, and can retrospective execution costs be
+> established without inventing commission or historical swap?
+
+Stage 1 must not calculate strategy P/L, Sharpe, drawdown, wealth, contribution,
+or any M027 reclassification.
+
+### Frozen input universe
+
+Start only from the 22 unambiguous Stage-0 mappings frozen at:
+
+`5f1ae15c35b3b20e24b4f999c7628d3534b54e30eb535295a69e359f285dd996`
+
+No Stage-0 unavailable currency may be substituted with a cross.
+
+### Mechanical current-quote viability
+
+For each mapped symbol, obtain one current `symbol_info_tick` snapshot.
+
+Define the Stage-1 reference tick time as the maximum tick timestamp among
+mapped symbols that have finite positive Bid and Ask.
+
+A mapped symbol is **QUOTE_VIABLE** only when:
+
+- Bid is finite and > 0;
+- Ask is finite and > 0;
+- Ask >= Bid;
+- tick timestamp is valid and within **300 seconds** of the Stage-1 reference
+  tick time.
+
+This is an execution-availability rule only. It does not use M027 returns.
+
+Minimum forward-paper quote gate:
+
+**4 QUOTE_VIABLE currencies**
+
+Fewer than 4 => Stage 1 stops with `FORWARD_PAPER_NOT_READY`.
+
+### Frozen tick-history coverage checkpoints
+
+For QUOTE_VIABLE symbols only, query read-only MT5 tick history at exactly
+these UTC windows, each **12:00:00–12:59:59**:
+
+- 2026-09-30
+- 2026-09-01
+- 2026-08-03
+- 2026-07-01
+- 2026-04-01
+- 2026-01-05
+- 2025-10-01
+
+For each symbol/window report only:
+
+- tick count;
+- first tick timestamp;
+- last tick timestamp;
+- count with finite positive Bid/Ask;
+- spread-points min/median/max over valid positive Bid/Ask ticks.
+
+No price return, direction, signal, or P/L statistic may be computed.
+
+Checkpoint presence is metadata evidence only; it does not authorize using
+current broker costs as historical 1980–2020 costs.
+
+### Frozen margin evidence
+
+For each QUOTE_VIABLE symbol, Stage 1 may call read-only
+`order_calc_margin` for exactly:
+
+- **1.00 lot BUY** at the current Ask;
+- **1.00 lot SELL** at the current Bid.
+
+It may report only the calculated account-currency margin values.
+
+`order_check` and `order_send` remain forbidden.
+
+### Commission evidence
+
+Stage 1 does not inspect trade history.
+
+Because Stage 0 exposed no commission metadata fields, commission remains:
+
+**UNPROVEN**
+
+No zero-commission assumption is authorized.
+
+### Swap evidence
+
+Stage 1 may carry forward the current `swap_long`, `swap_short`, `swap_mode`,
+and rollover-day metadata from Stage 0.
+
+It must explicitly classify historical swap evidence as **UNPROVEN** unless an
+actual time series is available from the allowed read-only broker data path.
+
+Current swap settings must not be backfilled through historical M027 months.
+
+### Stage-1 path classification
+
+Stage 1 returns exactly one path classification:
+
+**FORWARD_PAPER_NOT_READY**
+
+when fewer than 4 currencies pass current quote viability or fewer than 4 have
+valid current margin calculations.
+
+Otherwise, when quote/margin gates pass but commission or historical swap is
+unproven:
+
+**FORWARD_PAPER_ONLY**
+
+Retrospective net-execution economics are not authorized under that outcome.
+
+`RETROSPECTIVE_NET_EXECUTION_READY` may be returned only if both commission
+and historical swap evidence are independently proven without inference.
+
+### Safety
+
+Allowed MT5 calls:
+
+- initialize/shutdown;
+- symbol_info/symbol_info_tick/symbol_select;
+- copy_ticks_range;
+- order_calc_margin.
+
+Forbidden:
+
+- order_send;
+- order_check;
+- position modification/close;
+- history_deals_get/history_orders_get;
+- balance/equity/open-P&L return;
+- strategy replay;
+- M027 rerun;
+- M021 post-cutoff outcome use.
+
+No merge/deploy/live trading is authorized.
