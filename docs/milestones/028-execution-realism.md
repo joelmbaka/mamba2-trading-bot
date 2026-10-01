@@ -1194,3 +1194,50 @@ be inspected early.
 - no M027 rerun;
 - no M021 post-cutoff outcomes;
 - no live promotion.
+## Stage-3A readiness result — SOURCE_NOT_READY
+
+Readiness command:
+
+`mamba2-m028-stage3-readiness-v1`
+
+Result commit:
+
+`8b715961e58c2e8a56069d26c780db52d46b194c`
+
+Feature SHA observed by readiness probe:
+
+`58649c4625872e8ae12f31103cfcc497cde3cdcd`
+
+Mechanical source result:
+
+- BIS spot maximum date: **2026-09-29**
+- required BIS spot through: **2026-09-30**
+- OECD rate maximum month: **2026-08**
+- required OECD rate month: **2026-08**
+- source gate: **FAIL**
+
+Mechanical broker result:
+
+- quote viable: **8 / 8**
+- margin viable: **8 / 8**
+- joint viable: **8 / 8**
+- broker gate: **PASS**
+
+Joint viable currencies:
+
+`AUD, CAD, CHF, EUR, GBP, JPY, NZD, SEK`
+
+Readiness classification:
+
+**SOURCE_NOT_READY**
+
+This is expected pre-decision readiness evidence only. The October signal was
+not computed, no target side/lots were created, and no forward outcome was
+observed.
+
+Safety flags all remained false for signal reporting, target construction,
+orders, position changes, trade-history reads, balance/equity return, M027
+rerun, and M021 post-cutoff use.
+
+The Stage-3 protocol remains unchanged. The source gate may be checked again
+before or at the scheduled decision, but there is no early decision.
