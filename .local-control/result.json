@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "command_id": "mamba2-m028-stage3-synthetic-tests-v1",
-  "completed_at": "2026-10-01T12:25:20.962319+00:00",
+  "command_id": "mamba2-m028-stage3-synthetic-tests-v2",
+  "completed_at": "2026-10-01T12:28:20.082474+00:00",
   "ok": true,
   "action": "m028_stage3_tests",
   "data": {
     "ok": true,
     "feature_branch": "execution-realism",
-    "feature_sha": "6501229b701b8b91354eea84f09408a816f0f824",
+    "feature_sha": "499e088e8d77bdf7fff81f34b549ae93c5c7e8be",
     "tests": [
       "tests/test_m028_forward_paper.py",
       "tests/test_m028_prospective.py"
@@ -24,7 +24,7 @@
         "tests/test_m028_prospective.py"
       ],
       "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 21 items\n\ntests/test_m028_forward_paper.py .................                       [ 80%]\ntests/test_m028_prospective.py ....                                      [100%]\n\n============================== 21 passed in 0.22s ==============================\n",
+      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 24 items\n\ntests/test_m028_forward_paper.py ....................                    [ 83%]\ntests/test_m028_prospective.py ....                                      [100%]\n\n============================== 24 passed in 0.22s ==============================\n",
       "stderr": ""
     },
     "py_compile": {
