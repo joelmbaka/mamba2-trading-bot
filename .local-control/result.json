@@ -1,18 +1,755 @@
 {
   "version": 1,
-  "command_id": "mamba2-m028-stage1-execution-evidence-v2",
-  "completed_at": "2026-10-01T09:59:10.432137+00:00",
-  "ok": false,
-  "action": "m028_stage1_execution_evidence_probe_v2",
+  "command_id": "mamba2-m028-stage1-execution-evidence-v3",
+  "completed_at": "2026-10-01T10:45:01.619713+00:00",
+  "ok": true,
+  "action": "m028_stage1_execution_evidence_probe_v3",
   "data": {
-    "ok": false,
+    "ok": true,
     "feature_branch": "execution-realism",
-    "feature_sha": "2abec5c87c4a21ee50b825e51b768a1e28150220",
-    "reason": "Stage-1 v2 current quote/margin snapshot failed",
-    "snapshot_run": {
-      "exit_code": 0,
-      "timed_out": true,
-      "stderr": "\nlocal-control hard-killed process group after 60s\n"
+    "feature_sha": "2dcbdb5e05c5f7e9a1a06fb711f0c9f85bfd7455",
+    "probe": {
+      "stage": "m028-stage1-execution-evidence",
+      "implementation": "v3-file-backed-bounded",
+      "frozen_stage0_universe_sha256": "5f1ae15c35b3b20e24b4f999c7628d3534b54e30eb535295a69e359f285dd996",
+      "frozen_mapping": {
+        "AUD": "AUDUSD",
+        "CAD": "USDCAD",
+        "CHF": "USDCHF",
+        "CLP": "USDCLP",
+        "COP": "USDCOP",
+        "CZK": "USDCZK",
+        "DKK": "USDDKK",
+        "EUR": "EURUSD",
+        "GBP": "GBPUSD",
+        "HUF": "USDHUF",
+        "IDR": "USDIDR",
+        "ILS": "USDILS",
+        "INR": "USDINR",
+        "JPY": "USDJPY",
+        "KRW": "USDKRW",
+        "MXN": "USDMXN",
+        "NOK": "USDNOK",
+        "NZD": "NZDUSD",
+        "PLN": "USDPLN",
+        "RUB": "USDRUB",
+        "SEK": "USDSEK",
+        "ZAR": "USDZAR"
+      },
+      "reference_tick_time_epoch": 1790856405,
+      "reference_tick_time_utc": "2026-10-01T12:06:45Z",
+      "quote_snapshots": {
+        "AUD": {
+          "ask": 0.69413,
+          "bid": 0.69412,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": true,
+          "seconds_behind_reference": 0,
+          "symbol": "AUDUSD",
+          "tick_time_epoch": 1790856405,
+          "tick_time_utc": "2026-10-01T12:06:45Z"
+        },
+        "CAD": {
+          "ask": 1.4243299999999999,
+          "bid": 1.4243299999999999,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": true,
+          "seconds_behind_reference": 0,
+          "symbol": "USDCAD",
+          "tick_time_epoch": 1790856405,
+          "tick_time_utc": "2026-10-01T12:06:45Z"
+        },
+        "CHF": {
+          "ask": 0.83497,
+          "bid": 0.83496,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": true,
+          "seconds_behind_reference": 0,
+          "symbol": "USDCHF",
+          "tick_time_epoch": 1790856405,
+          "tick_time_utc": "2026-10-01T12:06:45Z"
+        },
+        "CLP": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 0.0001,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDCLP",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "COP": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 0.01,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDCOP",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "CZK": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDCZK",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "DKK": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDDKK",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "EUR": {
+          "ask": 1.12955,
+          "bid": 1.12955,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": true,
+          "seconds_behind_reference": 0,
+          "symbol": "EURUSD",
+          "tick_time_epoch": 1790856405,
+          "tick_time_utc": "2026-10-01T12:06:45Z"
+        },
+        "GBP": {
+          "ask": 1.32183,
+          "bid": 1.32182,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": true,
+          "seconds_behind_reference": 0,
+          "symbol": "GBPUSD",
+          "tick_time_epoch": 1790856405,
+          "tick_time_utc": "2026-10-01T12:06:45Z"
+        },
+        "HUF": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 0.001,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDHUF",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "IDR": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 0.001,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDIDR",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "ILS": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDILS",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "INR": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 0.001,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDINR",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "JPY": {
+          "ask": 158.355,
+          "bid": 158.353,
+          "metadata_available": true,
+          "point": 0.001,
+          "quote_viable": true,
+          "seconds_behind_reference": 0,
+          "symbol": "USDJPY",
+          "tick_time_epoch": 1790856405,
+          "tick_time_utc": "2026-10-01T12:06:45Z"
+        },
+        "KRW": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 0.01,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDKRW",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "MXN": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDMXN",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "NOK": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDNOK",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "NZD": {
+          "ask": 0.56097,
+          "bid": 0.56096,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": true,
+          "seconds_behind_reference": 0,
+          "symbol": "NZDUSD",
+          "tick_time_epoch": 1790856405,
+          "tick_time_utc": "2026-10-01T12:06:45Z"
+        },
+        "PLN": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDPLN",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "RUB": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 0.001,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDRUB",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        },
+        "SEK": {
+          "ask": 10.0408,
+          "bid": 10.0398,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": true,
+          "seconds_behind_reference": 0,
+          "symbol": "USDSEK",
+          "tick_time_epoch": 1790856405,
+          "tick_time_utc": "2026-10-01T12:06:45Z"
+        },
+        "ZAR": {
+          "ask": 0.0,
+          "bid": 0.0,
+          "metadata_available": true,
+          "point": 1e-05,
+          "quote_viable": false,
+          "seconds_behind_reference": 1790856405,
+          "symbol": "USDZAR",
+          "tick_time_epoch": 0,
+          "tick_time_utc": "1970-01-01T00:00:00Z"
+        }
+      },
+      "quote_viable_currencies": [
+        "AUD",
+        "CAD",
+        "CHF",
+        "EUR",
+        "GBP",
+        "JPY",
+        "NZD",
+        "SEK"
+      ],
+      "quote_viable_count": 8,
+      "quote_gate_minimum": 4,
+      "quote_gate_pass": true,
+      "margin": {
+        "AUD": {
+          "buy_margin_account_currency": 694.13,
+          "lots": 1.0,
+          "sell_margin_account_currency": 694.12,
+          "symbol": "AUDUSD",
+          "valid": true
+        },
+        "CAD": {
+          "buy_margin_account_currency": 1000.0,
+          "lots": 1.0,
+          "sell_margin_account_currency": 1000.0,
+          "symbol": "USDCAD",
+          "valid": true
+        },
+        "CHF": {
+          "buy_margin_account_currency": 1000.0,
+          "lots": 1.0,
+          "sell_margin_account_currency": 1000.0,
+          "symbol": "USDCHF",
+          "valid": true
+        },
+        "EUR": {
+          "buy_margin_account_currency": 1129.55,
+          "lots": 1.0,
+          "sell_margin_account_currency": 1129.55,
+          "symbol": "EURUSD",
+          "valid": true
+        },
+        "GBP": {
+          "buy_margin_account_currency": 1321.83,
+          "lots": 1.0,
+          "sell_margin_account_currency": 1321.82,
+          "symbol": "GBPUSD",
+          "valid": true
+        },
+        "JPY": {
+          "buy_margin_account_currency": 1000.0,
+          "lots": 1.0,
+          "sell_margin_account_currency": 1000.0,
+          "symbol": "USDJPY",
+          "valid": true
+        },
+        "NZD": {
+          "buy_margin_account_currency": 560.97,
+          "lots": 1.0,
+          "sell_margin_account_currency": 560.96,
+          "symbol": "NZDUSD",
+          "valid": true
+        },
+        "SEK": {
+          "buy_margin_account_currency": 1000.0,
+          "lots": 1.0,
+          "sell_margin_account_currency": 1000.0,
+          "symbol": "USDSEK",
+          "valid": true
+        }
+      },
+      "margin_valid_currencies": [
+        "AUD",
+        "CAD",
+        "CHF",
+        "EUR",
+        "GBP",
+        "JPY",
+        "NZD",
+        "SEK"
+      ],
+      "margin_valid_count": 8,
+      "margin_gate_minimum": 4,
+      "margin_gate_pass": true,
+      "tick_coverage_checkpoints": [
+        "2026-09-30",
+        "2026-09-01",
+        "2026-08-03",
+        "2026-07-01",
+        "2026-04-01",
+        "2026-01-05",
+        "2025-10-01"
+      ],
+      "tick_coverage": {
+        "AUD": {
+          "2025-10-01": {
+            "first_tick_utc": "2025-10-01T12:00:00Z",
+            "last_tick_utc": "2025-10-01T12:59:53Z",
+            "spread_points_max": 5.000000000010552,
+            "spread_points_median": 4.000000000004,
+            "spread_points_min": 3.9999999999928977,
+            "tick_count": 1933,
+            "valid_positive_bid_ask_count": 1933
+          },
+          "2026-01-05": {
+            "first_tick_utc": "2026-01-05T12:00:00Z",
+            "last_tick_utc": "2026-01-05T12:59:58Z",
+            "spread_points_max": 5.000000000010552,
+            "spread_points_median": 4.000000000004,
+            "spread_points_min": 3.9999999999928977,
+            "tick_count": 1835,
+            "valid_positive_bid_ask_count": 1835
+          },
+          "2026-04-01": {
+            "first_tick_utc": "2026-04-01T12:00:00Z",
+            "last_tick_utc": "2026-04-01T12:59:58Z",
+            "spread_points_max": 4.000000000004,
+            "spread_points_median": 2.000000000002,
+            "spread_points_min": 0.0,
+            "tick_count": 5340,
+            "valid_positive_bid_ask_count": 5340
+          },
+          "2026-07-01": {
+            "first_tick_utc": "2026-07-01T12:00:00Z",
+            "last_tick_utc": "2026-07-01T12:59:58Z",
+            "spread_points_max": 3.9999999999928977,
+            "spread_points_median": 0.9999999999954489,
+            "spread_points_min": 0.0,
+            "tick_count": 14072,
+            "valid_positive_bid_ask_count": 14072
+          },
+          "2026-08-03": {
+            "first_tick_utc": "2026-08-03T12:00:00Z",
+            "last_tick_utc": "2026-08-03T12:59:58Z",
+            "spread_points_max": 3.000000000008551,
+            "spread_points_median": 0.9999999999954489,
+            "spread_points_min": 0.0,
+            "tick_count": 13968,
+            "valid_positive_bid_ask_count": 13968
+          },
+          "2026-09-01": {
+            "first_tick_utc": "2026-09-01T12:00:00Z",
+            "last_tick_utc": "2026-09-01T12:59:58Z",
+            "spread_points_max": 2.000000000002,
+            "spread_points_median": 0.9999999999954489,
+            "spread_points_min": 0.0,
+            "tick_count": 11536,
+            "valid_positive_bid_ask_count": 11536
+          },
+          "2026-09-30": {
+            "first_tick_utc": "2026-09-30T12:00:00Z",
+            "last_tick_utc": "2026-09-30T12:59:58Z",
+            "spread_points_max": 2.000000000002,
+            "spread_points_median": 1.0000000000065512,
+            "spread_points_min": 0.0,
+            "tick_count": 8771,
+            "valid_positive_bid_ask_count": 8771
+          }
+        },
+        "CAD": {
+          "2025-10-01": {
+            "first_tick_utc": "2025-10-01T12:00:04Z",
+            "last_tick_utc": "2025-10-01T12:59:50Z",
+            "spread_points_max": 11.000000000005448,
+            "spread_points_median": 4.000000000004,
+            "spread_points_min": 2.9999999999752442,
+            "tick_count": 1239,
+            "valid_positive_bid_ask_count": 1239
+          },
+          "2026-01-05": {
+            "first_tick_utc": "2026-01-05T12:00:00Z",
+            "last_tick_utc": "2026-01-05T12:59:56Z",
+            "spread_points_max": 12.000000000012,
+            "spread_points_median": 4.000000000004,
+            "spread_points_min": 2.9999999999752442,
+            "tick_count": 1508,
+            "valid_positive_bid_ask_count": 1508
+          },
+          "2026-04-01": {
+            "first_tick_utc": "2026-04-01T12:00:00Z",
+            "last_tick_utc": "2026-04-01T12:59:58Z",
+            "spread_points_max": 4.000000000026205,
+            "spread_points_median": 3.9999999999817955,
+            "spread_points_min": 0.9999999999843466,
+            "tick_count": 4259,
+            "valid_positive_bid_ask_count": 4259
+          },
+          "2026-07-01": {
+            "first_tick_utc": "2026-07-01T12:00:00Z",
+            "last_tick_utc": "2026-07-01T12:59:58Z",
+            "spread_points_max": 3.000000000019653,
+            "spread_points_median": 0.0,
+            "spread_points_min": 0.0,
+            "tick_count": 9140,
+            "valid_positive_bid_ask_count": 9140
+          },
+          "2026-08-03": {
+            "first_tick_utc": "2026-08-03T12:00:00Z",
+            "last_tick_utc": "2026-08-03T12:59:58Z",
+            "spread_points_max": 3.000000000019653,
+            "spread_points_median": 0.9999999999843466,
+            "spread_points_min": 0.0,
+            "tick_count": 13837,
+            "valid_positive_bid_ask_count": 13837
+          },
+          "2026-09-01": {
+            "first_tick_utc": "2026-09-01T12:00:00Z",
+            "last_tick_utc": "2026-09-01T12:59:58Z",
+            "spread_points_max": 1.0000000000065512,
+            "spread_points_median": 0.9999999999843466,
+            "spread_points_min": 0.0,
+            "tick_count": 8746,
+            "valid_positive_bid_ask_count": 8746
+          },
+          "2026-09-30": {
+            "first_tick_utc": "2026-09-30T12:00:00Z",
+            "last_tick_utc": "2026-09-30T12:59:58Z",
+            "spread_points_max": 1.0000000000065512,
+            "spread_points_median": 0.9999999999843466,
+            "spread_points_min": 0.0,
+            "tick_count": 10146,
+            "valid_positive_bid_ask_count": 10146
+          }
+        },
+        "CHF": {},
+        "EUR": {
+          "2025-10-01": {
+            "first_tick_utc": "2025-10-01T12:00:00Z",
+            "last_tick_utc": "2025-10-01T12:59:57Z",
+            "spread_points_max": 2.0000000000131024,
+            "spread_points_median": 1.0000000000065512,
+            "spread_points_min": 0.9999999999843466,
+            "tick_count": 2751,
+            "valid_positive_bid_ask_count": 2751
+          },
+          "2026-01-05": {
+            "first_tick_utc": "2026-01-05T12:00:00Z",
+            "last_tick_utc": "2026-01-05T12:59:58Z",
+            "spread_points_max": 4.000000000004,
+            "spread_points_median": 2.9999999999974487,
+            "spread_points_min": 0.0,
+            "tick_count": 5414,
+            "valid_positive_bid_ask_count": 5414
+          },
+          "2026-04-01": {
+            "first_tick_utc": "2026-04-01T12:00:00Z",
+            "last_tick_utc": "2026-04-01T12:59:58Z",
+            "spread_points_max": 19.999999999997797,
+            "spread_points_median": 2.0000000000131024,
+            "spread_points_min": 0.0,
+            "tick_count": 7208,
+            "valid_positive_bid_ask_count": 7208
+          },
+          "2026-07-01": {
+            "first_tick_utc": "2026-07-01T12:00:00Z",
+            "last_tick_utc": "2026-07-01T12:59:58Z",
+            "spread_points_max": 18.0000000000069,
+            "spread_points_median": 0.0,
+            "spread_points_min": 0.0,
+            "tick_count": 15241,
+            "valid_positive_bid_ask_count": 15241
+          },
+          "2026-08-03": {
+            "first_tick_utc": "2026-08-03T12:00:00Z",
+            "last_tick_utc": "2026-08-03T12:59:58Z",
+            "spread_points_max": 2.0000000000131024,
+            "spread_points_median": 0.0,
+            "spread_points_min": 0.0,
+            "tick_count": 15631,
+            "valid_positive_bid_ask_count": 15631
+          },
+          "2026-09-01": {
+            "first_tick_utc": "2026-09-01T12:00:00Z",
+            "last_tick_utc": "2026-09-01T12:59:58Z",
+            "spread_points_max": 2.0000000000131024,
+            "spread_points_median": 0.0,
+            "spread_points_min": 0.0,
+            "tick_count": 11202,
+            "valid_positive_bid_ask_count": 11202
+          },
+          "2026-09-30": {
+            "first_tick_utc": "2026-09-30T12:00:00Z",
+            "last_tick_utc": "2026-09-30T12:59:58Z",
+            "spread_points_max": 2.0000000000131024,
+            "spread_points_median": 0.0,
+            "spread_points_min": 0.0,
+            "tick_count": 15180,
+            "valid_positive_bid_ask_count": 15180
+          }
+        },
+        "GBP": {
+          "2025-10-01": {
+            "first_tick_utc": "2025-10-01T12:00:00Z",
+            "last_tick_utc": "2025-10-01T12:59:56Z",
+            "spread_points_max": 5.000000000010552,
+            "spread_points_median": 2.0000000000131024,
+            "spread_points_min": 1.9999999999908977,
+            "tick_count": 2276,
+            "valid_positive_bid_ask_count": 2276
+          },
+          "2026-01-05": {
+            "first_tick_utc": "2026-01-05T12:00:00Z",
+            "last_tick_utc": "2026-01-05T12:59:58Z",
+            "spread_points_max": 3.000000000019653,
+            "spread_points_median": 2.0000000000131024,
+            "spread_points_min": 1.9999999999908977,
+            "tick_count": 3371,
+            "valid_positive_bid_ask_count": 3371
+          },
+          "2026-04-01": {
+            "first_tick_utc": "2026-04-01T12:00:00Z",
+            "last_tick_utc": "2026-04-01T12:59:58Z",
+            "spread_points_max": 6.000000000017102,
+            "spread_points_median": 5.999999999994897,
+            "spread_points_min": 0.0,
+            "tick_count": 6148,
+            "valid_positive_bid_ask_count": 6148
+          },
+          "2026-07-01": {
+            "first_tick_utc": "2026-07-01T12:00:00Z",
+            "last_tick_utc": "2026-07-01T12:59:58Z",
+            "spread_points_max": 4.999999999988347,
+            "spread_points_median": 0.0,
+            "spread_points_min": 0.0,
+            "tick_count": 22299,
+            "valid_positive_bid_ask_count": 22299
+          },
+          "2026-08-03": {
+            "first_tick_utc": "2026-08-03T12:00:00Z",
+            "last_tick_utc": "2026-08-03T12:59:58Z",
+            "spread_points_max": 2.9999999999974487,
+            "spread_points_median": 0.0,
+            "spread_points_min": 0.0,
+            "tick_count": 23410,
+            "valid_positive_bid_ask_count": 23410
+          },
+          "2026-09-01": {
+            "first_tick_utc": "2026-09-01T12:00:00Z",
+            "last_tick_utc": "2026-09-01T12:59:58Z",
+            "spread_points_max": 5.000000000010552,
+            "spread_points_median": 0.0,
+            "spread_points_min": 0.0,
+            "tick_count": 17037,
+            "valid_positive_bid_ask_count": 17037
+          },
+          "2026-09-30": {
+            "first_tick_utc": "2026-09-30T12:00:00Z",
+            "last_tick_utc": "2026-09-30T12:59:58Z",
+            "spread_points_max": 2.9999999999974487,
+            "spread_points_median": 0.0,
+            "spread_points_min": 0.0,
+            "tick_count": 18673,
+            "valid_positive_bid_ask_count": 18673
+          }
+        },
+        "JPY": {
+          "2025-10-01": {
+            "first_tick_utc": "2025-10-01T12:00:00Z",
+            "last_tick_utc": "2025-10-01T12:59:57Z",
+            "spread_points_max": 6.000000000000227,
+            "spread_points_median": 3.9999999999906777,
+            "spread_points_min": 2.999999999985903,
+            "tick_count": 2363,
+            "valid_positive_bid_ask_count": 2363
+          },
+          "2026-01-05": {
+            "first_tick_utc": "2026-01-05T12:00:00Z",
+            "last_tick_utc": "2026-01-05T12:59:58Z",
+            "spread_points_max": 8.000000000009777,
+            "spread_points_median": 3.9999999999906777,
+            "spread_points_min": 2.999999999985903,
+            "tick_count": 2375,
+            "valid_positive_bid_ask_count": 2375
+          },
+          "2026-04-01": {
+            "first_tick_utc": "2026-04-01T12:00:00Z",
+            "last_tick_utc": "2026-04-01T12:59:58Z",
+            "spread_points_max": 3.0000000000143245,
+            "spread_points_median": 2.999999999985903,
+            "spread_points_min": 0.0,
+            "tick_count": 5147,
+            "valid_positive_bid_ask_count": 5147
+          },
+          "2026-07-01": {
+            "first_tick_utc": "2026-07-01T12:00:00Z",
+            "last_tick_utc": "2026-07-01T12:59:58Z",
+            "spread_points_max": 3.0000000000143245,
+            "spread_points_median": 1.999999999981128,
+            "spread_points_min": 0.0,
+            "tick_count": 14089,
+            "valid_positive_bid_ask_count": 14089
+          },
+          "2026-08-03": {
+            "first_tick_utc": "2026-08-03T12:00:00Z",
+            "last_tick_utc": "2026-08-03T12:59:58Z",
+            "spread_points_max": 3.0000000000143245,
+            "spread_points_median": 1.0000000000047748,
+            "spread_points_min": 0.0,
+            "tick_count": 19368,
+            "valid_positive_bid_ask_count": 19368
+          },
+          "2026-09-01": {
+            "first_tick_utc": "2026-09-01T12:00:00Z",
+            "last_tick_utc": "2026-09-01T12:59:58Z",
+            "spread_points_max": 3.0000000000143245,
+            "spread_points_median": 2.0000000000095497,
+            "spread_points_min": 0.0,
+            "tick_count": 11878,
+            "valid_positive_bid_ask_count": 11878
+          },
+          "2026-09-30": {
+            "first_tick_utc": "2026-09-30T12:00:00Z",
+            "last_tick_utc": "2026-09-30T12:59:58Z",
+            "spread_points_max": 3.0000000000143245,
+            "spread_points_median": 2.0000000000095497,
+            "spread_points_min": 0.0,
+            "tick_count": 25329,
+            "valid_positive_bid_ask_count": 25329
+          }
+        },
+        "NZD": {},
+        "SEK": {}
+      },
+      "tick_coverage_runs": {
+        "AUD": {
+          "exit_code": 0,
+          "timed_out": false,
+          "payload_available": true
+        },
+        "CAD": {
+          "exit_code": 0,
+          "timed_out": false,
+          "payload_available": true
+        },
+        "CHF": {
+          "exit_code": -9,
+          "timed_out": true,
+          "payload_available": false
+        },
+        "EUR": {
+          "exit_code": 0,
+          "timed_out": false,
+          "payload_available": true
+        },
+        "GBP": {
+          "exit_code": 0,
+          "timed_out": false,
+          "payload_available": true
+        },
+        "JPY": {
+          "exit_code": 0,
+          "timed_out": false,
+          "payload_available": true
+        },
+        "NZD": {
+          "exit_code": -9,
+          "timed_out": true,
+          "payload_available": false
+        },
+        "SEK": {
+          "exit_code": -9,
+          "timed_out": true,
+          "payload_available": false
+        }
+      },
+      "commission_proven": false,
+      "historical_swap_proven": false,
+      "path_classification": "FORWARD_PAPER_ONLY"
     },
     "safety": {
       "market_data_read_only": true,
@@ -21,6 +758,7 @@
       "order_send_called": false,
       "position_change_api_called": false,
       "trade_history_read": false,
+      "account_balance_or_equity_returned": false,
       "strategy_replay_run": false,
       "m027_economics_rerun": false,
       "m021_post_cutoff_outcomes_used": false
