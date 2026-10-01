@@ -710,4 +710,38 @@ the exact frozen futures/forward excess-return process without introducing a
 new proxy.
 
 M026 is closed. Do not weaken it after the inventory.
+## M027 closed — gross carry-aware spot TSMOM supported
 
+Branch:
+
+`carry-aware-spot-tsmom`
+
+Final economic feature SHA:
+
+`ebd650204cb8d03d4eb144d2b3bc431f8b838409`
+
+Validation:
+
+- focused Stage-2: **17 passed**
+- full native: **297 passed / 2 skipped**
+
+Accepted economic result:
+
+- result commit: `5cebd54c14833dadd7e2de302213c059cd8b2116`
+- deterministic A/B SHA-256: `08be7e8002410ad36e32caa98cb3cf6e66110bef2c24815b2c1582b96b957e00`
+- A/B byte identity: **PASS**
+- evaluation: **1980-02 → 2020-04, 483 months**
+- annualized arithmetic mean: **37.5794%**
+- annualized volatility: **34.6032%**
+- Sharpe: **1.0860**
+- max drawdown: **-62.1427%**
+- positive months: **66.67%**
+- positive years: **30 / 41**
+- all three frozen folds had positive annualized mean
+- largest positive-currency contribution share: **39.30%**
+
+Mechanical classification:
+
+**SUPPORTED AS A GROSS PUBLIC-DATA APPROXIMATION**
+
+This does **not** authorize live trading. Costs, executable forward/futures prices, slippage, and real broker financing remain unmodeled. M027 is closed and may not be retuned.
