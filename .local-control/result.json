@@ -1,23 +1,137 @@
 {
   "version": 1,
-  "command_id": "mamba2-m027-stage2-full-native-v1",
-  "completed_at": "2026-09-30T19:19:36.774801+00:00",
+  "command_id": "mamba2-m027-stage2-economics-v1",
+  "completed_at": "2026-10-01T07:31:02.841296+00:00",
   "ok": true,
-  "action": "test_full_native",
+  "action": "m027_stage2_economics",
   "data": {
     "ok": true,
-    "run": {
-      "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest"
+    "feature_branch": "carry-aware-spot-tsmom",
+    "feature_sha": "ebd650204cb8d03d4eb144d2b3bc431f8b838409",
+    "reused_immutable_artifacts": false,
+    "artifact": {
+      "a_path": "backtest_data/m027-stage2-economics-v1/m027-stage2-a.json",
+      "b_path": "backtest_data/m027-stage2-economics-v1/m027-stage2-b.json",
+      "a_sha256": "08be7e8002410ad36e32caa98cb3cf6e66110bef2c24815b2c1582b96b957e00",
+      "b_sha256": "08be7e8002410ad36e32caa98cb3cf6e66110bef2c24815b2c1582b96b957e00",
+      "deterministic": true
+    },
+    "report": {
+      "calendar_years": {
+        "eligible": 41,
+        "positive": 30,
+        "positive_fraction": 0.7317073170731707
+      },
+      "classification": "SUPPORTED AS A GROSS PUBLIC-DATA APPROXIMATION",
+      "cost_label": "GROSS SPOT-PLUS-CARRY APPROXIMATION / TRANSACTION COSTS UNMODELED",
+      "currency_contribution": {
+        "AUD": 0.16521716106978337,
+        "CAD": 0.4631697969034052,
+        "CHF": 0.005636785614255988,
+        "CLP": 0.09975778790635555,
+        "CNY": 5.568415565021845,
+        "COP": 6.013473618577899,
+        "CZK": 0.10400534413311721,
+        "DKK": 0.17626751294086723,
+        "EUR": 0.11191275869060441,
+        "GBP": 0.061974688600726704,
+        "HUF": 0.07298685815487879,
+        "IDR": 0.03047468661624393,
+        "ILS": -0.047150528977904005,
+        "INR": 0.05671107031910645,
+        "ISK": 0.10594056566706593,
+        "JPY": 0.12005330072192008,
+        "KRW": 0.5337094158963522,
+        "MXN": -0.07421268444586034,
+        "NOK": 0.5880743595019144,
+        "NZD": 0.4249732110655239,
+        "PLN": 0.012468764573426681,
+        "RON": 0.273367704678082,
+        "RUB": 0.040516006128033494,
+        "SEK": 0.27269498596273756,
+        "ZAR": -0.05472472158981226
+      },
+      "eligible_currency_count": {
+        "max": 25,
+        "median": 22.0,
+        "min": 4
+      },
+      "evaluation_month_list_sha256": "c5cda6bb68904213dc46aa338887c19e7575e31cba8ab816e44469b81a3b4b40",
+      "folds": [
+        {
+          "annualized_arithmetic_mean": 0.46972723789656895,
+          "annualized_sharpe": 1.409319703176473,
+          "annualized_volatility": 0.333300695958375,
+          "first_month": "1980-02-29",
+          "last_month": "1993-06-30",
+          "maximum_drawdown": -0.43670226336350026,
+          "mean_monthly_return": 0.039143936491380746,
+          "name": "F1",
+          "observations": 161,
+          "positive_month_fraction": 0.7142857142857143,
+          "terminal_cumulative_wealth": 254.07985815039075
+        },
+        {
+          "annualized_arithmetic_mean": 0.6066053534582256,
+          "annualized_sharpe": 1.3821418658722684,
+          "annualized_volatility": 0.43888790900302954,
+          "first_month": "1993-07-31",
+          "last_month": "2006-11-30",
+          "maximum_drawdown": -0.5895611087505589,
+          "mean_monthly_return": 0.05055044612151881,
+          "name": "F2",
+          "observations": 161,
+          "positive_month_fraction": 0.7329192546583851,
+          "terminal_cumulative_wealth": 987.1164053636962
+        },
+        {
+          "annualized_arithmetic_mean": 0.05104981960649009,
+          "annualized_sharpe": 0.24632999567370575,
+          "annualized_volatility": 0.20724158853196192,
+          "first_month": "2006-12-31",
+          "last_month": "2020-04-30",
+          "maximum_drawdown": -0.6214266894048992,
+          "mean_monthly_return": 0.004254151633874174,
+          "name": "F3",
+          "observations": 161,
+          "positive_month_fraction": 0.5527950310559007,
+          "terminal_cumulative_wealth": 1.4859574299074436
+        }
       ],
-      "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 297 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  1%]\ntests/test_backtest_account_currency.py ............                     [  5%]\ntests/test_backtest_baseline_reporting.py ....                           [  6%]\ntests/test_backtest_diagnostics.py ....                                  [  8%]\ntests/test_backtest_execution.py .........                               [ 11%]\ntests/test_backtest_execution_costs.py ............                      [ 15%]\ntests/test_backtest_experiments.py .....                                 [ 16%]\ntests/test_backtest_foundation.py ..........                             [ 20%]\ntests/test_backtest_native_runtime.py ....                               [ 21%]\ntests/test_backtest_portfolio_runner.py .........                        [ 24%]\ntests/test_backtest_spread_execution.py ........                         [ 27%]\ntests/test_backtest_strategy_integration.py ..                           [ 27%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 29%]\ntests/test_cache_manager_security.py .........                           [ 32%]\ntests/test_config_security.py ...                                        [ 33%]\ntests/test_detect_trend.py ...                                           [ 34%]\ntests/test_m020_decision_spread.py ...                                   [ 35%]\ntests/test_m020_diagnostics.py ....                                      [ 37%]\ntests/test_m020_spread_treatment.py ...                                  [ 38%]\ntests/test_m021_forward_validation.py ...........                        [ 41%]\ntests/test_m025_stage3_ingestion.py ..........                           [ 45%]\ntests/test_m025_stage4_economics.py ..........                           [ 48%]\ntests/test_m027_carry_aware_tsmom.py .........                           [ 51%]\ntests/test_m027_stage1_ingestion.py ..                                   [ 52%]\ntests/test_m027_stage2.py ......                                         [ 54%]\ntests/test_mt5__broker.py ......                                         [ 56%]\ntests/test_mt5_dataset.py ..............                                 [ 60%]\ntests/test_parameter_research.py .............................           [ 70%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 78%]\n.                                                                        [ 78%]\ntests/test_public_benchmarks.py .......................                  [ 86%]\ntests/test_rates.py .......                                              [ 88%]\ntests/test_replay_indicator_cache.py ..                                  [ 89%]\ntests/test_stochastic_indicator.py ....                                  [ 90%]\ntests/test_trend_line.py ..                                              [ 91%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n=============================== warnings summary ===============================\ntests/test_m025_stage4_economics.py::test_h10_proxy_uses_exact_23_series_and_reports_valid_counts\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_monthly_summary_formulas_are_frozen\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_canonical_monthly_series_refuses_duplicate_months\n  /home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py:94: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.\n    return index.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\n  /home/joel/Dev/mamba2-trading-bot/tests/test_m025_stage4_economics.py:71: UserWarning: Converting to Period representation will drop timezone information.\n    earlier = control.index < cutoff.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\ntests/test_m027_stage2.py::test_readiness_reports_no_return_values_or_economics\ntests/test_m027_stage2.py::test_stage2_economics_is_deterministic_on_synthetic_data\ntests/test_m027_stage2.py::test_stage2_economics_is_deterministic_on_synthetic_data\ntests/test_m027_stage2.py::test_stage2_economics_is_deterministic_on_synthetic_data\ntests/test_m027_stage2.py::test_stage2_economics_refuses_month_list_hash_mismatch\n  /home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m027_stage2.py:114: UserWarning: Converting to Period representation will drop timezone information.\n    previous.to_period(\"M\") + 1\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n================= 297 passed, 2 skipped, 13 warnings in 4.21s ==================\n",
-      "stderr": ""
+      "label": "CARRY-AWARE SPOT TSMOM \u2014 PUBLIC-DATA APPROXIMATION",
+      "largest_positive_currency_contribution_share": 0.3929912070958048,
+      "safety": {
+        "currency_subset_search_run": false,
+        "lag_search_run": false,
+        "m021_post_cutoff_outcomes_used": false,
+        "m024_holdout_reused": false,
+        "real_order_api_called": false,
+        "sign_search_run": false,
+        "source_refreshed": false,
+        "subperiod_search_run": false
+      },
+      "summary": {
+        "annualized_arithmetic_mean": 0.3757941369870949,
+        "annualized_sharpe": 1.0860095666214589,
+        "annualized_volatility": 0.34603206871941145,
+        "first_month": "1980-02-29",
+        "last_month": "2020-04-30",
+        "maximum_drawdown": -0.6214266894048992,
+        "mean_monthly_return": 0.03131617808225791,
+        "observations": 483,
+        "positive_month_fraction": 0.6666666666666666,
+        "terminal_cumulative_wealth": 372687.6279800574
+      }
+    },
+    "safety": {
+      "currency_subset_search_run": false,
+      "lag_search_run": false,
+      "m021_post_cutoff_outcomes_used": false,
+      "m024_holdout_reused": false,
+      "real_order_api_called": false,
+      "sign_search_run": false,
+      "source_refreshed": false,
+      "subperiod_search_run": false
     }
   }
 }
