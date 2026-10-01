@@ -1241,3 +1241,77 @@ rerun, and M021 post-cutoff use.
 
 The Stage-3 protocol remains unchanged. The source gate may be checked again
 before or at the scheduled decision, but there is no early decision.
+## Stage-3 pre-decision implementation accepted — 2026-10-01
+
+Accepted feature SHA:
+
+`499e088e8d77bdf7fff81f34b549ae93c5c7e8be`
+
+Feature additions:
+
+- `mamba2/backtest/m028_prospective.py`
+- prospective time-gate/source-snapshot tests
+- complete shadow-target assembly in `m028_forward_paper.py`
+
+Current-head focused validation:
+
+- result commit: `974923abe050111fd2a34bc51a5947d908a5a307`
+- **24 passed**
+- `py_compile`: **PASS**
+- live source signal computed: **false**
+- broker initialized: **false**
+- forward outcome computed: **false**
+
+Current-head full native regression:
+
+- result commit: `d2c4dd30995e9d08c5c801ee9b903b0dd6d96d4a`
+- **321 passed**
+- **2 skipped**
+- **13 existing warnings**
+
+Control runner:
+
+- first-decision action commit: `e0c1da02ddd5c7615bc4720aebd4fea19e57eb15`
+- action: `m028_stage3_first_decision`
+- durable append-only local decision path:
+  `~/.local/share/mamba2-forward-paper/2026-10-decision.json`
+- if the record already exists, the runner returns that exact record instead
+  of recomputing the October decision.
+
+Pre-decision time-gate validation:
+
+- command: `mamba2-m028-stage3-first-decision-time-gate-v1`
+- result commit: `cda8ac731253060ca4d1f5de5bf64f7394e9b73b`
+- result: **TIME_GATE_NOT_OPEN**
+- scheduled decision: **2026-10-07T12:00:00Z**
+- observed check time: **2026-10-01T12:32:18.456505Z**
+
+The gate validation reported:
+
+- live source signal computed: **false**
+- target side computed: **false**
+- target lots computed: **false**
+- forward strategy outcome computed: **false**
+- real order API called: **false**
+- order validation called: **false**
+- position change called: **false**
+- trade history read: **false**
+- balance/equity returned: **false**
+- M027 economics rerun: **false**
+- M021 post-cutoff outcomes used: **false**
+
+### Pre-decision stop point
+
+All implementation work that can be completed without observing the first
+prospective signal is now complete.
+
+Before 2026-10-07T12:00:00Z the only permitted M028 runtime operation is the
+Stage-3A readiness probe. It may be rerun to determine whether BIS has
+published the required 2026-09-30 spot date.
+
+Even if readiness becomes `READY_FOR_SCHEDULED_DECISION`, no October signal
+or target may be generated early.
+
+At or after the scheduled timestamp, run the first-decision action exactly
+once. A flat decision caused by a failed gate is still the immutable October
+decision; there is no later October retry.
