@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "command_id": "mamba2-m028-stage1-execution-evidence-v1",
-  "completed_at": "2026-10-01T09:25:38.323034+00:00",
+  "command_id": "mamba2-m028-stage1-execution-evidence-v2",
+  "completed_at": "2026-10-01T09:59:10.432137+00:00",
   "ok": false,
-  "action": "m028_stage1_execution_evidence_probe",
+  "action": "m028_stage1_execution_evidence_probe_v2",
   "data": {
     "ok": false,
     "feature_branch": "execution-realism",
-    "feature_sha": "b74113ca1269158fa7044cf9074194ed3173b475",
-    "probe": null,
-    "run": {
-      "exit_code": -9,
+    "feature_sha": "2abec5c87c4a21ee50b825e51b768a1e28150220",
+    "reason": "Stage-1 v2 current quote/margin snapshot failed",
+    "snapshot_run": {
+      "exit_code": 0,
       "timed_out": true,
-      "stderr": "\nlocal-control hard-killed process group after 180s\n"
+      "stderr": "\nlocal-control hard-killed process group after 60s\n"
     },
     "safety": {
       "market_data_read_only": true,
@@ -21,7 +21,6 @@
       "order_send_called": false,
       "position_change_api_called": false,
       "trade_history_read": false,
-      "account_balance_or_equity_returned": false,
       "strategy_replay_run": false,
       "m027_economics_rerun": false,
       "m021_post_cutoff_outcomes_used": false
