@@ -814,3 +814,39 @@ economics have been run.
 Stage-1 closeout commit:
 
 `08e795a1ce90563642c0403c0266fffa4307fc4d`
+## M028 ready for first prospective decision
+
+Branch: `execution-realism`
+
+Pre-decision feature SHA:
+
+`499e088e8d77bdf7fff81f34b549ae93c5c7e8be`
+
+Stage-1 path remains:
+
+**FORWARD_PAPER_ONLY**
+
+Stage-2/3 implementation validation:
+
+- focused: **24 passed**
+- full native: **321 passed / 2 skipped**
+- no live-source signal or forward outcome has been observed.
+
+Latest readiness:
+
+- BIS spot last date: **2026-09-29**
+- required: **2026-09-30**
+- OECD rates: **2026-08**, requirement satisfied
+- broker quote+margin readiness: **8 / 8**
+- classification: **SOURCE_NOT_READY**
+
+First decision:
+
+- ID: `2026-10`
+- scheduled: **2026-10-07T12:00:00Z**
+- time gate independently verified on 2026-10-01
+- control action: `m028_stage3_first_decision`
+- append-only/recoverable; no recomputation after a record exists.
+
+No M028 strategy work beyond source-readiness checks is authorized before
+the scheduled decision.
