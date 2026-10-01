@@ -584,3 +584,29 @@ Implementation repair is permitted without changing the frozen Stage-1 protocol:
 split current quote/margin inspection from historical tick checkpoints and bound
 each historical-symbol probe independently so one slow MT5 history request cannot
 block the complete evidence stage.
+## Stage-1 v2 harness result — NO EVIDENCE ACCEPTED
+
+Command:
+
+`mamba2-m028-stage1-execution-evidence-v2`
+
+Result commit:
+
+`75f52146830ebbb16ae8e0e8e0e6802700c77694`
+
+Outcome:
+
+- snapshot process exit code: **0**
+- helper timed out: **true** after 60 seconds
+- probe payload: **none**
+- path classification: **not produced**
+
+The zero exit code plus timeout indicates the Wine/MT5 parent completed but
+descendant processes retained PIPE-backed descriptors. This is a transport/
+publication-harness problem, not a broker-evidence or strategy result.
+
+No Stage-1 v2 evidence is accepted.
+
+Implementation repair is permitted without changing the Stage-1 protocol:
+use file-backed JSON output with non-PIPE standard streams so Wine descendants
+cannot keep result transport open after the probe process completes.
