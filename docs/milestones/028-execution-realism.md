@@ -549,3 +549,38 @@ Forbidden:
 - M021 post-cutoff outcome use.
 
 No merge/deploy/live trading is authorized.
+## Stage-1 v1 harness result — NO EVIDENCE ACCEPTED
+
+Command:
+
+`mamba2-m028-stage1-execution-evidence-v1`
+
+Result commit:
+
+`4b54cac700749c90655bf2ee8dd243fffbb8f2f0`
+
+Outcome:
+
+- process exit: **-9**
+- hard timeout: **180 seconds**
+- probe payload: **none**
+- path classification: **not produced**
+
+This is a control-harness timeout, not a failed strategy or broker-evidence gate.
+
+No Stage-1 evidence from v1 is accepted.
+
+Safety remained intact:
+
+- read-only market-data path only;
+- no order placement or validation;
+- no position changes;
+- no trade-history reads;
+- no strategy replay;
+- no M027 rerun;
+- no M021 post-cutoff outcome use.
+
+Implementation repair is permitted without changing the frozen Stage-1 protocol:
+split current quote/margin inspection from historical tick checkpoints and bound
+each historical-symbol probe independently so one slow MT5 history request cannot
+block the complete evidence stage.
