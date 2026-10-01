@@ -1,51 +1,54 @@
 # Next Authorized Task
 
-## M028 Stage 2 — freeze forward-paper implementation contract
+## M028 — await first prospective paper decision
 
-Stage-1 accepted result:
+Current pre-decision feature SHA:
 
-`bf90b33409aa78d303d0928404e73f3d1a7da1bf`
+`499e088e8d77bdf7fff81f34b549ae93c5c7e8be`
 
-Stage-1 classification:
+Latest readiness result:
 
-**FORWARD_PAPER_ONLY**
+`8b715961e58c2e8a56069d26c780db52d46b194c`
 
-Before any paper strategy outcome is observed, freeze the exact forward-paper
-implementation contract.
+Current readiness:
 
-The contract must preserve M027 rather than retune it:
+**SOURCE_NOT_READY**
 
-- 12 completed calendar months for the time-series-momentum signal;
-- monthly decision/rebalance cadence;
-- 40% per-instrument ex-ante volatility target;
-- EWMA decay 60/61 and annualization 261;
-- equal weighting across mechanically eligible currencies;
-- no side/session/weekday/lookback/threshold optimization;
-- no performance-based currency pruning.
+Reason:
 
-Execution universe may start only from the eight Stage-1 mechanically viable
-currencies: AUD, CAD, CHF, EUR, GBP, JPY, NZD, SEK.
+- BIS currently reaches **2026-09-29**;
+- October requires BIS through **2026-09-30**;
+- OECD **2026-08** requirement already passes;
+- all eight fixed broker currencies currently pass quote+margin readiness.
 
-Stage 2 must prospectively define:
+Before the scheduled decision, the only authorized action is:
 
-- how M027 public-data signals are translated into broker pair direction;
-- exact monthly decision timestamp and first eligible forward-paper month;
-- paper position sizing under observed 100:1 margin evidence;
-- gross-leverage ceiling and handling of infeasible target weights;
-- bid/ask paper-entry and paper-exit marking;
-- prospective spread/slippage recording;
-- treatment of broker swap versus M027 carry so carry is not double-counted;
-- commission status and how unknown commission is reported;
-- immutable paper ledger/report schema;
-- minimum observation period before any performance conclusion.
+`m028_stage3_readiness`
 
-Stage 2 is specification/implementation only until that contract is frozen.
+It may be rerun to check whether the fixed source gate has become ready. It
+must not compute formation signs, target sides/lots, or P/L.
 
-Safety:
+First decision timestamp:
 
-- paper/shadow accounting only;
-- no live order placement or position modification;
-- no retrospective net-cost economics;
-- no M027 retuning or rerun;
+**2026-10-07T12:00:00Z**
+
+At or after that timestamp, run exactly:
+
+`m028_stage3_first_decision`
+
+The action is time-gated and append-only. It creates or returns the single
+`2026-10` decision record. Do not change parameters, sources, universe,
+leverage/margin caps, or timing before that run.
+
+After the first record exists, document its result before authorizing any
+holding-period mark or subsequent monthly decision.
+
+Safety remains:
+
+- paper/shadow only;
+- no real orders or position changes;
+- no trade-history/balance/equity reads;
+- no retrospective M028 net economics;
+- no M027 rerun;
 - no M021 post-cutoff outcome use;
 - no merge/deploy/live promotion.
