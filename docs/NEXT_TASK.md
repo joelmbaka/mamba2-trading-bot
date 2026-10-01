@@ -1,34 +1,35 @@
 # Next Authorized Task
 
-## M028 Stage 0 — read-only broker metadata probe
+## M028 Stage 1 — execution evidence only
 
-M028 protocol freeze:
+Stage-0 accepted result:
 
-`ed5effc7c3ac5df739fb80df7ed60b1a3409c8bd`
+`3258372afbf11aa8178cddd54c61b810c5e514d6`
 
-Run exactly one metadata-only probe against the currently authenticated MT5
-terminal on the Dell research machine.
+Stage-1 protocol freeze:
 
-The probe must:
+`13507ae2bb06af4daa24f4df70b97a11a8606fa9`
 
-- use the frozen 25-currency M027 universe;
-- map direct-USD symbols only from MT5 base/profit currency metadata;
-- record current non-sensitive execution metadata;
-- record account leverage/currency/margin mode without balance/equity/login;
-- classify every currency as mapped, unavailable, or ambiguous;
-- hash the accepted mapped universe;
-- report commission as unproven unless directly exposed by allowed metadata;
-- report no strategy economics.
+Run exactly one read-only Stage-1 evidence probe.
+
+It must:
+
+- start only from the frozen 22-symbol Stage-0 mapping;
+- mechanically classify current quote viability using the frozen 300-second relative-freshness rule;
+- query only the seven frozen one-hour tick-history checkpoints;
+- report spread metadata only, never returns or P/L;
+- calculate only read-only 1.00-lot BUY/SELL margin requirements;
+- keep commission **UNPROVEN**;
+- keep historical swap evidence **UNPROVEN** unless a true series exists;
+- classify the path as `FORWARD_PAPER_NOT_READY`, `FORWARD_PAPER_ONLY`, or `RETROSPECTIVE_NET_EXECUTION_READY` under the frozen rules.
 
 Safety:
 
-- no order APIs;
-- no order/position changes;
-- no trade-history inspection;
-- no M027 economics;
-- no M021 post-cutoff outcomes;
+- read-only market and margin metadata only;
+- no order placement or order validation;
+- no position changes;
+- no trade-history reads;
+- no strategy replay/economics;
+- no M027 rerun;
+- no M021 post-cutoff outcome use;
 - no merge/deploy/live trading.
-
-After the first accepted Stage-0 output, freeze the broker-availability result
-before investigating commission, swap history/forward observation, historical
-spread fidelity, or leverage implementation.
