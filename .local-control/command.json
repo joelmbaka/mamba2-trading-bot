@@ -1,7 +1,9 @@
 {
   "version": 1,
-  "id": "mamba2-m027-stage2-economics-v1",
-  "action": "m027_stage2_economics",
-  "args": {},
+  "id": "mamba2-m028-switch-execution-realism-v1",
+  "action": "switch_branch",
+  "args": {
+    "branch": "execution-realism"
+  },
   "requested_by": "chatgpt"
 }
