@@ -1,23 +1,95 @@
 {
   "version": 1,
-  "command_id": "mamba2-m028-stage2-full-native-v1",
-  "completed_at": "2026-10-01T12:19:35.294359+00:00",
+  "command_id": "mamba2-m028-stage3-readiness-v1",
+  "completed_at": "2026-10-01T12:23:55.530344+00:00",
   "ok": true,
-  "action": "test_full_native",
+  "action": "m028_stage3_readiness",
   "data": {
     "ok": true,
-    "run": {
+    "feature_branch": "execution-realism",
+    "feature_sha": "ee539fc5ca70faaef13fd0992e6f5ed3baf0bd88",
+    "scheduled_decision_utc": "2026-10-07T12:00:00Z",
+    "decision_id": "2026-10",
+    "source": {
+      "bis_raw_sha256": "6a2c6caf983021f1bc79f9a14e249387717e2fc85402a42d2320f40b12da6359",
+      "oecd_raw_sha256": "af54f1cf8677a0b2bd9c204210ad9b1f72d7bb669dce2e6e3c23f513be6cbed9",
+      "rate_last_month": "2026-08",
+      "required_rate_month": "2026-08",
+      "required_spot_through": "2026-09-30",
+      "source_gate_pass": false,
+      "spot_last_date": "2026-09-29",
+      "strategy_signal_computed": false
+    },
+    "broker": {
+      "broker_gate_pass": true,
+      "joint_viable_count": 8,
+      "joint_viable_currencies": [
+        "AUD",
+        "CAD",
+        "CHF",
+        "EUR",
+        "GBP",
+        "JPY",
+        "NZD",
+        "SEK"
+      ],
+      "margin_viable_count": 8,
+      "margin_viable_currencies": [
+        "AUD",
+        "CAD",
+        "CHF",
+        "EUR",
+        "GBP",
+        "JPY",
+        "NZD",
+        "SEK"
+      ],
+      "minimum_required": 4,
+      "quote_viable_count": 8,
+      "quote_viable_currencies": [
+        "AUD",
+        "CAD",
+        "CHF",
+        "EUR",
+        "GBP",
+        "JPY",
+        "NZD",
+        "SEK"
+      ],
+      "strategy_signal_computed": false,
+      "target_lots_computed": false,
+      "target_side_computed": false
+    },
+    "readiness_classification": "SOURCE_NOT_READY",
+    "source_run": {
+      "exit_code": 0,
+      "timed_out": false,
+      "stderr": ""
+    },
+    "broker_run": {
       "command": [
-        "/home/joel/.local/bin/uv",
-        "run",
-        "--locked",
-        "python",
-        "-m",
-        "pytest"
+        "/usr/bin/wine",
+        "Z:\\home\\joel\\Dev\\mamba2-trading-bot\\.venv-wine\\Scripts\\python.exe",
+        "-c",
+        "\nimport json\nimport math\nimport os\nfrom pathlib import Path\nimport MetaTrader5 as mt5\nfrom config import mt5 as mt5_config\nfrom mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs\n\nMAPPING = {\n    \"AUD\": \"AUDUSD\",\n    \"CAD\": \"USDCAD\",\n    \"CHF\": \"USDCHF\",\n    \"EUR\": \"EURUSD\",\n    \"GBP\": \"GBPUSD\",\n    \"JPY\": \"USDJPY\",\n    \"NZD\": \"NZDUSD\",\n    \"SEK\": \"USDSEK\",\n}\nOUT = Path(os.environ[\"M028_OUTPUT\"])\n\ndef positive(value):\n    try:\n        number = float(value)\n    except (TypeError, ValueError):\n        return False\n    return math.isfinite(number) and number > 0.0\n\nif not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):\n    raise RuntimeError(\"MT5 initialize failed for M028 Stage-3 readiness\")\n\ntemporary = []\ntry:\n    rows = {}\n    positive_times = []\n\n    for currency, symbol in MAPPING.items():\n        info = mt5.symbol_info(symbol)\n        if info is None:\n            rows[currency] = {\n                \"symbol\": symbol,\n                \"quote_viable\": False,\n                \"margin_viable\": False,\n                \"reason\": \"NO_SYMBOL_METADATA\",\n            }\n            continue\n\n        was_visible = bool(getattr(info, \"visible\", False))\n        tick = mt5.symbol_info_tick(symbol)\n        if tick is None:\n            selected = bool(mt5.symbol_select(symbol, True))\n            if selected and not was_visible:\n                temporary.append(symbol)\n            tick = mt5.symbol_info_tick(symbol)\n\n        bid = float(getattr(tick, \"bid\", 0.0) or 0.0) if tick is not None else 0.0\n        ask = float(getattr(tick, \"ask\", 0.0) or 0.0) if tick is not None else 0.0\n        raw_time = getattr(tick, \"time\", None) if tick is not None else None\n        try:\n            raw_time = int(raw_time) if raw_time is not None else None\n        except (TypeError, ValueError):\n            raw_time = None\n\n        valid_quote = (\n            positive(bid)\n            and positive(ask)\n            and ask >= bid\n            and raw_time is not None\n            and raw_time > 0\n        )\n        if valid_quote:\n            positive_times.append(raw_time)\n\n        rows[currency] = {\n            \"symbol\": symbol,\n            \"bid\": bid,\n            \"ask\": ask,\n            \"tick_time_epoch\": raw_time,\n            \"valid_positive_quote\": bool(valid_quote),\n        }\n\n    reference = max(positive_times) if positive_times else None\n    quote_viable = []\n    margin_viable = []\n    joint_viable = []\n\n    for currency, row in rows.items():\n        raw_time = row.get(\"tick_time_epoch\")\n        lag = (\n            None\n            if reference is None or raw_time is None\n            else int(reference) - int(raw_time)\n        )\n        quote_ok = (\n            bool(row.get(\"valid_positive_quote\"))\n            and lag is not None\n            and 0 <= lag <= 300\n        )\n        row[\"seconds_behind_reference\"] = lag\n        row[\"quote_viable\"] = quote_ok\n\n        margin_ok = False\n        if quote_ok:\n            symbol = row[\"symbol\"]\n            buy = mt5.order_calc_margin(\n                mt5.ORDER_TYPE_BUY,\n                symbol,\n                1.0,\n                float(row[\"ask\"]),\n            )\n            sell = mt5.order_calc_margin(\n                mt5.ORDER_TYPE_SELL,\n                symbol,\n                1.0,\n                float(row[\"bid\"]),\n            )\n            margin_ok = positive(buy) and positive(sell)\n\n        row[\"margin_viable\"] = bool(margin_ok)\n\n        if quote_ok:\n            quote_viable.append(currency)\n        if margin_ok:\n            margin_viable.append(currency)\n        if quote_ok and margin_ok:\n            joint_viable.append(currency)\n\n    OUT.write_text(json.dumps({\n        \"quote_viable_currencies\": sorted(quote_viable),\n        \"quote_viable_count\": len(quote_viable),\n        \"margin_viable_currencies\": sorted(margin_viable),\n        \"margin_viable_count\": len(margin_viable),\n        \"joint_viable_currencies\": sorted(joint_viable),\n        \"joint_viable_count\": len(joint_viable),\n        \"minimum_required\": 4,\n        \"broker_gate_pass\": len(joint_viable) >= 4,\n        \"strategy_signal_computed\": False,\n        \"target_side_computed\": False,\n        \"target_lots_computed\": False,\n    }, sort_keys=True), encoding=\"utf-8\")\nfinally:\n    for symbol in temporary:\n        try:\n            mt5.symbol_select(symbol, False)\n        except Exception:\n            pass\n    mt5.shutdown()\n"
       ],
       "exit_code": 0,
-      "stdout": "============================= test session starts ==============================\nplatform linux -- Python 3.10.19, pytest-8.4.0, pluggy-1.6.0\nrootdir: /home/joel/Dev/mamba2-trading-bot\nconfigfile: pyproject.toml\nplugins: asyncio-1.0.0\nasyncio: mode=strict, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollected 314 items / 2 skipped\n\ntests/test_atr_manager.py ....                                           [  1%]\ntests/test_backtest_account_currency.py ............                     [  5%]\ntests/test_backtest_baseline_reporting.py ....                           [  6%]\ntests/test_backtest_diagnostics.py ....                                  [  7%]\ntests/test_backtest_execution.py .........                               [ 10%]\ntests/test_backtest_execution_costs.py ............                      [ 14%]\ntests/test_backtest_experiments.py .....                                 [ 15%]\ntests/test_backtest_foundation.py ..........                             [ 19%]\ntests/test_backtest_native_runtime.py ....                               [ 20%]\ntests/test_backtest_portfolio_runner.py .........                        [ 23%]\ntests/test_backtest_spread_execution.py ........                         [ 25%]\ntests/test_backtest_strategy_integration.py ..                           [ 26%]\ntests/test_backtest_strategy_lifecycle.py .....                          [ 28%]\ntests/test_cache_manager_security.py .........                           [ 30%]\ntests/test_config_security.py ...                                        [ 31%]\ntests/test_detect_trend.py ...                                           [ 32%]\ntests/test_m020_decision_spread.py ...                                   [ 33%]\ntests/test_m020_diagnostics.py ....                                      [ 35%]\ntests/test_m020_spread_treatment.py ...                                  [ 35%]\ntests/test_m021_forward_validation.py ...........                        [ 39%]\ntests/test_m025_stage3_ingestion.py ..........                           [ 42%]\ntests/test_m025_stage4_economics.py ..........                           [ 45%]\ntests/test_m027_carry_aware_tsmom.py .........                           [ 48%]\ntests/test_m027_stage1_ingestion.py ..                                   [ 49%]\ntests/test_m027_stage2.py ......                                         [ 51%]\ntests/test_m028_forward_paper.py .................                       [ 56%]\ntests/test_mt5__broker.py ......                                         [ 58%]\ntests/test_mt5_dataset.py ..............                                 [ 63%]\ntests/test_parameter_research.py .............................           [ 72%]\ntests/test_position_manager_trailing_semantics.py ...................... [ 79%]\n.                                                                        [ 79%]\ntests/test_public_benchmarks.py .......................                  [ 86%]\ntests/test_rates.py .......                                              [ 89%]\ntests/test_replay_indicator_cache.py ..                                  [ 89%]\ntests/test_stochastic_indicator.py ....                                  [ 91%]\ntests/test_trend_line.py ..                                              [ 91%]\ntests/test_triple_cross_condition_semantics.py ......................... [ 99%]\n.                                                                        [100%]\n\n=============================== warnings summary ===============================\ntests/test_m025_stage4_economics.py::test_h10_proxy_uses_exact_23_series_and_reports_valid_counts\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\ntests/test_m025_stage4_economics.py::test_monthly_summary_formulas_are_frozen\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_comparison_uses_only_zero_lag_common_months\ntests/test_m025_stage4_economics.py::test_canonical_monthly_series_refuses_duplicate_months\n  /home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m025_stage4_economics.py:94: UserWarning: Converting to PeriodArray/Index representation will drop timezone information.\n    return index.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\ntests/test_m025_stage4_economics.py::test_h10_future_mutation_cannot_change_earlier_proxy_returns\n  /home/joel/Dev/mamba2-trading-bot/tests/test_m025_stage4_economics.py:71: UserWarning: Converting to Period representation will drop timezone information.\n    earlier = control.index < cutoff.to_period(\"M\").to_timestamp(\"M\").tz_localize(\"UTC\")\n\ntests/test_m027_stage2.py::test_readiness_reports_no_return_values_or_economics\ntests/test_m027_stage2.py::test_stage2_economics_is_deterministic_on_synthetic_data\ntests/test_m027_stage2.py::test_stage2_economics_is_deterministic_on_synthetic_data\ntests/test_m027_stage2.py::test_stage2_economics_is_deterministic_on_synthetic_data\ntests/test_m027_stage2.py::test_stage2_economics_refuses_month_list_hash_mismatch\n  /home/joel/Dev/mamba2-trading-bot/mamba2/backtest/m027_stage2.py:114: UserWarning: Converting to Period representation will drop timezone information.\n    previous.to_period(\"M\") + 1\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n================= 314 passed, 2 skipped, 13 warnings in 4.61s ==================\n",
-      "stderr": ""
+      "timed_out": false
+    },
+    "safety": {
+      "strategy_signal_computed": false,
+      "formation_sign_reported": false,
+      "volatility_reported": false,
+      "target_side_computed": false,
+      "target_lots_computed": false,
+      "forward_strategy_outcome_computed": false,
+      "real_order_api_called": false,
+      "order_check_called": false,
+      "position_change_api_called": false,
+      "trade_history_read": false,
+      "balance_or_equity_returned": false,
+      "m027_economics_rerun": false,
+      "m021_post_cutoff_outcomes_used": false
     }
   }
 }
