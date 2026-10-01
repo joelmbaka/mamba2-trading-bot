@@ -610,3 +610,105 @@ No Stage-1 v2 evidence is accepted.
 Implementation repair is permitted without changing the Stage-1 protocol:
 use file-backed JSON output with non-PIPE standard streams so Wine descendants
 cannot keep result transport open after the probe process completes.
+## Stage-1 accepted result — FORWARD_PAPER_ONLY
+
+Accepted command:
+
+`mamba2-m028-stage1-execution-evidence-v3`
+
+Accepted result commit:
+
+`bf90b33409aa78d303d0928404e73f3d1a7da1bf`
+
+Feature SHA:
+
+`2dcbdb5e05c5f7e9a1a06fb711f0c9f85bfd7455`
+
+Implementation:
+
+`v3-file-backed-bounded`
+
+### Frozen gate result
+
+- current quote-viable currencies: **8**
+- quote gate minimum: **4**
+- quote gate: **PASS**
+- valid current margin currencies: **8**
+- margin gate minimum: **4**
+- margin gate: **PASS**
+- commission proven: **false**
+- historical swap proven: **false**
+- path classification: **FORWARD_PAPER_ONLY**
+
+Quote- and margin-viable currencies:
+
+`AUD, CAD, CHF, EUR, GBP, JPY, NZD, SEK`
+
+### Observed 1.00-lot margin requirements in account currency
+
+- AUDUSD: BUY **694.13**, SELL **694.12**
+- USDCAD: BUY **1000.00**, SELL **1000.00**
+- USDCHF: BUY **1000.00**, SELL **1000.00**
+- EURUSD: BUY **1129.55**, SELL **1129.55**
+- GBPUSD: BUY **1321.83**, SELL **1321.82**
+- USDJPY: BUY **1000.00**, SELL **1000.00**
+- NZDUSD: BUY **560.97**, SELL **560.96**
+- USDSEK: BUY **1000.00**, SELL **1000.00**
+
+These are current MetaQuotes-Demo margin calculations only. They are not
+historical margin evidence and do not authorize live trading.
+
+### Historical tick checkpoint evidence
+
+The seven prospectively frozen one-hour checkpoints were successfully returned
+for **AUD, CAD, EUR, GBP, JPY**. Every returned tick in those successful
+windows had finite positive Bid/Ask values.
+
+Historical retrieval timed out with no accepted payload for:
+
+`CHF, NZD, SEK`
+
+This partial tick-history result does not upgrade the path to retrospective
+execution readiness. It is retained only as execution-data evidence.
+
+Representative observed median spread-point evolution across the successful
+checkpoint set:
+
+- AUDUSD: roughly **4 points** in 2025-10/2026-01, falling to about **1 point**
+  by the 2026-07 through 2026-09 checkpoints;
+- USDCAD: roughly **4 points** in 2025-10 through 2026-04, then generally
+  around **0–1 point** in later checkpoints;
+- EURUSD and GBPUSD: several later checkpoint medians are **0 points** in the
+  broker tick feed; this is recorded as observed data and must not be
+  interpreted as proof of zero executable cost;
+- USDJPY: checkpoint medians generally ranged from about **1–4 points**.
+
+### Stage-1 conclusion
+
+Stage 1 mechanically supports a forward-paper path for the eight viable
+currencies above.
+
+Stage 1 does **not** support a retrospective net-execution backtest because:
+
+1. commission remains unproven;
+2. historical swap/financing remains unproven;
+3. three viable symbols did not complete the frozen historical tick probe;
+4. today's broker settings must not be retrofitted onto M027's 1980–2020 history.
+
+No M028 strategy economics have been run.
+
+### Safety evidence
+
+- market-data path read-only: **true**
+- margin calculation only: **true**
+- order validation: **not called**
+- order placement: **not called**
+- position changes: **not called**
+- trade history read: **false**
+- balance/equity returned: **false**
+- strategy replay run: **false**
+- M027 economics rerun: **false**
+- M021 post-cutoff outcomes used: **false**
+
+Stage-1 is now closed. Do not rerun or retune it to improve coverage or
+execution-data appearance.
