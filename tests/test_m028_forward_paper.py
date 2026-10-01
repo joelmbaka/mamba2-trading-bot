@@ -21,6 +21,7 @@ from mamba2.backtest.m028_forward_paper import (
     seal_decision_record,
     source_gate_ready,
     usd_notional_to_lots,
+    build_shadow_target_plan,
 )
 
 
@@ -175,3 +176,92 @@ def test_decision_record_hash_is_canonical_and_sealed():
     assert decision_record_sha256(a) == decision_record_sha256(b)
     sealed = seal_decision_record(a)
     assert sealed["decision_record_sha256"] == decision_record_sha256(sealed)
+
+
+
+def _synthetic_signal_snapshot(vol=0.20):
+    currencies = {}
+    for index, code in enumerate(
+        ("AUD", "CAD", "CHF", "EUR", "GBP", "JPY", "NZD", "SEK")
+    ):
+        sign = 1 if index % 2 == 0 else -1
+        currencies[code] = {
+            "signal_eligible": True,
+            "formation_value": float(sign),
+            "formation_sign": sign,
+            "annualized_ex_ante_volatility": vol,
+        }
+    return {"currencies": currencies}
+
+
+def _synthetic_broker_snapshot():
+    prices = {
+        "AUD": (0.6999, 0.7001),
+        "CAD": (1.3999, 1.4001),
+        "CHF": (0.7999, 0.8001),
+        "EUR": (1.0999, 1.1001),
+        "GBP": (1.2999, 1.3001),
+        "JPY": (149.99, 150.01),
+        "NZD": (0.5999, 0.6001),
+        "SEK": (9.999, 10.001),
+    }
+    result = {}
+    for code, (bid, ask) in prices.items():
+        result[code] = {
+            "quote_viable": True,
+            "bid": bid,
+            "ask": ask,
+            "contract_size": 100_000.0,
+            "volume_min": 0.01,
+            "volume_max": 500.0,
+            "volume_step": 0.01,
+            "buy_margin_per_lot": 1000.0,
+            "sell_margin_per_lot": 1000.0,
+        }
+    return result
+
+
+def test_shadow_target_plan_builds_ready_eight_currency_portfolio():
+    result = build_shadow_target_plan(
+        _synthetic_signal_snapshot(),
+        _synthetic_broker_snapshot(),
+    )
+
+    assert result["status"] == "FORWARD_PAPER_READY"
+    assert result["eligible_count"] == 8
+    assert result["gross_scale"] == pytest.approx(1.0)
+    assert result["projected_margin_usd"] > 0
+    assert result["projected_margin_usd"] <= 2500.0
+    assert result["cost_evidence"]["net_pnl"] is None
+    assert all(
+        row["final_target_lots"] > 0
+        for row in result["targets"].values()
+    )
+
+
+def test_shadow_target_plan_applies_common_gross_cap():
+    result = build_shadow_target_plan(
+        _synthetic_signal_snapshot(vol=0.05),
+        _synthetic_broker_snapshot(),
+    )
+
+    assert result["status"] == "FORWARD_PAPER_READY"
+    assert result["gross_leverage_before_cap"] == pytest.approx(8.0)
+    assert result["gross_leverage_after_cap"] == pytest.approx(4.0)
+    assert result["gross_scale"] == pytest.approx(0.5)
+
+
+def test_shadow_target_plan_flattens_when_broker_gate_drops_below_four():
+    broker = _synthetic_broker_snapshot()
+    for code in ("GBP", "JPY", "NZD", "SEK", "EUR"):
+        broker[code]["quote_viable"] = False
+
+    result = build_shadow_target_plan(
+        _synthetic_signal_snapshot(),
+        broker,
+    )
+
+    assert result["status"] == "FORWARD_PAPER_NOT_READY"
+    assert result["reason"] == "FEWER_THAN_4_PRE_SIZING_ELIGIBLE"
+    assert result["eligible_count"] == 3
+    assert result["targets"] == {}
