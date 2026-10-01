@@ -1,33 +1,46 @@
 # Next Authorized Task
 
-## M026 is closed at the source-fidelity gate
+## M027 is closed
 
-M026 did not run economics.
+M027 produced one deterministic terminal result and must not be rerun or retuned.
 
-Protocol freeze:
+Accepted classification:
 
-`c9dbe03e7f08f2c7c26355d7bf3761684622fb90`
+**SUPPORTED AS A GROSS PUBLIC-DATA APPROXIMATION**
 
-Source inventory:
+Accepted economic result commit:
 
-`0f72b1928f06d90f12409396982867db92ca037f`
+`5cebd54c14833dadd7e2de302213c059cd8b2116`
 
-Result:
+Deterministic A/B report SHA-256:
 
-**NO PUBLIC/FREE RAW FUTURES/FORWARD SOURCE PASSED**
+`08be7e8002410ad36e32caa98cb3cf6e66110bef2c24815b2c1582b96b957e00`
 
-Do not weaken M026 or rerun the M025 H.10 spot proxy.
+Headline frozen metrics:
 
-The next research milestone, if continuing without purchasing data, must be a
-separately named **explicit approximation** whose market object, financing/carry
-approximation, data sources, signal, risk scaling, universe, evaluation window,
-and cost treatment are frozen before economics.
+- annualized arithmetic mean: **37.5794%**
+- annualized volatility: **34.6032%**
+- Sharpe: **1.0860**
+- max drawdown: **-62.1427%**
+- positive calendar years: **30 / 41**
+
+The next milestone, if research continues, must be separately named and prospectively frozen **before** inspecting new economics.
+
+The most relevant unresolved question is execution realism:
+
+- real transaction costs / spread;
+- real broker financing or swap treatment;
+- leverage constraints;
+- executable retail-FX implementation.
+
+A future milestone may study those only if its cost source, leverage contract, broker/account assumptions, universe, period, and pass/fail rule are frozen before results.
 
 It must not:
 
+- modify M027 after seeing its positive result;
+- prune currencies based on M027 contribution;
+- search signs/sessions/weekdays/subperiods;
 - reuse the consumed M024 holdout;
-- use M021 post-cutoff outcomes;
-- search symbols/sessions/sides after results;
-- alter M025 or M026 definitions;
+- inspect M021 post-cutoff outcomes outside M021's own protocol;
 - merge/deploy;
 - enable real trading.
