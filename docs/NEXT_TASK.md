@@ -1,35 +1,51 @@
 # Next Authorized Task
 
-## M028 Stage 1 — execution evidence only
+## M028 Stage 2 — freeze forward-paper implementation contract
 
-Stage-0 accepted result:
+Stage-1 accepted result:
 
-`3258372afbf11aa8178cddd54c61b810c5e514d6`
+`bf90b33409aa78d303d0928404e73f3d1a7da1bf`
 
-Stage-1 protocol freeze:
+Stage-1 classification:
 
-`13507ae2bb06af4daa24f4df70b97a11a8606fa9`
+**FORWARD_PAPER_ONLY**
 
-Run exactly one read-only Stage-1 evidence probe.
+Before any paper strategy outcome is observed, freeze the exact forward-paper
+implementation contract.
 
-It must:
+The contract must preserve M027 rather than retune it:
 
-- start only from the frozen 22-symbol Stage-0 mapping;
-- mechanically classify current quote viability using the frozen 300-second relative-freshness rule;
-- query only the seven frozen one-hour tick-history checkpoints;
-- report spread metadata only, never returns or P/L;
-- calculate only read-only 1.00-lot BUY/SELL margin requirements;
-- keep commission **UNPROVEN**;
-- keep historical swap evidence **UNPROVEN** unless a true series exists;
-- classify the path as `FORWARD_PAPER_NOT_READY`, `FORWARD_PAPER_ONLY`, or `RETROSPECTIVE_NET_EXECUTION_READY` under the frozen rules.
+- 12 completed calendar months for the time-series-momentum signal;
+- monthly decision/rebalance cadence;
+- 40% per-instrument ex-ante volatility target;
+- EWMA decay 60/61 and annualization 261;
+- equal weighting across mechanically eligible currencies;
+- no side/session/weekday/lookback/threshold optimization;
+- no performance-based currency pruning.
+
+Execution universe may start only from the eight Stage-1 mechanically viable
+currencies: AUD, CAD, CHF, EUR, GBP, JPY, NZD, SEK.
+
+Stage 2 must prospectively define:
+
+- how M027 public-data signals are translated into broker pair direction;
+- exact monthly decision timestamp and first eligible forward-paper month;
+- paper position sizing under observed 100:1 margin evidence;
+- gross-leverage ceiling and handling of infeasible target weights;
+- bid/ask paper-entry and paper-exit marking;
+- prospective spread/slippage recording;
+- treatment of broker swap versus M027 carry so carry is not double-counted;
+- commission status and how unknown commission is reported;
+- immutable paper ledger/report schema;
+- minimum observation period before any performance conclusion.
+
+Stage 2 is specification/implementation only until that contract is frozen.
 
 Safety:
 
-- read-only market and margin metadata only;
-- no order placement or order validation;
-- no position changes;
-- no trade-history reads;
-- no strategy replay/economics;
-- no M027 rerun;
+- paper/shadow accounting only;
+- no live order placement or position modification;
+- no retrospective net-cost economics;
+- no M027 retuning or rerun;
 - no M021 post-cutoff outcome use;
-- no merge/deploy/live trading.
+- no merge/deploy/live promotion.
