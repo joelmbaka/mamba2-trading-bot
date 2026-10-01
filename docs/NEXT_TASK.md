@@ -1,46 +1,34 @@
 # Next Authorized Task
 
-## M027 is closed
+## M028 Stage 0 — read-only broker metadata probe
 
-M027 produced one deterministic terminal result and must not be rerun or retuned.
+M028 protocol freeze:
 
-Accepted classification:
+`ed5effc7c3ac5df739fb80df7ed60b1a3409c8bd`
 
-**SUPPORTED AS A GROSS PUBLIC-DATA APPROXIMATION**
+Run exactly one metadata-only probe against the currently authenticated MT5
+terminal on the Dell research machine.
 
-Accepted economic result commit:
+The probe must:
 
-`5cebd54c14833dadd7e2de302213c059cd8b2116`
+- use the frozen 25-currency M027 universe;
+- map direct-USD symbols only from MT5 base/profit currency metadata;
+- record current non-sensitive execution metadata;
+- record account leverage/currency/margin mode without balance/equity/login;
+- classify every currency as mapped, unavailable, or ambiguous;
+- hash the accepted mapped universe;
+- report commission as unproven unless directly exposed by allowed metadata;
+- report no strategy economics.
 
-Deterministic A/B report SHA-256:
+Safety:
 
-`08be7e8002410ad36e32caa98cb3cf6e66110bef2c24815b2c1582b96b957e00`
+- no order APIs;
+- no order/position changes;
+- no trade-history inspection;
+- no M027 economics;
+- no M021 post-cutoff outcomes;
+- no merge/deploy/live trading.
 
-Headline frozen metrics:
-
-- annualized arithmetic mean: **37.5794%**
-- annualized volatility: **34.6032%**
-- Sharpe: **1.0860**
-- max drawdown: **-62.1427%**
-- positive calendar years: **30 / 41**
-
-The next milestone, if research continues, must be separately named and prospectively frozen **before** inspecting new economics.
-
-The most relevant unresolved question is execution realism:
-
-- real transaction costs / spread;
-- real broker financing or swap treatment;
-- leverage constraints;
-- executable retail-FX implementation.
-
-A future milestone may study those only if its cost source, leverage contract, broker/account assumptions, universe, period, and pass/fail rule are frozen before results.
-
-It must not:
-
-- modify M027 after seeing its positive result;
-- prune currencies based on M027 contribution;
-- search signs/sessions/weekdays/subperiods;
-- reuse the consumed M024 holdout;
-- inspect M021 post-cutoff outcomes outside M021's own protocol;
-- merge/deploy;
-- enable real trading.
+After the first accepted Stage-0 output, freeze the broker-availability result
+before investigating commission, swap history/forward observation, historical
+spread fidelity, or leverage implementation.
