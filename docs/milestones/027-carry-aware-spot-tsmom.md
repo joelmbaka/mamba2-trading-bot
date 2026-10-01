@@ -638,4 +638,111 @@ choice.
 
 This month list is now immutable for M027. No date, fold, or currency may be
 changed after economics.
+## Terminal M027 result — CLOSED
 
+Final economic feature SHA:
+
+`ebd650204cb8d03d4eb144d2b3bc431f8b838409`
+
+Final pre-economic validation:
+
+- focused Stage-2: **17 passed / 0 failed**
+  (`c318aeeb5974f975d4fda76640326a61388fd1b0`);
+- full native: **297 passed / 2 skipped**
+  (`670ba6b651bf0223e01847ebbd5d380867d646bc`).
+
+Sole accepted economic execution:
+
+`mamba2-m027-stage2-economics-v1`
+
+Result branch commit:
+
+`5cebd54c14833dadd7e2de302213c059cd8b2116`
+
+A/B report paths:
+
+- `backtest_data/m027-stage2-economics-v1/m027-stage2-a.json`
+- `backtest_data/m027-stage2-economics-v1/m027-stage2-b.json`
+
+A/B SHA-256:
+
+`08be7e8002410ad36e32caa98cb3cf6e66110bef2c24815b2c1582b96b957e00`
+
+Byte identity:
+
+**PASS**
+
+### Frozen full-sample economics
+
+Evaluation:
+
+- **1980-02-29 → 2020-04-30**
+- **483 months**
+- eligible currencies per month: **4 / 22 median / 25 max**
+
+Portfolio:
+
+- annualized arithmetic mean: **0.3757941369870949**
+- annualized volatility: **0.34603206871941145**
+- annualized Sharpe: **1.0860095666214589**
+- maximum drawdown: **-0.6214266894048992**
+- positive-month fraction: **0.6666666666666666**
+- terminal cumulative wealth from 1.0: **372687.6279800574**
+
+Frozen chronological folds:
+
+- F1 annualized mean: **0.46972723789656895**
+- F2 annualized mean: **0.6066053534582256**
+- F3 annualized mean: **0.05104981960649009**
+
+All three folds are positive under the frozen metric.
+
+Calendar-year stability:
+
+- eligible calendar years: **41**
+- positive calendar years: **30**
+- positive-year fraction: **0.7317073170731707**
+
+Concentration:
+
+- largest positive currency contribution share: **0.3929912070958048**
+- frozen gate maximum: **0.50**
+
+### Mechanical classification
+
+**SUPPORTED AS A GROSS PUBLIC-DATA APPROXIMATION**
+
+Every prospectively frozen support gate passed.
+
+This result is intentionally not called publication-faithful futures TSMOM and does not authorize live trading.
+
+Important limitations remain unchanged:
+
+- transaction costs are unmodeled;
+- execution slippage is unmodeled;
+- direct forwards/futures are not used;
+- broker financing / swaps are not modeled from real executable history;
+- the excess-return process is an explicit BIS spot + lagged OECD short-rate approximation;
+- 40% per-instrument ex-ante volatility scaling can create material gross leverage and large drawdowns.
+
+The very large long-run terminal wealth is therefore a property of the frozen gross approximation and must not be interpreted as an executable account equity forecast.
+
+### Terminal stop rule
+
+M027 is **CLOSED**.
+
+Do not, inside M027:
+
+- add transaction costs after seeing the result;
+- add leverage/volatility caps or floors;
+- remove losing currencies;
+- retain only CNY/COP or other strong contributors;
+- change the 12-month lookback;
+- change carry lag or rate source;
+- search signs, sessions, weekdays, symbols, subperiods, or alternate folds;
+- change the 40% volatility target;
+- refresh the source snapshot;
+- rerun economics to seek a different result;
+- merge/deploy or enable real trading.
+
+Any executable-cost or broker-realism investigation must be a separately named prospectively frozen future milestone.
