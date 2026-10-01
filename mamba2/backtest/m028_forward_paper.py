@@ -340,3 +340,309 @@ def seal_decision_record(record: Mapping[str, Any]) -> dict[str, Any]:
     sealed = dict(record)
     sealed["decision_record_sha256"] = decision_record_sha256(sealed)
     return sealed
+
+
+def build_shadow_target_plan(
+    signal_snapshot: Mapping[str, Any],
+    broker_snapshot: Mapping[str, Mapping[str, Any]],
+    *,
+    reference_equity: float = M028_REFERENCE_EQUITY_USD,
+) -> dict[str, Any]:
+    """Build one paper target plan without calculating any strategy return."""
+
+    equity = _require_positive_finite(reference_equity, "reference equity")
+    signal_rows = signal_snapshot.get("currencies")
+    if not isinstance(signal_rows, Mapping):
+        raise ValueError("signal_snapshot must contain currency rows")
+
+    eligibility: dict[str, dict[str, Any]] = {}
+    formation: dict[str, float] = {}
+    volatility: dict[str, float] = {}
+    eligible_codes: list[str] = []
+
+    for currency in M028_FIXED_CURRENCIES:
+        signal_row = signal_rows.get(currency)
+        broker_row = broker_snapshot.get(currency)
+        reason = None
+        sign = None
+        side = None
+
+        if not isinstance(signal_row, Mapping):
+            reason = "SIGNAL_UNAVAILABLE"
+        elif not bool(signal_row.get("signal_eligible")):
+            reason = "SIGNAL_UNAVAILABLE"
+        else:
+            raw_sign = signal_row.get("formation_sign")
+            if raw_sign not in {-1, 0, 1}:
+                reason = "SIGNAL_INVALID"
+            elif int(raw_sign) == 0:
+                reason = "FLAT_SIGNAL"
+            else:
+                sign = int(raw_sign)
+
+        if reason is None:
+            if not isinstance(broker_row, Mapping):
+                reason = "BROKER_METADATA_UNAVAILABLE"
+            elif not bool(broker_row.get("quote_viable")):
+                reason = "QUOTE_NOT_VIABLE"
+
+        if reason is None:
+            side = broker_side(currency, int(sign))
+            margin_key = (
+                "buy_margin_per_lot"
+                if side == "BUY"
+                else "sell_margin_per_lot"
+            )
+            margin_value = broker_row.get(margin_key)
+            try:
+                margin_ok = (
+                    margin_value is not None
+                    and math.isfinite(float(margin_value))
+                    and float(margin_value) > 0
+                )
+            except (TypeError, ValueError):
+                margin_ok = False
+            if not margin_ok:
+                reason = "MARGIN_NOT_VIABLE"
+
+        if reason is None:
+            try:
+                _require_positive_finite(
+                    float(broker_row["contract_size"]),
+                    f"{currency} contract size",
+                )
+                _require_positive_finite(
+                    float(broker_row["volume_min"]),
+                    f"{currency} volume_min",
+                )
+                _require_positive_finite(
+                    float(broker_row["volume_max"]),
+                    f"{currency} volume_max",
+                )
+                _require_positive_finite(
+                    float(broker_row["volume_step"]),
+                    f"{currency} volume_step",
+                )
+                bid = _require_positive_finite(
+                    float(broker_row["bid"]),
+                    f"{currency} bid",
+                )
+                ask = _require_positive_finite(
+                    float(broker_row["ask"]),
+                    f"{currency} ask",
+                )
+                if ask < bid:
+                    raise ValueError("ask below bid")
+                formation_value = float(signal_row["formation_value"])
+                vol_value = _require_positive_finite(
+                    float(signal_row["annualized_ex_ante_volatility"]),
+                    f"{currency} annualized volatility",
+                )
+                if not math.isfinite(formation_value):
+                    raise ValueError("formation is not finite")
+            except (KeyError, TypeError, ValueError):
+                reason = "EXECUTION_METADATA_INVALID"
+
+        eligibility[currency] = {
+            "eligible": reason is None,
+            "reason": reason,
+            "formation_sign": sign,
+            "broker_side": side,
+        }
+
+        if reason is None:
+            eligible_codes.append(currency)
+            formation[currency] = formation_value
+            volatility[currency] = vol_value
+
+    if len(eligible_codes) < M028_MIN_EXECUTABLE_CURRENCIES:
+        return {
+            "status": "FORWARD_PAPER_NOT_READY",
+            "reason": "FEWER_THAN_4_PRE_SIZING_ELIGIBLE",
+            "reference_equity_usd": equity,
+            "eligible_currencies": sorted(eligible_codes),
+            "eligible_count": len(eligible_codes),
+            "eligibility": eligibility,
+            "targets": {},
+            "gross_scale": None,
+            "margin_scale": None,
+            "projected_margin_usd": 0.0,
+            "cost_evidence": {
+                "commission": None,
+                "commission_status": "UNPROVEN",
+                "slippage": None,
+                "slippage_status": "UNOBSERVED",
+                "financing": None,
+                "financing_status": "UNPROVEN",
+                "net_pnl": None,
+            },
+        }
+
+    raw_weights = raw_portfolio_weights(formation, volatility)
+    capped_weights, gross_scale = apply_gross_leverage_cap(raw_weights)
+
+    pre_margin_lots: dict[str, float] = {}
+    margin_per_lot: dict[str, float] = {}
+    volume_rules: dict[str, Mapping[str, float]] = {}
+    targets: dict[str, dict[str, Any]] = {}
+
+    for currency in eligible_codes:
+        broker_row = broker_snapshot[currency]
+        sign = int(signal_rows[currency]["formation_sign"])
+        side = broker_side(currency, sign)
+        weight = float(capped_weights[currency])
+        usd_notional = abs(weight) * equity
+        unrounded_lots = usd_notional_to_lots(
+            currency,
+            usd_notional,
+            contract_size=float(broker_row["contract_size"]),
+            bid=float(broker_row["bid"]),
+            ask=float(broker_row["ask"]),
+        )
+        rounded_lots = round_lots_toward_zero(
+            unrounded_lots,
+            volume_min=float(broker_row["volume_min"]),
+            volume_max=float(broker_row["volume_max"]),
+            volume_step=float(broker_row["volume_step"]),
+        )
+        margin_key = (
+            "buy_margin_per_lot"
+            if side == "BUY"
+            else "sell_margin_per_lot"
+        )
+        mpl = float(broker_row[margin_key])
+        pre_margin_lots[currency] = rounded_lots
+        margin_per_lot[currency] = mpl
+        volume_rules[currency] = {
+            "volume_min": float(broker_row["volume_min"]),
+            "volume_max": float(broker_row["volume_max"]),
+            "volume_step": float(broker_row["volume_step"]),
+        }
+        targets[currency] = {
+            "symbol": M028_FIXED_MAPPING[currency],
+            "formation_sign": sign,
+            "broker_side": side,
+            "raw_weight": float(raw_weights[currency]),
+            "gross_capped_weight": weight,
+            "target_usd_notional": usd_notional,
+            "unrounded_target_lots": unrounded_lots,
+            "pre_margin_rounded_lots": rounded_lots,
+            "margin_per_lot": mpl,
+            "bid": float(broker_row["bid"]),
+            "ask": float(broker_row["ask"]),
+            "paper_fill_price": paper_entry_price(
+                side,
+                bid=float(broker_row["bid"]),
+                ask=float(broker_row["ask"]),
+            ),
+            "paper_exit_mark_at_decision": paper_exit_mark(
+                side,
+                bid=float(broker_row["bid"]),
+                ask=float(broker_row["ask"]),
+            ),
+        }
+
+    pre_margin_nonzero = [
+        currency
+        for currency, lots in pre_margin_lots.items()
+        if lots > 0
+    ]
+    if len(pre_margin_nonzero) < M028_MIN_EXECUTABLE_CURRENCIES:
+        return {
+            "status": "FORWARD_PAPER_NOT_READY",
+            "reason": "FEWER_THAN_4_AFTER_VOLUME_ROUNDING",
+            "reference_equity_usd": equity,
+            "eligible_currencies": sorted(eligible_codes),
+            "eligible_count": len(eligible_codes),
+            "eligibility": eligibility,
+            "targets": targets,
+            "gross_scale": gross_scale,
+            "margin_scale": None,
+            "projected_margin_usd": 0.0,
+            "cost_evidence": {
+                "commission": None,
+                "commission_status": "UNPROVEN",
+                "slippage": None,
+                "slippage_status": "UNOBSERVED",
+                "financing": None,
+                "financing_status": "UNPROVEN",
+                "net_pnl": None,
+            },
+        }
+
+    final_lots, margin_scale, projected_margin = apply_margin_utilization_cap(
+        pre_margin_lots,
+        margin_per_lot,
+        volume_rules,
+        reference_equity=equity,
+    )
+
+    final_nonzero = [
+        currency
+        for currency, lots in final_lots.items()
+        if lots > 0
+    ]
+    if len(final_nonzero) < M028_MIN_EXECUTABLE_CURRENCIES:
+        for currency in targets:
+            targets[currency]["final_target_lots"] = 0.0
+        return {
+            "status": "FORWARD_PAPER_NOT_READY",
+            "reason": "FEWER_THAN_4_AFTER_MARGIN_SCALING",
+            "reference_equity_usd": equity,
+            "eligible_currencies": sorted(eligible_codes),
+            "eligible_count": len(eligible_codes),
+            "eligibility": eligibility,
+            "targets": targets,
+            "gross_scale": gross_scale,
+            "margin_scale": margin_scale,
+            "projected_margin_usd": 0.0,
+            "cost_evidence": {
+                "commission": None,
+                "commission_status": "UNPROVEN",
+                "slippage": None,
+                "slippage_status": "UNOBSERVED",
+                "financing": None,
+                "financing_status": "UNPROVEN",
+                "net_pnl": None,
+            },
+        }
+
+    for currency, lots in final_lots.items():
+        targets[currency]["final_target_lots"] = lots
+        targets[currency]["projected_margin_usd"] = (
+            lots * margin_per_lot[currency]
+        )
+
+    return {
+        "status": "FORWARD_PAPER_READY",
+        "reason": None,
+        "reference_equity_usd": equity,
+        "eligible_currencies": sorted(final_nonzero),
+        "eligible_count": len(final_nonzero),
+        "eligibility": eligibility,
+        "targets": targets,
+        "gross_scale": gross_scale,
+        "gross_leverage_before_cap": sum(
+            abs(value) for value in raw_weights.values()
+        ),
+        "gross_leverage_after_cap": sum(
+            abs(value) for value in capped_weights.values()
+        ),
+        "margin_scale": margin_scale,
+        "margin_utilization_cap": M028_MARGIN_UTILIZATION_CAP,
+        "projected_margin_usd": projected_margin,
+        "cost_evidence": {
+            "commission": None,
+            "commission_status": "UNPROVEN",
+            "slippage": None,
+            "slippage_status": "UNOBSERVED",
+            "financing": None,
+            "financing_status": "UNPROVEN",
+            "net_pnl": None,
+        },
+        "safety": {
+            "strategy_return_computed": False,
+            "portfolio_pnl_computed": False,
+            "broker_order_api_called": False,
+        },
+    }
