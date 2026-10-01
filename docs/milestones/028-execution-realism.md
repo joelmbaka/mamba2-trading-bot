@@ -130,6 +130,10 @@ No ambiguity may be resolved using M027 returns.
 The Stage-0 executable candidate universe is the set of unambiguous mappings
 only. It must be listed and hashed before any M028 economics.
 
+The accepted-universe hash serialization is frozen as the uppercase accepted
+currency codes sorted lexicographically, joined by a single newline character
+with no trailing newline, then SHA-256 encoded as UTF-8.
+
 Minimum continuation gate:
 
 **4 unambiguous direct-USD currencies**
