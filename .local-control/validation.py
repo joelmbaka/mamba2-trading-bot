@@ -1019,6 +1019,46 @@ def _require_m027_branch():
     return head["stdout"].strip()
 
 
+
+def _require_m028_branch():
+    branch = _run(["git", "branch", "--show-current"])
+    name = branch["stdout"].strip()
+    if branch["exit_code"] != 0 or name != "execution-realism":
+        raise RuntimeError(
+            "M028 action requires branch execution-realism"
+        )
+
+    status = _run(["git", "status", "--porcelain", "--untracked-files=all"])
+    if status["exit_code"] != 0 or status["stdout"].strip():
+        raise RuntimeError("M028 action refuses a dirty worktree")
+
+    target = "execution-realism"
+    refresh = _run([
+        "git",
+        "fetch",
+        "origin",
+        f"{target}:refs/remotes/origin/{target}",
+    ])
+    if refresh["exit_code"] != 0:
+        raise RuntimeError("M028 action could not refresh remote branch")
+
+    head = _run(["git", "rev-parse", "HEAD"])
+    remote = _run([
+        "git",
+        "rev-parse",
+        "--verify",
+        f"refs/remotes/origin/{target}",
+    ])
+    if (
+        head["exit_code"] != 0
+        or remote["exit_code"] != 0
+        or head["stdout"].strip() != remote["stdout"].strip()
+    ):
+        raise RuntimeError(
+            "M028 action requires local HEAD to match origin/execution-realism"
+        )
+    return head["stdout"].strip()
+
 def _ensure_baseline_path(path):
     root = (REPO / "backtest_data").resolve()
     resolved = Path(path).resolve()
@@ -17024,7 +17064,300 @@ def recovery_remove_accidental_systemctl_file():
 
 
 
+
+def m028_stage0_broker_metadata_probe():
+    """Read-only current-broker metadata probe for frozen M028 Stage 0."""
+
+    feature_sha = _require_m028_branch()
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    if not dedicated.is_file():
+        raise RuntimeError("established M028 Wine runtime is missing: .venv-wine")
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M028 Wine runtime")
+    wine = _wine()
+
+    probe_code = r'''
+import hashlib
+import json
+import math
+from datetime import datetime, timezone
+
+import MetaTrader5 as mt5
+
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+FROZEN_CURRENCIES = [
+    "AUD", "CAD", "CHF", "CLP", "CNY", "COP", "CZK", "DKK", "EUR",
+    "GBP", "HUF", "IDR", "INR", "ISK", "ILS", "JPY", "KRW", "MXN",
+    "NOK", "NZD", "PLN", "RON", "RUB", "SEK", "ZAR",
+]
+
+
+def finite_positive(value):
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return False
+    return math.isfinite(numeric) and numeric > 0.0
+
+
+def safe_float(value):
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return None
+    return numeric if math.isfinite(numeric) else None
+
+
+def safe_int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def iso_tick_time(tick):
+    raw = getattr(tick, "time", None)
+    if raw is None:
+        return None
+    try:
+        return datetime.fromtimestamp(int(raw), timezone.utc).isoformat().replace(
+            "+00:00", "Z"
+        )
+    except (TypeError, ValueError, OSError):
+        return None
+
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed for M028 Stage-0 metadata probe")
+
+temporarily_selected = []
+try:
+    terminal = mt5.terminal_info()
+    account = mt5.account_info()
+    symbols = list(mt5.symbols_get() or [])
+    disabled_mode = getattr(mt5, "SYMBOL_TRADE_MODE_DISABLED", 0)
+
+    mapping = {}
+    accepted_symbols = {}
+    unavailable = []
+    ambiguous = []
+    commission_field_names = set()
+
+    for currency in FROZEN_CURRENCIES:
+        eligible = []
+        for info in symbols:
+            base = str(getattr(info, "currency_base", "") or "").upper()
+            profit = str(getattr(info, "currency_profit", "") or "").upper()
+            direct_usd = (
+                (base == currency and profit == "USD")
+                or (base == "USD" and profit == currency)
+            )
+            if not direct_usd:
+                continue
+
+            trade_mode = safe_int(getattr(info, "trade_mode", None))
+            mechanically_eligible = (
+                trade_mode is not None
+                and trade_mode != int(disabled_mode)
+                and finite_positive(getattr(info, "trade_contract_size", None))
+                and finite_positive(getattr(info, "point", None))
+                and finite_positive(getattr(info, "trade_tick_size", None))
+                and finite_positive(getattr(info, "volume_min", None))
+            )
+            if mechanically_eligible:
+                eligible.append(info)
+
+        eligible.sort(key=lambda item: str(getattr(item, "name", "")))
+
+        if not eligible:
+            mapping[currency] = {
+                "status": "UNAVAILABLE",
+                "candidate_symbols": [],
+            }
+            unavailable.append(currency)
+            continue
+
+        if len(eligible) > 1:
+            names = [str(getattr(item, "name", "")) for item in eligible]
+            mapping[currency] = {
+                "status": "AMBIGUOUS",
+                "candidate_symbols": names,
+            }
+            ambiguous.append(currency)
+            continue
+
+        info = eligible[0]
+        name = str(getattr(info, "name", ""))
+        was_visible = bool(getattr(info, "visible", False))
+        tick = mt5.symbol_info_tick(name)
+
+        if tick is None and name:
+            selected = bool(mt5.symbol_select(name, True))
+            if selected and not was_visible:
+                temporarily_selected.append(name)
+            tick = mt5.symbol_info_tick(name)
+
+        info_dict = info._asdict() if hasattr(info, "_asdict") else {}
+        for key, value in info_dict.items():
+            if "commission" in str(key).lower() and value is not None:
+                commission_field_names.add(str(key))
+
+        point = safe_float(getattr(info, "point", None))
+        bid = safe_float(getattr(tick, "bid", None)) if tick is not None else None
+        ask = safe_float(getattr(tick, "ask", None)) if tick is not None else None
+        spread_points = None
+        if (
+            point is not None
+            and point > 0
+            and bid is not None
+            and ask is not None
+            and ask >= bid
+        ):
+            spread_points = (ask - bid) / point
+
+        metadata = {
+            "symbol": name,
+            "base_currency": str(getattr(info, "currency_base", "") or ""),
+            "profit_currency": str(getattr(info, "currency_profit", "") or ""),
+            "margin_currency": str(getattr(info, "currency_margin", "") or ""),
+            "trade_mode": safe_int(getattr(info, "trade_mode", None)),
+            "digits": safe_int(getattr(info, "digits", None)),
+            "point": point,
+            "trade_tick_size": safe_float(
+                getattr(info, "trade_tick_size", None)
+            ),
+            "trade_tick_value": safe_float(
+                getattr(info, "trade_tick_value", None)
+            ),
+            "trade_tick_value_profit": safe_float(
+                getattr(info, "trade_tick_value_profit", None)
+            ),
+            "trade_tick_value_loss": safe_float(
+                getattr(info, "trade_tick_value_loss", None)
+            ),
+            "trade_contract_size": safe_float(
+                getattr(info, "trade_contract_size", None)
+            ),
+            "volume_min": safe_float(getattr(info, "volume_min", None)),
+            "volume_max": safe_float(getattr(info, "volume_max", None)),
+            "volume_step": safe_float(getattr(info, "volume_step", None)),
+            "margin_initial": safe_float(
+                getattr(info, "margin_initial", None)
+            ),
+            "margin_maintenance": safe_float(
+                getattr(info, "margin_maintenance", None)
+            ),
+            "swap_mode": safe_int(getattr(info, "swap_mode", None)),
+            "swap_long": safe_float(getattr(info, "swap_long", None)),
+            "swap_short": safe_float(getattr(info, "swap_short", None)),
+            "swap_rollover3days": safe_int(
+                getattr(info, "swap_rollover3days", None)
+            ),
+            "quote_time_utc": iso_tick_time(tick) if tick is not None else None,
+            "bid": bid,
+            "ask": ask,
+            "spread_points": spread_points,
+        }
+        mapping[currency] = {
+            "status": "MAPPED",
+            "candidate_symbols": [name],
+            "symbol": name,
+        }
+        accepted_symbols[currency] = metadata
+
+    accepted_currencies = sorted(accepted_symbols)
+    serialization = "\n".join(accepted_currencies)
+    universe_sha = hashlib.sha256(serialization.encode("utf-8")).hexdigest()
+
+    output = {
+        "probe_timestamp_utc": datetime.now(timezone.utc)
+            .isoformat()
+            .replace("+00:00", "Z"),
+        "terminal": {
+            "name": getattr(terminal, "name", None),
+            "company": getattr(terminal, "company", None),
+            "build": getattr(terminal, "build", None),
+            "version": list(mt5.version()) if hasattr(mt5, "version") else None,
+        },
+        "account": {
+            "server": getattr(account, "server", None),
+            "company": getattr(account, "company", None),
+            "currency": getattr(account, "currency", None),
+            "leverage": safe_int(getattr(account, "leverage", None)),
+            "margin_mode": safe_int(getattr(account, "margin_mode", None)),
+            "trade_mode": safe_int(getattr(account, "trade_mode", None)),
+        },
+        "frozen_currencies": FROZEN_CURRENCIES,
+        "mapping": mapping,
+        "accepted_symbols": accepted_symbols,
+        "accepted_currencies": accepted_currencies,
+        "accepted_currency_count": len(accepted_currencies),
+        "accepted_universe_sha256": universe_sha,
+        "hash_serialization": "uppercase sorted currency codes joined by LF, no trailing LF",
+        "unavailable_currencies": unavailable,
+        "ambiguous_currencies": ambiguous,
+        "commission_proven": bool(commission_field_names),
+        "commission_metadata_fields": sorted(commission_field_names),
+        "continuation_gate_minimum": 4,
+        "continuation_gate_pass": len(accepted_currencies) >= 4,
+    }
+    print(json.dumps(output, sort_keys=True), flush=True)
+finally:
+    for symbol in temporarily_selected:
+        try:
+            mt5.symbol_select(symbol, False)
+        except Exception:
+            pass
+    mt5.shutdown()
+'''
+
+    run = _run_process_group_bounded(
+        [wine, wine_python, "-c", probe_code],
+        env=_safe_env(wine=True),
+        timeout_seconds=90,
+    )
+    payload = None
+    if run["exit_code"] == 0 and run["stdout"].strip():
+        try:
+            payload = json.loads(run["stdout"].strip().splitlines()[-1])
+        except json.JSONDecodeError:
+            payload = None
+
+    ok = (
+        run["exit_code"] == 0
+        and payload is not None
+        and payload.get("frozen_currencies")
+        == [
+            "AUD", "CAD", "CHF", "CLP", "CNY", "COP", "CZK", "DKK", "EUR",
+            "GBP", "HUF", "IDR", "INR", "ISK", "ILS", "JPY", "KRW", "MXN",
+            "NOK", "NZD", "PLN", "RON", "RUB", "SEK", "ZAR",
+        ]
+        and len(payload.get("mapping", {})) == 25
+    )
+    return {
+        "ok": bool(ok),
+        "feature_branch": "execution-realism",
+        "feature_sha": feature_sha,
+        "probe": payload,
+        "run": run,
+        "safety": {
+            "market_data_read_only": True,
+            "order_api_called": False,
+            "position_change_api_called": False,
+            "trade_history_read": False,
+            "account_login_returned": False,
+            "account_balance_or_equity_returned": False,
+            "historical_economics_run": False,
+            "m027_economics_rerun": False,
+            "m021_post_cutoff_outcomes_used": False,
+        },
+    }
+
 ACTION_HANDLERS = {
+    "m028_stage0_broker_metadata_probe": m028_stage0_broker_metadata_probe,
     "m027_stage2_economics": m027_stage2_economics,
     "m027_stage2_tests": m027_stage2_tests,
     "m027_stage2_readiness": m027_stage2_readiness,
