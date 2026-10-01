@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m028-stage0-broker-metadata-v1",
-  "action": "m028_stage0_broker_metadata_probe",
+  "id": "mamba2-m028-stage1-execution-evidence-v1",
+  "action": "m028_stage1_execution_evidence_probe",
   "args": {},
   "requested_by": "chatgpt"
 }
