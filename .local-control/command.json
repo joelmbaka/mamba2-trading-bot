@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-m028-stage1-execution-evidence-v3",
-  "action": "m028_stage1_execution_evidence_probe_v3",
+  "id": "mamba2-m028-stage2-contract-tests-v1",
+  "action": "m028_stage2_tests",
   "args": {},
   "requested_by": "chatgpt"
 }
