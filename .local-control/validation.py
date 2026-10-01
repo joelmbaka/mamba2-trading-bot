@@ -18945,7 +18945,49 @@ finally:
         },
     }
 
+
+def m028_stage3_tests():
+    """Validate M028 Stage-3 time gate with synthetic-only fixtures."""
+
+    feature_sha = _require_m028_branch()
+    tests = [
+        "tests/test_m028_forward_paper.py",
+        "tests/test_m028_prospective.py",
+    ]
+    pytest_run = _pytest_native(tests)
+    compile_run = _run(
+        _native_command(
+            "-m",
+            "py_compile",
+            "mamba2/backtest/m028_forward_paper.py",
+            "mamba2/backtest/m028_prospective.py",
+            "tests/test_m028_forward_paper.py",
+            "tests/test_m028_prospective.py",
+        ),
+        env=_safe_env(),
+    )
+    return {
+        "ok": (
+            pytest_run["exit_code"] == 0
+            and compile_run["exit_code"] == 0
+        ),
+        "feature_branch": "execution-realism",
+        "feature_sha": feature_sha,
+        "tests": tests,
+        "pytest": pytest_run,
+        "py_compile": compile_run,
+        "safety": {
+            "live_source_signal_computed": False,
+            "broker_initialized": False,
+            "real_order_api_called": False,
+            "forward_strategy_outcome_computed": False,
+            "m027_economics_rerun": False,
+            "m021_post_cutoff_outcomes_used": False,
+        },
+    }
+
 ACTION_HANDLERS = {
+    "m028_stage3_tests": m028_stage3_tests,
     "m028_stage3_readiness": m028_stage3_readiness,
     "m028_stage2_tests": m028_stage2_tests,
     "m028_stage1_execution_evidence_probe_v3": m028_stage1_execution_evidence_probe_v3,
