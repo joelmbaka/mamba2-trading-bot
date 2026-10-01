@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "id": "mamba2-m028-stage3-synthetic-tests-v1",
+  "id": "mamba2-m028-stage3-synthetic-tests-v2",
   "action": "m028_stage3_tests",
   "args": {},
   "requested_by": "chatgpt"
