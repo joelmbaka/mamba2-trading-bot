@@ -326,11 +326,13 @@ def execute(command):
 
 
 def _bound(value):
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        value = bytes(value).decode("utf-8", errors="replace")
     if isinstance(value, str):
         if len(value) <= MAX_RESULT_CHARS:
             return value
         return "[publisher truncated output]\n" + value[-MAX_RESULT_CHARS:]
-    if isinstance(value, list):
+    if isinstance(value, (list, tuple)):
         return [_bound(item) for item in value]
     if isinstance(value, dict):
         return {key: _bound(item) for key, item in value.items()}
