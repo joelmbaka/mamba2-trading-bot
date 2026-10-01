@@ -312,3 +312,97 @@ No MT5 order API may be called.
 No merge to `main` is authorized.
 
 No deployment is authorized.
+## Stage-0 broker-availability result accepted — 2026-10-01
+
+Accepted command:
+
+`mamba2-m028-stage0-broker-metadata-v1`
+
+Accepted result commit:
+
+`3258372afbf11aa8178cddd54c61b810c5e514d6`
+
+Feature SHA:
+
+`de05a0207c6679e58f17fded969ab3e5401c2d68`
+
+Result:
+
+- frozen M027 currencies inspected: **25**
+- unambiguous direct-USD mappings: **22**
+- unavailable: **CNY, ISK, RON**
+- ambiguous: **none**
+- continuation gate minimum: **4**
+- continuation gate: **PASS**
+- accepted mapped-universe SHA-256:
+  `5f1ae15c35b3b20e24b4f999c7628d3534b54e30eb535295a69e359f285dd996`
+
+Mapped currencies:
+
+`AUD, CAD, CHF, CLP, COP, CZK, DKK, EUR, GBP, HUF, IDR, ILS, INR, JPY, KRW, MXN, NOK, NZD, PLN, RUB, SEK, ZAR`
+
+Observed terminal/account metadata:
+
+- terminal: **MetaTrader 5 build 6215**
+- server: **MetaQuotes-Demo**
+- account currency: **USD**
+- account leverage: **100:1**
+- margin mode: **2**
+- commission metadata fields exposed: **none**
+- commission status: **UNPROVEN**
+
+Safety:
+
+- market-data read only: **true**
+- order API called: **false**
+- position change API called: **false**
+- trade history read: **false**
+- account login returned: **false**
+- balance/equity returned: **false**
+- historical economics run: **false**
+- M027 economics rerun: **false**
+- M021 post-cutoff outcomes used: **false**
+
+### Quote-quality observation
+
+The Stage-0 mapping gate is intentionally metadata-based and is not the same as a live-quote gate.
+
+At the accepted snapshot:
+
+- six mapped symbols had non-zero quotes dated 2026-10-01:
+  **USDCHF, EURUSD, GBPUSD, USDJPY, NZDUSD, USDSEK**;
+- AUDUSD and USDCAD had non-zero quotes but their latest quoted timestamps were
+  **2026-09-25**;
+- the remaining fourteen mapped symbols returned zero Bid/Ask with epoch-like
+  `1970-01-01T00:00:00Z` quote timestamps.
+
+Therefore the 22-currency mapping result proves broker symbol availability only.
+It does **not** prove that all 22 are currently streamable/executable.
+
+### Publisher incident
+
+The first publication attempt encountered a control-plane JSON serialization
+error because a subprocess timeout/error field could contain `bytes`. The
+strategy probe itself remained read-only. The same command ID subsequently
+published the accepted result above. No economics or order operation occurred.
+
+The control publisher was repaired separately on `local-control` to decode
+bytes deterministically before JSON serialization.
+
+## Stage-0 stop/continuation decision
+
+Stage 0 passes its pre-frozen broker-availability gate.
+
+Economics remain **NOT AUTHORIZED**.
+
+Before any executable-performance calculation, M028 must now establish:
+
+1. which mapped symbols have mechanically valid current quote streams;
+2. whether historical spread evidence is available for those symbols;
+3. whether commission can be proven for the selected paper/broker environment;
+4. how current broker swap relates to M027's already-included carry approximation;
+5. the exact leverage/margin contract and infeasible-weight handling;
+6. whether the valid path is retrospective execution research or forward paper only.
+
+Today's MetaQuotes-Demo costs must not be retrofitted onto M027's 1980–2020
+history and presented as historical executable costs.
