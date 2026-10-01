@@ -18665,7 +18665,288 @@ def m028_stage2_tests():
         },
     }
 
+
+def m028_stage3_readiness():
+    """Pre-decision M028 readiness only; never compute a strategy signal."""
+
+    feature_sha = _require_m028_branch()
+
+    source_code = r'''
+import json
+from mamba2.backtest.m027_stage1_ingestion import _download
+from mamba2.backtest.m027_carry_aware_tsmom import (
+    BIS_XRU_URL,
+    OECD_STIR_URL,
+    parse_bis_daily_spot_zip,
+    parse_oecd_monthly_short_rates,
+    sha256_bytes,
+)
+
+bis_raw = _download(BIS_XRU_URL)
+oecd_raw = _download(
+    OECD_STIR_URL,
+    accept="text/csv,application/vnd.sdmx.data+csv;version=2.0.0",
+)
+spot = parse_bis_daily_spot_zip(bis_raw)
+rates = parse_oecd_monthly_short_rates(oecd_raw)
+
+spot_last = None if spot.empty else spot.index.max().date().isoformat()
+rate_last = None if rates.empty else str(rates.index.max())
+ready = (
+    spot_last is not None
+    and rate_last is not None
+    and spot_last >= "2026-09-30"
+    and rate_last >= "2026-08"
+)
+
+print(json.dumps({
+    "bis_raw_sha256": sha256_bytes(bis_raw),
+    "oecd_raw_sha256": sha256_bytes(oecd_raw),
+    "spot_last_date": spot_last,
+    "rate_last_month": rate_last,
+    "required_spot_through": "2026-09-30",
+    "required_rate_month": "2026-08",
+    "source_gate_pass": bool(ready),
+    "strategy_signal_computed": False,
+}, sort_keys=True))
+'''
+
+    source_run = _run_process_group_bounded(
+        _native_command("-c", source_code),
+        env=_safe_env(),
+        timeout_seconds=240,
+    )
+    source_payload = None
+    if (
+        source_run["exit_code"] == 0
+        and not source_run.get("timed_out")
+        and source_run["stdout"].strip()
+    ):
+        try:
+            source_payload = json.loads(source_run["stdout"].strip().splitlines()[-1])
+        except json.JSONDecodeError:
+            source_payload = None
+
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    if not dedicated.is_file():
+        raise RuntimeError("established M028 Wine runtime is missing: .venv-wine")
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M028 Wine runtime")
+    wine = _wine()
+
+    output_path = Path("/tmp/mamba2-m028-stage3-readiness-broker.json")
+    output_path.unlink(missing_ok=True)
+
+    broker_code = r'''
+import json
+import math
+import os
+from pathlib import Path
+import MetaTrader5 as mt5
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+MAPPING = {
+    "AUD": "AUDUSD",
+    "CAD": "USDCAD",
+    "CHF": "USDCHF",
+    "EUR": "EURUSD",
+    "GBP": "GBPUSD",
+    "JPY": "USDJPY",
+    "NZD": "NZDUSD",
+    "SEK": "USDSEK",
+}
+OUT = Path(os.environ["M028_OUTPUT"])
+
+def positive(value):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return False
+    return math.isfinite(number) and number > 0.0
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed for M028 Stage-3 readiness")
+
+temporary = []
+try:
+    rows = {}
+    positive_times = []
+
+    for currency, symbol in MAPPING.items():
+        info = mt5.symbol_info(symbol)
+        if info is None:
+            rows[currency] = {
+                "symbol": symbol,
+                "quote_viable": False,
+                "margin_viable": False,
+                "reason": "NO_SYMBOL_METADATA",
+            }
+            continue
+
+        was_visible = bool(getattr(info, "visible", False))
+        tick = mt5.symbol_info_tick(symbol)
+        if tick is None:
+            selected = bool(mt5.symbol_select(symbol, True))
+            if selected and not was_visible:
+                temporary.append(symbol)
+            tick = mt5.symbol_info_tick(symbol)
+
+        bid = float(getattr(tick, "bid", 0.0) or 0.0) if tick is not None else 0.0
+        ask = float(getattr(tick, "ask", 0.0) or 0.0) if tick is not None else 0.0
+        raw_time = getattr(tick, "time", None) if tick is not None else None
+        try:
+            raw_time = int(raw_time) if raw_time is not None else None
+        except (TypeError, ValueError):
+            raw_time = None
+
+        valid_quote = (
+            positive(bid)
+            and positive(ask)
+            and ask >= bid
+            and raw_time is not None
+            and raw_time > 0
+        )
+        if valid_quote:
+            positive_times.append(raw_time)
+
+        rows[currency] = {
+            "symbol": symbol,
+            "bid": bid,
+            "ask": ask,
+            "tick_time_epoch": raw_time,
+            "valid_positive_quote": bool(valid_quote),
+        }
+
+    reference = max(positive_times) if positive_times else None
+    quote_viable = []
+    margin_viable = []
+    joint_viable = []
+
+    for currency, row in rows.items():
+        raw_time = row.get("tick_time_epoch")
+        lag = (
+            None
+            if reference is None or raw_time is None
+            else int(reference) - int(raw_time)
+        )
+        quote_ok = (
+            bool(row.get("valid_positive_quote"))
+            and lag is not None
+            and 0 <= lag <= 300
+        )
+        row["seconds_behind_reference"] = lag
+        row["quote_viable"] = quote_ok
+
+        margin_ok = False
+        if quote_ok:
+            symbol = row["symbol"]
+            buy = mt5.order_calc_margin(
+                mt5.ORDER_TYPE_BUY,
+                symbol,
+                1.0,
+                float(row["ask"]),
+            )
+            sell = mt5.order_calc_margin(
+                mt5.ORDER_TYPE_SELL,
+                symbol,
+                1.0,
+                float(row["bid"]),
+            )
+            margin_ok = positive(buy) and positive(sell)
+
+        row["margin_viable"] = bool(margin_ok)
+
+        if quote_ok:
+            quote_viable.append(currency)
+        if margin_ok:
+            margin_viable.append(currency)
+        if quote_ok and margin_ok:
+            joint_viable.append(currency)
+
+    OUT.write_text(json.dumps({
+        "quote_viable_currencies": sorted(quote_viable),
+        "quote_viable_count": len(quote_viable),
+        "margin_viable_currencies": sorted(margin_viable),
+        "margin_viable_count": len(margin_viable),
+        "joint_viable_currencies": sorted(joint_viable),
+        "joint_viable_count": len(joint_viable),
+        "minimum_required": 4,
+        "broker_gate_pass": len(joint_viable) >= 4,
+        "strategy_signal_computed": False,
+        "target_side_computed": False,
+        "target_lots_computed": False,
+    }, sort_keys=True), encoding="utf-8")
+finally:
+    for symbol in temporary:
+        try:
+            mt5.symbol_select(symbol, False)
+        except Exception:
+            pass
+    mt5.shutdown()
+'''
+
+    broker_env = _safe_env(wine=True)
+    broker_env["M028_OUTPUT"] = _wine_windows_path(output_path)
+    broker_run = _run_process_group_file_bounded(
+        [wine, wine_python, "-c", broker_code],
+        env=broker_env,
+        timeout_seconds=75,
+    )
+
+    broker_payload = None
+    if output_path.is_file() and output_path.stat().st_size > 0:
+        try:
+            broker_payload = json.loads(output_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            broker_payload = None
+    output_path.unlink(missing_ok=True)
+
+    source_ok = bool(source_payload and source_payload.get("source_gate_pass"))
+    broker_ok = bool(broker_payload and broker_payload.get("broker_gate_pass"))
+
+    if not source_ok:
+        classification = "SOURCE_NOT_READY"
+    elif not broker_ok:
+        classification = "BROKER_NOT_READY"
+    else:
+        classification = "READY_FOR_SCHEDULED_DECISION"
+
+    return {
+        "ok": source_payload is not None and broker_payload is not None,
+        "feature_branch": "execution-realism",
+        "feature_sha": feature_sha,
+        "scheduled_decision_utc": "2026-10-07T12:00:00Z",
+        "decision_id": "2026-10",
+        "source": source_payload,
+        "broker": broker_payload,
+        "readiness_classification": classification,
+        "source_run": {
+            "exit_code": source_run["exit_code"],
+            "timed_out": bool(source_run.get("timed_out")),
+            "stderr": source_run.get("stderr", ""),
+        },
+        "broker_run": broker_run,
+        "safety": {
+            "strategy_signal_computed": False,
+            "formation_sign_reported": False,
+            "volatility_reported": False,
+            "target_side_computed": False,
+            "target_lots_computed": False,
+            "forward_strategy_outcome_computed": False,
+            "real_order_api_called": False,
+            "order_check_called": False,
+            "position_change_api_called": False,
+            "trade_history_read": False,
+            "balance_or_equity_returned": False,
+            "m027_economics_rerun": False,
+            "m021_post_cutoff_outcomes_used": False,
+        },
+    }
+
 ACTION_HANDLERS = {
+    "m028_stage3_readiness": m028_stage3_readiness,
     "m028_stage2_tests": m028_stage2_tests,
     "m028_stage1_execution_evidence_probe_v3": m028_stage1_execution_evidence_probe_v3,
     "m028_stage1_execution_evidence_probe_v2": m028_stage1_execution_evidence_probe_v2,
