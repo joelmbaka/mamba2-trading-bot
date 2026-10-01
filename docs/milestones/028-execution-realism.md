@@ -1037,3 +1037,48 @@ Stage 2 must not:
 - rewrite M027 economics;
 - create paper performance outcomes before the first real prospective decision
   timestamp.
+## Stage-2 implementation accepted — 2026-10-01
+
+Protocol freeze:
+
+`3dd84c480d13adf598532489e6519f92683493f2`
+
+Accepted implementation feature SHA:
+
+`7ce4a54c9ac0e7d4083f1bbd58cc2284bffa1355`
+
+Implementation files:
+
+- `mamba2/backtest/m028_forward_paper.py`
+- `tests/test_m028_forward_paper.py`
+
+Focused validation result:
+
+`88c0aa33ce2bc7fe89c233a3fb3b181b993e228a`
+
+- focused tests: **17 passed**
+- `py_compile`: **PASS**
+
+Full native regression result:
+
+`ec66dbc297572d59f0880a996600e459bbfc37b6`
+
+- **314 passed**
+- **2 skipped**
+- **13 existing warnings**
+
+Focused validation safety:
+
+- broker initialized: **false**
+- market data read: **false**
+- real order API called: **false**
+- position change API called: **false**
+- trade history read: **false**
+- historical strategy economics run: **false**
+- forward strategy outcome computed: **false**
+- M027 economics rerun: **false**
+- M021 post-cutoff outcomes used: **false**
+
+Stage 2 is closed. Its leverage, margin, timing, lot-rounding, cost-status,
+and observation rules may not be changed inside M028 after prospective
+forward outcomes begin.
