@@ -712,3 +712,328 @@ No M028 strategy economics have been run.
 
 Stage-1 is now closed. Do not rerun or retune it to improve coverage or
 execution-data appearance.
+## Stage-2 forward-paper contract freeze — 2026-10-01
+
+Status: **FROZEN BEFORE ANY FORWARD-PAPER STRATEGY OUTCOME**
+
+Stage 1 mechanically classified M028 as:
+
+**FORWARD_PAPER_ONLY**
+
+Stage 2 therefore defines an implementation contract only. It may build and
+validate deterministic shadow-position machinery, but it may not inspect
+forward strategy P/L before this contract is committed.
+
+### Fixed forward-paper currency set
+
+Only the eight Stage-1 quote- and margin-viable currencies may participate:
+
+`AUD, CAD, CHF, EUR, GBP, JPY, NZD, SEK`
+
+Frozen broker mapping:
+
+- AUD -> AUDUSD
+- CAD -> USDCAD
+- CHF -> USDCHF
+- EUR -> EURUSD
+- GBP -> GBPUSD
+- JPY -> USDJPY
+- NZD -> NZDUSD
+- SEK -> USDSEK
+
+No cross pair may substitute for a missing direct-USD symbol.
+
+At each decision timestamp a currency is execution-eligible only when:
+
+1. its M027-compatible signal and ex-ante volatility are available;
+2. its current broker Bid and Ask are finite and positive with Ask >= Bid;
+3. its quote is within 300 seconds of the freshest positive quote among the
+   fixed eight currencies;
+4. a positive read-only margin calculation is available for the required side;
+5. the rounded target meets broker minimum-volume rules.
+
+At least **4 non-zero execution-eligible currencies** are required to open or
+rebalance the paper portfolio. Otherwise the decision is recorded as
+`FORWARD_PAPER_NOT_READY` and the paper portfolio is flat for that holding
+period.
+
+### Signal and volatility contract — unchanged from M027
+
+For every execution-eligible currency:
+
+- market object remains USD value of one foreign-currency unit;
+- approximate daily excess log return remains
+  `dlog(spot) + (r_foreign - r_usd) / 261`;
+- month M carry uses only completed-month M-1 rates;
+- formation signal is the sum of the prior **12 completed calendar months**;
+- positive formation = long foreign currency;
+- negative formation = short foreign currency;
+- zero formation = flat;
+- annualized ex-ante volatility uses the M027 centered EWMA variance;
+- EWMA decay remains **60/61**;
+- annualization remains **261**;
+- target volatility remains **40% per instrument**.
+
+No signal threshold, alternate lookback, side filter, volatility floor,
+session rule, weekday rule, or performance-based currency filter is allowed.
+
+### Prospective source-refresh rule
+
+M027 itself remains closed and its frozen economics are never rerun.
+
+M028 may refresh only the same BIS XRU and OECD IR3TIB public source contracts
+prospectively to construct new completed-month signals.
+
+At every decision:
+
+- the raw BIS and OECD payloads must be hashed;
+- normalized inputs must be hashed;
+- only observations published and available by the decision timestamp may be
+  used;
+- the immediately prior calendar month must be complete for required BIS spot;
+- the rate month required by the frozen one-month carry lag must be present;
+- no interpolation or source substitution is allowed;
+- the exact source hashes and source maximum dates/months are written to the
+  immutable paper decision record before target construction.
+
+### Decision/rebalance timestamp
+
+The paper decision occurs at **12:00:00 UTC on the fifth Monday-Friday business
+day of each calendar month**.
+
+Business-day counting here is mechanical Monday-Friday only; no country
+holiday calendar is introduced.
+
+The signal uses only completed calendar months before the decision month.
+
+If the prospective source-completeness gate is not satisfied at that timestamp,
+the month is skipped and remains flat. There is no late entry later in the
+same month.
+
+Earliest permitted M028 paper decision:
+
+**2026-10-07T12:00:00Z**
+
+No backfill of October or any earlier month is allowed after its decision time.
+
+### Foreign-currency signal -> broker side mapping
+
+For broker pairs with foreign currency as base and USD as quote:
+
+`AUDUSD, EURUSD, GBPUSD, NZDUSD`
+
+- long foreign -> BUY pair;
+- short foreign -> SELL pair.
+
+For broker pairs with USD as base and foreign currency as quote:
+
+`USDCAD, USDCHF, USDJPY, USDSEK`
+
+- long foreign -> SELL pair;
+- short foreign -> BUY pair.
+
+This orientation is mechanical and may not be changed after observing paper
+results.
+
+### Raw portfolio weights
+
+Let `sigma_i` be the M027 ex-ante annualized volatility and `s_i` the frozen
+formation sign.
+
+Per-instrument raw M027 scaling:
+
+`u_i = s_i * 0.40 / sigma_i`
+
+For N execution-eligible non-flat currencies:
+
+`w_i_raw = u_i / N`
+
+This is exactly the M027 equal-weight aggregation translated into target
+notional weights.
+
+### Execution-only gross leverage cap
+
+Forward paper uses a prospectively frozen gross notional leverage ceiling:
+
+**4.0x reference equity**
+
+Define:
+
+`G = sum(abs(w_i_raw))`
+
+`gross_scale = min(1, 4.0 / G)`
+
+`w_i_gross = w_i_raw * gross_scale`
+
+The scale is common across all currencies. No currency-specific clipping or
+redistribution based on expected or historical performance is allowed.
+
+Both uncapped and capped weights must be recorded so the effect of execution
+realism remains auditable.
+
+### Reference paper capital
+
+Forward paper uses fixed reference capital:
+
+**USD 10,000**
+
+This is a sizing denominator, not a simulated account balance and not a claim
+about deployable user capital.
+
+Until complete cost accounting is proven, target sizing does not compound
+paper P/L. Every monthly target is based on the same USD 10,000 reference
+capital.
+
+### Margin utilization gate
+
+After gross-cap scaling and broker volume rounding, projected read-only margin
+may use at most:
+
+**25% of reference equity = USD 2,500**
+
+If aggregate projected margin exceeds that amount, all non-zero target lots
+are scaled down by one common factor and rounded toward zero again.
+
+There is no performance-based reallocation after margin scaling.
+
+If fewer than four non-zero positions remain after volume/margin constraints,
+the entire monthly paper portfolio is flat and classified
+`FORWARD_PAPER_NOT_READY`.
+
+### Lot conversion and rounding
+
+Target absolute USD notional is:
+
+`abs(w_i_final) * 10,000`
+
+For foreign-base/USD-quote pairs:
+
+`lots = USD_notional / (contract_size * current_mid)`
+
+For USD-base/foreign-quote pairs:
+
+`lots = USD_notional / contract_size`
+
+where:
+
+`current_mid = (Bid + Ask) / 2`
+
+Lots are rounded **toward zero** to the broker `volume_step`.
+
+- below `volume_min` -> zero position;
+- above `volume_max` -> capped at `volume_max` without redistribution;
+- no rounding-up is permitted.
+
+### Paper fill and mark convention
+
+For a paper BUY:
+
+- entry/increase price = current Ask;
+- exit/decrease/mark price = current Bid.
+
+For a paper SELL:
+
+- entry/increase price = current Bid;
+- exit/decrease/mark price = current Ask.
+
+Bid/Ask spread is therefore represented directly by the shadow fills/marks.
+
+No mid-price fill is permitted.
+
+### Commission, slippage, and financing
+
+Commission remains **UNPROVEN**.
+
+Slippage remains **UNOBSERVED** because no real order is sent.
+
+Historical broker swap remains **UNPROVEN**.
+
+M027 carry may be used only to construct the signal/volatility input. It must
+**not** be added as paper execution P/L.
+
+The forward paper ledger must keep these fields separate:
+
+- quote/spread-based spot P/L;
+- commission: null / UNPROVEN;
+- slippage: null / UNOBSERVED;
+- broker financing/swap: null until prospectively verified;
+- net P/L: null while any required cost component is unresolved.
+
+Current swap metadata may be snapshotted for evidence, but it cannot be
+silently converted into historical or realized net P/L.
+
+### Immutable decision/ledger schema
+
+Every monthly paper decision must record at least:
+
+- decision timestamp and holding-period identifier;
+- feature/code SHA;
+- raw BIS/OECD SHA-256 hashes;
+- normalized-input hashes and maximum source dates/months;
+- fixed eight-currency universe;
+- per-currency eligibility reason;
+- 12-month formation value and sign;
+- ex-ante volatility;
+- raw M027 scaling and equal-weight target;
+- gross-cap scale and resulting weight;
+- broker symbol and side;
+- Bid, Ask, midpoint and quote timestamp;
+- contract size and volume min/max/step;
+- unrounded and rounded target lots;
+- read-only projected margin;
+- any common margin scale;
+- paper fill price;
+- prior paper position and target paper position;
+- cost-evidence status fields;
+- all safety flags.
+
+Decision files are append-only and content-hashed. A prior decision record may
+not be overwritten after its decision timestamp.
+
+### Observation and conclusion rule
+
+Operational diagnostics may be reviewed immediately: source readiness, quote
+freshness, sizing, margin, ledger integrity, and cost-evidence completeness.
+
+No claim that the executable strategy is supported/not supported may be made
+until at least:
+
+**12 completed monthly forward-paper holding periods**
+
+have been recorded prospectively under this frozen contract.
+
+Before that threshold:
+
+- no symbol pruning based on paper P/L;
+- no parameter tuning;
+- no side/session/weekday changes;
+- no retrospective re-entry of skipped months;
+- no annualized Sharpe or strategy-support classification used to change the
+  contract.
+
+Any future change to signal, execution universe, leverage cap, margin cap,
+decision timestamp, cost treatment, or observation threshold requires a new
+named milestone.
+
+### Stage-2 implementation scope
+
+Stage 2 may now implement and unit-test pure shadow-position machinery for:
+
+- decision timestamps;
+- broker-side orientation;
+- raw M027 weight translation;
+- common gross-cap scaling;
+- lot conversion and toward-zero rounding;
+- common margin scaling;
+- bid/ask paper fill/mark conventions;
+- immutable decision-record construction.
+
+Stage 2 must not:
+
+- send or validate a real broker order;
+- modify a position;
+- run retrospective M028 strategy economics;
+- inspect M021 post-cutoff outcomes;
+- rewrite M027 economics;
+- create paper performance outcomes before the first real prospective decision
+  timestamp.
