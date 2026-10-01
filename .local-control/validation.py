@@ -18986,7 +18986,516 @@ def m028_stage3_tests():
         },
     }
 
+
+def m028_stage3_first_decision():
+    """Create the immutable first M028 paper decision only after its time gate."""
+
+    from datetime import datetime, timezone
+
+    feature_sha = _require_m028_branch()
+    scheduled = datetime(2026, 10, 7, 12, 0, tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc)
+
+    record_dir = Path.home() / ".local" / "share" / "mamba2-forward-paper"
+    record_path = record_dir / "2026-10-decision.json"
+
+    if record_path.is_file():
+        try:
+            existing = json.loads(record_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            return {
+                "ok": False,
+                "reason": f"existing October decision record is invalid JSON: {exc}",
+                "feature_sha": feature_sha,
+                "safety": {
+                    "decision_recomputed": False,
+                    "real_order_api_called": False,
+                    "position_change_api_called": False,
+                },
+            }
+        return {
+            "ok": True,
+            "feature_branch": "execution-realism",
+            "feature_sha": feature_sha,
+            "decision": existing,
+            "reused_existing_record": True,
+            "safety": {
+                "decision_recomputed": False,
+                "real_order_api_called": False,
+                "order_check_called": False,
+                "position_change_api_called": False,
+                "trade_history_read": False,
+                "balance_or_equity_returned": False,
+                "m027_economics_rerun": False,
+                "m021_post_cutoff_outcomes_used": False,
+            },
+        }
+
+    if now < scheduled:
+        return {
+            "ok": False,
+            "feature_branch": "execution-realism",
+            "feature_sha": feature_sha,
+            "reason": "TIME_GATE_NOT_OPEN",
+            "scheduled_decision_utc": "2026-10-07T12:00:00Z",
+            "current_time_utc": now.isoformat().replace("+00:00", "Z"),
+            "safety": {
+                "live_source_signal_computed": False,
+                "target_side_computed": False,
+                "target_lots_computed": False,
+                "forward_strategy_outcome_computed": False,
+                "real_order_api_called": False,
+                "order_check_called": False,
+                "position_change_api_called": False,
+                "trade_history_read": False,
+                "balance_or_equity_returned": False,
+                "m027_economics_rerun": False,
+                "m021_post_cutoff_outcomes_used": False,
+            },
+        }
+
+    source_path = Path("/tmp/mamba2-m028-first-decision-source.json")
+    broker_path = Path("/tmp/mamba2-m028-first-decision-broker.json")
+    decision_path = Path("/tmp/mamba2-m028-first-decision-record.json")
+    for candidate in (source_path, broker_path, decision_path):
+        candidate.unlink(missing_ok=True)
+
+    source_code = r'''
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+from mamba2.backtest.m027_stage1_ingestion import _download
+from mamba2.backtest.m027_carry_aware_tsmom import (
+    BIS_XRU_URL,
+    OECD_STIR_URL,
+    parse_bis_daily_spot_zip,
+    parse_oecd_monthly_short_rates,
+    sha256_bytes,
+)
+from mamba2.backtest.m028_forward_paper import (
+    required_source_cutoffs,
+    source_gate_ready,
+)
+from mamba2.backtest.m028_prospective import (
+    M028_FIRST_DECISION_UTC,
+    _frame_sha256,
+    build_live_source_signal_snapshot,
+)
+
+out = Path(os.environ["M028_OUTPUT"])
+
+bis_raw = _download(BIS_XRU_URL)
+oecd_raw = _download(
+    OECD_STIR_URL,
+    accept="text/csv,application/vnd.sdmx.data+csv;version=2.0.0",
+)
+spot = parse_bis_daily_spot_zip(bis_raw)
+rates = parse_oecd_monthly_short_rates(oecd_raw)
+spot_max = None if spot.empty else spot.index.max().date().isoformat()
+rate_max = None if rates.empty else str(rates.index.max())
+
+source = {
+    "bis_raw_sha256": sha256_bytes(bis_raw),
+    "oecd_raw_sha256": sha256_bytes(oecd_raw),
+    "spot_panel_sha256": _frame_sha256(spot, index_label="date"),
+    "rate_panel_sha256": _frame_sha256(
+        rates,
+        index_label="month",
+        period_index_as_string=True,
+    ),
+    "spot_max_date": spot_max,
+    "rate_max_month": rate_max,
+    **required_source_cutoffs(M028_FIRST_DECISION_UTC),
+}
+ready = (
+    spot_max is not None
+    and rate_max is not None
+    and source_gate_ready(
+        M028_FIRST_DECISION_UTC,
+        spot_max_date=spot_max,
+        rate_max_month=rate_max,
+    )
+)
+
+payload = {
+    "source_gate_pass": bool(ready),
+    "source": source,
+    "signal": None,
+}
+if ready:
+    live = build_live_source_signal_snapshot(
+        bis_raw=bis_raw,
+        oecd_raw=oecd_raw,
+        now=datetime.now(timezone.utc),
+        decision=M028_FIRST_DECISION_UTC,
+    )
+    payload["source"] = live["source"]
+    payload["signal"] = live["signal"]
+
+out.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+'''
+
+    source_env = _safe_env()
+    source_env["M028_OUTPUT"] = str(source_path)
+    source_run = _run_process_group_file_bounded(
+        _native_command("-c", source_code),
+        env=source_env,
+        timeout_seconds=300,
+    )
+    source_payload = None
+    if source_path.is_file() and source_path.stat().st_size > 0:
+        try:
+            source_payload = json.loads(source_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            source_payload = None
+    source_path.unlink(missing_ok=True)
+
+    if source_payload is None:
+        return {
+            "ok": False,
+            "feature_branch": "execution-realism",
+            "feature_sha": feature_sha,
+            "reason": "FIRST_DECISION_SOURCE_SNAPSHOT_FAILED",
+            "source_run": source_run,
+            "safety": {
+                "real_order_api_called": False,
+                "position_change_api_called": False,
+                "trade_history_read": False,
+            },
+        }
+
+    dedicated = REPO / ".venv-wine" / "Scripts" / "python.exe"
+    if not dedicated.is_file():
+        raise RuntimeError("established M028 Wine runtime is missing: .venv-wine")
+    wine_python = _wine_windows_path(dedicated)
+    if not wine_python:
+        raise RuntimeError("cannot map established M028 Wine runtime")
+    wine = _wine()
+
+    broker_code = r'''
+import json
+import math
+import os
+from pathlib import Path
+
+import MetaTrader5 as mt5
+
+from config import mt5 as mt5_config
+from mamba2.backtest.mt5_dataset import _mt5_initialize_kwargs
+
+MAPPING = {
+    "AUD": "AUDUSD",
+    "CAD": "USDCAD",
+    "CHF": "USDCHF",
+    "EUR": "EURUSD",
+    "GBP": "GBPUSD",
+    "JPY": "USDJPY",
+    "NZD": "NZDUSD",
+    "SEK": "USDSEK",
+}
+OUT = Path(os.environ["M028_OUTPUT"])
+
+def positive(value):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return False
+    return math.isfinite(number) and number > 0.0
+
+if not mt5.initialize(**_mt5_initialize_kwargs(mt5_config)):
+    raise RuntimeError("MT5 initialize failed for M028 first paper decision")
+
+temporary = []
+try:
+    rows = {}
+    positive_times = []
+
+    for currency, symbol in MAPPING.items():
+        info = mt5.symbol_info(symbol)
+        if info is None:
+            rows[currency] = {
+                "symbol": symbol,
+                "quote_viable": False,
+                "reason": "NO_SYMBOL_METADATA",
+            }
+            continue
+
+        was_visible = bool(getattr(info, "visible", False))
+        tick = mt5.symbol_info_tick(symbol)
+        if tick is None:
+            selected = bool(mt5.symbol_select(symbol, True))
+            if selected and not was_visible:
+                temporary.append(symbol)
+            tick = mt5.symbol_info_tick(symbol)
+
+        bid = float(getattr(tick, "bid", 0.0) or 0.0) if tick is not None else 0.0
+        ask = float(getattr(tick, "ask", 0.0) or 0.0) if tick is not None else 0.0
+        raw_time = getattr(tick, "time", None) if tick is not None else None
+        try:
+            raw_time = int(raw_time) if raw_time is not None else None
+        except (TypeError, ValueError):
+            raw_time = None
+
+        valid_quote = (
+            positive(bid)
+            and positive(ask)
+            and ask >= bid
+            and raw_time is not None
+            and raw_time > 0
+        )
+        if valid_quote:
+            positive_times.append(raw_time)
+
+        buy_margin = (
+            mt5.order_calc_margin(mt5.ORDER_TYPE_BUY, symbol, 1.0, ask)
+            if valid_quote
+            else None
+        )
+        sell_margin = (
+            mt5.order_calc_margin(mt5.ORDER_TYPE_SELL, symbol, 1.0, bid)
+            if valid_quote
+            else None
+        )
+
+        rows[currency] = {
+            "symbol": symbol,
+            "bid": bid,
+            "ask": ask,
+            "tick_time_epoch": raw_time,
+            "valid_positive_quote": bool(valid_quote),
+            "contract_size": float(getattr(info, "trade_contract_size", 0.0) or 0.0),
+            "volume_min": float(getattr(info, "volume_min", 0.0) or 0.0),
+            "volume_max": float(getattr(info, "volume_max", 0.0) or 0.0),
+            "volume_step": float(getattr(info, "volume_step", 0.0) or 0.0),
+            "buy_margin_per_lot": (
+                float(buy_margin) if positive(buy_margin) else None
+            ),
+            "sell_margin_per_lot": (
+                float(sell_margin) if positive(sell_margin) else None
+            ),
+            "swap_mode": int(getattr(info, "swap_mode", 0) or 0),
+            "swap_long": float(getattr(info, "swap_long", 0.0) or 0.0),
+            "swap_short": float(getattr(info, "swap_short", 0.0) or 0.0),
+            "swap_rollover3days": int(
+                getattr(info, "swap_rollover3days", 0) or 0
+            ),
+        }
+
+    reference = max(positive_times) if positive_times else None
+    viable = []
+    for currency, row in rows.items():
+        raw_time = row.get("tick_time_epoch")
+        lag = (
+            None
+            if reference is None or raw_time is None
+            else int(reference) - int(raw_time)
+        )
+        quote_ok = (
+            bool(row.get("valid_positive_quote"))
+            and lag is not None
+            and 0 <= lag <= 300
+        )
+        row["seconds_behind_reference"] = lag
+        row["quote_viable"] = bool(quote_ok)
+        if quote_ok:
+            viable.append(currency)
+
+    OUT.write_text(json.dumps({
+        "reference_tick_time_epoch": reference,
+        "quote_viable_currencies": sorted(viable),
+        "quote_viable_count": len(viable),
+        "currencies": rows,
+    }, sort_keys=True), encoding="utf-8")
+finally:
+    for symbol in temporary:
+        try:
+            mt5.symbol_select(symbol, False)
+        except Exception:
+            pass
+    mt5.shutdown()
+'''
+
+    broker_env = _safe_env(wine=True)
+    broker_env["M028_OUTPUT"] = _wine_windows_path(broker_path)
+    broker_run = _run_process_group_file_bounded(
+        [wine, wine_python, "-c", broker_code],
+        env=broker_env,
+        timeout_seconds=90,
+    )
+    broker_payload = None
+    if broker_path.is_file() and broker_path.stat().st_size > 0:
+        try:
+            broker_payload = json.loads(broker_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            broker_payload = None
+    broker_path.unlink(missing_ok=True)
+
+    if broker_payload is None:
+        return {
+            "ok": False,
+            "feature_branch": "execution-realism",
+            "feature_sha": feature_sha,
+            "reason": "FIRST_DECISION_BROKER_SNAPSHOT_FAILED",
+            "broker_run": broker_run,
+            "safety": {
+                "real_order_api_called": False,
+                "order_check_called": False,
+                "position_change_api_called": False,
+                "trade_history_read": False,
+            },
+        }
+
+    combine_code = r'''
+import json
+import os
+from datetime import datetime, timezone
+from pathlib import Path
+
+from mamba2.backtest.m028_forward_paper import (
+    M028_FIXED_CURRENCIES,
+    build_shadow_target_plan,
+    seal_decision_record,
+)
+
+source_payload = json.loads(Path(os.environ["M028_SOURCE"]).read_text(encoding="utf-8"))
+broker_payload = json.loads(Path(os.environ["M028_BROKER"]).read_text(encoding="utf-8"))
+out = Path(os.environ["M028_OUTPUT"])
+feature_sha = os.environ["M028_FEATURE_SHA"]
+
+if source_payload.get("source_gate_pass") and source_payload.get("signal"):
+    plan = build_shadow_target_plan(
+        source_payload["signal"],
+        broker_payload["currencies"],
+    )
+    signal = source_payload["signal"]
+else:
+    plan = {
+        "status": "FORWARD_PAPER_NOT_READY",
+        "reason": "SOURCE_NOT_READY",
+        "reference_equity_usd": 10000.0,
+        "targets": {},
+        "cost_evidence": {
+            "commission": None,
+            "commission_status": "UNPROVEN",
+            "slippage": None,
+            "slippage_status": "UNOBSERVED",
+            "financing": None,
+            "financing_status": "UNPROVEN",
+            "net_pnl": None,
+        },
+    }
+    signal = None
+
+record = {
+    "version": 1,
+    "decision_id": "2026-10",
+    "scheduled_decision_utc": "2026-10-07T12:00:00Z",
+    "created_at_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+    "feature_branch": "execution-realism",
+    "feature_sha": feature_sha,
+    "source": source_payload["source"],
+    "source_gate_pass": bool(source_payload.get("source_gate_pass")),
+    "signal": signal,
+    "broker": broker_payload,
+    "prior_positions_lots": {
+        currency: 0.0 for currency in M028_FIXED_CURRENCIES
+    },
+    "plan": plan,
+    "holding_period_return": None,
+    "safety": {
+        "real_order_api_called": False,
+        "order_check_called": False,
+        "position_change_api_called": False,
+        "trade_history_read": False,
+        "balance_or_equity_returned": False,
+        "strategy_return_computed": False,
+        "portfolio_pnl_computed": False,
+        "m027_economics_rerun": False,
+        "m021_post_cutoff_outcomes_used": False,
+    },
+}
+sealed = seal_decision_record(record)
+out.write_text(json.dumps(sealed, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+'''
+
+    # Re-materialize input files for the pure native combiner.
+    source_path.write_text(
+        json.dumps(source_payload, sort_keys=True),
+        encoding="utf-8",
+    )
+    broker_path.write_text(
+        json.dumps(broker_payload, sort_keys=True),
+        encoding="utf-8",
+    )
+    combine_env = _safe_env()
+    combine_env["M028_SOURCE"] = str(source_path)
+    combine_env["M028_BROKER"] = str(broker_path)
+    combine_env["M028_OUTPUT"] = str(decision_path)
+    combine_env["M028_FEATURE_SHA"] = feature_sha
+
+    combine_run = _run_process_group_file_bounded(
+        _native_command("-c", combine_code),
+        env=combine_env,
+        timeout_seconds=60,
+    )
+    for candidate in (source_path, broker_path):
+        candidate.unlink(missing_ok=True)
+
+    decision = None
+    if decision_path.is_file() and decision_path.stat().st_size > 0:
+        try:
+            decision = json.loads(decision_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            decision = None
+    decision_path.unlink(missing_ok=True)
+
+    if decision is None:
+        return {
+            "ok": False,
+            "feature_branch": "execution-realism",
+            "feature_sha": feature_sha,
+            "reason": "FIRST_DECISION_ASSEMBLY_FAILED",
+            "combine_run": combine_run,
+            "safety": {
+                "real_order_api_called": False,
+                "position_change_api_called": False,
+            },
+        }
+
+    record_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        with record_path.open("x", encoding="utf-8") as handle:
+            json.dump(decision, handle, indent=2, sort_keys=True)
+            handle.write("\n")
+    except FileExistsError:
+        existing = json.loads(record_path.read_text(encoding="utf-8"))
+        decision = existing
+
+    return {
+        "ok": True,
+        "feature_branch": "execution-realism",
+        "feature_sha": feature_sha,
+        "decision": decision,
+        "reused_existing_record": False,
+        "source_run": source_run,
+        "broker_run": broker_run,
+        "combine_run": combine_run,
+        "safety": {
+            "append_only_record": True,
+            "real_order_api_called": False,
+            "order_check_called": False,
+            "position_change_api_called": False,
+            "trade_history_read": False,
+            "balance_or_equity_returned": False,
+            "m027_economics_rerun": False,
+            "m021_post_cutoff_outcomes_used": False,
+        },
+    }
+
 ACTION_HANDLERS = {
+    "m028_stage3_first_decision": m028_stage3_first_decision,
     "m028_stage3_tests": m028_stage3_tests,
     "m028_stage3_readiness": m028_stage3_readiness,
     "m028_stage2_tests": m028_stage2_tests,
