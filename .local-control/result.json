@@ -1,17 +1,32 @@
 {
   "version": 1,
-  "command_id": "mamba2-20261112-stage3a-closeout-status-v1",
-  "completed_at": "2026-11-12T10:08:34.389103+00:00",
+  "command_id": "mamba2-20261112-stage3b-isolated-preflight-v1",
+  "completed_at": "2026-11-12T10:31:42.447785+00:00",
   "ok": true,
-  "action": "status",
+  "action": "m029_stage3b_isolated_preflight",
   "data": {
-    "hostname": "joel-OptiPlex-7080",
-    "repo": "/home/joel/Dev/mamba2-trading-bot",
-    "branch": "prospective-paper-recovery",
-    "head": "63445f93ffa1a7c3d6b9316815081fcff4260ee2",
-    "clean": true,
-    "changed_paths": [],
-    "divergence": "0\t0",
-    "time": "2026-11-12T10:08:30.556033+00:00"
+    "read_only": true,
+    "wine_started": false,
+    "terminal_started": false,
+    "python_started": false,
+    "broker_initialized": false,
+    "account_data_read": false,
+    "real_order_api_called": false,
+    "prefix_modified": false,
+    "wine_candidates": [
+      {
+        "binary": "/usr/bin/wine",
+        "version": "wine-9.0 (Ubuntu 9.0~repack-4build3)"
+      }
+    ],
+    "isolated_prefix_candidates": [
+      {
+        "prefix": "/home/joel/mt5-prefix-backup-2026-09-24",
+        "windows_product_name": "Microsoft Windows 10",
+        "bridge_python_candidates": [],
+        "terminal_copy_present": false
+      }
+    ],
+    "isolated_python_available": false
   }
 }
