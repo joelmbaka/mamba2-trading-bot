@@ -1,37 +1,38 @@
-# Next Authorized Task — M030 Stage 1E incremental indicator engine
+# Next Authorized Task — M030 Stage 1E synthetic and isolated compilation validation
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1D PYTHON TESTS AND DISPOSABLE MQL5 COMPILATION ACCEPTED; TESTER BLOCKED BY FULL-PREFIX COST**
+Status: **INCREMENTAL OBSERVATION ENGINE SOURCE COMMITTED; TESTS/RECOMPILE REQUIRED**
 
-## Evidence
+## Current progress
 
-Codex validated source `f878cbd65389ae4f1ccb490ecbfd3af93bba96ca` on clean synced `scalping-recovery`: 13 M030 tests passed; 45 relevant regressions passed; Python syntax passed. Independent revised no-order MQL5 probe compiled in a disposable Wine environment with MetaEditor 6316 and 0 warnings/errors, EX5 SHA-256 `dd019f9769c66b229b31b81ffe1bf9a0ac619dd3d4f01a6f4f2e5f1272d374a1`. CLI status `1` remains an evidence caveat. Original terminal PID 71219 stayed untouched. Complete report: `docs/milestones/030-stage1d-validation.md`.
+Stage 1D passed 13 focused and 45 regression tests. Its no-order MQL5 EA compiled with 0 MetaEditor errors/warnings; Wine CLI exit code 1 remains a known caveat. Codex diagnosed prohibitive repeated full-prefix computations (~19 billion estimated inner-loop iterations for a one-day tester sample).
 
-Codex estimated approximately 19 billion inner-loop operations for a one-day run because the EA re-reads/recalculates the full 389k M1 / 78k M5 warm-up prefixes each minute. This is an analytical estimate, not a measured benchmark. **Do not run Strategy Tester.**
+ChatGPT has implemented Stage 1E GitHub source changes detailed in `docs/milestones/030-stage1e-incremental-engine.md`: full historical prefix read once for first-source EMA7 seeding, newest 48 M1/M5 bar windows for 21/7/7 stochastic and M5 ATR14, newest completed bar reads thereafter, explicit no-gap and completed-bar assertions, optional one-time audit, and synthetic Python vector tests in `tests/test_m030_incremental_contract.py`.
 
-## Next source work — ChatGPT GitHub
+**The Stage 1E revised EA has not yet been independently compiled or run.**
 
-Build **M030 Stage 1E**, a persistent, causal indicator-state engine inside the independent MQL5 diagnostic EA:
+## Next bounded task for Codex, after explicit instruction
 
-- Consume the complete independently seeded M1 and M5 prefixes once, retaining Python's exact EMA initial close and stochastic 21/7/7 smoothing behavior; incremental M1/M5 updates thereafter.
-- Preserve native M5 ATR14 as rolling TR mean; preserve newest-ten-M1 stochastic extreme checks, current M5 K/D, completed candles, and original trend/EMA branch semantics.
-- Strictly verify timestamp chronology and expected latest closed bars; reject missing, duplicated, misordered or unavailable prefixes rather than inventing data.
-- Keep explicit historical server-to-UTC offset and independent M1/M5 source starts; do not auto-infer broker clock or change evaluation date.
-- Keep optional bar audit and no-order tester-only safeguards.
-- Add synthetic indicator-vector regression tests; document technical performance and memory constraints.
-- No source changes outside GitHub, no new branches, no strategy tuning, no broker connections, no automated tester launch.
+- Confirm branch `scalping-recovery` is clean and synchronized with origin. Fetch/pull safely without reset, rebase, stash or force-push.
+- Read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, this file and Stage 1E milestone.
+- Run `PYTHONPATH=. ./.venv/bin/pytest tests/test_m030_parity.py tests/test_m030_incremental_contract.py -q`, relevant regression tests and `py_compile`.
+- Static review: no-order EA safety, M1/M5 latest-bar progression, EMA seed, stochastic lookback, ATR14 and `CopyRates` constraints.
+- Compile only the revised EA using a **new disposable Wine prefix and copied MetaEditor application**, protected from original MT5 app/prefix and host-user mappings. Report compiler errors, warnings, build, original/copied source SHA-256, EX5 SHA-256, paths, exit status, and original running terminal unchanged.
+- Do not modify source locally; submit defects to ChatGPT for Github source edits.
 
-After implementation, independently ask Codex to run synthetic Python tests and *compile only* the revised EA in a new disposable isolated MetaEditor context.
+## Still prohibited
 
-## Not authorized
+Do not launch MT5 Strategy Tester or historical Python backtest, place simulated or real orders, connect a broker, download or modify market data, install packages, optimize settings, change the production strategy, launch the original terminal, use local-control or local-control-results, or create new branches.
 
-Do not run historical Python/MT5 replay, tester GUI, simulated/live orders, broker initialization, downloads, installs, optimization, original-terminal modifications, or local-control workflow. Full MT5 data/clock identity remains unverified.
+## Subsequent gate
+
+Review code/test/compile results and whether the full native M1/M5 prefix can actually be supplied by MT5. Independently verify historical server-to-UTC mapping and data identity before any separately approved isolated *decision-only* tester launch. Compilation is not parity evidence.
 
 ## References
 
 - `AGENTS.md`
 - `docs/BACKTEST_SEMANTICS.md`
 - `docs/milestones/030-stage1c-data-provenance.md`
-- `docs/milestones/030-stage1d-alignment-contract.md`
 - `docs/milestones/030-stage1d-validation.md`
+- `docs/milestones/030-stage1e-incremental-engine.md`
