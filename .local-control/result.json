@@ -1,15 +1,15 @@
 {
   "version": 1,
-  "command_id": "mamba2-20261112-branch-consolidation-switch-main-v1",
-  "completed_at": "2026-11-12T11:55:57.362885+00:00",
+  "command_id": "mamba2-20261112-switch-scalping-recovery-v1",
+  "completed_at": "2026-11-12T12:27:04.177967+00:00",
   "ok": true,
   "action": "switch_branch",
   "data": {
-    "target_branch": "main",
-    "before_branch": "prospective-paper-recovery",
-    "after_branch": "main",
-    "before_sha": "f29afaa483a48309f508a0e5fca99694c856a409",
-    "after_sha": "954a90124d1355e865f05fd05d394d99d8944b56",
+    "target_branch": "scalping-recovery",
+    "before_branch": "main",
+    "after_branch": "scalping-recovery",
+    "before_sha": "954a90124d1355e865f05fd05d394d99d8944b56",
+    "after_sha": "5f5084739af0659687c127b065dcfd87c6b21dd3",
     "reason": null,
     "commands": [
       {
@@ -19,7 +19,7 @@
           "--show-current"
         ],
         "exit_code": 0,
-        "stdout": "prospective-paper-recovery\n",
+        "stdout": "main\n",
         "stderr": ""
       },
       {
@@ -29,7 +29,7 @@
           "HEAD"
         ],
         "exit_code": 0,
-        "stdout": "f29afaa483a48309f508a0e5fca99694c856a409\n",
+        "stdout": "954a90124d1355e865f05fd05d394d99d8944b56\n",
         "stderr": ""
       },
       {
@@ -37,10 +37,10 @@
           "git",
           "check-ref-format",
           "--branch",
-          "main"
+          "scalping-recovery"
         ],
         "exit_code": 0,
-        "stdout": "main\n",
+        "stdout": "scalping-recovery\n",
         "stderr": ""
       },
       {
@@ -59,21 +59,21 @@
           "git",
           "fetch",
           "origin",
-          "main:refs/remotes/origin/main"
+          "scalping-recovery:refs/remotes/origin/scalping-recovery"
         ],
         "exit_code": 0,
         "stdout": "",
-        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n   927d90c..954a901  main       -> origin/main\n"
+        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * [new branch]      scalping-recovery -> origin/scalping-recovery\n"
       },
       {
         "command": [
           "git",
           "rev-parse",
           "--verify",
-          "refs/remotes/origin/main"
+          "refs/remotes/origin/scalping-recovery"
         ],
         "exit_code": 0,
-        "stdout": "954a90124d1355e865f05fd05d394d99d8944b56\n",
+        "stdout": "5f5084739af0659687c127b065dcfd87c6b21dd3\n",
         "stderr": ""
       },
       {
@@ -81,45 +81,24 @@
           "git",
           "rev-parse",
           "--verify",
-          "refs/heads/main"
+          "refs/heads/scalping-recovery"
         ],
-        "exit_code": 0,
-        "stdout": "40536d96c6ac2119fca3c2cfec92dad889e7c878\n",
-        "stderr": ""
-      },
-      {
-        "command": [
-          "git",
-          "rev-list",
-          "--left-right",
-          "--count",
-          "refs/heads/main...refs/remotes/origin/main"
-        ],
-        "exit_code": 0,
-        "stdout": "0\t310\n",
-        "stderr": ""
+        "exit_code": 128,
+        "stdout": "",
+        "stderr": "fatal: Needed a single revision\n"
       },
       {
         "command": [
           "git",
           "switch",
-          "main"
+          "--track",
+          "-c",
+          "scalping-recovery",
+          "origin/scalping-recovery"
         ],
         "exit_code": 0,
-        "stdout": "Your branch is behind 'origin/main' by 310 commits, and can be fast-forwarded.\n  (use \"git pull\" to update your local branch)\n",
-        "stderr": "Switched to branch 'main'\n"
-      },
-      {
-        "command": [
-          "git",
-          "pull",
-          "--ff-only",
-          "origin",
-          "main"
-        ],
-        "exit_code": 0,
-        "stdout": "Updating 40536d9..954a901\nFast-forward\n .env.example                                       |    7 -\n .gitignore                                         |    6 +\n AGENTS.md                                          |   46 +\n README.md                                          |  169 +-\n backtest/market_metrics.csv                        |    1 -\n docs/BACKTEST_SEMANTICS.md                         |   98 +\n docs/CODE_CLEANUP.md                               |   71 +\n docs/CURRENT_STATE.md                              | 1026 +++\n docs/MILESTONES.md                                 |  148 +\n docs/NEXT_TASK.md                                  |  147 +\n docs/PROJECT_PLAN.md                               |   89 +\n docs/README.md                                     |   14 +\n docs/WORKFLOW.md                                   |   81 +\n .../015-repository-operations-foundation.md        |  122 +\n docs/milestones/016-first-real-baseline.md         |  222 +\n docs/milestones/017-baseline-diagnosis.md          |  321 +\n docs/milestones/018-proven-defect-review.md        |  244 +\n docs/milestones/019-broader-history-validation.md  |  354 +\n docs/milestones/020-controlled-experiments.md      |  781 ++\n .../021-prospective-forward-validation.md          |  459 +\n .../022-two-timeframe-parameter-research.md        | 2494 ++++++\n docs/milestones/023-direction-session-research.md  | 1625 ++++\n .../024-symbol-specialization-research.md          | 1370 +++\n .../025-public-fx-strategy-benchmarks.md           | 1745 ++++\n .../026-tradeable-fx-tsmom-reconstruction.md       |  248 +\n docs/milestones/027-carry-aware-spot-tsmom.md      |  748 ++\n docs/milestones/028-execution-realism.md           | 1317 +++\n docs/milestones/029-prospective-paper-recovery.md  |  238 +\n docs/milestones/029-stage3-operational-protocol.md |  153 +\n docs/research/m025-public-source-inventory.md      |  458 +\n docs/research/m026-tsmom-source-inventory.md       |  287 +\n docs/research/m027-stage0-source-universe.md       |  129 +\n examples/mt5_broker_demo.py                        |   74 -\n examples/plot_eurusd_trend.py                      |   75 -\n examples/simple_strategy.py                        |   15 -\n logs/mamba2.log                                    | 8767 --------------------\n mamba2/backtest/broker.py                          |  135 +-\n mamba2/backtest/diagnostics.py                     |  958 +++\n mamba2/backtest/direction_session_diagnostics.py   |  635 ++\n mamba2/backtest/experiments.py                     |  270 +\n mamba2/backtest/feed.py                            |  115 +-\n mamba2/backtest/m020_decision_spread.py            |  452 +\n mamba2/backtest/m020_diagnostics.py                |  269 +\n mamba2/backtest/m020_spread_treatment.py           |  344 +\n mamba2/backtest/m021_forward_validation.py         |  698 ++\n mamba2/backtest/m023_direction_research.py         |  843 ++\n mamba2/backtest/m023_session_research.py           |  530 ++\n mamba2/backtest/m024_holdout_assessment.py         |  261 +\n mamba2/backtest/m024_holdout_readiness.py          |  287 +\n mamba2/backtest/m024_holdout_research.py           |  470 ++\n mamba2/backtest/m024_symbol_causal_research.py     |  454 +\n mamba2/backtest/m024_symbol_specialization.py      |  509 ++\n mamba2/backtest/m025_stage3_ingestion.py           |  745 ++\n mamba2/backtest/m025_stage4_economics.py           |  797 ++\n mamba2/backtest/m027_carry_aware_tsmom.py          |  360 +\n mamba2/backtest/m027_stage1_ingestion.py           |  156 +\n mamba2/backtest/m027_stage2.py                     |  357 +\n mamba2/backtest/m027_stage2_runner.py              |   46 +\n mamba2/backtest/m028_forward_paper.py              |  648 ++\n mamba2/backtest/m028_prospective.py                |  206 +\n mamba2/backtest/m029_assembly.py                   |  227 +\n mamba2/backtest/m029_prospective.py                |  297 +\n mamba2/backtest/m029_stage3a.py                    |  355 +\n mamba2/backtest/mt5_dataset.py                     |  295 +-\n mamba2/backtest/parameter_research.py              | 1192 +++\n mamba2/backtest/public_benchmarks.py               |  464 ++\n mamba2/backtest/runner.py                          |   15 +-\n mamba2/broker/README.md                            |  102 -\n mamba2/crew/atr_manager.py                         |   11 +-\n mamba2/crew/position_manager.py                    |   24 +-\n mamba2/crew/test_mt5_columns.py                    |   71 -\n mamba2/indicators/MACD.py                          |   79 -\n mamba2/indicators/atr.py                           |  139 +-\n mamba2/indicators/detect_divergences.py            |    0\n mamba2/indicators/moving_average.py                |  106 +-\n mamba2/indicators/stochastic.py                    |  284 +-\n mamba2/indicators/support_resistance.py            |   66 -\n mamba2/strategy/mq5_version.mq5                    |    0\n mamba2/strategy/triple_cross.py                    |   70 +-\n mamba2/trader/client.py                            |   24 -\n pyproject.toml                                     |    2 +-\n tests/test_backtest_account_currency.py            |  139 +\n tests/test_backtest_diagnostics.py                 |  265 +\n tests/test_backtest_experiments.py                 |  169 +\n tests/test_backtest_foundation.py                  |   44 +\n tests/test_backtest_portfolio_runner.py            |   45 +\n tests/test_backtest_strategy_lifecycle.py          |    1 +\n tests/test_direction_session_diagnostics.py        |  136 +\n tests/test_m020_decision_spread.py                 |  189 +\n tests/test_m020_diagnostics.py                     |  177 +\n tests/test_m020_spread_treatment.py                |  109 +\n tests/test_m021_forward_validation.py              |  266 +\n tests/test_m023_direction_research.py              |  185 +\n tests/test_m023_session_research.py                |  159 +\n tests/test_m024_holdout_readiness.py               |   62 +\n tests/test_m024_holdout_research.py                |  151 +\n tests/test_m024_symbol_causal_research.py          |   67 +\n tests/test_m024_symbol_specialization.py           |  205 +\n tests/test_m025_stage3_ingestion.py                |  285 +\n tests/test_m025_stage4_economics.py                |  214 +\n tests/test_m027_carry_aware_tsmom.py               |  242 +\n tests/test_m027_stage1_ingestion.py                |  120 +\n tests/test_m027_stage2.py                          |  112 +\n tests/test_m028_forward_paper.py                   |  267 +\n tests/test_m028_prospective.py                     |   78 +\n tests/test_m029_assembly.py                        |  247 +\n tests/test_m029_prospective.py                     |  303 +\n tests/test_m029_stage3a.py                         |  299 +\n tests/test_m029_stage3a_journal.py                 |  126 +\n tests/test_mt5_dataset.py                          |  116 +\n tests/test_parameter_research.py                   |  588 ++\n tests/test_position_manager_trailing_semantics.py  |   69 +-\n tests/test_public_benchmarks.py                    |  330 +\n tests/test_replay_indicator_cache.py               |  205 +\n tests/test_trader.py                               |   16 -\n uv.lock                                            | 1398 ++--\n 116 files changed, 35576 insertions(+), 10325 deletions(-)\n delete mode 100644 .env.example\n create mode 100644 AGENTS.md\n delete mode 100644 backtest/market_metrics.csv\n create mode 100644 docs/BACKTEST_SEMANTICS.md\n create mode 100644 docs/CODE_CLEANUP.md\n create mode 100644 docs/CURRENT_STATE.md\n create mode 100644 docs/MILESTONES.md\n create mode 100644 docs/NEXT_TASK.md\n create mode 100644 docs/PROJECT_PLAN.md\n create mode 100644 docs/README.md\n create mode 100644 docs/WORKFLOW.md\n create mode 100644 docs/milestones/015-repository-operations-foundation.md\n create mode 100644 docs/milestones/016-first-real-baseline.md\n create mode 100644 docs/milestones/017-baseline-diagnosis.md\n create mode 100644 docs/milestones/018-proven-defect-review.md\n create mode 100644 docs/milestones/019-broader-history-validation.md\n create mode 100644 docs/milestones/020-controlled-experiments.md\n create mode 100644 docs/milestones/021-prospective-forward-validation.md\n create mode 100644 docs/milestones/022-two-timeframe-parameter-research.md\n create mode 100644 docs/milestones/023-direction-session-research.md\n create mode 100644 docs/milestones/024-symbol-specialization-research.md\n create mode 100644 docs/milestones/025-public-fx-strategy-benchmarks.md\n create mode 100644 docs/milestones/026-tradeable-fx-tsmom-reconstruction.md\n create mode 100644 docs/milestones/027-carry-aware-spot-tsmom.md\n create mode 100644 docs/milestones/028-execution-realism.md\n create mode 100644 docs/milestones/029-prospective-paper-recovery.md\n create mode 100644 docs/milestones/029-stage3-operational-protocol.md\n create mode 100644 docs/research/m025-public-source-inventory.md\n create mode 100644 docs/research/m026-tsmom-source-inventory.md\n create mode 100644 docs/research/m027-stage0-source-universe.md\n delete mode 100644 examples/mt5_broker_demo.py\n delete mode 100644 examples/plot_eurusd_trend.py\n delete mode 100644 examples/simple_strategy.py\n delete mode 100644 logs/mamba2.log\n create mode 100644 mamba2/backtest/diagnostics.py\n create mode 100644 mamba2/backtest/direction_session_diagnostics.py\n create mode 100644 mamba2/backtest/experiments.py\n create mode 100644 mamba2/backtest/m020_decision_spread.py\n create mode 100644 mamba2/backtest/m020_diagnostics.py\n create mode 100644 mamba2/backtest/m020_spread_treatment.py\n create mode 100644 mamba2/backtest/m021_forward_validation.py\n create mode 100644 mamba2/backtest/m023_direction_research.py\n create mode 100644 mamba2/backtest/m023_session_research.py\n create mode 100644 mamba2/backtest/m024_holdout_assessment.py\n create mode 100644 mamba2/backtest/m024_holdout_readiness.py\n create mode 100644 mamba2/backtest/m024_holdout_research.py\n create mode 100644 mamba2/backtest/m024_symbol_causal_research.py\n create mode 100644 mamba2/backtest/m024_symbol_specialization.py\n create mode 100644 mamba2/backtest/m025_stage3_ingestion.py\n create mode 100644 mamba2/backtest/m025_stage4_economics.py\n create mode 100644 mamba2/backtest/m027_carry_aware_tsmom.py\n create mode 100644 mamba2/backtest/m027_stage1_ingestion.py\n create mode 100644 mamba2/backtest/m027_stage2.py\n create mode 100644 mamba2/backtest/m027_stage2_runner.py\n create mode 100644 mamba2/backtest/m028_forward_paper.py\n create mode 100644 mamba2/backtest/m028_prospective.py\n create mode 100644 mamba2/backtest/m029_assembly.py\n create mode 100644 mamba2/backtest/m029_prospective.py\n create mode 100644 mamba2/backtest/m029_stage3a.py\n create mode 100644 mamba2/backtest/parameter_research.py\n create mode 100644 mamba2/backtest/public_benchmarks.py\n delete mode 100644 mamba2/broker/README.md\n delete mode 100644 mamba2/crew/test_mt5_columns.py\n delete mode 100644 mamba2/indicators/MACD.py\n delete mode 100644 mamba2/indicators/detect_divergences.py\n delete mode 100644 mamba2/indicators/support_resistance.py\n delete mode 100644 mamba2/strategy/mq5_version.mq5\n delete mode 100644 mamba2/trader/client.py\n create mode 100644 tests/test_backtest_diagnostics.py\n create mode 100644 tests/test_backtest_experiments.py\n create mode 100644 tests/test_direction_session_diagnostics.py\n create mode 100644 tests/test_m020_decision_spread.py\n create mode 100644 tests/test_m020_diagnostics.py\n create mode 100644 tests/test_m020_spread_treatment.py\n create mode 100644 tests/test_m021_forward_validation.py\n create mode 100644 tests/test_m023_direction_research.py\n create mode 100644 tests/test_m023_session_research.py\n create mode 100644 tests/test_m024_holdout_readiness.py\n create mode 100644 tests/test_m024_holdout_research.py\n create mode 100644 tests/test_m024_symbol_causal_research.py\n create mode 100644 tests/test_m024_symbol_specialization.py\n create mode 100644 tests/test_m025_stage3_ingestion.py\n create mode 100644 tests/test_m025_stage4_economics.py\n create mode 100644 tests/test_m027_carry_aware_tsmom.py\n create mode 100644 tests/test_m027_stage1_ingestion.py\n create mode 100644 tests/test_m027_stage2.py\n create mode 100644 tests/test_m028_forward_paper.py\n create mode 100644 tests/test_m028_prospective.py\n create mode 100644 tests/test_m029_assembly.py\n create mode 100644 tests/test_m029_prospective.py\n create mode 100644 tests/test_m029_stage3a.py\n create mode 100644 tests/test_m029_stage3a_journal.py\n create mode 100644 tests/test_parameter_research.py\n create mode 100644 tests/test_public_benchmarks.py\n create mode 100644 tests/test_replay_indicator_cache.py\n delete mode 100644 tests/test_trader.py\n",
-        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * branch            main       -> FETCH_HEAD\n"
+        "stdout": "branch 'scalping-recovery' set up to track 'origin/scalping-recovery'.\n",
+        "stderr": "Switched to a new branch 'scalping-recovery'\n"
       },
       {
         "command": [
@@ -128,7 +107,7 @@
           "--show-current"
         ],
         "exit_code": 0,
-        "stdout": "main\n",
+        "stdout": "scalping-recovery\n",
         "stderr": ""
       },
       {
@@ -138,7 +117,7 @@
           "HEAD"
         ],
         "exit_code": 0,
-        "stdout": "954a90124d1355e865f05fd05d394d99d8944b56\n",
+        "stdout": "5f5084739af0659687c127b065dcfd87c6b21dd3\n",
         "stderr": ""
       },
       {
