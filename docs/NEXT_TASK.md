@@ -1,30 +1,34 @@
-# Next Authorized Task — M030 Stage 1S closure/readiness evidence matrix (read-only)
+# M030 — PAUSED after Stage 1S evidence assessment
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGES 1Q/1R SYNTHETIC PYTHON TESTS PASSED; NATIVE MT5 PARITY BLOCKED**
+Status: **PYTHON DETERMINISTIC SEMANTICS VALIDATED FOR TESTED SCOPE; NATIVE MT5 PARITY AND ECONOMIC PERFORMANCE UNRESOLVED**
 
-## Accepted verification
+## Stage 1S decision
 
-Stage 1Q: 64 focused tests passed; related regressions 92 passed, 1 known legacy skip; 119 Python syntax files parsed. Real production ten-M1-candle extreme BUY/SELL without fresh crossover, Stochastic 34/35 warm-up, first-source EMA7 and ATR14 public 0.0 vs 15-row gap TR tested.
+Codex reviewed clean synchronized branch `46c4cf1ae0b9e49889861f5e2e600a52c9bac898` read-only. No independent native MetaQuotes-Demo raw historical clock, M1/M5 OHLC, native tick/Ask, offline tester execution or broker cost/fill parity was available. The account-free blank terminal repeatedly shut down for an unknown reason; unsupported standalone tester-agent invocation is not authorized. The Stage 1S decision and evidence matrix are preserved at `docs/milestones/030-stage1s-readiness-decision.md`.
 
-Stage 1R: 59 focused tests passed; 109 related deterministic regressions passed, 1 known legacy skip; 120 Python files syntax-parsed; zero failures. Real replay broker/position manager event ordering `M1_CLOSE,SIGNAL,SUBMIT,FILL,SLTP_MODIFY`, prior completed-bar `EXIT` before new `M1_CLOSE`, same-boundary execution open, deferred ATR protection and production strategy pending/open position guards. See `docs/milestones/030-stage1r-validation.md` and Stage 1Q validation milestone.
+Prior Stage 1Q: 64 focused tests passed, 92 related regressions passed with one known legacy skip, 119 Python files parsed; real strategy ten-K extreme/no-fresh-crossover entry, indicator warmup, EMA7 seed, ATR14 boundaries.
 
-Original MQL5 diagnostics compiled, but native MT5 startup was short-lived without account/server state and neither a supported offline tester nor history-portability path was found. Stage 1O specifically STOPPED additional account-free blank-terminal retries. Historical MetaQuotes-Demo UTC offset, native M1/M5 OHLC and ticks, MT5 tester decision/fill parity and broker costs remain unverified. The frozen UTC sample remains 2026-09-10; source exporter UTC interpretation is not independent historical broker clock verification.
+Prior Stage 1R: 59 focused tests passed; 109 synthetic regressions passed with one known legacy skip, 120 Python files parsed; correct deterministic causal source-bar timing, signal/order/fill/SLTP/exit sequence and real strategy pending/open position guard. Test totals are separate suite counts with potential overlap; **do not add them as distinct tests**.
 
-## Next bounded Codex task — Stage 1S read-only decision
+No production trading rules, source dataset or historical broker offset changed.
 
-1. Verify clean synchronized branch. Read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, `docs/NEXT_TASK.md`, M030 milestone, Stage 1O STOP, Stage 1Q/1R validations, M030 probes and source/test design summaries as necessary.
-2. Produce a single **read-only M030 evidence matrix** separating: (a) frozen strategy/indicator calculations, (b) Python causal feed and signal decisions, (c) synthetic broker/execution and trace ordering, (d) MQL5 source compilation, (e) independently established native MT5 timestamps, M1/M5 OHLC and tick history, (f) native tester decision/execution parity, and (g) economic performance/broker execution.
-3. For each, name exact verified evidence, remaining uncertainties and an objective pass/fail gate. Do not treat overlapping test suites' pass counts as independent distinct test totals, do not overstate synthetic proof, and do not conflate original historical source exporter timestamp interpretation with broker-clock proof.
-4. Identify whether any *new* supported and privacy-preserving native data/time source is available **without** copying account material or connecting to broker. If none, recommend explicit native-parity STOP, with alternatives and required evidence to reopen. No speculative MT5 processes.
-5. Recommend a single focused next action in one of two forms: evidence-backed source-only work, or formal closure/pause of M030 awaiting independent native evidence. Any historical **economic** test, broker/tick study or native tester must be separately authorized.
-6. Report findings and citations to repo paths/lines, and identify any known schema-only `REJECT`/`ACCOUNT` events and blocked candidate observability limitations.
+## No active M030 execution task
 
-## Prohibited
+**PAUSE** rather than manufacturing a Stage 1T. Do not ask Codex to repeat blank MT5 terminal startup, invoke undocumented `metatester64.exe`, copy original account/server/history state, or endlessly add synthetic tests without a new diagnosed contract gap.
 
-No code edits, tests, historical replay, Wine/MT5/MetaEditor/Strategy Tester startup, native history/account data copying, broker connection, downloads, simulated/live orders, optimization or performance claims, package installs, new branches/force-push/reset or local-control.
+M030 may reopen only when a material, independently verifiable capability is provided:
+- documented account-free offline native MT5 tester/history interface;
+- independently captured and UTC-anchored native raw M1/M5/ticks plus full causal prefixes and provenance;
+- or separately approved privacy-preserving native tester workflow with reproducible no-order probe traces.
 
-## Decision after Stage 1S
+On receipt of new evidence, the **first** action is a read-only source/provenance and privacy-risk assessment, not automatically starting a tester. Preserve frozen EURUSD sample 2026-09-10 and checksum pinned canonical dataset.
 
-Use the evidence matrix to decide whether to close Python deterministic correctness submilestone while keeping **native MT5 parity unresolved**; do not bypass the native MT5 and economic validation requirements by relabeling Python tests as trading readiness.
+## Not yet approved
+
+Historical **economic** backtest, new broker connections, market data downloads/imports, simulated/paper/live trades, strategy tuning, original MT5 state changes, Wine/MetaEditor/Strategy Tester execution, and local-control. Python semantics are validated within their synthetic scope, **not** independent native MT5 or real-broker parity, profit or deployment readiness.
+
+## Next user decision
+
+Await genuinely new evidence or separately scoped authorization for a different task. M030 itself is parked at Stage 1S.
