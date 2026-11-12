@@ -1,17 +1,47 @@
 {
   "version": 1,
-  "command_id": "mamba2-20261112-stage3b-blocked-handoff-status-v1",
-  "completed_at": "2026-11-12T10:36:25.886593+00:00",
+  "command_id": "mamba2-20261112-stage3b-divergence-audit-v1",
+  "completed_at": "2026-11-12T10:37:57.095883+00:00",
   "ok": true,
-  "action": "status",
+  "action": "m029_branch_divergence_report",
   "data": {
-    "hostname": "joel-OptiPlex-7080",
-    "repo": "/home/joel/Dev/mamba2-trading-bot",
+    "read_only": true,
     "branch": "prospective-paper-recovery",
-    "head": "34e9ada1e90a71f98baecf2bedb6d1c87ff43a8a",
-    "clean": true,
-    "changed_paths": [],
-    "divergence": "1\t2",
-    "time": "2026-11-12T10:36:20.112536+00:00"
+    "checks": {
+      "heads": {
+        "ok": true,
+        "lines": [
+          "34e9ada1e90a71f98baecf2bedb6d1c87ff43a8a",
+          "5afc8cafb8067c1108fdaf01a4170868a599c3e8"
+        ]
+      },
+      "counts": {
+        "ok": true,
+        "lines": [
+          "1\t2"
+        ]
+      },
+      "commits": {
+        "ok": true,
+        "lines": [
+          "34e9ada\tgitignore",
+          "5afc8ca\tdocs: record failed Stage 3B isolated runtime discovery without broker access",
+          "8ab37eb\tdocs: record Stage 3B preflight evidence and missing isolated runtime blocker"
+        ]
+      },
+      "changes": {
+        "ok": true,
+        "lines": [
+          "M\tdocs/CURRENT_STATE.md",
+          "M\tdocs/NEXT_TASK.md"
+        ]
+      },
+      "clean": {
+        "ok": true,
+        "lines": []
+      }
+    },
+    "git_mutation": false,
+    "strategy_computed": false
   }
 }
