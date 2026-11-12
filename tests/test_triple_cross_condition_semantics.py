@@ -502,3 +502,71 @@ async def test_strategy_passes_explicit_stochastic_parameters(monkeypatch):
         assert kwargs["k_period"] == 21
         assert kwargs["d_period"] == 7
         assert kwargs["slowing"] == 7
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("direction", "expected_type", "historical_extreme"),
+    [("buy", 0, 10.0), ("sell", 1, 90.0)],
+)
+@pytest.mark.parametrize("extreme_present", [True, False])
+async def test_real_strategy_ten_candle_extreme_not_fresh_crossover(
+    monkeypatch, direction, expected_type, historical_extreme, extreme_present,
+):
+    """The older extreme, not a last-bar crossover, determines eligibility."""
+    from mamba2.indicators import moving_average
+    from mamba2.strategy import triple_cross
+
+    monkeypatch.setattr(
+        triple_cross, "config", strategy_config(trend=False, rsi=False, higher=False)
+    )
+    # %K remains on the same side of %D across the final two candles.
+    if direction == "buy":
+        entry_k = [historical_extreme if extreme_present else 30.0] + [30.0] * 7 + [55.0, 60.0]
+        entry_d = [20.0] + [25.0] * 7 + [50.0, 50.0]
+        trading_k, trading_d, ema = [55.0, 60.0], [50.0, 50.0], 1.1002
+    else:
+        entry_k = [historical_extreme if extreme_present else 70.0] + [70.0] * 7 + [45.0, 40.0]
+        entry_d = [80.0] + [75.0] * 7 + [50.0, 50.0]
+        trading_k, trading_d, ema = [45.0, 40.0], [50.0, 50.0], 1.1003
+    assert len(entry_k) == len(entry_d) == 10
+    if direction == "buy":
+        assert entry_k[-2] > entry_d[-2] and entry_k[-1] > entry_d[-1]
+    else:
+        assert entry_k[-2] < entry_d[-2] and entry_k[-1] < entry_d[-1]
+
+    def fake_stochastic(symbol, timeframe, rate_fetcher, **kwargs):
+        if timeframe == "M1":
+            assert kwargs["lookback_period"] == 10
+            k, d = entry_k, entry_d
+        elif timeframe == "M5":
+            k, d = trading_k, trading_d
+        else:
+            raise AssertionError("disabled M15 must not be evaluated")
+        return {
+            "k": pd.Series(k),
+            "d": pd.Series(d),
+            "closes": pd.Series([1.0] * len(k)),
+        }
+
+    monkeypatch.setattr(triple_cross, "get_stochastic", fake_stochastic)
+    monkeypatch.setattr(
+        moving_average, "get_moving_average",
+        lambda *args, **kwargs: ema,
+    )
+    broker = Broker()
+    strategy = triple_cross.StochasticTripleTFStrategy("EURUSD")
+    await strategy.evaluate({
+        "broker": broker,
+        "rate_fetcher": RateFetcher(bullish=(direction == "buy")),
+        "position_manager": None,
+        "reporting_enabled": False,
+    })
+    if extreme_present:
+        broker.order_send.assert_called_once()
+        order = broker.order_send.call_args.args[0]
+        assert order["type"] == expected_type
+        assert order["volume"] == 0.1
+        assert order["sl"] == order["tp"] == 0.0
+    else:
+        broker.order_send.assert_not_called()
