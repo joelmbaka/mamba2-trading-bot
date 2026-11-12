@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-20261112-stage3a-closeout-status-v1",
-  "action": "status",
+  "id": "mamba2-20261112-stage3b-isolated-preflight-v1",
+  "action": "m029_stage3b_isolated_preflight",
   "args": {},
   "requested_by": "chatgpt"
 }
