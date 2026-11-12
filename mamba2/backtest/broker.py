@@ -7,6 +7,7 @@ import math
 from typing import Any, Mapping
 
 from .feed import ReplayFeed
+from .m030_parity import event as m030_event, utc_millis
 
 
 @dataclass(frozen=True)
@@ -98,8 +99,10 @@ class HistoricalBroker:
         symbol_metadata: Mapping[str, SymbolExecutionMetadata] | None = None,
         account_currency: str = "USD",
         execution_costs: Mapping[str, ExecutionCostModel] | None = None,
+        event_sink: Any | None = None,
     ):
         self.feed = feed
+        self.event_sink = event_sink
         self.connected = False
         self._balance = float(balance)
         self._realized_pl = 0.0
@@ -213,6 +216,20 @@ class HistoricalBroker:
     def order_check(self, request: dict[str, Any]) -> dict[str, Any]:
         return {"retcode": 0, "comment": "accepted by offline broker"}
 
+    def _trace(self, kind: str, symbol: str, **fields: Any) -> None:
+        """Emit a replay-boundary observation, never a claimed tick timestamp."""
+        if self.event_sink is None or self.feed.current_time is None:
+            return
+        from datetime import timedelta
+        boundary = self.feed.current_time
+        source_open = boundary - timedelta(minutes=1)
+        self.event_sink.emit(m030_event(
+            engine="python", kind=kind, symbol=symbol,
+            utc_time_ms=utc_millis(boundary.to_pydatetime()),
+            m1_source_open_utc=source_open.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            **fields,
+        ))
+
     def order_send(self, request: dict[str, Any]) -> dict[str, Any]:
         order_id = self._next_order_id
         self._next_order_id += 1
@@ -222,6 +239,12 @@ class HistoricalBroker:
             "submitted_at": self.feed.current_time,
         }
         self._pending.append(order)
+        self._trace("SUBMIT", request["symbol"], request_id=order_id,
+                    side="BUY" if request.get("type", 0) == 0 else "SELL",
+                    volume_lots=float(request.get("volume", 1.0)),
+                    entry_or_exit_price=float(request.get("price", 0.0)),
+                    sl=float(request.get("sl", 0.0)), tp=float(request.get("tp", 0.0)),
+                    reason_or_error_code="10008_PENDING")
         return {
             "retcode": 10008,
             "deal": 0,
@@ -233,7 +256,11 @@ class HistoricalBroker:
     async def order_modify(self, ticket: int, sl: float = 0.0, tp: float = 0.0):
         for position in self._positions:
             if position["ticket"] == ticket:
+                previous_sl, previous_tp = position["sl"], position["tp"]
                 position["sl"], position["tp"] = float(sl), float(tp)
+                self._trace("SLTP_MODIFY", position["symbol"],
+                            position_id=ticket, sl_before=previous_sl, tp_before=previous_tp,
+                            sl=float(sl), tp=float(tp), reason_or_error_code="0_MODIFIED")
                 return {"retcode": 0, "comment": "modified"}
         return {"retcode": 1, "comment": "position not found"}
 
@@ -331,6 +358,12 @@ class HistoricalBroker:
             self._charge_commission(entry_commission)
             self._next_position_ticket += 1
             self._positions.append(position)
+            self._trace("FILL", symbol, request_id=order["order_id"],
+                        position_id=position["ticket"],
+                        side="BUY" if side == 0 else "SELL", volume_lots=volume,
+                        entry_or_exit_price=float(fill_price), bid=bid_open,
+                        ask=ask_open, sl=position["sl"], tp=position["tp"],
+                        commission=entry_commission)
         self._pending = remaining
 
     def _mark_positions(self) -> None:
@@ -461,6 +494,13 @@ class HistoricalBroker:
         self._commission_paid += exit_commission
 
         self._positions.remove(position)
+        self._trace("EXIT", position["symbol"],
+                    request_id=position["order_id"], position_id=position["ticket"],
+                    side="BUY" if position["type"] == 0 else "SELL",
+                    volume_lots=position["volume"], entry_or_exit_price=float(price),
+                    exit_reason=reason, gross_pl=float(gross_realized),
+                    commission=float(total_commission), swap=0.0,
+                    net_pl=float(net_trade_pl))
         self._closed_trades.append(
             ClosedTrade(
                 order_id=position["order_id"],
