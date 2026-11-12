@@ -111,6 +111,7 @@ def draft_from_supplied_snapshots(
     bis_raw: bytes,
     oecd_raw: bytes,
     broker_currencies: Mapping[str, Mapping[str, Any]],
+    prior_positions_lots: Mapping[str, float] | None = None,
 ) -> dict[str, Any]:
     """Assemble one unsealed on-time draft, with NO I/O or live side effects.
 
@@ -124,6 +125,20 @@ def draft_from_supplied_snapshots(
 
     at = now.astimezone(timezone.utc)
     scheduled, _ = window_bounds(month_id)
+    if month_id == "2026-12":
+        if prior_positions_lots is not None and any(
+            float(value) != 0 for value in prior_positions_lots.values()
+        ):
+            raise ValueError("first prospective month has no prior paper positions")
+        prior = {currency: 0.0 for currency in M028_FIXED_MAPPING}
+    else:
+        if prior_positions_lots is None:
+            raise RuntimeError("PRIOR_PAPER_STATE_REQUIRED")
+        if set(prior_positions_lots) != set(M028_FIXED_MAPPING):
+            raise ValueError("prior paper positions must cover the fixed eight currencies")
+        prior = {currency: float(prior_positions_lots[currency]) for currency in M028_FIXED_MAPPING}
+        if any(not math.isfinite(value) for value in prior.values()):
+            raise ValueError("prior paper positions must be finite")
     if not isinstance(bis_raw, bytes) or not isinstance(oecd_raw, bytes):
         raise TypeError("BIS and OECD snapshots must be raw bytes")
     if not isinstance(broker_currencies, Mapping):
@@ -197,9 +212,7 @@ def draft_from_supplied_snapshots(
         "signal": signal,
         "broker": broker,
         "plan": plan,
-        "prior_positions_lots": {
-            currency: 0.0 for currency in M028_FIXED_MAPPING
-        },
+        "prior_positions_lots": prior,
         "holding_period_return": None,
         "safety": {
             "real_order_api_called": False,
