@@ -1,32 +1,21 @@
 {
   "version": 1,
-  "command_id": "mamba2-20261112-stage3b-isolated-preflight-v1",
-  "completed_at": "2026-11-12T10:31:42.447785+00:00",
+  "command_id": "mamba2-20261112-stage3b-targeted-discovery-v1",
+  "completed_at": "2026-11-12T10:33:42.955572+00:00",
   "ok": true,
-  "action": "m029_stage3b_isolated_preflight",
+  "action": "m029_stage3b_targeted_discovery",
   "data": {
     "read_only": true,
-    "wine_started": false,
-    "terminal_started": false,
-    "python_started": false,
+    "search_bounded": true,
+    "directories_examined": 3000,
+    "wine_binaries": [],
+    "isolated_prefix_paths": [],
+    "python_exe_paths": [],
+    "wine_package_metadata": [],
+    "terminal_launched": false,
+    "mt5_imported": false,
     "broker_initialized": false,
     "account_data_read": false,
-    "real_order_api_called": false,
-    "prefix_modified": false,
-    "wine_candidates": [
-      {
-        "binary": "/usr/bin/wine",
-        "version": "wine-9.0 (Ubuntu 9.0~repack-4build3)"
-      }
-    ],
-    "isolated_prefix_candidates": [
-      {
-        "prefix": "/home/joel/mt5-prefix-backup-2026-09-24",
-        "windows_product_name": "Microsoft Windows 10",
-        "bridge_python_candidates": [],
-        "terminal_copy_present": false
-      }
-    ],
-    "isolated_python_available": false
+    "order_api_called": false
   }
 }
