@@ -357,344 +357,670 @@ window is classified or extended by a predeclared seven-day increment.
 Real MT5 trading remains disabled. M020-D is not promoted to production/live
 behavior.
 
-## M022 closeout and M023 research state
 
-M022 is **CLOSED** at docs closeout HEAD:
+## M025 independent public-benchmark research
 
-`7047d5ff3fd4c74163b62f2142742a124462bb7d`
+M025 is **OPEN — PROTOCOL FROZEN; STAGE 1 IMPLEMENTATION ONLY** on
+`public-strategy-benchmarks`, based from the closed M022 docs SHA
+`7047d5ff3fd4c74163b62f2142742a124462bb7d`.
 
-Its accepted validation implementation SHA remains:
+It is intentionally isolated from M023. M023 results may not be used to choose,
+replace, or tune M025 benchmark definitions.
 
-`a409a5703e709feb0b45cbe870f4d8639189b6ba`
+Frozen benchmark families are:
 
-The frozen M022 validation assessment supported zero non-reference candidates, so its historical holdout was not opened.
+- MOP TSMOM 12/1;
+- currency momentum MOM(1,1), MOM(6,1), MOM(12,1);
+- HML-FX carry;
+- M020-D as the frozen internal Mamba comparator.
 
-M023 — Direction and Session Research — is now **OPEN** on:
-
-`direction-session-research`
-
-The current M023 gate is diagnostic only. It may read existing M022 development + validation artifacts for P2-R, P2-03, and P2-08, derive timezone-aware direction/session/day/fold attribution, and publish deterministic diagnostic evidence. It may not run a fresh filtered strategy replay or inspect the untouched historical holdout.
-
-## M023 diagnostic gate result
-
-M023 diagnostic-only evidence completed deterministically on `direction-session-research` using existing accepted M022 JSON artifacts only.
-
-Diagnostic implementation SHA:
-
-`f925ae8121fb9ce4ee04c1c980e58720c2a611f3`
-
-Diagnostic result commit:
-
-`30712d1c55e1204fc4d849a38bfa96318155b54b`
-
-Deterministic artifact SHA-256:
-
-`0b306c2341befd7110ea2a6695ecd4fc473055fb2231849b5a3741a11251d9a2`
-
-The main finding is a strong time-of-day effect: EAT-ACTIVE 08:00–20:59 is consistently less negative than EAT-OFF-HOURS across P2-R, P2-03, and P2-08 and across all five chronological folds in mean trade P/L. The raw direction slices do not support jumping directly to SELL-only; BUY is less negative in 5 of 6 arm/partition comparisons. No filtered replay has run. Historical holdout and M021 remain untouched.
-
-## M023 Stage-A prospective freeze
-
-The M023 diagnostic gate is complete. The exact Stage-A causal direction protocol is now prospectively frozen before Stage-A economics. Stage A uses P2-08 on the already-seen 225-date research sample, with exactly D-R/BOTH, D-S/SELL-only, and D-B/BUY-only. The ordered 225-date list SHA-256 is `50b56aabc47dd0f485d07ee531b9967922a7b81780b02aacf8affc80f744dfb0`. Historical holdout and M021 remain sealed/uninspected. Stage B is not authorized.
+Stage 1 authorizes signal/portfolio machinery, data sufficiency gates, and
+synthetic tests only. No M025 historical economics are authorized yet.
 
 
-## M023 closeout — direction/session research
+## M025 fidelity review checkpoint
 
-M023 is **CLOSED** on `direction-session-research`.
+Branch:
 
-Final economic feature SHA:
+`public-strategy-benchmarks`
 
-`f5cd1111d4626bd96e11dc9b630cdac364059a04`
+M025 remains independent of M024/M023 outcome selection. No M025 historical
+economics have been run.
 
-Accepted Stage-B family result:
+Primary-source review found:
 
-`0c91e8fad993c9ab2f9075bf0d3b28dcda718249`
+- MOP centered EWMA variance semantics are correct in principle and should be
+  preserved;
+- Menkhoff formation returns require additive aggregation of monthly **log
+  currency excess returns**;
+- HML-FX attribution is Lustig, Roussanov, and Verdelhan (2011);
+- the five-year-plus-warmup sufficiency gate must be consecutive, not a count
+  of scattered eligible months.
 
-Accepted Stage-B mechanical assessment:
-
-`42630379450fa3b20d7fd24c5bc2decf83dddf46`
-
-The frozen assessment classified S-ACTIVE, S-MORNING, S-MIDDAY, and
-S-AFTERNOON **NOT SUPPORTED**. Supported sessions: **0**. Fixed session:
-**none**. Historical-holdout execution remains **unauthorized**.
-
-S-MIDDAY was closest to break-even at **-$53.4115** total and
-**-$0.05743/trade**, but failed the mandatory positive-P/L and positive-mean
-requirements.
-
-The next milestone is **M024 — Symbol Specialization Research**. Its first gate
-must remain diagnostic-only on already-seen research evidence. Historical
-holdout and M021 remain sealed/uninspected for this research path.
+Stage 1 remains code/tests/data-gate only.
 
 
-## M024 open — Symbol Specialization Research
+## M025 Stage-1 fidelity implementation checkpoint
 
-M024 is **OPEN — DIAGNOSTIC PROTOCOL FROZEN** on
-`symbol-specialization-research`, branched from final M023 closeout
-`ffd33e2ae0534d572c73840cccaa98104b3ad460`.
+Feature repair:
 
-The first gate reads only accepted M023 D-B / BUY-only all-hours evidence and
-tests exactly four predeclared descriptive symbol subsets: SYM-R, SYM-UJ,
-SYM-JPY, and SYM-NONJPY. No fresh symbol-filtered economic replay is authorized.
-
-The accepted D-B full-sample USDJPY slice was +$15.0437 across 1,335 closed
-trades, but two of five chronological folds were negative. It is therefore a
-hypothesis generator only.
-
-Historical holdout and M021 remain sealed. M025 public benchmark research is
-independent and may not be used to tune M024.
-
-
-## M024 implementation checkpoint
-
-M024 diagnostic machinery is implemented on
-`symbol-specialization-research`.
-
-Protocol freeze:
-
-`12c8b93af164f24a719fa6151efb54f838659619`
-
-Analyzer implementation:
-
-`2a605aebee379e50df7193f9562b84bbb2edb128`
+`35775c872ef83fa161732f7975ef3c0513e1b847`
 
 Fixed local-control support:
 
-`b0acf22ff8271a96f926dd9250b85418034053c4`
+`6c5342e804c24f9a4ca8ee2b46f7991192713839`
 
-The analyzer reads only the accepted M023 Stage-A D-B deterministic summary
-pair, requires source SHA-256
-`7f16803e8174ffddc7afe6d7d273cc04a4b2859dd61753f6fae1f272ce28551c`,
-and cannot run strategy replay.
-
-Focused native tests and the deterministic M024 diagnostic remain the next
-acceptance gates. No M024 economic replay has run and historical holdout/M021
-remain untouched.
+No M025 economics have run. The next gate is exact Dell branch switch, focused
+public-benchmark tests, then full native regression.
 
 
-## M024 diagnostic accepted / Stage 2 frozen
+## M025 Stage 1 accepted
 
-M024 diagnostic acceptance is complete at feature HEAD
-`f403124a31464f6b42768f6a1d985abe290cbc4c`.
+Accepted feature SHA:
+
+`d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
+
+Focused acceptance:
+
+`a9d4ce84b5cc35e911407082c056c24668b79401`
+— **23 passed**.
+
+Full native acceptance:
+
+`28a5c79dd49e10f1255a97bc24a05b0df721bb1b`
+— **260 passed, 2 skipped**.
+
+No M025 economics have run.
+
+The Stage-2 data-source inventory protocol is frozen. The next work is public
+source metadata/schema inventory only, with no benchmark P/L.
+
+
+## M025 Stage 2 source inventory accepted
+
+Inventory artifact:
+
+`docs/research/m025-public-source-inventory.md`
+
+Result:
+
+- no public/free raw-eligible source established for publication-faithful B1,
+  B2, or B3;
+- AQR TSMOM and CurrencyPortfolios are retained as derived external references;
+- H.10/Dukascopy spot are retained only as possible TSMOM spot-proxy sources.
+
+No M025 economics have run. Raw publication-faithful reconstruction stops here
+under the current free-data boundary.
+
+
+## M025 Stage-3 reference/proxy protocol frozen
+
+Stage-2 inventory acceptance:
+
+`efbf59094ff226542201a32963a5e75a1fccd416`
+
+Stage 3 prospectively selects:
+
+- **Federal Reserve H.10** for the explicit
+  `TSMOM SPOT PROXY — FED H.10` path;
+- AQR monthly TSMOM as a derived reference, currency factor only if schema
+  proves it exists;
+- LRV `CurrencyPortfolios.xls` as a derived HML-FX reference;
+- accepted M020-D artifacts as the internal reference.
+
+The H.10 source universe is frozen at all 23 daily currency-rate series, with
+USD-per-foreign normalization and no fill/interpolation.
+
+Economic metrics and cross-series comparison formulas are frozen before any
+Stage-3 economic download/calculation.
+
+Next gate: deterministic schema/ingestion only.
+
+
+## M025 Stage-3 ingestion implementation checkpoint
+
+Protocol:
+
+`6b6592237fe4f9e087745c914e916bda6521012d`
+
+Snapshot-range addendum:
+
+`a7fa66244e57c9f0e214526ab8dee9b96537f87c`
+
+Ingestion implementation:
+
+`184f0fbd0e58e0d451120232a2cb9295c729f7f2`
+
+Fixed controls:
+
+`cd985e2f29d6814b1aec54ffff1b57b2c9a1ab6a`
+
+Runtime probe:
+
+`315a03a0ba1967d30a884b0fc0d33c39543f6e70`
+
+No Stage-3 source has been economically evaluated. Next: focused ingestion
+tests, then the immutable non-economic source snapshot.
+
+
+## M025 Stage-3 H.10 VES/VEB metadata repair
+
+Non-economic ingestion v4 stopped before publication because the exact frozen
+Fed series `RXI_N.B.VES` carries legacy SDMX metadata
+`CURRENCY="VEB"`.
+
+The parser now accepts only `VES`/legacy `VEB` for that exact series and
+still rejects all other currency-code drift.
+
+Repair:
+
+`82c9665f9dd29f7985b71dd2fa0e70422efba9fc`
+
+No Stage-3 economics have run.
+
+
+## M025 Stage-3 LRV transport repair
+
+Non-economic ingestion v5 reached the LRV workbook step but the prior
+Wharton-hosted URL did not produce a loadable XLS.
+
+The same frozen `CurrencyPortfolios.xls` reference will use the historical
+MIT mirror:
+
+`https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls`
+
+and must pass an OLE-XLS magic-byte check before conversion.
+
+No Stage-3 economics have run.
+
+
+## M025 Stage-3 LRV conversion-path repair
+
+Ingestion v6 proved the MIT payload is a real OLE XLS but LibreOffice failed on
+relative temp paths.
+
+Repair:
+
+`26de5ae69742a7913ab56e0f5f73af2084e2c511`
+
+Conversion now uses verified absolute paths. No economics have run.
+
+
+## M025 Stage-3 LRV conversion-free schema repair
+
+The validated MIT LRV workbook is a genuine OLE Excel file but LibreOffice
+cannot convert it. Stage-3 now validates its schema directly from deterministic
+OLE binary strings, requiring P1-P6 and HML labels while explicitly avoiding
+numeric-cell parsing.
+
+Feature repairs:
+
+- `3302ab0fdaa698811ef549888bba5fbe1b541be6`
+- `a267f626ad13281a0976e78c6f50fa3773efb042`
+
+Control repair:
+
+`2ab3bceb0f1506002490f6f2a18863e872045e1a`
+
+No Stage-3 economics have run.
+
+
+## M025 Stage 3 ingestion accepted
+
+Accepted feature:
+
+`554ab3a827163732f4dec335c716fec2f386bfe8`
 
 Focused tests:
 
-- result commit:
-  `7bed8ad0173916f61b488c2d1ffe3742f9051446`;
-- **7 passed**.
+`2d3e36ca14c4a277666a74d4f300a982a19d88be` — **33 passed**.
 
-Deterministic diagnostic:
+Immutable ingestion:
 
-- result commit:
-  `0473b8f149a15516c6d7b4e2f1b0585482be7eef`;
-- artifact SHA-256:
-  `108752dfdb7430efb2c3b4b971d16d6affb1c43e2aacc1bc5ef8e276db2d6410`;
-- only SYM-UJ / USDJPY classified **DESCRIPTIVELY PROMISING**.
+`61bb9c5d591e8519f5bebc024d670204d9a71eab`
 
-Full native regression:
+Report SHA:
 
-- result commit:
-  `1bed8eb23b6bca980d076dbf9173f6479f53239d`;
-- **283 passed, 2 skipped**.
+`d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505`
 
-USDJPY descriptive evidence:
+H.10 raw SHA:
 
-- 1,335 trades;
-- +$15.0437376424 total;
-- +$0.0112687173/trade;
-- 3/5 positive folds;
-- 23/46 positive-mean eligible weeks = 50.0%;
-- max positive-fold contribution share = 41.05198%.
+`38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046`
 
-This is not yet a causal/proven edge.
+H.10 normalized panel SHA:
 
-M024 Stage 2 is now prospectively frozen before economics with exactly C-R
-(all-five reference) and C-UJ (USDJPY strategy only, all-five market data
-retained). No historical holdout execution is authorized.
+`015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419`
+
+All 23 frozen H.10 currencies pass the 72-month gate.
+
+AQR exposes dedicated currency factor `TSMOM^FX`.
+
+LRV exposes P1-P6 and HML schema.
+
+No Stage-3 economics have run.
+
+Next gate: freeze Stage-4 economic execution protocol.
 
 
-## M024 Stage-2 implementation checkpoint
+## M025 Stage-4 implementation checkpoint
 
-The frozen C-R/C-UJ causal runner is implemented.
+Protocol: `6511131792e32e74b6c98ce9de1d11dded5522b7`
 
-Feature implementation:
+Locked `xlrd==2.0.2` dependency:
+`07facca9a04cc5f8154b7c648208f186326c0f2e`
 
-`d0dff1fc66e6bc1b60200a4aeaa27990bd1322fc`
+Implementation:
+`f74bd6606b91f38a4255d38af6d4770500004ec5`
 
-Invariant hardening:
+Focused-test control:
+`7ab842c005e45d07c6790ba037a0bd9c1ce86599`
 
-`ea49b23f72b0e857538c77a6f469920248cfde6a`
-
-Fixed local-control actions:
-
-`0226b4e807480ed7e754c362d72e0adf05d5f25d`
-
-Stage-2 validation/economics have not yet been accepted at this checkpoint.
-Historical holdout remains sealed and no holdout action exists.
+No Stage-4 economics have run. Economic execution remains disabled pending
+focused tests and full native regression.
 
 
-## M024 Stage 2 accepted
+## M025 Stage-4 validated; blocked on LRV unit metadata probe
 
-M024 Stage 2 is fully accepted on `symbol-specialization-research`.
+Accepted focused Stage-4 tests:
 
-Feature SHA:
+`d95bf9911368d11c79e0e247247bc991c49a06dd`
+— **42 passed**.
 
-`fd9c0ec689c57c572a7318ddd54fecb8dc5e8666`
+Accepted full native regression:
 
-Family result:
+`f77ba7f1e424058a52d3c6f139b86347b1714852`
+— **279 passed, 2 skipped**.
 
-`45cc718b908a28040a1907c08c8dc7382d800883`
+Stage-4 economics attempt `d1703515...` stopped at the frozen LRV unit gate
+before a successful report; no unit was inferred from return magnitude.
 
-Mechanical assessment:
+Corrected metadata-only probe command
+`mamba2-m025-stage4-lrv-unit-probe-v2` is queued on `local-control` at
+`b61a2b6caeac49dd200d067678a28a2ec718ca72`, but the Dell local-agent has not
+consumed it. Latest result remains the v1 environment failure.
 
-`d99ca44882f9814d42ed5b71a86fd13150d41b8f`
+No Stage-4 terminal economic result is accepted yet.
 
-Final full native regression:
+## M025 closed — Stage-4 terminal economics accepted
 
-`2a824763aab9e8b9be7eb5626cf657b857cae945`
-— **288 passed, 2 skipped**.
+M025 is **CLOSED**.
 
-C-R reproduced accepted M023 D-B exactly.
+Final repaired economic feature SHA:
 
-C-UJ / USDJPY-only strategy:
+`2aed0444c8f0e214d14f9dc90d4c2813388555db`
 
-- 1,335 closed trades;
-- +$15.0437376424 net;
-- +$0.0112687173/trade;
-- max DD $275.4694141888 / 2.7490114456%;
-- 3/5 positive folds;
-- 23/46 positive-mean eligible weeks = 50.0%;
-- all frozen representation/support/safety gates passed.
+Post-repair validation:
+
+- focused Stage-4: **43 passed / 0 failed**
+  (`894ce65d5a1a83910fcacc3d3dfd5ccf551c1a8d`);
+- full native: **280 passed / 2 skipped**
+  (`d5f85857a3f4014f44b3f5970f16bca2090c87ca`).
+
+Sole accepted Stage-4 economic execution:
+
+`mamba2-m025-stage4-economics-after-unit-evidence-v1`
+
+Result branch commit:
+
+`c01ab5df81bdf31b3279b2c0d7e99843c7437ef7`
+
+Deterministic A/B report SHA-256:
+
+`633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9`
+
+A/B byte identity: **PASS**.
+
+Accepted headline references:
+
+- H.10 TSMOM spot proxy annualized mean: **-1.6058975079063509**
+- AQR TSMOM^FX annualized mean: **0.10093357261356833**
+- LRV HML-FX annualized mean: **0.0003586837489041334**
+- H.10 vs AQR zero-lag correlation: **-0.07400075645466087**
+
+The LRV scale `0.01` was established through the prospectively frozen
+Stage-4.1 evidence rule, not by return-magnitude inference.
+
+Stop rule is active: no retuning, rescaling, lag/sign search, source
+replacement, universe pruning, or production/live promotion is authorized
+inside M025. Any further benchmark work requires a new prospectively frozen
+milestone.
+
+## M026 closed at source-fidelity gate
+
+Branch:
+
+`tradeable-fx-tsmom-reconstruction`
+
+Protocol freeze:
+
+`c9dbe03e7f08f2c7c26355d7bf3761684622fb90`
+
+Source inventory:
+
+`0f72b1928f06d90f12409396982867db92ca037f`
+
+Result:
+
+**DATA GATE NOT PASSED — NO ECONOMICS RUN**
+
+CME continuous FX futures were the strongest raw-data path, but historical
+access is licensed/purchased. No public/free direct forward source survived,
+and the reviewed official rate datasets were insufficient to turn spot into
+the exact frozen futures/forward excess-return process without introducing a
+new proxy.
+
+M026 is closed. Do not weaken it after the inventory.
+## M027 closed — gross carry-aware spot TSMOM supported
+
+Branch:
+
+`carry-aware-spot-tsmom`
+
+Final economic feature SHA:
+
+`ebd650204cb8d03d4eb144d2b3bc431f8b838409`
+
+Validation:
+
+- focused Stage-2: **17 passed**
+- full native: **297 passed / 2 skipped**
+
+Accepted economic result:
+
+- result commit: `5cebd54c14833dadd7e2de302213c059cd8b2116`
+- deterministic A/B SHA-256: `08be7e8002410ad36e32caa98cb3cf6e66110bef2c24815b2c1582b96b957e00`
+- A/B byte identity: **PASS**
+- evaluation: **1980-02 → 2020-04, 483 months**
+- annualized arithmetic mean: **37.5794%**
+- annualized volatility: **34.6032%**
+- Sharpe: **1.0860**
+- max drawdown: **-62.1427%**
+- positive months: **66.67%**
+- positive years: **30 / 41**
+- all three frozen folds had positive annualized mean
+- largest positive-currency contribution share: **39.30%**
 
 Mechanical classification:
 
-**SUPPORTED FOR HOLDOUT CHECKPOINT ONLY**
+**SUPPORTED AS A GROSS PUBLIC-DATA APPROXIMATION**
 
-Historical holdout remains sealed and unauthorized. The next task is only to
-freeze and review a separate prospective holdout-checkpoint protocol.
+This does **not** authorize live trading. Costs, executable forward/futures prices, slippage, and real broker financing remain unmodeled. M027 is closed and may not be retuned.
+## M028 Stage 0 accepted — broker availability only
+
+Branch: `execution-realism`
+
+Stage-0 result commit:
+
+`3258372afbf11aa8178cddd54c61b810c5e514d6`
+
+Stage-0 feature SHA:
+
+`de05a0207c6679e58f17fded969ab3e5401c2d68`
+
+Broker metadata result:
+
+- 22 / 25 frozen M027 currencies mapped unambiguously to direct-USD symbols;
+- unavailable: **CNY, ISK, RON**;
+- no ambiguous mappings;
+- mapped-universe SHA-256:
+  `5f1ae15c35b3b20e24b4f999c7628d3534b54e30eb535295a69e359f285dd996`;
+- terminal/server: **MetaTrader 5 / MetaQuotes-Demo**;
+- account currency: **USD**;
+- leverage: **100:1**;
+- commission: **UNPROVEN**;
+- no strategy economics or order APIs were used.
+
+Quote caveat:
+
+- six mapped symbols had same-day non-zero quotes;
+- AUDUSD/USDCAD had stale Sep-25 quotes;
+- fourteen mapped symbols returned zero/epoch quote snapshots.
+
+Therefore Stage 0 proves symbol metadata availability only, not that all 22
+symbols are currently executable.
+
+M028 Stage-1 execution-evidence protocol is frozen at:
+
+`13507ae2bb06af4daa24f4df70b97a11a8606fa9`
+
+No M028 economics are authorized yet.
+## M028 Stage 1 accepted — forward paper only
+
+Accepted result commit:
+
+`bf90b33409aa78d303d0928404e73f3d1a7da1bf`
+
+Accepted feature SHA:
+
+`2dcbdb5e05c5f7e9a1a06fb711f0c9f85bfd7455`
+
+Mechanical result:
+
+- quote-viable currencies: **8** — AUD, CAD, CHF, EUR, GBP, JPY, NZD, SEK;
+- quote gate: **PASS** (8 >= 4);
+- valid current margin calculations: **8**;
+- margin gate: **PASS** (8 >= 4);
+- commission: **UNPROVEN**;
+- historical swap/financing: **UNPROVEN**;
+- path: **FORWARD_PAPER_ONLY**.
+
+Frozen historical tick checkpoints completed for AUD, CAD, EUR, GBP, and
+JPY. CHF, NZD, and SEK history probes timed out and are retained as missing
+execution-history evidence.
+
+No retrospective net-execution backtest is authorized. No M028 strategy
+economics have been run.
+
+Stage-1 closeout commit:
+
+`08e795a1ce90563642c0403c0266fffa4307fc4d`
+## M028 ready for first prospective decision
+
+Branch: `execution-realism`
+
+Pre-decision feature SHA:
+
+`499e088e8d77bdf7fff81f34b549ae93c5c7e8be`
+
+Stage-1 path remains:
+
+**FORWARD_PAPER_ONLY**
+
+Stage-2/3 implementation validation:
+
+- focused: **24 passed**
+- full native: **321 passed / 2 skipped**
+- no live-source signal or forward outcome has been observed.
+
+Latest readiness:
+
+- BIS spot last date: **2026-09-29**
+- required: **2026-09-30**
+- OECD rates: **2026-08**, requirement satisfied
+- broker quote+margin readiness: **8 / 8**
+- classification: **SOURCE_NOT_READY**
+
+First decision:
+
+- ID: `2026-10`
+- scheduled: **2026-10-07T12:00:00Z**
+- time gate independently verified on 2026-10-01
+- control action: `m028_stage3_first_decision`
+- append-only/recoverable; no recomputation after a record exists.
+
+No M028 strategy work beyond source-readiness checks is authorized before
+the scheduled decision.
+
+## 2026-11-12 audit — M028 first paper decision missed, no backfill
+
+The workstation local-agent was contacted through the allowlisted `status`
+action. It reported a clean `execution-realism` checkout, HEAD
+`270d7c5e0e04b45ec2ce32b108cd2e7d334cdb3b`, with zero divergence.
+
+The read-only, single-path paper-record audit completed successfully and was
+committed to `local-control-results` at
+`5d1ccfd0460908946cc74cad36c6c712e81679a7`. The expected immutable
+`~/.local/share/mamba2-forward-paper/2026-10-decision.json` **does not
+exist**; its parent directory also does not exist. This does not establish
+whether any other, untracked record exists elsewhere.
+
+The Oct 7 prospective decision is missed. The Nov 6 fifth-weekday decision is
+also in the past. No October/November signal, positions, strategy P/L or
+decision record may be backfilled. The `local-control` safeguard
+`6f1f71c219b7e4e1ef50f6392e4b902311ce9b99` rejects attempts to create
+the missing October record after its decision day.
+
+No real broker order or strategy computation was performed in this audit.
+M027 is still only a **gross public-data approximation**, not executable
+net-profit evidence. M028 produced no accepted forward performance record.
+
+Next work is the new, pre-frozen M029 prospective protocol and safety-tested
+month-generic decision engine. See `docs/NEXT_TASK.md`; do not use the former
+M028 first-decision action to resume retrospectively.
+
+## M029 prospective recovery — Stage 1 and Stage 2 accepted (2026-11-12)
+
+Feature branch: `prospective-paper-recovery`.
+
+M028 October 7 and November 6 decision windows were missed and may not
+be backfilled. The first possible future decision remains December 7, 2026,
+12:00–12:10 UTC, contingent on a separately accepted live-readiness adapter.
+
+Stage 1: source-free UTC calendar/window gates, metadata readiness and
+exclusive hash-verified immutable journal. Native acceptance:
+**345 passed, 2 skipped** at `eefcda398009a9d366bcbbb192d5a38b62df6191`;
+result `2033f647e28d5d51ef52816c2c7115f4321853ce`.
+
+Stage 2: synthetic-only supplied BIS/OECD source and broker snapshot assembly,
+with source/quote gates before M028 signal/target reuse, unproven cost fields
+left null, and explicit prior paper ledger required for subsequent months.
+Accepted feature `bd73d29751b376523e8fd4d74b357e5925744cf1`,
+synthetic test SHA `05981c916e5a334200b3a42bbd55bfbebdcbd609`.
+Full native **356 passed, 2 skipped, 13 existing warnings** at
+`bcb873c4d1b812b290e1066fde12e943a7912e49`.
+
+Stage 3 real-readiness/live-input bridge is NOT implemented or accepted.
+There is no scheduled trading decision, real order, or published paper record.
+M027 remains supported only as a GROSS public-data approximation; real
+execution profitability and broker costs remain unproven.
+
+Read the frozen protocol and latest handoff:
+`docs/milestones/029-prospective-paper-recovery.md`;
+`docs/NEXT_TASK.md`.
+
+## 2026-11-12 — M029 Stage 3 operational protocol frozen
+
+Operator-reported isolated MT5 compatibility test: Wine 11.21 Staging with
+Windows 11 compatibility launched a **copied** MT5 terminal; the window showed
+`MetaTrader 5 - Netting` without a debugger warning. No credentials, broker
+quotes, orders, existing MT5 installation files, or existing test environments
+were used/changed. System Wine remains 9.0. The Python/MetaTrader5 read-only
+bridge is **NOT YET VALIDATED**.
+
+The distinct Stage-3 operational protocol was frozen on
+`prospective-paper-recovery` before any M029 Stage-3 source/quote read:
+`c74ca08fe32bf9ac9954cee5b033f808f3932ddd`,
+`docs/milestones/029-stage3-operational-protocol.md`.
+
+Its gates separate:
+- Stage 3A: implementation and synthetic/native regression **only**;
+- Stage 3B: separately approved read-only source and broker connectivity;
+- Stage 3C: separately approved/scheduled December on-time paper decision.
+
+Stage 3A explicitly requires real acquisition UTC provenance rather than
+the synthetic Stage-2 `now` placeholder, a repeated close-of-window check,
+strict eight-symbol quote/margin validation, isolated Wine bridge handling,
+and fail-closed append-only journal integrity. The 2026-12 decision window
+remains 2026-12-07T12:00Z to strictly before 12:10Z; no scheduling was
+authorized. October/November are still missed without backfill.
+
+No Stage-3 code, real market-data ingestion, MT5 initialization, broker read,
+paper decision, live order or strategy economics were run by the protocol
+freeze. Refer to `docs/NEXT_TASK.md` for the exact Stage-3A handoff.
 
 
-## M024 historical holdout checkpoint protocol frozen
+## 2026-11-12 — M029 Stage 3A CLOSED (synthetic integration only)
 
-Stage 2 is accepted and C-UJ is fixed as the sole holdout candidate.
+Branch: `prospective-paper-recovery`.
+Accepted feature/test HEAD: `50cc8dded6003fc6f7558263c8f5186cda796989`.
 
-A separate M024 historical-holdout checkpoint protocol is now frozen before
-holdout economics.
+Full native suite run by the workstation local agent:
+`mamba2-20261112-m029-stage3a-native-v1`, recorded on results branch at
+`bb68fab6c7e55543717a33b9a27fb788093d359f`.
+Result: **382 passed, 2 skipped, 13 pre-existing warnings, zero failures**.
 
-Holdout window:
+Stage 3A additions: `mamba2/backtest/m029_stage3a.py` with source
+download/parse acquisition times measured by a mock UTC clock, source raw
+and normalized hashes, source completeness, a strict mock allowlist of
+eight symbol info/tick/margin calls, freshness at observation and after
+potentially blocking margin calls, no strategy or P/L paths, synthetic
+isolated runtime path preflight. M029 journal adds a final-clock gate before
+exclusive file creation and rejects a symlinked journal directory.
 
-`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`
+All inputs were synthetic. No real BIS/OECD data were downloaded, Wine/MT5
+bridge initialized, account information inspected, quotes obtained, trades
+placed, or actual workstation paper decisions created. Passing mocks is not
+evidence of real broker connectivity or profitability.
 
-Expected common trading dates:
+The operational Stage-3 protocol and acceptance are documented in
+`docs/milestones/029-stage3-operational-protocol.md`.
+Stage **3B** real read-only connectivity is pending separate authorization.
+Stage **3C** paper decisions/scheduling remain unauthorized. December
+7, 2026 at 12:00–12:10 UTC remains a prospective window only.
 
-**57**
+## 2026-11-12 — Stage 3B isolated runtime preflight BLOCKED
 
-Candidate:
+Under the user's "go" instruction, only the noninvasive environment
+preflight and import-only test preparation were attempted. Stage-3B
+connectivity, quote/margin reads and Stage-3C paper decisions were not run.
 
-**H-UJ — USDJPY strategy only, all-five market data retained**
+Read-only local-control results:
+- `e97616f2200fd9ea9f717c40aff4069fb34ed3e2`:
+  standard-path preflight detected only system Wine 9.0 and an older
+  Windows 10 backup prefix; no separate Wine 11.21 Python bridge.
+- `219898b7d142ed32097e2831be9f46e59bd10dfa`:
+  bounded targeted discovery inspected 3,000 directories (limit reached)
+  and found no further isolated Wine 11.21 executable/prefix, Python
+  interpreter or installed WineHQ staging package in the paths examined.
 
-The next gate is metadata-only readiness. No holdout P/L, trades, drawdown,
-win rate, weekly economics, or classification may be computed before readiness
-passes and publishes immutable date/replay hashes.
+This does not contradict the operator's prior isolated MT5 GUI smoke test:
+that environment may be at another path or may have been temporary.
+The executable/prefix identity is not yet established.
 
+**No Python MetaTrader5 import was executed.** Never substitute the
+existing system Wine 9.0/`~/.mt5` setup. Resume import-only checks only
+once the isolated Wine executable, prefix and bridge interpreter have
+been located or provisioned in a separate environment. No broker
+initialization, account data, market quotes, credentials, source downloads,
+strategy signals, paper decisions, trading orders or scheduling occurred.
 
-## M024 holdout-readiness implementation checkpoint
+## 2026-11-12 — Stage 3B isolated runtime LOCATED; Python bridge missing
 
-Prospective holdout protocol freeze:
+Operator reconciled the local and remote `prospective-paper-recovery`
+history without reset/force-push, resulting in merge `3fda38c`, clean and
+synced according to operator report. Persistent separate Wine environment
+provided at `~/.local/share/mamba2-mt5-wine1121/`.
 
-`b8f54de8f79f84c6f913515231e46453106a6cc7`
+Read-only workstation evidence:
 
-Metadata-only readiness implementation:
+- `05ed5e694db0451c1257f18ebf6a1cdc4ec1658c`: isolated
+  `runtime/opt/wine-staging/bin/wine` reports **11.21 Staging**, the
+  `prefix/` Windows product is **Windows 11**, the isolated
+  `app/terminal64.exe` exists. No standard-prefix Windows Python detected.
+- `2537f1f769c182e289921cf74f4fbd491ff91b0d`: bounded traversal
+  examined all **334** isolated-root directories without reaching its limit;
+  found no Windows `python.exe`, `pythonw.exe` or `pypy.exe`.
 
-`f7c0f432367bd7d0e667af08b55f041e13700730`
+**The old Wine discovery blocker is resolved.** A separate Windows Python
+bridge is not installed in this isolated environment. Therefore the
+Stage-3B MetaTrader5 **import-only test is still UNEXECUTED**, not failed,
+and broker connectivity remains unproven. No Wine prefix settings,
+system Wine, original `~/.mt5`, project strategy, source records, credentials
+or trading interfaces were modified by either probe.
 
-Fixed local-control readiness support:
+Next step requires separately approved isolated Windows Python 3.10 +
+compatible MetaTrader5/NumPy provisioning. No unapproved automatic package
+installation, real source/broker data access, broker initialization,
+paper decision or scheduling occurred.
 
-`276f2d6c414d2f0405be9d4ec45009f529f17931`
-
-No M024 holdout economics have run. The next gate is focused readiness tests,
-then deterministic metadata-only readiness.
-
-
-## M024 historical holdout readiness accepted
-
-Readiness result:
-
-`098ecd3116daf9e26b2bf6b03d6d7a643fce66cb`
-
-Readiness artifact SHA-256:
-
-`85852452d61db9447e8935ddc05e2f8e41889aa3ae168b3cc2a76ab26ceedb2e`
-
-Ordered 57-date SHA-256:
-
-`5d71d3ed67e5ae50f7e515f765e99a4887336e8a0d3659c62836d79dfe484af4`
-
-Replay-boundary SHA-256:
-
-`945c9961af7ce58e3b54223f0b8c10eb216e3dbfdf687ac002ef27b18197fab7`
-
-Partition-spec SHA-256:
-
-`2fac9ab123f1ed173a51aab2cccb42368937e9373b4937a94fd421a89a49cb70`
-
-Blocks are fixed at three 19-date chunks H1/H2/H3. Readiness was metadata-only
-and computed no trades or economics.
-
-The next authorized work is implementation of the single fixed H-UJ
-deterministic A/B holdout replay and mechanical assessment against the already
-frozen protocol.
-
-
-## M024 holdout economic implementation checkpoint
-
-Accepted readiness documentation:
-
-`62f1bb0d0151e0cd8b2e29a824881107b0649e95`
-
-H-UJ runner/assessment:
-
-`ee6bec3e93b507a9c7ac61a0c43fb485e2028357`
-
-Invariant hardening:
-
-`58e9a13b94598e4435c81637a476774abe096863`
-
-Fixed local-control support/hardening:
-
-- `04ae5bbb0168c44d54b74bfc2bde37c6abc0a254`
-- `2acd2e73e78f27a2c50d837ba96cae36dd5efc08`
-
-No H-UJ holdout economics have run yet. The next gate is focused tests, then
-the one-shot deterministic H-UJ A/B evaluation.
-
-
-## M024 closed — holdout not supported
-
-M024 Symbol Specialization Research is closed.
-
-One-shot holdout result:
-
-`6a944355dbd7ab026f3e04ffa8e7102a60b27077`
-
-Mechanical assessment:
-
-`83caeb3f93e7165a79c9408a8496185b45c39d5a`
-
-Final full native regression:
-
-`4bb6591beb91015b9d76287a04776cf4b037cfa9`
-— **299 passed, 2 skipped**.
-
-Terminal result:
-
-**HOLDOUT NOT SUPPORTED**
-
-H-UJ produced 308 closed trades, -$228.6339 net, -$0.7423/trade, 39.61%
-non-flat win rate, and 2.77% max equity drawdown. Only H2 was positive; H1 and
-H3 were negative. Positive-mean eligible weeks were 3/12 = 25%.
-
-The M024 holdout is consumed and must not be reused to tune/retest a modified
-H-UJ descendant.
-
-No production/live promotion is authorized.
+See `docs/NEXT_TASK.md` for exact safe handoff.
