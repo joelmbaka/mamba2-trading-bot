@@ -42,6 +42,24 @@ def _utc(value: str) -> datetime:
     return result
 
 
+def _unix_seconds_utc(value: str) -> datetime:
+    """Interpret the exporter 'time' field as an explicit UTC Unix second.
+
+    This is an exporter format declaration, NOT independent proof of
+    MetaQuotes-Demo historical server clock behavior.
+    """
+    raw = value.strip()
+    if not raw or not raw.isascii() or not raw.isdecimal():
+        raise ValueError("Unix UTC bar timestamp must be an integer epoch second")
+    try:
+        stamp = datetime.fromtimestamp(int(raw), tz=timezone.utc)
+    except (OverflowError, OSError, ValueError) as exc:
+        raise ValueError("Unix UTC bar timestamp out of supported range") from exc
+    if stamp.second or stamp.microsecond:
+        raise ValueError("Unix UTC bar timestamp must be minute-aligned")
+    return stamp
+
+
 def _server(value: str) -> datetime:
     try:
         result = datetime.strptime(value, "%Y.%m.%d %H:%M:%S")
@@ -64,7 +82,10 @@ def _prices(record: Mapping[str, str]) -> tuple[Decimal, ...]:
     return values
 
 
-def _load_reference(path: str | Path, *, start: datetime, end: datetime) -> dict:
+def _load_reference(path: str | Path, *, start: datetime, end: datetime,
+                    timestamp_format: str) -> dict:
+    if timestamp_format not in {"iso8601_utc", "unix_seconds_utc"}:
+        raise ValueError("reference timestamp format must be explicitly declared")
     expected = {}
     with Path(path).open(encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
@@ -77,7 +98,11 @@ def _load_reference(path: str | Path, *, start: datetime, end: datetime) -> dict
             raise ValueError("reference requires explicit UTC timestamp and OHLC columns")
         previous = None
         for row in reader:
-            stamp = _utc(row[source_column])
+            if timestamp_format == "unix_seconds_utc" and source_column != "time":
+                raise ValueError("exporter epoch-second format requires 'time' column")
+            stamp = (_unix_seconds_utc(row[source_column])
+                     if timestamp_format == "unix_seconds_utc"
+                     else _utc(row[source_column]))
             if previous is not None and stamp <= previous:
                 raise ValueError("reference source timestamps duplicate or out of order")
             previous = stamp
@@ -133,11 +158,14 @@ def discover_clock_offset(
     window_end: datetime = FROZEN_END,
     expected_counts: Mapping[str, int] = EXPECTED_COUNTS,
     candidate_offsets_minutes: range | tuple[int, ...] = range(-840, 841, 15),
+    reference_timestamp_format: str = "iso8601_utc",
 ) -> dict:
     """Require a unique exact M1/M5 timestamp+OHLC mapping and full coverage.
 
-    Candidate means server wall time = claimed UTC + offset. Completeness
-    alone does not validate the exporter's claimed UTC identity.
+    Candidate means server wall time = claimed UTC + offset. The canonical
+    MT5 exporter uses reference_timestamp_format="unix_seconds_utc" for its
+    integer 'time' column. The format must be selected explicitly; doing so
+    does not independently verify the exporter's UTC clock assertion.
     """
     if not run_id:
         raise ValueError("run ID required")
@@ -153,8 +181,10 @@ def discover_clock_offset(
         if actual != expected_sha256[key]:
             raise ValueError(f"{key} SHA-256 mismatch")
     expected = {
-        "M1": _load_reference(reference_m1_csv, start=window_start, end=window_end),
-        "M5": _load_reference(reference_m5_csv, start=window_start, end=window_end),
+        "M1": _load_reference(reference_m1_csv, start=window_start, end=window_end,
+                              timestamp_format=reference_timestamp_format),
+        "M5": _load_reference(reference_m5_csv, start=window_start, end=window_end,
+                              timestamp_format=reference_timestamp_format),
     }
     for tf in ("M1", "M5"):
         if len(expected[tf]) != expected_counts[tf]:
