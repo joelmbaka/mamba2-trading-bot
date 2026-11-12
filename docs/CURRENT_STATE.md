@@ -908,3 +908,32 @@ Read the frozen protocol and latest handoff:
 `docs/milestones/029-prospective-paper-recovery.md`;
 `docs/NEXT_TASK.md`.
 
+## 2026-11-12 — M029 Stage 3 operational protocol frozen
+
+Operator-reported isolated MT5 compatibility test: Wine 11.21 Staging with
+Windows 11 compatibility launched a **copied** MT5 terminal; the window showed
+`MetaTrader 5 - Netting` without a debugger warning. No credentials, broker
+quotes, orders, existing MT5 installation files, or existing test environments
+were used/changed. System Wine remains 9.0. The Python/MetaTrader5 read-only
+bridge is **NOT YET VALIDATED**.
+
+The distinct Stage-3 operational protocol was frozen on
+`prospective-paper-recovery` before any M029 Stage-3 source/quote read:
+`c74ca08fe32bf9ac9954cee5b033f808f3932ddd`,
+`docs/milestones/029-stage3-operational-protocol.md`.
+
+Its gates separate:
+- Stage 3A: implementation and synthetic/native regression **only**;
+- Stage 3B: separately approved read-only source and broker connectivity;
+- Stage 3C: separately approved/scheduled December on-time paper decision.
+
+Stage 3A explicitly requires real acquisition UTC provenance rather than
+the synthetic Stage-2 `now` placeholder, a repeated close-of-window check,
+strict eight-symbol quote/margin validation, isolated Wine bridge handling,
+and fail-closed append-only journal integrity. The 2026-12 decision window
+remains 2026-12-07T12:00Z to strictly before 12:10Z; no scheduling was
+authorized. October/November are still missed without backfill.
+
+No Stage-3 code, real market-data ingestion, MT5 initialization, broker read,
+paper decision, live order or strategy economics were run by the protocol
+freeze. Refer to `docs/NEXT_TASK.md` for the exact Stage-3A handoff.
