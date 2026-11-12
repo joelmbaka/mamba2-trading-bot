@@ -1,34 +1,28 @@
-# Next Authorized Task — M030 Stage 1F tester/data readiness preflight (read-only)
+# Next Authorized Task — M030 Stage 1G offline provenance feasibility (read-only)
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1E INCREMENTAL ENGINE VALIDATED AND COMPILED; NO TESTER RUN AUTHORIZED**
+Status: **STAGE 1F ACCEPTED; HISTORICAL CLOCK AND NATIVE MT5 CACHE CONTENT NOT PROVEN**
 
-## Accepted evidence
+## Prior acceptance
 
-Codex verified Stage 1E incremental MQL5 EA source and synthetic validation: **39 focused Python tests passed**, **45 regressions passed**, syntax checks passed. The revised observation-only EA was compiled in a newly initialized isolated Wine 11.21 prefix with MetaEditor build 6316: **0 errors, 0 warnings**, EX5 SHA-256 `ea46dcb09e4bbc77fdb6b764918ab38c2b269909ae4520459ea7261c131609b4`; source SHA-256 `125c0f44cb2118a5ce74d5c8165fdb78c2a17e1dcb64351043f16e168f20e35f`. Exit code 1 is a previously observed CLI anomaly, but compiler output is explicit. Original terminal PID 71219 untouched. Full report: `docs/milestones/030-stage1eii-compile-acceptance.md`.
+Stage 1E: 39 focused and 45 regression Python tests passed; observation-only incremental EA compiled independently, 0 errors/warnings. Stage 1F read-only preflight verified clean synced source `71a47bdcd84d940ce9a86375611e84aa70dee3f4`, and existing tester build record `LastBuildTester=6316`. Repo EURUSD research CSVs and local MetaQuotes-Demo MT5 caches exist but exact native history coverage, OHLC matching, real-tick identity and historical server-to-UTC offset cannot be established from their file metadata. See `docs/milestones/030-stage1f-readiness.md`.
 
 ## Next bounded Codex task
 
-**Read-only** inspect availability/readiness for an isolated no-order decision-only Strategy Tester configuration, but do not execute it:
-1. Verify clean synced `scalping-recovery` branch and read Stage 1C provenance, 1E-II compile acceptance, and source-level guards.
-2. Identify exact installed tester build, existing history/cache coverage evidence, and whether full earliest M1 (2025-08-25 00:03 UTC) and M5 (2025-08-25 00:00 UTC) bar prefixes can be supplied without downloads. Distinguish manifest claims from actual terminal-cache proof; do not assume a source alignment.
-3. Seek independent historical server-to-UTC clock evidence for MetaQuotes-Demo. Do not guess a UTC offset; the EA must remain fail-closed on unknown clock.
-4. Inspect feasibility of isolated tester inputs and safe immutable CSV evidence output paths (including large optional prefix audit), without copying account profiles or launching MT5. Do not start tester, MetaEditor, Wine, broker connection or Python backtest in this gate.
-5. Return exact paths, build/version evidence, interval coverage proof or gaps, input readiness, time offset evidence, remaining blockers, and proposed *separately authorized* diagnostic procedure.
+Under a separately scoped instruction, read-only and offline:
 
-## Prohibited
+1. Verify clean synced `scalping-recovery`; read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, `docs/milestones/030-stage1f-readiness.md`.
+2. Find/inspect existing **repo exporter source**, export scripts/manifests and timestamp conversion code that generated `m022-history-inventory-tick-m1-v2`. Distinguish the Python MetaTrader5 copy_rates/copy_ticks UTC claims from the historical MT5 terminal's actual server candle clock.
+3. Inspect existing **non-sensitive** MT5 historical terminal logs/config or metadata *read-only* for any direct, date-specific MetaQuotes-Demo server-time / UTC pairing; no account secrets may be printed. Do not infer offset from Kenya, filename stamps or apparent active broker hours.
+4. Determine whether locally present cache binary formats can be **safely and independently decoded** by already present tools without launching Wine/terminal, installing libraries, writing artifacts or touching original cached files. Do not claim decoded bar/tick coverage based only on size/hash.
+5. Return exact file evidence, timestamp pairs and provenance confidence; clearly distinguish proven results, tentative clues and blockers.
+6. If no conclusive offline evidence, design an isolated, no-order, separately authorized *clock/bar discovery* protocol that can inspect native MT5 historical timestamps safely **without requiring the unverified offset as an input**; it must not enable order execution or mutate original data.
 
-No live/demo broker login, tester/terminal launch, historical replay, order calls (including simulated), data downloads, installs, changes to original MT5 app or Wine prefix, production strategy changes, optimization, reset/rebase/force-push/new branch, or local-control.
+## Do not do
+
+Do not launch Wine, MetaEditor, MT5 or Strategy Tester; create/copy files, decode via scripts that write to disk, connect broker, download market data, run Python historical replay, submit simulated/live orders, change source/strategy, install packages or use local-control. Never guess the offset or silently replace history with alternate dataset.
 
 ## Following decision
 
-If enough clock and history evidence exists, propose an isolated **decision-only** tester step with no-order EA and frozen EURUSD 2026-09-10 UTC sample for explicit later authorization. If not, design a provenance-preserving alignment path before any tester execution.
-
-## References
-
-- `AGENTS.md`
-- `docs/BACKTEST_SEMANTICS.md`
-- `docs/milestones/030-stage1c-data-provenance.md`
-- `docs/milestones/030-stage1e-incremental-engine.md`
-- `docs/milestones/030-stage1eii-compile-acceptance.md`
+ChatGPT evaluates evidence and separately approves only necessary source-level diagnostic changes on GitHub before any isolated no-order data-discovery execution. Full strategy parity and optimization remain blocked.
