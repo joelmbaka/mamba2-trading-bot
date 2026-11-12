@@ -25,3 +25,5 @@ atr_cache.json
 # Generated runtime analytics/output
 /backtest/
 /logs/
+
+.env
