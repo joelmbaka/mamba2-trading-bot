@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-20261112-branch-consolidation-status-v1",
-  "action": "status",
+  "id": "mamba2-20261112-branch-consolidation-native-v1",
+  "action": "test_full_native",
   "args": {},
   "requested_by": "chatgpt"
 }
