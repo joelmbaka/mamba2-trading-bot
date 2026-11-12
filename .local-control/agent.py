@@ -795,6 +795,93 @@ def m029_branch_divergence_report():
     }
 
 
+
+def m029_stage3b_known_runtime_probe():
+    """Read-only inspection of the exact isolated paths provided by operator."""
+    root = Path("/home/joel/.local/share/mamba2-mt5-wine1121")
+    wine = root / "runtime/opt/wine-staging/bin/wine"
+    prefix = root / "prefix"
+    terminal = root / "app/terminal64.exe"
+    original = (Path.home() / ".mt5").resolve()
+
+    if root.is_symlink() or prefix.is_symlink() or wine.is_symlink():
+        return {"ok": False, "action": "m029_stage3b_known_runtime_probe",
+                "data": {"reason": "ISOLATED_PATH_SYMLINK"}}
+    if prefix.resolve() == original or prefix.resolve() == (Path.home()/".wine").resolve():
+        return {"ok": False, "action": "m029_stage3b_known_runtime_probe",
+                "data": {"reason": "SHARED_PREFIX_REFUSED"}}
+    if not (wine.is_file() and prefix.is_dir() and terminal.is_file()):
+        return {"ok": False, "action": "m029_stage3b_known_runtime_probe",
+                "data": {
+                    "reason": "REQUIRED_ISOLATED_PATH_MISSING",
+                    "wine_exists": wine.is_file(),
+                    "prefix_exists": prefix.is_dir(),
+                    "terminal_exists": terminal.is_file(),
+                }}
+    env = os.environ.copy()
+    env["WINEPREFIX"] = str(prefix)
+    env["WINEDEBUG"] = "-all"
+    try:
+        check = subprocess.run(
+            [str(wine), "--version"], text=True, capture_output=True,
+            env=env, check=False, timeout=10,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return {"ok": False, "action": "m029_stage3b_known_runtime_probe",
+                "data": {"reason": "WINE_VERSION_PROBE_FAILED",
+                         "error_class": type(exc).__name__}}
+    if check.returncode != 0 or "11.21" not in check.stdout:
+        return {"ok": False, "action": "m029_stage3b_known_runtime_probe",
+                "data": {"reason": "WINE_VERSION_MISMATCH",
+                         "reported_wine_version": check.stdout.strip()[:80]}}
+
+    candidates = [
+        "drive_c/Python310/python.exe",
+        "drive_c/Python311/python.exe",
+        "drive_c/Python312/python.exe",
+        "drive_c/Program Files/Python310/python.exe",
+        "drive_c/users/joel/AppData/Local/Programs/Python/Python310/python.exe",
+        "drive_c/users/joel/AppData/Local/Programs/Python/Python311/python.exe",
+        "drive_c/Program Files (x86)/Python310/python.exe",
+    ]
+    # Top-level Python executables only, no user directory inspection.
+    py = []
+    for rel in candidates:
+        p = prefix / rel
+        if p.is_file() and not p.is_symlink() and p.resolve().is_relative_to(root.resolve()):
+            py.append(str(p))
+    reg = prefix/"system.reg"
+    version_11 = None
+    if reg.is_file() and reg.stat().st_size < 25000000:
+        try:
+            import re
+            content = reg.read_text(encoding="utf-8", errors="replace")
+            match = re.search(r'(?m)^"ProductName"="([^"\r\n]{1,120})"', content)
+            if match:
+                version_11 = match.group(1)
+        except OSError:
+            pass
+    return {
+        "ok": True, "action": "m029_stage3b_known_runtime_probe",
+        "data": {
+            "wine_version": check.stdout.strip()[:100],
+            "wine_binary": str(wine),
+            "wine_prefix": str(prefix),
+            "isolated_terminal_present": True,
+            "prefix_windows_product": version_11,
+            "python_candidates": py,
+            "isolated_bridge_python_present": bool(py),
+            "wine_terminal_started": False,
+            "python_import_attempted": False,
+            "mt5_initialized": False,
+            "account_data_read": False,
+            "broker_quote_read": False,
+            "order_api_called": False,
+            "prefix_modified_by_probe": False,
+        },
+    }
+
+
 def execute(command):
     action = command.get("action")
     if action == "status":
@@ -811,6 +898,8 @@ def execute(command):
         return m029_stage3b_targeted_discovery()
     if action == "m029_branch_divergence_report":
         return m029_branch_divergence_report()
+    if action == "m029_stage3b_known_runtime_probe":
+        return m029_stage3b_known_runtime_probe()
     if action == "sync":
         return git_sync()
     if action == "switch_branch":
