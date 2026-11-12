@@ -1,70 +1,67 @@
 # Next Authorized Task
 
-## M029 Stage 3A — implement the frozen operational safety boundary
+## M029 — Stage 3A accepted; Stage 3B read-only bridge is pending authorization
 
-Branch: `prospective-paper-recovery`. Do not touch `main`.
+Branch: `prospective-paper-recovery`. Do not merge or promote to `main`.
 
-**Operational protocol frozen before implementation/real-data access:**
-`c74ca08fe32bf9ac9954cee5b033f808f3932ddd`
-(`docs/milestones/029-stage3-operational-protocol.md`).
+The frozen M029 operational contract remains:
+`docs/milestones/029-stage3-operational-protocol.md`;
+freeze SHA `c74ca08fe32bf9ac9954cee5b033f808f3932ddd`.
 
-Accepted Stage-1 / Stage-2 engine remains:
-- Final pre-Stage-3 code/handoff HEAD: `917be98f784fe0842521b76a76ebf41a5654786c`.
-- Local-agent final full native regression: **356 passed, 2 skipped,
-  13 existing warnings**; result commit
-  `bcb873c4d1b812b290e1066fde12e943a7912e49`.
+### Stage 3A accepted evidence (2026-11-12)
 
-### Operator-reported isolated MT5 compatibility evidence (2026-11-12)
+- Tested implementation HEAD:
+  `50cc8dded6003fc6f7558263c8f5186cda796989`.
+- Full native regression result:
+  `bb68fab6c7e55543717a33b9a27fb788093d359f`
+  on `local-control-results`.
+- **382 passed, 2 skipped, 13 pre-existing warnings; zero failures.**
+- Pure/mock adapter: `mamba2/backtest/m029_stage3a.py`.
+- Tested direct UTC acquisition start/finish, immutable record final-clock
+  refusal, window close during source/broker calls, quote tick in active
+  window and <=300 seconds old, raw/normalized hashes, eight fixed symbols,
+  projected buy/sell margins, symlink and corrupt journal refusal.
+- No real publisher data, broker session, quote, signal, trade or live P/L was
+  accessed. Tests only wrote synthetic records into temporary directories.
+- Reported isolated Wine 11.21/Windows 11 terminal launch success is GUI
+  evidence ONLY. Python MT5 import/broker API compatibility remains unknown.
 
-- Wine **11.21 Staging**, Windows 11 compatibility, isolated copied
-  MetaTrader 5 terminal showed `MetaTrader 5 - Netting`.
-- No debugger warning appeared; no credentials, broker data, orders or
-  existing MT5 installation files were used/changed.
-- System Wine still **9.0**. Repository was clean at `917be98`.
-- **Python/MetaTrader5 bridge unvalidated**. Do not equate GUI launch with
-  broker API readiness.
+### Next gate — Stage 3B, NOT YET AUTHORIZED
 
-### Authorized immediate work: code and synthetic tests ONLY
+When a subsequent explicit authorization is given, the next safest sequence
+is **bounded and read-only**, stopping on any unsuccessful step:
 
-1. Implement trusted UTC-time window checks that run before source access,
-   after blocking calls, and at the exact immutable journal write boundary.
-2. Define real source acquisition metadata schema: actual UTC request/response
-   timestamps, exact BIS/OECD publisher URLs/identities, source coverage
-   date/month, raw/normalized hashes. Do not invent timestamps from a
-   synthetic `now` argument when designing the live adapter.
-3. Define a read-only broker transport interface with strict whitelist and
-   separate isolated Wine 11.21/Windows 11 runtime discovery; do not connect
-   to a broker yet, change Wine system defaults, copy credentials or mutate
-   existing `~/.mt5` / `.venv-wine`.
-4. Validate eight fixed symbol identities, quote timestamps inside the actual
-   decision window and <=300 seconds old, Bid/Ask, lot rules, BUY/SELL margin;
-   only metadata checks may occur before a decision.
-5. Use synthetic/mock fixtures only to prove fail-closed no-backfill, crash
-   handling, filesystem integrity, missing source/quote/margin, wrong symbols
-   and UTC boundary/refusal semantics. Preserve M027/M028 strategy logic.
-6. Run focused and full native regression, inspect exact feature SHA, and
-   document Stage-3A acceptance evidence before approving any real-data test.
+1. **Environment preflight:** inspect only isolated Wine 11.21 Staging and
+   copied Windows 11 compatibility prefix, separate bridge interpreter and
+   accepted package pins; do not modify original `~/.mt5`, system Wine 9.0,
+   existing `.venv-wine` / `.venv-native-control`, or project strategy.
+2. **Import-only smoke:** launch isolated bridge Python and import
+   `MetaTrader5` without `initialize`, account login, broker connection,
+   order checks, account reads or data downloads. Record version/error class
+   only, never secrets.
+3. **Real broker connectivity** only if separately authorized for a suitable
+   isolated demo session with no copied credentials: fixed, allowlisted
+   `symbol_info`, `symbol_info_tick`, and `order_calc_margin` for eight
+   frozen direct-USD symbols. No `symbol_select`, positions, history,
+   `account_info`, `order_check`, `order_send` or live actions.
+4. **Fixed-source metadata readiness** only if separately approved: inspect
+   BIS XRU/OECD IR3TIB source cutoff dates and SHA-256, no formation signs,
+   no target lots, no strategy economics; confirm actual acquisition timestamps
+   and source publication metadata when available.
+5. Capture deterministic/filtered evidence and close Stage 3B before
+   considering Stage 3C. Do not silently turn a read-only check into paper
+   decision or scheduler activation.
 
-### STOP before Stage 3B real connectivity
+### Stage 3C — NOT AUTHORIZED
 
-Stage 3B (bounded read-only bridge/source readiness) requires a separate
-explicit authorization **after** synthetic Stage-3A acceptance. No live HTTP
-source downloads, real broker quote/margin calls, credentials, MT5
-initialization or source-derived strategy signal are authorized by this
-handoff.
+No live-source trading signal, paper record, broker position or scheduled
+decision. The first potentially eligible paper window remains
+**2026-12-07T12:00:00Z** to strictly before **12:10:00Z**
+(15:00–15:10 EAT); this is not an enabled automation. Missing that
+window permanently forbids reconstruction. October and November were
+already missed; never backfill.
 
-Stage 3C (actual monthly on-time paper decision and optional scheduling)
-requires its **own explicit acceptance/authorization** after Stage 3B.
-Do not schedule it by default. No real MT5 order/position changes are permitted.
-
-### Immutable prospective calendar
-
-First possible month: `2026-12`; decision window is
-**2026-12-07T12:00:00Z** through *strictly before*
-**2026-12-07T12:10:00Z** (15:00–15:10 EAT).
-October and November are irrecoverably missed. Never backfill. A missed
-December window is also terminal.
-
-Preserve source identities, eight-currency signal and sizing, unknown cost
-fields, and minimum 12 completed prospective paper holding periods before
-any strategy support analysis. See the frozen Stage-3 protocol for full rules.
+Retain M027/M028 fixed strategy and eight currencies, unknown actual
+commission/slippage/swap, and the minimum **12 completed prospective**
+paper holding periods before a performance conclusion. Neither live trading
+nor net executable profitability is supported.
