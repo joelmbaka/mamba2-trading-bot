@@ -1,27 +1,30 @@
-# Next Authorized Task — M030 Stage 1M offline standalone-tester prerequisites (read-only)
+# Next Authorized Task — M030 Stage 1N blank terminal/tester executable startup (no data)
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1L COPIED TERMINAL STARTED IN ISOLATION; STANDALONE TESTER READINESS UNPROVEN**
+Status: **STAGE 1M READ-ONLY AUDIT COMPLETE; ACCOUNT-FREE TESTER NOT DEMONSTRATED**
 
-## Prior evidence
+## Evidence
 
-Stage 1L Codex verified clean synced `scalping-recovery` at `ca48dde609cad571b75a1717e7ee1dd11d8691f4`; only copied bare MT5 terminal binary SHA-256 `f7e4ad40b74b05a67a03c8c7b8abf6d6f2aea45fe4669c42b67c1b361e0cfc72` was launched inside existing network-denied, host-inaccessible bubblewrap sandbox after successful `wineboot -u`. MT5 x64 build 6316 began starting, wrote only disposable local defaults/logs and exited; `timeout` wrapper status 69, internal terminal exit code 0, shutdown code 10053 (unknown cause). Logged attempted MQL5.community authorization (failed) and request for a newer MetaEditor; local loopback MCP. No tester/EA, broker or historical dataset operation. Original MT5 PID 71219 and wineserver PID 35411 unchanged. See `docs/milestones/030-stage1l-isolated-terminal-startup.md`.
+Stage 1M Codex verified clean synchronized `scalping-recovery` at `8b93eba40ddbb91ad0864317874c2567099a9dda`. MT5 terminal `terminal64.exe`, `metatester64.exe` and MetaEditor executables are available, but neither a standalone tester config nor any supported offline market-data-only provisioning mechanism was found. Original MetaQuotes-Demo data and account-linked configuration cannot safely be cloned. Read `docs/milestones/030-stage1m-tester-prerequisites.md`.
 
-## Immediate next task after explicit instruction (READ-ONLY)
+Stage 1L previously demonstrated only **short-lived MT5 terminal startup** with network denial, no credentials, profiles, history or display socket. Wine 11.21 initialization and sandbox network/FS isolation were separately verified in Stages 1J/1K. Native historical M1/M5 source parity and server-to-UTC offset remain unresolved.
 
-Codex:
-1. Verify clean branch and origin sync. Read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, Stage 1L report, and this file.
-2. Inspect local **non-sensitive** MT5 terminal/tester program binaries and existing app directory layout, tester configuration documentation and any available non-secret usage/help/reference evidence. **No Wine or MT5 launch**.
-3. Determine what is needed for account-free, network-disconnected tester launch: whether a stable terminal session is a prerequisite; relationship between `terminal64.exe`, `metatester64.exe`, tester settings, agent processes and compiled no-order EA; whether an update/authorization attempt may block startup. Distinguish evidence from assumptions.
-4. Reconcile process exit evidence (wrapper status 69 vs internal exit 0 and shutdown 10053) only where the existing logs support a cause. Never claim failure due to missing account state without proof.
-5. Inspect permissible offline use of a *blank* isolated configuration versus sensitive original accounts/servers/certs/profiles. Do not copy any of them. Determine if market-data-only provision is possible on present evidence; if unknown say so.
-6. Report exact prerequisite matrix, missing evidence, risks and narrowly scoped next *separately authorized* safe compatibility experiment.
+## Next bounded Codex task — only after explicit instruction
 
-## No authority to do
+**Stage 1N: bare executable startup compatibility under externally verified isolation, no data and no backtest.**
 
-No Wine/MT5/MetaEditor/Strategy Tester starts, account or native-history copies, imports/downloads, broker connection, Python historical economic backtest, simulation/orders, installs, repository edits, original state changes, force-push/new branch, or local-control.
+1. Verify clean/synchronized branch, read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, this file and Stage 1M report.
+2. Create new scratch and fresh Wine prefix; copy **only** `terminal64.exe` and `metatester64.exe`. Exclude all accounts, server config/certificates, common/settings/terminal INIs, bases/history/ticks, profiles, logs, original Wine prefix, community/trade state.
+3. Reuse proven bubblewrap no-network/host-home-inaccessible sandbox; verify there are no network routes other than loopback and no access to original home/repository/MT5. No display socket or host desktop mounts; scratch-only writable.
+4. Initialize Wine with bounded `wineboot -u`. Attempt **copied terminal startup** `/portable` with a bounded timeout, no EA, account or tester job. Record stability and runtime output, rather than assume that brief startup implies persistence.
+5. **Only if safe and terminal remains stable**, attempt bare copied `metatester64.exe` process initialization with a bounded timeout **without scheduling a backtest**. If invocation is known to trigger a tester job, skip. Stop on unexpected update/login/download/service activity; do not weaken network isolation.
+6. Report exact commands, original/copy SHA-256, prefix mount restrictions, exit codes, network verification, process cleanup and whether original terminal PID 71219 / original wineserver PID 35411 remained unchanged. Report blockers clearly.
+
+## Prohibited
+
+No Strategy Tester job, MQL5 EA/clock probe load, historical replay, real/simulated orders, broker login, data download/import/copies, original MT5 app/prefix modifications, software installs, repo source edits, new branches, force-push/reset or local-control.
 
 ## Following decision
 
-Only if standalone-test prerequisites are evidence-supported can an isolated no-order diagnostic launch or data provisioning step be separately considered. Historical clock offset, native bar/tick identity and trading parity remain unproven.
+Even successful bare tester-agent startup does not prove data availability, independent server clock mapping, or economic parity. A later data-only feasibility experiment would require a separate reviewed authorization and strict account-state exclusion.
