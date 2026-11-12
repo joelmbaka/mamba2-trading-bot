@@ -100,3 +100,54 @@ If an operational gate fails, STOP. Never loosen data requirements, retrospectiv
 ## 6. Immediate next task
 
 Implement Stage 3A only, starting with the timestamp provenance defect and fail-closed time gate. Do not initiate Stage 3B or Stage 3C as a consequence of this freeze.
+
+
+## Stage 3A acceptance — 2026-11-12
+
+**Accepted implementation/test HEAD:**
+`50cc8dded6003fc6f7558263c8f5186cda796989`
+on `prospective-paper-recovery`.
+
+**Verified physical workstation result:** `local-control-results` commit
+`bb68fab6c7e55543717a33b9a27fb788093d359f`,
+action `mamba2-20261112-m029-stage3a-native-v1`.
+
+- Full native: **382 passed, 2 skipped, 13 pre-existing warnings**; no failures.
+- New pure/mock-only module `mamba2/backtest/m029_stage3a.py`:
+  allowlisted BIS/OECD source addresses, actual mocked call start/finish clock
+  captures, raw/normalized source SHA-256, source cutoff classification, fixed
+  eight-symbol read-only mock broker interface, tick timestamp and last-use
+  freshness gate, and synthetic isolated-runtime path manifest check.
+- Native synthetic tests:
+  `tests/test_m029_stage3a.py` and
+  `tests/test_m029_stage3a_journal.py`.
+- Existing M029 journal hardened by an optional *final clock* callback checked
+  immediately before exclusive file creation; parent directory symlink is
+  rejected. No change to M027 or M028 strategy and sizing machinery.
+- Mock scheduler tests rejected October/November backfill, early starts, exact
+  closing boundary, a delayed source download, and a delayed broker call.
+- No actual Wine or MetaTrader5 Python bridge was launched; no HTTP public
+  source downloaded; no credentials, market-data quotes, signals, target lots,
+  paper decision in workstation storage, real broker orders or P/L accessed or
+  generated. The only journal writes in the tests used temporary synthetic
+  files.
+- Publisher header timestamps are **UNPROVEN**, and actual runtime/bridge
+  compatibility remains **UNVERIFIED**. Source fetch timestamps in these
+  tests are mock-clock measurements, not observed real source publication
+  times. Passing these mocks does not certify real connectivity or the
+  December decision.
+
+**Stage 3A CLOSED.**
+
+## Stage 3B pending — separate explicit authorization required
+
+A bounded, read-only isolated Python/MT5 import and runtime smoke test is the
+next gate. Prior to any real broker initialization or price/margin access,
+verify isolated Wine runtime paths and that no credentials or personal/live
+account are being reused. A Python import check alone is not broker-readiness
+evidence.
+
+A separately authorized metadata-only BIS/OECD publisher-date/hash probe may
+follow. No pre-decision signal or target computation, paper record creation,
+scheduler activation, broker trading, or M027/M028 economics is permitted.
+Stage 3C is still unapproved and unimplemented.
