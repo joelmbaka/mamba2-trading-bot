@@ -31,8 +31,9 @@ public abstract class M031CsvBar : BaseData
     protected abstract M031CsvBar Create();
 
     public override SubscriptionDataSource GetSource(SubscriptionDataConfig config,
-        DateTime date, DateTime? dataTimeZone)
+        DateTime date, bool isLiveMode)
     {
+        if (isLiveMode) throw new NotSupportedException("M031 sealed data is backtest-only");
         return new SubscriptionDataSource(
             M031SourcePaths.For(SourceKind),
             SubscriptionTransportMedium.LocalFile,
