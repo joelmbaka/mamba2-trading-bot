@@ -1,55 +1,51 @@
 # Next Authorized Task
 
-## M028 — October forward-paper decision missed; do not backfill
+## M029 Stage 1 — validate prospective safety machinery
 
-Read-only audit date: **2026-11-12**.
+Milestone branch: `prospective-paper-recovery`.
 
-Evidence:
-- workstation `execution-realism` at `270d7c5e0e04b45ec2ce32b108cd2e7d334cdb3b`, clean, no divergence;
-- remote local-agent audit result: `5d1ccfd0460908946cc74cad36c6c712e81679a7`;
-- configured immutable record `~/.local/share/mamba2-forward-paper/2026-10-decision.json`: **ABSENT**;
-- configured forward-paper record directory: **ABSENT**;
-- no October paper signal, position target or forward outcome is supported by durable evidence;
-- no broker order, MT5 signal evaluation or strategy economics was invoked in this audit.
+**Protocol frozen before implementation:**
+`b84456f256cd701738b20ff30dc5be37f4f36dfb`
+(`docs/milestones/029-prospective-paper-recovery.md`).
 
-The frozen October decision was scheduled for **2026-10-07T12:00:00Z**.
-It cannot now be reconstructed using later quotes or revised published sources.
-The November fifth-Monday-through-Friday decision (**2026-11-06T12:00:00Z**) is also past.
-Do **not** execute `m028_stage3_first_decision` to create a missing October record.
+Stage-1 feature implementation:
+`03f0e0dfd918ad7c4827253c864a373a671abe8c`
+(`mamba2/backtest/m029_prospective.py`).
 
-Control safety interlock (not a strategy change):
-`6f1f71c219b7e4e1ef50f6392e4b902311ce9b99` on `local-control`
-refuses a post-October-7 first-decision command if no existing record exists.
+Synthetic tests:
+`23234f97688d284476ccb4404cf1ce87407a60e1`
+(`tests/test_m029_prospective.py`).
 
-## Next authorized work — design M029 prospective recovery
+### Authorized immediate action
 
-Before any new monthly signal or shadow position:
+1. Verify the Dell checkout is clean and switch, without force, to the
+   `prospective-paper-recovery` branch.
+2. Run the full native test suite; inspect any failing tests and fix
+   implementation/test defects without changing the frozen economic contract.
+3. Record exact accepted feature SHA and test evidence.
+4. Close only Stage 1 once tests pass and the result has been inspected.
 
-1. Freeze a **new, named** M029 paper-validation protocol; preserve M027/M028
-   strategy, signal parameters, currency universe, leverage/margin caps and cost
-   evidence semantics, without inspecting any newly generated strategy outcomes.
-2. The earliest future fifth-Mon–Fri business-day decision is
-   **2026-12-07T12:00:00Z** (December 2026). This is only a proposed eligible
-   date until the M029 protocol and validation are accepted.
-3. Implement and test a **month-generic**, append-only prospective decision
-   machine with both an opening time and a missed-window refusal.
-4. Add a safe metadata-only readiness gate, never calculate strategy signals
-   ahead of a frozen decision timestamp, and never backfill October/November.
-5. Require source timestamps, immutable hashes, quote/margin viability and
-   reproducible synthetic tests before authorizing M029's first decision.
-6. Record decisions prospectively, one per month; do not claim strategy support
-   before 12 completed forward-paper months with cost limitations disclosed.
+### Permanently missed months
 
-Until M029 is explicitly frozen and its implementation validated, the only
-permitted work is read-only status/evidence audit, documentation, synthetic
-tests and implementation of prospective safety controls. No paper decision,
-real broker order or strategy economic result is authorized.
+The October 2026 and November 2026 prospective windows passed without a
+record. The 2026-11-12 workstation audit proved the configured October path
+and directory absent. No historical paper decision may be backfilled.
+The first eligible future window is:
+**2026-12-07 12:00:00Z <= clock < 2026-12-07 12:10:00Z**.
 
-## Unchanged safety boundaries
+### Not authorized in Stage 1
 
-- paper/shadow only, **no real orders**;
-- no position changes, MT5 order-check/order-send, or trade history reads;
-- no retrospective M028 net-economics claim;
-- no M027 economics rerun or parameter retune;
-- no M021 post-cutoff outcome use;
-- no merge/deploy/live promotion.
+- No real-source signal or target-lot calculation.
+- No real or paper position creation on broker.
+- No live MT5 account read, order check, or order send.
+- No M028 October first-decision action.
+- No M027 retrospective economics rerun.
+- No historical result retune or post-fact selection.
+- No production merge/deploy.
+- No M029 paper-decision record on the actual workstation.
+
+The upcoming M029 Stage 2 must receive its own prospective implementation
+authorization *after* Stage-1 regression is green. It will integrate
+metadata-only readiness and broker/source adapters using the fixed Stage-1
+calendar/journal invariants. The full M029 strategy remains unproven at
+executable net-cost level.
