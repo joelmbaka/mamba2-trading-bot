@@ -212,3 +212,36 @@ def test_snapshot_types_required_before_parse(monkeypatch):
             month_id="2026-12", now=AT,
             bis_raw="not bytes", oecd_raw=b"mock", broker_currencies=broker(),
         )
+
+
+
+def test_january_requires_explicit_prior_ledger_before_source_parse(monkeypatch):
+    monkeypatch.setattr(
+        assembly, "parse_bis_daily_spot_zip",
+        lambda raw: (_ for _ in ()).throw(AssertionError("no source parsing")),
+    )
+    jan = datetime(2027, 1, 7, 12, 1, tzinfo=timezone.utc)
+    with pytest.raises(RuntimeError, match="PRIOR_PAPER_STATE_REQUIRED"):
+        assembly.draft_from_supplied_snapshots(
+            month_id="2027-01",
+            now=jan,
+            bis_raw=b"SYNTHETIC BIS",
+            oecd_raw=b"SYNTHETIC OECD",
+            broker_currencies=broker(),
+        )
+
+
+def test_first_december_decision_refuses_invented_prior_positions(monkeypatch):
+    monkeypatch.setattr(
+        assembly, "parse_bis_daily_spot_zip",
+        lambda raw: (_ for _ in ()).throw(AssertionError("no source parsing")),
+    )
+    with pytest.raises(ValueError, match="no prior paper positions"):
+        assembly.draft_from_supplied_snapshots(
+            month_id="2026-12",
+            now=AT,
+            bis_raw=b"SYNTHETIC BIS",
+            oecd_raw=b"SYNTHETIC OECD",
+            broker_currencies=broker(),
+            prior_positions_lots={"AUD": 0.1},
+        )
