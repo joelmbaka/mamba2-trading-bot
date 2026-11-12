@@ -1,17 +1,15 @@
 {
   "version": 1,
-  "command_id": "mamba2-20261112-readonly-status-v1",
-  "completed_at": "2026-11-12T07:33:54.397836+00:00",
+  "command_id": "mamba2-20261112-record-audit-v1",
+  "completed_at": "2026-11-12T07:35:59.698036+00:00",
   "ok": true,
-  "action": "status",
+  "action": "m028_record_audit",
   "data": {
-    "hostname": "joel-OptiPlex-7080",
-    "repo": "/home/joel/Dev/mamba2-trading-bot",
-    "branch": "execution-realism",
-    "head": "270d7c5e0e04b45ec2ce32b108cd2e7d334cdb3b",
-    "clean": true,
-    "changed_paths": [],
-    "divergence": "0\t0",
-    "time": "2026-11-12T07:33:49.993483+00:00"
+    "record_exists": false,
+    "record_directory_exists": false,
+    "read_only": true,
+    "broker_initialized": false,
+    "order_api_called": false,
+    "strategy_economics_computed": false
   }
 }
