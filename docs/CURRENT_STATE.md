@@ -937,3 +937,33 @@ authorized. October/November are still missed without backfill.
 No Stage-3 code, real market-data ingestion, MT5 initialization, broker read,
 paper decision, live order or strategy economics were run by the protocol
 freeze. Refer to `docs/NEXT_TASK.md` for the exact Stage-3A handoff.
+
+
+## 2026-11-12 — M029 Stage 3A CLOSED (synthetic integration only)
+
+Branch: `prospective-paper-recovery`.
+Accepted feature/test HEAD: `50cc8dded6003fc6f7558263c8f5186cda796989`.
+
+Full native suite run by the workstation local agent:
+`mamba2-20261112-m029-stage3a-native-v1`, recorded on results branch at
+`bb68fab6c7e55543717a33b9a27fb788093d359f`.
+Result: **382 passed, 2 skipped, 13 pre-existing warnings, zero failures**.
+
+Stage 3A additions: `mamba2/backtest/m029_stage3a.py` with source
+download/parse acquisition times measured by a mock UTC clock, source raw
+and normalized hashes, source completeness, a strict mock allowlist of
+eight symbol info/tick/margin calls, freshness at observation and after
+potentially blocking margin calls, no strategy or P/L paths, synthetic
+isolated runtime path preflight. M029 journal adds a final-clock gate before
+exclusive file creation and rejects a symlinked journal directory.
+
+All inputs were synthetic. No real BIS/OECD data were downloaded, Wine/MT5
+bridge initialized, account information inspected, quotes obtained, trades
+placed, or actual workstation paper decisions created. Passing mocks is not
+evidence of real broker connectivity or profitability.
+
+The operational Stage-3 protocol and acceptance are documented in
+`docs/milestones/029-stage3-operational-protocol.md`.
+Stage **3B** real read-only connectivity is pending separate authorization.
+Stage **3C** paper decisions/scheduling remain unauthorized. December
+7, 2026 at 12:00–12:10 UTC remains a prospective window only.
