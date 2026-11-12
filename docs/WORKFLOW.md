@@ -1,81 +1,35 @@
-# ChatGPT ↔ Codex IDE Workflow
+# ChatGPT ↔ Codex IDE Workflow — Mamba2
 
-## Roles
+## Current division of responsibilities
 
-### ChatGPT
-Architecture, milestone boundaries, review, acceptance criteria, remote GitHub operations, local-control commands, and milestone acceptance.
+**ChatGPT**: inspect GitHub directly, design architecture and experiments, create/edit GitHub source and documentation, commit changes on the active branch, review results.
 
-### Codex IDE
-Physical-machine implementation/execution, native/Wine tests, authorized read-only MT5 exports, and exact evidence reporting.
+**Codex IDE**: local terminal commands, branch checkout/sync on the workstation, dependency provisioning, unit/integration tests, backtests, native/Wine execution, MT5 Strategy Tester interaction (including GUI/screenshots), and result extraction.
 
-The user should not need to relay long routine test/status transcripts once local-control is installed.
+**Operator**: approves milestone boundaries, trading strategy semantic changes, brokerage/data access, risk and any live trading.
+
+Do **not** dispatch any local work using the `local-control` / `local-control-results` branches. They remain preserved but inactive. Local executions must happen explicitly through Codex, and the outcome must be returned to the ChatGPT conversation. GitHub operations by ChatGPT are allowed without workstation execution.
 
 ## Fresh-session handoff
 
-Read:
-
-1. `AGENTS.md`
-2. `docs/CURRENT_STATE.md`
-3. `docs/NEXT_TASK.md`
-4. `docs/BACKTEST_SEMANTICS.md`
-5. `docs/MILESTONES.md`
+Read in order: `AGENTS.md`, `docs/CURRENT_STATE.md`, `docs/NEXT_TASK.md`, `docs/BACKTEST_SEMANTICS.md`, `docs/MILESTONES.md`, `docs/milestones/030-scalping-parity-audit.md`.
 
 ## Milestone lifecycle
 
-1. Start from accepted SHA on named branch.
-2. Implement only authorized scope.
-3. Validate.
-4. Record exact implementation SHA.
-5. Add milestone record.
-6. Update `CURRENT_STATE.md` and `NEXT_TASK.md` in a docs-only closeout commit.
-7. Fast-forward `main`; never rewrite history.
-8. Transition to next branch.
+1. Work on the existing `scalping-recovery` branch. Do not create another branch merely to advance a milestone.
+2. Confirm exact GitHub HEAD and clean local worktree.
+3. ChatGPT implements source/document changes only within explicitly authorized scope.
+4. Codex fetches those changes without overwriting local work and runs authorized validation on the Dell.
+5. Codex reports command results, exact SHAs, tests, reproducibility evidence and any failures here.
+6. ChatGPT records acceptance and subsequent task boundaries in GitHub.
+7. Merge to `main` only when ready; delete obsolete branches as part of deliberate consolidation, never force-delete or rewrite history.
 
-The implementation SHA and later docs-closeout SHA must both remain identifiable.
+## Git and trading safety
 
-## Local-control architecture
+Refuse dirty tree, detached HEAD, unexpected divergence, missing remote target or local-only commits before a risky switch or merge. Never auto-stash, reset away work, force-push, or silently modify broker credentials.
 
-Use the proven RentPayor/Milliol GitHub-mailbox pattern:
+Use MT5 Strategy Tester for simulated trades; never execute real-account orders in verification work. Real market-data access requires separate authorization. Keep environments isolated, and do not accidentally resume previous monthly momentum paper execution.
 
-- `local-control`: command + whitelisted agent code + bootstrap.
-- `local-control-results`: structured result JSON.
+## Current authorized task
 
-The workstation systemd user agent polls GitHub, safely auto-fast-forwards a clean current app branch, executes only enumerated actions, and publishes results.
-
-No arbitrary shell action.
-
-## Git safety
-
-Refuse dirty tree, detached HEAD, divergence, missing remote target, or target branch with local-only commits.
-
-Never auto-stash, reset, force-switch, delete work, rewrite history, or force-push.
-
-## Initial Mamba2 actions
-
-- `status`
-- `sync`
-- `switch_branch`
-- `repo_checks`
-- `bootstrap_wine_test_env`
-- `runtime_discovery`
-- `runtime_versions`
-- `test_core`
-- `test_full_native`
-- `test_full_wine`
-
-Baseline-specific workflows can be added later as fixed actions.
-
-## Trading safety
-
-The local agent must never place/modify/close MT5 orders, set `MAMBA_RUN_MT5_INTEGRATION=1`, or publish credentials/account metadata.
-
-## Environment isolation
-
-Local-control keeps native and Wine test environments separate:
-
-- native control environment: `.venv-native-control`
-- Wine validation environment: `.venv-wine`
-
-The Wine environment is rebuilt only through the fixed `bootstrap_wine_test_env` action from the accepted pinned runtime constraints.
-
-This prevents native `uv` operations from overwriting the Wine validation environment.
+M030 Stage 0: read-only GitHub audit and independent Python/MT5 parity design. Runtime audit and test execution are reserved for a subsequent explicitly authorized Codex step.
