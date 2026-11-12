@@ -447,6 +447,40 @@ def diagnose_mt5_wine_compat():
     return {"ok": True, "action": "diagnose_mt5_wine_compat", "data": info}
 
 
+
+def probe_mt5_pe_version():
+    """Read only the MT5 executable's embedded Windows file version."""
+    import mmap
+    import struct
+
+    root = Path.home() / ".mt5" / "drive_c" / "Program Files" / "MetaTrader 5"
+    exe = root / "terminal64.exe"
+    if not exe.is_file():
+        return {"ok": False, "action": "probe_mt5_pe_version",
+                "data": {"reason": "exe_not_present"}}
+    versions = []
+    with exe.open("rb") as handle:
+        with mmap.mmap(handle.fileno(), 0, access=mmap.ACCESS_READ) as buf:
+            pattern = b"\xbd\x04\xef\xfe"  # VS_FIXEDFILEINFO signature
+            pos = buf.find(pattern)
+            checks = 0
+            while pos >= 0 and checks < 300:
+                checks += 1
+                if pos + 16 < len(buf):
+                    fixed_ver, hi, lo = struct.unpack_from("<III", buf, pos + 4)
+                    major, minor = hi >> 16, hi & 0xFFFF
+                    build, patch = lo >> 16, lo & 0xFFFF
+                    if (fixed_ver in (0x00010000, 0x00010001)
+                            and major == 5 and minor <= 2
+                            and 1000 <= build < 30000):
+                        versions.append(f"{major}.{minor}.{build}.{patch}")
+                        break
+                pos = buf.find(pattern, pos + 4)
+    return {"ok": True, "action": "probe_mt5_pe_version",
+            "data": {"read_only": True, "exe_version": versions[0] if versions else None,
+                     "version_present": bool(versions),
+                     "terminal_launched": False, "order_api_called": False}}
+
 def execute(command):
     action = command.get("action")
     if action == "status":
@@ -455,6 +489,8 @@ def execute(command):
         return audit_m028_record()
     if action == "diagnose_mt5_wine_compat":
         return diagnose_mt5_wine_compat()
+    if action == "probe_mt5_pe_version":
+        return probe_mt5_pe_version()
     if action == "sync":
         return git_sync()
     if action == "switch_branch":
