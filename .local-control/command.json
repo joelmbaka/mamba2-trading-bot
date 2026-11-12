@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "id": "mamba2-20261112-branch-consolidation-switch-main-v1",
+  "id": "mamba2-20261112-switch-scalping-recovery-v1",
   "action": "switch_branch",
   "args": {
-    "branch": "main"
+    "branch": "scalping-recovery"
   },
   "requested_by": "chatgpt"
 }
