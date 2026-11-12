@@ -1,39 +1,34 @@
-# Next Authorized Task — M030 Stage 1C no-trade data alignment preflight
+# Next Authorized Task — M030 Stage 1D independent data-alignment contract
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **ISOLATED NO-ORDER MQL5 COMPILATION ACCEPTED; READ-ONLY DATA PROVENANCE NEXT**
+Status: **STAGE 1C READ-ONLY PROVENANCE AUDIT ACCEPTED; SOURCE ALIGNMENT REPAIR NEXT**
 
-## Accepted prior results
+## Accepted Stage 1C evidence
 
-- Python synthetic tests 10 passed; relevant regressions 45 passed; Python syntax passed.
-- Stage 1B-I established necessity and feasibility of disposable compiler isolation.
-- Stage 1B-II reported successful compilation of `mql5/M030_DecisionProbe.mq5` under independent disposable Wine prefix/app with MetaEditor 5.0.0.6316, 0 errors and 0 warnings. Source SHA-256 `16d5dd992d8183074d0c7795661e4891aca4ff52a103fa11ad8786929b886ba6`; EX5 SHA-256 `392a6cb6f71893a5cb24a2da0a730120da98d18baadfebbf44030fb74522308c`. Process exit code 1 is an unresolved reporting anomaly; preserve the compiler log and executable evidence. Original running terminal unchanged. See `docs/milestones/030-stage1bii-compiler-validation.md`.
+Codex inspected the canonical `backtest_data/m022-history-inventory-tick-m1-v2/` MetaQuotes-Demo export without modifying data or opening the terminal/tester. EURUSD Sep 10, 2026 UTC contains M1=1,440, Ask M1=1,440, M5=288 complete bars. The canonical M1/Ask first source bar is 2025-08-25 00:03 UTC; the native M5 source starts 2025-08-25 00:00 UTC. These different origins are valid **per-timeframe warm-up starts**; both engines must agree within each timeframe, not artificially synchronize M1 start with M5 start. Raw ticks were not preserved; MT5 caches cannot yet prove coverage or historical server clock offset. See `docs/milestones/030-stage1c-data-provenance.md` for hashes, row counts and unresolved risks.
 
-## Immediate next gate — Stage 1C
+Prior gates: 10 focused + 45 regression tests passed; independent no-order EA compiled with MetaEditor build 6316, zero errors/warnings and a generated EX5. CLI returned code 1 despite a successful log; note the anomaly. No tester execution.
 
-Before any tester or historical replay, Codex should perform only separately instructed read-only offline data-provenance checks:
-1. Check clean/synchronized `scalping-recovery`, read M030 contract.
-2. Inventory existing repository EURUSD M1/M5/Ask datasets and manifests: file hashes, source server, exact first/last UTC rows and warm-up span, sample completeness, timezone declarations and tick export provenance. **Do not inspect historical trading P/L.**
-3. Read-only inspect the known EURUSD MT5 cache metadata and timestamps without launching MT5, Wine, MetaEditor or Strategy Tester. Do not mutate originals or interpret a cached binary as a proven complete real-tick source unless independently decoded and validated.
-4. Determine whether an explicit historical MT5 server-to-UTC offset can be independently established from available metadata. No inference from user's Kenya timezone or speculative offsets.
-5. Identify the exact common initial M1 and M5 source bar used for EMA and stochastic warm-up and whether the EA's copied-history approach can reproduce the Python historical prefix. Report any mismatch instead of silently trimming inputs.
-6. Provide machine-readable data inventory where feasible but do not create/write files under this read-only preflight. Return source paths, hashes, row counts, UTC identity, missing coverage and blockers.
+## Next source work (ChatGPT GitHub only)
 
-## Boundaries
+1. Revise `mql5/M030_DecisionProbe.mq5` as necessary to explicitly assert **separate M1 and M5 source origins**, correct `CopyRates` closed-bar ordering and startup seeds, and fail closed if the exact frozen history prefix is unavailable. Do not silently trim or shift warm-up data.
+2. Capture or verify per-timeframe bar timestamps/OHLC using a deterministic export schema and manifest with independent source hash and time-zone declarations. MQL5 server timestamps are not assumed UTC.
+3. Strengthen Python importer and synthetic tests to reject missing/duplicate/misaligned M1/M5 identities and unverified offset assumptions.
+4. Document exact Codex source validation and disposable compilation instructions. Preserve original strategy semantics and all historical data. No new branch.
 
-Stage 1C is **not** authorization to launch a tester, download/repair market data, initialize a broker, run a historical Python backtest, create orders (even simulated), install packages, change strategy calculations or overwrite old data. Workstation execution belongs only to Codex, not local-control or local-control-results. GitHub remains the source editing control plane. No new branches.
+## Runtime boundaries
 
-## Next decision
+Stage 1D GitHub source work only; Codex tests/compile require a distinct bounded instruction and report. Do **not** automatically launch MT5 or its Strategy Tester, run a historical Python backtest, connect a broker, download/replace historical data, submit simulated/real orders, optimize strategy, install packages, or use `local-control`/`local-control-results`.
 
-Evaluate data identity and clock evidence before authorizing isolated no-trade MT5 decision-only Strategy Tester operation. Full trade execution comparison remains a separate later gate.
+## Subsequent decision
+
+After Stage 1D source validation and isolated compile, decide whether to authorize a *decision-only* MT5 tester session in an isolated environment to establish actual broker cache data coverage and clock alignment. No order-capable EA or economic parity is authorized at this stage.
 
 ## References
 
 - `AGENTS.md`
 - `docs/BACKTEST_SEMANTICS.md`
-- `docs/milestones/030-scalping-parity-audit.md`
-- `docs/milestones/030-stage1a-source-checkpoint.md`
-- `docs/milestones/030-stage1b-validation.md`
-- `docs/milestones/030-stage1bi-isolation-preflight.md`
+- `docs/milestones/030-stage1a-parity-harness.md`
 - `docs/milestones/030-stage1bii-compiler-validation.md`
+- `docs/milestones/030-stage1c-data-provenance.md`
