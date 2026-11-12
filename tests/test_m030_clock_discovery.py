@@ -16,7 +16,7 @@ def _hash(path):
 
 
 def _write_fixture(tmp_path, *, offset=180, omit_m5=False, m5_bad=False,
-                   second_offset=None, duplicate=False):
+                   second_offset=None, duplicate=False, epoch_seconds=False):
     m1 = tmp_path / "M1.csv"
     m5 = tmp_path / "M5.csv"
     probe = tmp_path / "probe.csv"
@@ -64,13 +64,15 @@ def _write_fixture(tmp_path, *, offset=180, omit_m5=False, m5_bad=False,
     return probe,m1,m5, {"probe":_hash(probe),"M1":_hash(m1),"M5":_hash(m5)}
 
 
-def _discover(files, *, candidates=range(-240,241,15)):
+def _discover(files, *, candidates=range(-240,241,15),
+              reference_timestamp_format="iso8601_utc"):
     probe,m1,m5,hashes = files
     return discover_clock_offset(
         probe,m1,m5,run_id="test",expected_sha256=hashes,
         window_start=START,window_end=END,
         expected_counts={"M1":10,"M5":2},
-        candidate_offsets_minutes=candidates)
+        candidate_offsets_minutes=candidates,
+        reference_timestamp_format=reference_timestamp_format)
 
 
 def test_unique_clock_mapping_requires_both_timeframes(tmp_path):
@@ -118,3 +120,36 @@ def test_missing_reference_rows_rejected(tmp_path):
             window_start=START,window_end=END,
             expected_counts={"M1":1440,"M5":288},
             candidate_offsets_minutes=(180,))
+
+
+def test_canonical_epoch_seconds_without_rewriting_files(tmp_path):
+    files = _write_fixture(tmp_path, offset=180, epoch_seconds=True)
+    result = _discover(files, reference_timestamp_format="unix_seconds_utc")
+    assert result["status"] == "UNIQUE"
+    assert result["offset_minutes"] == 180
+    with pytest.raises(ValueError, match="invalid UTC timestamp"):
+        _discover(files)
+
+
+def test_reference_format_must_be_explicit_and_valid(tmp_path):
+    files = _write_fixture(tmp_path, epoch_seconds=True)
+    with pytest.raises(ValueError, match="reference timestamp format"):
+        _discover(files, reference_timestamp_format="auto")
+
+
+def test_epoch_seconds_refuses_misaligned_or_fractional_time(tmp_path):
+    files = _write_fixture(tmp_path, epoch_seconds=True)
+    probe, m1, m5, hashes = files
+    old = m1.read_text()
+    first = str(int(START.timestamp()))
+    for replacement, message in ((str(int(START.timestamp()) + 1), "minute-aligned"),
+                                 (first + ".5", "integer epoch second")):
+        m1.write_text(old.replace(first, replacement, 1), encoding="utf-8")
+        updated = {**hashes, "M1": _hash(m1)}
+        with pytest.raises(ValueError, match=message):
+            discover_clock_offset(
+                probe, m1, m5, run_id="test", expected_sha256=updated,
+                window_start=START, window_end=END,
+                expected_counts={"M1": 10, "M5": 2},
+                candidate_offsets_minutes=(180,),
+                reference_timestamp_format="unix_seconds_utc")
