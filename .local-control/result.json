@@ -1,14 +1,17 @@
 {
   "version": 1,
-  "command_id": "mamba2-20261112-mt5-pe-version-readonly-v1",
-  "completed_at": "2026-11-12T08:41:08.817918+00:00",
+  "command_id": "mamba2-20261112-stage3-protocol-freeze-status-v1",
+  "completed_at": "2026-11-12T09:55:11.207840+00:00",
   "ok": true,
-  "action": "probe_mt5_pe_version",
+  "action": "status",
   "data": {
-    "read_only": true,
-    "exe_version": null,
-    "version_present": false,
-    "terminal_launched": false,
-    "order_api_called": false
+    "hostname": "joel-OptiPlex-7080",
+    "repo": "/home/joel/Dev/mamba2-trading-bot",
+    "branch": "prospective-paper-recovery",
+    "head": "27d0d5593d72ffb3e146e53537cda8f9f4a0ad8a",
+    "clean": true,
+    "changed_paths": [],
+    "divergence": "0\t0",
+    "time": "2026-11-12T09:55:05.699399+00:00"
   }
 }
