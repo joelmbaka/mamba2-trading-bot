@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-20261112-mt5-pe-version-readonly-v1",
-  "action": "probe_mt5_pe_version",
+  "id": "mamba2-20261112-stage3-protocol-freeze-status-v1",
+  "action": "status",
   "args": {},
   "requested_by": "chatgpt"
 }
