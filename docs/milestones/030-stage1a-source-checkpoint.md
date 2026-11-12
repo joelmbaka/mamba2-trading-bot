@@ -38,3 +38,22 @@ No historical Python backtest, simulated EA order, broker access, GUI Strategy T
 ## First sample, frozen
 
 EURUSD, `[2026-09-10T00:00:00Z,2026-09-11T00:00:00Z)`, with earlier data warm-up. Repository preflight reported M1 1,440, M5 288 and at least 24h historical warm-up. MT5 historical tick coverage still unknown. Stage 2 execution must not start without sample provenance and separate authorization.
+
+
+## 2026-11-12 additional source work (unexecuted)
+
+Additional opt-in source implementation:
+- `mamba2/backtest/broker.py` now accepts `event_sink` and records SUBMIT/FILL/SLTP_MODIFY/EXIT at causal replay boundaries; it does not change uninstrumented defaults. Those are Python offline-broker observations, not MT5 tick-accurate events.
+- Replay runner binds an explicitly supplied single sink to the broker and emits candidate SIGNAL events before calling the unblocked strategy.
+- `mamba2/backtest/m030_signal_observer.py` reproduces baseline candidate decisions using the original Python indicator functions. It fails closed if optional trend/RSI/higher-TF filters are switched on. A candidate decision is not an accepted order and should only be reconciled with similarly *unblocked* MT5 decisions.
+- `mamba2/backtest/m030_mt5_import.py` converts independent MQL5 decision CSV into the common SIGNAL event schema using a separately verified server-to-UTC offset. No assumed timezone or data provenance. Synthetic conversion tests have been added.
+- `mql5/M030_DecisionProbe.mq5` now requires an explicit first-source-history timestamp for EMA seeding, rejects pre-existing output files and limits emitted decisions to the frozen sample. The precise Python and MT5 initial bar history, source timestamps and correct tester GUI behavior are still unverified.
+- Comparator now includes both M1 and M5 source-open IDs and a frozen-UTC-window selection helper.
+
+### Critical gates still unresolved
+
+**Do not interpret these commits as Stage 1A completion.** Nothing has been compiled, tested or run. Two independent engines still need comparison against exact identical bar arrays (including the first bar used for EMA), verified conversion of server timestamps, handling of open-position blocking in MQL5, and explicit no-trade/warm-up alignment. MT5 currently emits decision candidates only: there is no test-order transaction implementation, so full fill/protection/exits/accounting parity cannot yet be asserted. Python emitted order IDs are offline-only and may never equal MT5 tickets. Record correspondences rather than comparing their numeric identities.
+
+The opt-in signal observer currently emits no signal for blocked symbols (whereas standalone MT5 probe still evaluates every eligible boundary); compare **matching eligible boundaries only** until a matched position-state filter is implemented. The MQL5 output is server-time CSV and is not a directly comparable full-event ledger until imported and filtered. Output collision checks are not an atomic file lock; use unique RunId and OutputName, isolated tester context, and an immutable evidence manifest.
+
+**Next decision gate**: Codex may run synthetic Python unit tests and compile the standalone tester-only EA only after a separately scoped local execution instruction. Do not launch any historical tester/backtest or connect to broker automatically. Fix all discovered compiler/tests defects on GitHub before considering an instrumented MT5 simulated-order EA.
