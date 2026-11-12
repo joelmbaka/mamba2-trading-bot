@@ -21,6 +21,7 @@ namespace Mamba2.M031;
 public sealed class M031FrozenBaselineAlgorithm : QCAlgorithm
 {
     private const string Schema = "m030.events.v1";
+    private const string ExpectedManifestSha256 = "cfaf3d130eb8fc2abf2e467e43cc5bba735df711ebb8bc9766e865713ba4065b";
     private const string ExpectedM1Sha256 = "19a3a92141989e9d1ed174447e43ada627c13ed8b3cef39d800a07d587fdc2fe";
     private const string ExpectedM1AskSha256 = "7cca2326ead010df7dcc38fdbd787ec051804ce7145b4645325ea9f67ca0548c";
     private const string ExpectedM5Sha256 = "c8dc043c301531b11452a95273bd2fceec8f7ca933d99c5d7338d3f4ab2bb2e9";
@@ -47,6 +48,7 @@ public sealed class M031FrozenBaselineAlgorithm : QCAlgorithm
     private int _sampleM1Count;
     private int _sampleM5Count;
     private int _sampleAskCount;
+    private int _totalAskCount;
     private int _candidateBuyCount;
     private int _candidateSellCount;
     private int _boundaryCount;
@@ -59,6 +61,7 @@ public sealed class M031FrozenBaselineAlgorithm : QCAlgorithm
         SetEndDate(2026, 9, 11);
         SetCash(10000m); // No orders are permitted.
 
+        var manifestPath = RequiredParameter("manifest_path");
         M031SourcePaths.M1 = RequiredParameter("m1_path");
         M031SourcePaths.M1Ask = RequiredParameter("m1_ask_path");
         M031SourcePaths.M5 = RequiredParameter("m5_path");
@@ -74,6 +77,7 @@ public sealed class M031FrozenBaselineAlgorithm : QCAlgorithm
             if (ObjectStore.ContainsKey(_outputPrefix + "/" + leaf))
                 throw new InvalidOperationException("refusing to overwrite existing M031 evidence: " + leaf);
 
+        ValidateSource("manifest", manifestPath, ExpectedManifestSha256);
         ValidateSource("m1", M031SourcePaths.M1, ExpectedM1Sha256);
         ValidateSource("m1_ask", M031SourcePaths.M1Ask, ExpectedM1AskSha256);
         ValidateSource("m5", M031SourcePaths.M5, ExpectedM5Sha256);
@@ -102,6 +106,7 @@ public sealed class M031FrozenBaselineAlgorithm : QCAlgorithm
             var time = Utc(ask.Time);
             if (time <= _lastAskOpen) throw new InvalidOperationException("Ask source is not strictly increasing");
             _lastAskOpen = time;
+            _totalAskCount++;
             if (time >= SealedStart && time < SealedEnd) _sampleAskCount++;
         }
 
@@ -122,6 +127,11 @@ public sealed class M031FrozenBaselineAlgorithm : QCAlgorithm
         if (boundary <= SealedStart) return;
         if (sourceOpen < SealedStart || sourceOpen >= SealedEnd)
             throw new InvalidOperationException("sample source-open interval was exceeded");
+        if (_boundaryCount == 0 &&
+            (_m1Stochastic.Count != 389448 || _m5Stochastic.Count != 77868 ||
+             _totalAskCount != 389448))
+            throw new InvalidOperationException(
+                $"incomplete original indicator prefix: M1={_m1Stochastic.Count}, M5={_m5Stochastic.Count}, Ask={_totalAskCount}");
         if (_lastAskOpen != sourceOpen)
             throw new InvalidOperationException("canonical Ask minute missing at boundary " + Iso(boundary));
         if (_lastBoundary != DateTime.MinValue && boundary != _lastBoundary.AddMinutes(1))
@@ -298,6 +308,7 @@ public sealed class M031FrozenBaselineAlgorithm : QCAlgorithm
         private readonly List<Bar> _bars = new();
         private readonly List<decimal> _kHistory = new();
         public DateTime? LastSourceTime => _bars.Count == 0 ? null : _bars[^1].Time;
+        public int Count => _bars.Count;
         public bool Ready => _bars.Count >= 21 + 7 + 7;
         public decimal K => _kHistory.Count == 0 ? 0m : _kHistory[^1];
         public decimal D { get; private set; }
