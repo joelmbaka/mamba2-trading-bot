@@ -169,61 +169,150 @@ void OnDeinit(const int reason) {
   if(handle!=INVALID_HANDLE) FileClose(handle);
   if(audit_handle!=INVALID_HANDLE) FileClose(audit_handle);
 }
+// The last 48 bars contain more than the 21+7+7 stochastic
+// dependencies and the ten-entry-K extreme lookback. The full Python
+// source prefix is used exactly once to seed EMA from its earliest M1 close.
+// We do NOT truncate the EMA seed to the last 48 bars.
+const int WINDOW_BARS = 48;
+Bar m1_window[], m5_window[];
+datetime last_m1_open=0, last_m5_open=0;
+double incremental_ema=0;
+bool state_ready=false;
+
+void TailWindow(Bar &source[], Bar &dest[]) {
+  int count=ArraySize(source);
+  int start=MathMax(0,count-WINDOW_BARS);
+  ArrayResize(dest,count-start);
+  for(int i=start;i<count;i++) dest[i-start]=source[i];
+}
+
+void AppendWindow(Bar &bars[], const Bar &next_bar) {
+  int count=ArraySize(bars);
+  if(count<WINDOW_BARS) {
+    ArrayResize(bars,count+1);
+    bars[count]=next_bar;
+    return;
+  }
+  for(int i=1;i<count;i++) bars[i-1]=bars[i];
+  bars[count-1]=next_bar;
+}
+
+bool ReadNewestCompleted(ENUM_TIMEFRAMES tf, datetime expected_open, Bar &out) {
+  MqlRates latest[];
+  ArraySetAsSeries(latest,false);
+  if(CopyRates(_Symbol,tf,1,1,latest)!=1) return false;
+  if(latest[0].time!=expected_open) {
+    PrintFormat("M030 DENIED: newest completed %d expected %s got %s",
+      (int)tf,TimeToString(expected_open),TimeToString(latest[0].time));
+    return false;
+  }
+  out.start=latest[0].time;
+  out.open=latest[0].open;
+  out.high=latest[0].high;
+  out.low=latest[0].low;
+  out.close=latest[0].close;
+  return true;
+}
+
+void WriteInitialAudit(Bar &m1[], Bar &m5[]) {
+  if(!EmitBarAudit || bar_audit_done) return;
+  for(int i=0;i<ArraySize(m1);i++)
+    FileWrite(audit_handle,RunId,_Symbol,"M1",
+              TimeToString(m1[i].start,TIME_DATE|TIME_SECONDS),
+              DoubleToString(m1[i].open,_Digits),DoubleToString(m1[i].high,_Digits),
+              DoubleToString(m1[i].low,_Digits),DoubleToString(m1[i].close,_Digits));
+  for(int i=0;i<ArraySize(m5);i++)
+    FileWrite(audit_handle,RunId,_Symbol,"M5",
+              TimeToString(m5[i].start,TIME_DATE|TIME_SECONDS),
+              DoubleToString(m5[i].open,_Digits),DoubleToString(m5[i].high,_Digits),
+              DoubleToString(m5[i].low,_Digits),DoubleToString(m5[i].close,_Digits));
+  FileFlush(audit_handle);
+  bar_audit_done=true;
+}
+
+bool InitializeState(datetime boundary, datetime expected_m5_open) {
+  Bar m1_full[],m5_full[];
+  if(!GetBars(PERIOD_M1,M1SourceStartServer,m1_full) ||
+     !GetBars(PERIOD_M5,M5SourceStartServer,m5_full)) return false;
+  int n1=ArraySize(m1_full),n5=ArraySize(m5_full);
+  if(n1<WINDOW_BARS || n5<WINDOW_BARS ||
+     m1_full[n1-1].start!=boundary-60 ||
+     m5_full[n5-1].start!=expected_m5_open) {
+    Print("M030 DENIED: initial completed-prefix alignment/length mismatch");
+    return false;
+  }
+  // Full Python ewm(span=7,adjust=False): first source close is the seed.
+  incremental_ema=Ema(m1_full,7);
+  WriteInitialAudit(m1_full,m5_full);
+  TailWindow(m1_full,m1_window);
+  TailWindow(m5_full,m5_window);
+  last_m1_open=boundary-60;
+  last_m5_open=expected_m5_open;
+  state_ready=true;
+  return true;
+}
+
+bool AdvanceState(datetime boundary, datetime expected_m5_open) {
+  Bar bar;
+  // Do not accept any missing or duplicated M1 completed boundary.
+  if(boundary-60!=last_m1_open+60 ||
+     !ReadNewestCompleted(PERIOD_M1,boundary-60,bar)) return false;
+  incremental_ema=0.25*bar.close+0.75*incremental_ema;
+  AppendWindow(m1_window,bar);
+  last_m1_open=bar.start;
+
+  if(expected_m5_open==last_m5_open) return true;
+  if(expected_m5_open!=last_m5_open+300 ||
+     !ReadNewestCompleted(PERIOD_M5,expected_m5_open,bar)) return false;
+  AppendWindow(m5_window,bar);
+  last_m5_open=bar.start;
+  return true;
+}
+
 void OnTick() {
   datetime boundary=iTime(_Symbol,PERIOD_M1,0);
   if(boundary==0 || boundary==lastBoundary) return;
   lastBoundary=boundary;
   if(boundary<server_sample_start || boundary>=server_sample_end) return;
-  Bar m1[],m5[];
-  if(!GetBars(PERIOD_M1,M1SourceStartServer,m1) ||
-     !GetBars(PERIOD_M5,M5SourceStartServer,m5)) {
-    Print("M030 DENIED: missing complete source prefix; stopping probe");
-    ExpertRemove();
-    return;
-  }
+
   datetime expected_m5_open=(datetime)(((long)boundary/300)*300-300);
-  if(m1[ArraySize(m1)-1].start != boundary-60 ||
-     m5[ArraySize(m5)-1].start != expected_m5_open) {
-    Print("M030 DENIED: M1/M5 latest completed bar misaligned");
+  if(!state_ready) {
+    if(!InitializeState(boundary,expected_m5_open)) {
+      Print("M030 DENIED: missing/unaligned first full historical prefix");
+      ExpertRemove();
+      return;
+    }
+  } else if(!AdvanceState(boundary,expected_m5_open)) {
+    Print("M030 DENIED: missing M1/M5 increment or calendar gap");
     ExpertRemove();
     return;
   }
-  if(EmitBarAudit && !bar_audit_done) {
-    for(int tf=0;tf<2;tf++) {
-      int size=(tf==0?ArraySize(m1):ArraySize(m5));
-      for(int i=0;i<size;i++) {
-        if(tf==0) {
-          FileWrite(audit_handle,RunId,_Symbol,"M1",
-                    TimeToString(m1[i].start,TIME_DATE|TIME_SECONDS),
-                    DoubleToString(m1[i].open,_Digits),DoubleToString(m1[i].high,_Digits),
-                    DoubleToString(m1[i].low,_Digits),DoubleToString(m1[i].close,_Digits));
-        } else {
-          FileWrite(audit_handle,RunId,_Symbol,"M5",
-                    TimeToString(m5[i].start,TIME_DATE|TIME_SECONDS),
-                    DoubleToString(m5[i].open,_Digits),DoubleToString(m5[i].high,_Digits),
-                    DoubleToString(m5[i].low,_Digits),DoubleToString(m5[i].close,_Digits));
-        }
-      }
-    }
-    FileFlush(audit_handle);
-    bar_audit_done=true;
+
+  double k1,d1,k5,d5;
+  bool low1,high1,low5,high5;
+  if(!Stoch(m1_window,k1,d1,low1,high1) ||
+     !Stoch(m5_window,k5,d5,low5,high5)) {
+    Print("M030 DENIED: insufficient rolling stochastic state");
+    ExpertRemove();
+    return;
   }
-  double k1,d1,k5,d5; bool low1,high1,low5,high5;
-  if(!Stoch(m1,k1,d1,low1,high1) || !Stoch(m5,k5,d5,low5,high5)) return;
-  double ema=Ema(m1,7),atr=Atr(m5,14);
-  int n=ArraySize(m1);
+  double ema=incremental_ema,atr=Atr(m5_window,14);
+  int n=ArraySize(m1_window);
   string signal="NONE",reason="NO_SIGNAL";
-  // Preserve the original recent-extreme check, NOT a fresh cross.
+  // No fresh crossover: preserve Python's latest-K and ten-K-extreme rules.
   bool buy=k5>d5 && low1 && k1>d1;
   bool sell=k5<d5 && high1 && k1<d1;
-  if(buy && m1[n-1].close>ema && m1[n-1].close>m1[n-1].open) {
-    signal="BUY"; reason="ENTRY_CONDITIONS";
-  } else if(sell && m1[n-1].close<ema && m1[n-1].close<m1[n-1].open) {
+  if(buy && m1_window[n-1].close>ema &&
+     m1_window[n-1].close>m1_window[n-1].open) {
+    signal="BUY";reason="ENTRY_CONDITIONS";
+  } else if(sell && m1_window[n-1].close<ema &&
+            m1_window[n-1].close<m1_window[n-1].open) {
     signal="SELL";reason="ENTRY_CONDITIONS";
   } else if(buy || sell) reason="EMA_CANDLE_FILTER";
+
   FileWrite(handle,RunId,_Symbol,TimeToString(boundary,TIME_DATE|TIME_SECONDS),
-            TimeToString(m1[n-1].start,TIME_DATE|TIME_SECONDS),
-            TimeToString(m5[ArraySize(m5)-1].start,TIME_DATE|TIME_SECONDS),
+            TimeToString(last_m1_open,TIME_DATE|TIME_SECONDS),
+            TimeToString(last_m5_open,TIME_DATE|TIME_SECONDS),
             DoubleToString(k1,12),DoubleToString(d1,12),
             DoubleToString(k5,12),DoubleToString(d5,12),
             DoubleToString(ema,12),DoubleToString(atr,12),signal,reason);
