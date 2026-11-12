@@ -61,13 +61,8 @@ def test_ema_first_source_seed_and_increment_match_full_prefix(length):
         current = 0.25 * value + 0.75 * current
     baseline = float(data["close"].ewm(span=7, adjust=False).mean().iloc[-1])
     assert current == pytest.approx(baseline, abs=1e-12)
-    wrong_short_seed = float(
-        data.iloc[-WINDOW:]["close"].ewm(span=7, adjust=False).mean().iloc[-1]
-    )
-    if length > WINDOW and length < 90:
-        # Difference may be tiny; direct series prefixes, not approximate
-        # market expectations, are the actual equality criterion.
-        assert abs(current - wrong_short_seed) >= 0
+    # Discriminating full-vs-truncated public API regression is exercised
+    # with a deliberately nonstationary source in test_m030_stage1q_boundaries.py.
 
 
 @pytest.mark.parametrize("length", [48, 49, 60, 75, 90, 150, 280])
