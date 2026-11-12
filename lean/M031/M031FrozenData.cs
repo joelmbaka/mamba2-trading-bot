@@ -51,11 +51,12 @@ public abstract class M031CsvBar : BaseData
             CultureInfo.InvariantCulture, out var unixSeconds))
             return null!;
 
-        // LEAN may request the same full-file source for successive UTC days.
-        // Emit only that day\x27s bar: otherwise daily source renewal can replay
-        // earlier history and invalidate first-source EMA and event counts.
+        // LEAN retains the same LocalFile enumerator while the data clock
+        // advances through this multi-month file. Do not filter its rows
+        // against a date argument: doing so would discard later source history.
+        // The independent algorithm enforces monotonic bars and exact
+        // full-prefix counts at the sealed sample start.
         var timestamp = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime;
-        if (timestamp.Date != date.Date) return null!;
 
         var open = decimal.Parse(fields[1], CultureInfo.InvariantCulture);
         var high = decimal.Parse(fields[2], CultureInfo.InvariantCulture);
