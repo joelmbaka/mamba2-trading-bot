@@ -755,6 +755,46 @@ def m029_stage3b_targeted_discovery():
     }
 
 
+
+def m029_branch_divergence_report():
+    """Read-only summary of diverged M029 HEAD, without file content."""
+    branch = run(["git", "branch", "--show-current"], check=False).stdout.strip()
+    if branch != "prospective-paper-recovery":
+        return {
+            "ok": False, "action": "m029_branch_divergence_report",
+            "data": {"reason": "WRONG_BRANCH", "branch": branch},
+        }
+    commands = {}
+    specs = {
+        "heads": ["git", "rev-parse", "HEAD", "origin/prospective-paper-recovery"],
+        "counts": ["git", "rev-list", "--left-right", "--count",
+                   "HEAD...origin/prospective-paper-recovery"],
+        "commits": ["git", "log", "--left-right", "--format=%h%x09%s",
+                    "--max-count=16",
+                    "HEAD...origin/prospective-paper-recovery"],
+        "changes": ["git", "diff", "--name-status",
+                    "HEAD...origin/prospective-paper-recovery"],
+        "clean": ["git", "status", "--porcelain", "--untracked-files=all"],
+    }
+    for name, cmd in specs.items():
+        proc = run(cmd, check=False)
+        commands[name] = {
+            "ok": proc.returncode == 0,
+            "lines": proc.stdout.splitlines()[:35],
+        }
+    return {
+        "ok": all(v["ok"] for v in commands.values()),
+        "action": "m029_branch_divergence_report",
+        "data": {
+            "read_only": True,
+            "branch": branch,
+            "checks": commands,
+            "git_mutation": False,
+            "strategy_computed": False,
+        },
+    }
+
+
 def execute(command):
     action = command.get("action")
     if action == "status":
@@ -769,6 +809,8 @@ def execute(command):
         return m029_stage3b_isolated_preflight()
     if action == "m029_stage3b_targeted_discovery":
         return m029_stage3b_targeted_discovery()
+    if action == "m029_branch_divergence_report":
+        return m029_branch_divergence_report()
     if action == "sync":
         return git_sync()
     if action == "switch_branch":
