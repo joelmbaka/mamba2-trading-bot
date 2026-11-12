@@ -7,11 +7,16 @@
 
 input string RunId = "M030-stage1a";
 input string OutputName = "m030_decisions.csv";
+// Must be set to the exact earliest source-bar open in Python's dataset.
+// Default invalid: tester refuses to run without an explicit seed.
+input datetime SourceHistoryStart = 0;
+input datetime ComparisonStart = D'2026.09.10 00:00';
+input datetime ComparisonEnd = D'2026.09.11 00:00';
 
 int handle = INVALID_HANDLE;
 datetime lastBoundary = 0;
 const int KPER = 21, DPER = 7, SLOW = 7;
-const int HISTORY = 512;
+
 
 struct Bar {
   datetime start;
@@ -20,7 +25,10 @@ struct Bar {
 bool GetBars(ENUM_TIMEFRAMES tf, Bar &result[]) {
   MqlRates rates[];
   ArraySetAsSeries(rates, false);
-  int count = CopyRates(_Symbol, tf, 1, HISTORY, rates); // completed only
+  // Complete source history; never seed EMA at an arbitrary 512-bar cutoff.
+  int count = CopyRates(_Symbol, tf, SourceHistoryStart, TimeCurrent(), rates);
+  if(count > 0 && rates[count-1].time >= iTime(_Symbol,tf,0)) count--;
+  // A source-by-source timestamp audit remains mandatory.
   if(count < 40) return false;
   ArrayResize(result, count);
   for(int i=0;i<count;i++) {
@@ -91,8 +99,16 @@ int OnInit() {
     Print("M030 DENIED: EA may only run in Strategy Tester");
     return INIT_FAILED;
   }
+  if(SourceHistoryStart<=0 || SourceHistoryStart>=ComparisonStart || ComparisonStart>=ComparisonEnd) {
+    Print("M030 DENIED: missing history start or invalid frozen date window");
+    return INIT_FAILED;
+  }
   if(_Symbol!="EURUSD") {
     Print("M030 DENIED: frozen first symbol must be EURUSD");
+    return INIT_FAILED;
+  }
+  if(FileIsExist(OutputName,FILE_COMMON)) {
+    Print("M030 DENIED: output exists; choose an unused evidence file name");
     return INIT_FAILED;
   }
   handle=FileOpen(OutputName,FILE_CSV|FILE_WRITE|FILE_ANSI|FILE_COMMON,',');
@@ -109,6 +125,7 @@ void OnTick() {
   datetime boundary=iTime(_Symbol,PERIOD_M1,0);
   if(boundary==0 || boundary==lastBoundary) return;
   lastBoundary=boundary;
+  if(boundary<ComparisonStart || boundary>=ComparisonEnd) return;
   Bar m1[],m5[];
   if(!GetBars(PERIOD_M1,m1)||!GetBars(PERIOD_M5,m5)) return;
   double k1,d1,k5,d5; bool low1,high1,low5,high5;
