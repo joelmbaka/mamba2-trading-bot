@@ -110,6 +110,11 @@ def _source(
         raise EvidenceRefused("SOURCE_ID_UNKNOWN")
     if finished > parsed_at or parsed_at > parsed_finished:
         raise EvidenceRefused("SOURCE_CLOCK_ORDER_INVALID")
+    # A malformed source must never advertise observations from the future.
+    if label == "BIS" and max_period > parsed_finished.date().isoformat():
+        raise EvidenceRefused("SOURCE_FUTURE_OBSERVATION")
+    if label == "OECD" and max_period > parsed_finished.strftime("%Y-%m"):
+        raise EvidenceRefused("SOURCE_FUTURE_OBSERVATION")
     return {
         "source_id": label,
         "url": url,
@@ -119,6 +124,8 @@ def _source(
         "raw_sha256": sha256(raw).hexdigest(),
         "normalized_sha256": normalized_hash,
         "last_observation": max_period,
+        "publisher_timestamp_utc": None,
+        "publisher_timestamp_status": "UNPROVEN",
     }
 
 
@@ -242,6 +249,12 @@ def _broker(
             rows[currency] = {"symbol": symbol, "quote_viable": False}
 
     finished = _gate(month_id, clock)
+    # Quotes must remain fresh at the END of potentially blocking margin reads.
+    for currency in tuple(viable):
+        tick_at = _parse_utc_iso(rows[currency]["quote_timestamp_utc"])
+        if not timedelta(0) <= finished - tick_at <= M029_QUOTE_MAX_AGE:
+            rows[currency]["quote_viable"] = False
+            viable.remove(currency)
     return {
         "query_started_at_utc": utc_iso(started),
         "query_finished_at_utc": utc_iso(finished),
