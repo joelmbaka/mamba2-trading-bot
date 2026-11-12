@@ -20,7 +20,7 @@ Original files, mounted read-only:
 - `EURUSD_M5.csv` — **direct** canonical M5; never resample M1 for the M5
   stochastic/ATR inputs
 
-The algorithm validates hard-coded SHA-256 hashes **before** subscribing.
+The algorithm validates hard-coded SHA-256 hashes for the **manifest and all three CSVs** **before** subscribing. It also checks the complete available warm-up count at the first comparison boundary: 389,448 M1 and Ask rows (including the first sample bar) and 77,868 completed M5 bars.
 The source file is filtered to the date requested by LEAN's custom-data reader,
 to avoid emitting the same full file on each successive source request.
 The original source is never modified.
@@ -71,7 +71,8 @@ intrabar fill-model mismatch. No genuine execution or P/L parity is claimed.
    before a full 13-month warm-up run. Generated shards must be derived
    deterministically from, and check against, the verified source hashes.
 3. LEAN custom-data callbacks may have date-boundary, market-hours or
-   time-zone behavior that needs measured verification. Fail-closed
+   time-zone behavior that needs measured verification. A source M5 bar must
+   not enter the M1 candidate calculation before its EndTime. Fail-closed
    1,440/288/1,440 and timestamp checks must pass.
 4. LEAN's `ObjectStore` namespace and CSV local-file paths must work in
    the pinned container. The source mounts must remain read-only.
@@ -86,7 +87,7 @@ intrabar fill-model mismatch. No genuine execution or P/L parity is claimed.
 
 ## Required LEAN parameters
 
-`m1_path`, `m1_ask_path`, `m5_path`,
+`manifest_path`, `m1_path`, `m1_ask_path`, `m5_path`,
 `sample_start=2026-09-10T00:00:00Z`,
 `sample_end=2026-09-11T00:00:00Z`, and a *unique*
 `output_prefix=m031/<run-id>`.
