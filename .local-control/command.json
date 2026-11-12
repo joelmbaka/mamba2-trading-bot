@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-20261112-m029-stage3a-native-v1",
-  "action": "test_full_native",
+  "id": "mamba2-20261112-stage3a-closeout-status-v1",
+  "action": "status",
   "args": {},
   "requested_by": "chatgpt"
 }
