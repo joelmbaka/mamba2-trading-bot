@@ -96,6 +96,21 @@ def _equal(left: Any, right: Any, *, atol: float) -> bool:
     return left == right
 
 
+def select_events(
+    records: Iterable[Mapping[str, Any]], *, kind: str,
+    start_utc_ms: int, end_utc_ms: int,
+) -> list[dict[str, Any]]:
+    """Select a frozen interval without silently comparing warm-up events."""
+    if kind not in KINDS or start_utc_ms >= end_utc_ms:
+        raise ValueError("invalid kind or UTC interval")
+    selected = []
+    for record in records:
+        timestamp = record["utc_time_ms"]
+        if start_utc_ms <= timestamp < end_utc_ms and record["event_kind"] == kind:
+            selected.append(dict(record))
+    return selected
+
+
 def compare_events(
     python_events: Iterable[Mapping[str, Any]],
     mt5_events: Iterable[Mapping[str, Any]],
