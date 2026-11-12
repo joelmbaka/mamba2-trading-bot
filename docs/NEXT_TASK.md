@@ -1,29 +1,23 @@
-# Next Authorized Task — M030 Stage 1I offline isolated history feasibility (read-only)
+# Next Authorized Task — M030 Stage 1J sandbox feasibility test (no MT5)
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1H-II VERIFIED; ISOLATED NATIVE MT5 HISTORY ACCESS STILL BLOCKED**
+Status: **STAGE 1I READ-ONLY ACCEPTED; NETWORK/FILESYSTEM ISOLATION UNPROVEN**
 
-## Accepted evidence
+## Prior evidence
 
-Codex validated source `c0a7d2259a5e10a3518603ee119d244577466f9b`, clean/synchronized (0/0). Focused M030 tests **49 passed**, relevant regression tests **59 passed**, syntax passed. Canonical EURUSD M1/M5 CSV files have integer epoch-second `time`, read successfully and explicitly as `unix_seconds_utc` without mutation. Known file hashes remain unchanged. Frozen Sep 10 2026 UTC: M1 1,440 rows and M5 288 rows. Complete results: `docs/milestones/030-stage1hii-validation.md`.
+Stage 1H-II: 49 focused tests, 59 relevant regressions and Python syntax checks passed. Original EURUSD M1/M5 canonical epoch-second CSV formats/hashes verified; independent no-order `M030_ClockBarProbe.mq5` built with 0 MetaEditor errors/warnings in isolated environment. Native terminal cache content, historical server offset and MT5 history portability remain unverified.
 
-Standalone independent no-order `M030_ClockBarProbe.mq5` unchanged, SHA-256 `9b6b4782402c0eea268ccea8325ca81bf03b0e265054d58904c598137834a2fe`; prior isolated compile completed with 0 errors/warnings (EX5 SHA-256 `59cf2288212bc8d215b32f23a7bda89c9faf25dbcd486706999ad5251c5f2496`). No tester operation yet.
+Stage 1I: clean synchronized branch `4e3e818434f80b0bbe64e7c25c7946e665edc69b`; original MT5 terminal PID 71219 remained untouched. Opaque EURUSD cache files exist under a MetaQuotes-Demo base co-located with sensitive server/account state; entire base must never be copied for the diagnostic. Existing user namespace and bwrap/unshare tools may permit offline isolation, but no network blocking has been proven. Full report: `docs/milestones/030-stage1i-history-feasibility.md`.
 
-## Next bounded Codex task
+## Proposed next task after explicit Codex instruction
 
-After separately scoped instruction, perform **read-only offline** feasibility inventory:
-1. Verify clean synced `scalping-recovery`, read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, Stage 1H-II and this file.
-2. Inspect existing MT5 program/Tester directories and market-data-only history/tick caches (types, timestamps, relationships and path conventions), without copying or decoding undocumented formats as if reliable.
-3. Identify whether a fresh offline isolated terminal/tester can consume *market-data-only* cache copies without account credentials, profiles, broker login, synchronization or downloading history. Seek documentation/source-grounded support; **do not assume this works**.
-4. Check what an explicit independent offline network-isolation setup would require (e.g., sandbox/container namespace) and whether existing workstation permissions/tools allow it *without executing or creating anything*. Network blocking must be externally enforceable and verifiable; no new software installs.
-5. Identify any private/sensitive files that must not be copied. Original app/prefix and PID 71219 remain untouched.
-6. Report exact evidence, unknowns, verified-versus-hypothesized feasibility, disk/permission needs and a staged fail-closed proposal. Stop on any operation requiring terminal launch, data copy, original state modification or network connection.
+M030 Stage 1J: prove a **harmless, non-MT5** disposable process can run inside a least-privilege sandbox, with network namespace denying connectivity, host root/home/repo/original terminal inaccessible, and writable paths restricted to an isolated scratch directory. Use already installed tooling, bounded lifetime and clean teardown. No original app/prefix/history modifications or copies. Record exact command(s), exit codes, network/filesystem probe results, remaining processes and limitations; stop on inability to establish controls. No assumed security guarantee from presence of bwrap or unshare alone.
 
 ## Still prohibited
 
-No Wine/MetaEditor/MT5/Strategy Tester launch; no native cache or history copies/imports; no broker login/network; no data download; no Python historical economic backtest; no simulated/real orders; no installs, repo changes, original state changes, optimization, force-push/new branches or local-control.
+No Wine, MetaEditor, terminal/Strategy Tester launch, native history copies, account/profile files, market data downloads or imports, broker connection, Python historic economic replay, simulated/real orders, installs, production changes, force-push/reset/new branches or local-control. A proven toy-process sandbox does **not** automatically authorize a copied Wine/MT5 run.
 
-## Subsequent decision
+## Following gate
 
-Only after feasibility evidence is reviewed may a **separately authorized** offline isolated no-order tester bar/clock discovery be considered. If tester cannot access native history with offline isolation and no account state, declare a blocker. No server offset or OHLC parity is established yet.
+Review Stage 1J evidence. Only then assess separate, staged native market-data-only provisioning feasibility under a network-denied disposable environment, with explicit authorization. If native history cannot be accessed without account state, remain blocked rather than fabricating offset/parity.
