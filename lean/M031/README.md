@@ -1,6 +1,6 @@
 # M031 — independent LEAN **candidate-signal** comparator
 
-**Status: source corrections committed, not compiled or executed in LEAN.**
+**Status: candidate-only C# source successfully compiled on .NET SDK 10.0.404 against QuantConnect.Algorithm 2.5.18248. The LEAN engine has NOT been provisioned or run; independent signals remain UNVERIFIED.**
 
 This C# code is intentionally a *different implementation* of the frozen
 Python M031 indicator and raw-entry-condition calculations. It does not import
@@ -64,8 +64,10 @@ intrabar fill-model mismatch. No genuine execution or P/L parity is claimed.
 
 ## Remaining validation and runtime risks
 
-1. **No C# compilation has been performed.** A pinned LEAN / .NET API check
-   is required; keyword-only Python tests cannot replace compilation.
+1. **C# source compiled successfully in Stage 6B** (exit 0; warnings 2).
+   Compiled DLL SHA-256: `44018debe665eb1966aca44177f4ca7b59470ab629e372f204e3119705322b7f`.
+   This proves *source compilation* only, not runtime custom-data behavior,
+   indicator parity, market-hours timing or trading execution.
 2. The same LocalFile source is supplied across dates. LEAN's behavior when
    the custom-data reader advances the data clock across a multi-month file
    must be verified at runtime. If a pinned version cannot retain a continuous
@@ -129,7 +131,7 @@ socket inside the container or use the LEAN engine image solely for compilation.
 
 See `docs/milestones/031-stage5-runtime-diagnostics.md`.
 
-## Preferred compile-only environment (Stage 6B, not yet authorized)
+## Pinned compile-only environment (Stage 6B completed)
 
 `global.json` pins .NET SDK **10.0.404** without roll-forward. Instead of
 changing Docker socket permissions, this small C# project can be compiled
@@ -138,11 +140,35 @@ toolchain directory. The archive's official SHA-512 is recorded in
 `docs/milestones/031-stage6a-durable-evidence-and-sdk-plan.md`. Always
 verify the host architecture and downloaded archive hash before extraction.
 
-The `QuantConnect.Algorithm` 2.5.18248 NuGet restore needs a separately
-approved initial network access and generates `packages.lock.json` in a
-new scratch build copy, not in this Git working tree. A subsequent
-`dotnet build --no-restore` validates compilation only; it must not be
-called independent signal parity or an engine execution test.
+Stage 6B restored 26 packages to a private scratch build directory; scratch
+`packages.lock.json` SHA-256 is
+`c1b212cb8617f82a7dbe28a1bd93535c79fab2eecb5193c3494e5f6fe9d5859f`.
+Build result: 0 errors, 2 vulnerability warnings. Do not treat this as
+independent signal parity or an engine execution test.
 
 The persistent Python comparison reference is private at
 `/home/joel/.local/share/mamba2/evidence/m031-2026-09-10/`.
+
+## Stage 6C pin for a possible local Launcher build
+
+The `QuantConnect.Algorithm 2.5.18248` package metadata identifies the
+matching official QuantConnect/Lean upstream commit
+`a99fba023df877bd2301c14b4db37f40101d273c`. ChatGPT verified the
+Launcher project at this commit targets `net10.0` and references the engine,
+data-provider, brokerage, compression and other project assemblies.
+
+Codex identified the transitive path `QuantConnect.Algorithm -> Common ->
+Compression -> DotNetZip 1.16.0 -> System.Security.Permissions 4.7.0 ->
+System.Windows.Extensions 4.7.0 -> System.Drawing.Common 4.7.0`.
+M031 does not directly use zip extraction or image parsing, but the complete
+engine may load a broader surface. No automatic package overrides or warning
+suppressions are approved.
+
+**The next stage requires separate operator approval to fetch/build the
+pinned open-source Launcher in private scratch storage**. Do not execute
+the Launcher, read market CSVs, use the upstream default config, expose
+credentials, connect to a broker or run LEAN observations under that approval.
+A minimal offline data-only configuration and no-network controls must be
+reviewed before any later startup.
+
+See `docs/milestones/031-stage6c-dependency-and-launcher-feasibility.md`.
