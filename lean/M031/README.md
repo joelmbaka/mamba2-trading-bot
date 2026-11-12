@@ -21,9 +21,10 @@ Original files, mounted read-only:
   stochastic/ATR inputs
 
 The algorithm validates hard-coded SHA-256 hashes for the **manifest and all three CSVs** **before** subscribing. It also checks the complete available warm-up count at the first comparison boundary: 389,448 M1 and Ask rows (including the first sample bar) and 77,868 completed M5 bars.
-The source file is filtered to the date requested by LEAN's custom-data reader,
-to avoid emitting the same full file on each successive source request.
-The original source is never modified.
+The custom-data reader consumes each sealed multi-month CSV as a continuous
+LocalFile stream; it must **not** discard rows merely because the engine's
+request date changes. The algorithm checks strict source monotonicity and
+exact seeded counts. The original source is never modified.
 
 Historical source data begins in August 2025; the **complete** original source
 prefix is required, particularly because EMA7 is first-source seeded. The
@@ -65,11 +66,11 @@ intrabar fill-model mismatch. No genuine execution or P/L parity is claimed.
 
 1. **No C# compilation has been performed.** A pinned LEAN / .NET API check
    is required; keyword-only Python tests cannot replace compilation.
-2. LEAN might reopen the same complete CSV for every requested day. Date
-   filtering prevents duplicate observations, but can be inefficient. An
-   independently reviewed *temporary daily-shard index* may be necessary
-   before a full 13-month warm-up run. Generated shards must be derived
-   deterministically from, and check against, the verified source hashes.
+2. The same LocalFile source is supplied across dates. LEAN's behavior when
+   the custom-data reader advances the data clock across a multi-month file
+   must be verified at runtime. If a pinned version cannot retain a continuous
+   stream, design deterministic scratch-file daily shards rather than silently
+   date-filtering or dropping original history.
 3. LEAN custom-data callbacks may have date-boundary, market-hours or
    time-zone behavior that needs measured verification. A source M5 bar must
    not enter the M1 candidate calculation before its EndTime. Fail-closed
