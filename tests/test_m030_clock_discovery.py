@@ -36,7 +36,7 @@ def _write_fixture(tmp_path, *, offset=180, omit_m5=False, m5_bad=False,
         return t.strftime("%Y.%m.%d %H:%M:%S")
     def write_source(path, rows):
         path.write_text(header + "".join(
-            f"{t.isoformat().replace('+00:00','Z')},{o:.5f},{h:.5f},{l:.5f},{c:.5f}\n"
+            f"{int(t.timestamp()) if epoch_seconds else t.isoformat().replace('+00:00','Z')},{o:.5f},{h:.5f},{l:.5f},{c:.5f}\n"
             for t,o,h,l,c in rows), encoding="utf-8")
     write_source(m1, m1_rows)
     write_source(m5, m5_rows)
