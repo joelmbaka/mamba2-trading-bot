@@ -362,6 +362,31 @@ def execute(command):
         return git_sync()
     if action == "switch_branch":
         return git_switch_branch((command.get("args") or {}).get("branch"))
+    if action == "m028_stage3_first_decision":
+        # The October paper decision was prospective, not retroactive.
+        # Reusing an existing immutable record is safe; creating one after
+        # the scheduled UTC calendar day would violate the frozen protocol.
+        October_decision_day = datetime(2026, 10, 7, tzinfo=timezone.utc).date()
+        existing_record = (
+            Path.home() / ".local/share/mamba2-forward-paper/2026-10-decision.json"
+        )
+        if (
+            not existing_record.is_file()
+            and datetime.now(timezone.utc).date() > October_decision_day
+        ):
+            return {
+                "ok": False,
+                "action": action,
+                "data": {
+                    "ok": False,
+                    "reason": "MISSED_OCTOBER_DECISION_NO_BACKFILL",
+                    "scheduled_decision_utc": "2026-10-07T12:00:00Z",
+                    "record_exists": False,
+                    "strategy_economics_computed": False,
+                    "broker_initialized": False,
+                    "real_order_api_called": False,
+                },
+            }
     if action in VALIDATION_ACTIONS:
         data = validation.execute(action)
         return {"ok": bool(data.get("ok")), "action": action, "data": data}
