@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-20261112-record-audit-v1",
-  "action": "m028_record_audit",
+  "id": "mamba2-20261112-post-handoff-status-v1",
+  "action": "status",
   "args": {},
   "requested_by": "chatgpt"
 }
