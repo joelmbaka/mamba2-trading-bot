@@ -1,6 +1,6 @@
 # Next Authorized Task
 
-## M029 — Stage 3B preflight attempted; import-only smoke blocked by missing isolated runtime
+## M029 — Stage 3B isolated Wine 11.21 verified; separate Python bridge not installed
 
 Branch: `prospective-paper-recovery`. Do not merge or promote to `main`.
 
@@ -25,6 +25,55 @@ freeze SHA `c74ca08fe32bf9ac9954cee5b033f808f3932ddd`.
   accessed. Tests only wrote synthetic records into temporary directories.
 - Reported isolated Wine 11.21/Windows 11 terminal launch success is GUI
   evidence ONLY. Python MT5 import/broker API compatibility remains unknown.
+
+### Stage 3B exact isolated runtime confirmation — 2026-11-12
+
+The operator supplied and verified the persistent isolated Wine environment:
+
+- Isolated root: `/home/joel/.local/share/mamba2-mt5-wine1121/`
+- Wine binary: `runtime/opt/wine-staging/bin/wine` within that root.
+- Wine prefix: `prefix/` within that root.
+- Copied MT5 terminal: `app/terminal64.exe` within that root.
+- Earlier local/remote Git divergence was reconciled by the operator using a
+  regular merge commit `3fda38c8a97e374d8cb03213ce2dedc6a6717634`;
+  no reset or force push was used.
+
+Read-only allowlisted agent checks:
+
+1. `mamba2-20261112-stage3b-known-runtime-v1`, result commit
+   `05ed5e694db0451c1257f18ebf6a1cdc4ec1658c`: exact Wine binary
+   reports **Wine 11.21 Staging**, prefix registry reports **Windows 11**,
+   isolated copied MT5 terminal exists; standard isolated-prefix Python
+   candidate paths do not exist.
+2. `mamba2-20261112-stage3b-isolated-python-inventory-v1`,
+   result commit `2537f1f769c182e289921cf74f4fbd491ff91b0d`:
+   scanned **334** directories (without reaching its 2,000 limit) inside the
+   isolated root and found **zero `python.exe`/`pythonw.exe`/`pypy.exe`**.
+
+**Updated blocker: no Windows Python interpreter in the confirmed isolated
+Wine 11.21 environment.** The earlier failure to locate Wine 11.21 is now
+resolved; no compatible isolated Python/MetaTrader5 bridge was provisioned.
+The import-only test **was not run**. The copied MT5 GUI smoke test remains
+valid as GUI compatibility evidence, not broker/Python API evidence.
+
+### Next bounded task
+
+Under separate provisioning approval, install a standalone **Windows
+Python 3.10 x64** interpreter and compatible pinned `numpy`/
+`MetaTrader5` package inside this **isolated** Wine 11.21 prefix only.
+Do not import or copy credential stores, packages or runtime directories from
+the existing `~/.mt5`, system Wine 9.0, `.venv-wine`, or native Python
+environment. Preserve the isolated MT5 copy and original strategy.
+
+After provisioning, run the separately bounded **import-only** Python test
+without `mt5.initialize`, terminal launch, account access, quote/margin
+queries, orders, source downloads or paper decisions. Record Python/package
+versions or sanitized error classes only.
+
+Do not treat Windows Python provisioning as authorized by the earlier
+import-only instruction. Broker initialization requires its own approval.
+
+---
 
 ### Stage 3B preflight evidence — 2026-11-12
 
