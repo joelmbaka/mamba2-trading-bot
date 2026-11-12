@@ -1,28 +1,27 @@
-# Next Authorized Task — M030 Stage 1L isolated empty MT5 startup feasibility
+# Next Authorized Task — M030 Stage 1M offline standalone-tester prerequisites (read-only)
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1K SANDBOXED WINE INITIALIZATION PASSED; MT5/TESTER/HISTORY NOT YET VERIFIED**
+Status: **STAGE 1L COPIED TERMINAL STARTED IN ISOLATION; STANDALONE TESTER READINESS UNPROVEN**
 
-## Accepted result
+## Prior evidence
 
-Stage 1K confirmed clean synchronized source `7859e36f17fbe8c27d94e1255998ad92cc769cdf`; disposable bubblewrap sandboxed Wine 11.21 initialized with `wineboot -u` exit 0 under working network-denial and limited mounts. Host home/repo/original MT5 installation and Wine prefix were inaccessible; original MT5 terminal PID 71219 and host wineserver PID 35411 unchanged. Read `docs/milestones/030-stage1k-sandboxed-wine.md`.
+Stage 1L Codex verified clean synced `scalping-recovery` at `ca48dde609cad571b75a1717e7ee1dd11d8691f4`; only copied bare MT5 terminal binary SHA-256 `f7e4ad40b74b05a67a03c8c7b8abf6d6f2aea45fe4669c42b67c1b361e0cfc72` was launched inside existing network-denied, host-inaccessible bubblewrap sandbox after successful `wineboot -u`. MT5 x64 build 6316 began starting, wrote only disposable local defaults/logs and exited; `timeout` wrapper status 69, internal terminal exit code 0, shutdown code 10053 (unknown cause). Logged attempted MQL5.community authorization (failed) and request for a newer MetaEditor; local loopback MCP. No tester/EA, broker or historical dataset operation. Original MT5 PID 71219 and wineserver PID 35411 unchanged. See `docs/milestones/030-stage1l-isolated-terminal-startup.md`.
 
-No MT5 app, MetaEditor, tester, native history, account or trade functionality was run. No native data portability or historical server offset is proven.
+## Immediate next task after explicit instruction (READ-ONLY)
 
-## Next bounded Codex task, after explicit authorization
+Codex:
+1. Verify clean branch and origin sync. Read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, Stage 1L report, and this file.
+2. Inspect local **non-sensitive** MT5 terminal/tester program binaries and existing app directory layout, tester configuration documentation and any available non-secret usage/help/reference evidence. **No Wine or MT5 launch**.
+3. Determine what is needed for account-free, network-disconnected tester launch: whether a stable terminal session is a prerequisite; relationship between `terminal64.exe`, `metatester64.exe`, tester settings, agent processes and compiled no-order EA; whether an update/authorization attempt may block startup. Distinguish evidence from assumptions.
+4. Reconcile process exit evidence (wrapper status 69 vs internal exit 0 and shutdown 10053) only where the existing logs support a cause. Never claim failure due to missing account state without proof.
+5. Inspect permissible offline use of a *blank* isolated configuration versus sensitive original accounts/servers/certs/profiles. Do not copy any of them. Determine if market-data-only provision is possible on present evidence; if unknown say so.
+6. Report exact prerequisite matrix, missing evidence, risks and narrowly scoped next *separately authorized* safe compatibility experiment.
 
-Stage 1L — **start/exit compatibility of copied empty MT5 application only**, inside a new disposable `bwrap` network/mount namespace:
-1. Verify clean synchronized branch and read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, Stage 1K report and this task. Inspect minimal application binaries and dependencies. Copy only non-sensitive program binaries/resources required for startup to the disposable app; exclude all original `config`, `bases`, `Tester` history, `MQL5/Profiles`, account credentials/servers/certificates, terminal and community state/logs.
-2. Recreate previously verified no-network sandbox: no host home, original prefix/app, repository mount; read-only Wine runtime mounted separately; isolated scratch writable. No broad `Z:` root/user-host mapping. Verify no-network/routes and isolation *before* invoking copied terminal.
-3. Initialize fresh disposable Wine prefix; run only copied `terminal64.exe` with `/portable` and a bounded timeout if startup isolation remains intact. Probe application process start/display readiness and safe termination; do not supply account login, server config or historical data.
-4. No Strategy Tester, MetaEditor, EA, clock probe, history refresh/download, broker connection or market data provisioning. If terminal attempts to demand network/login/update, prevent it via OS network deny and stop; don't weaken restrictions.
-5. Capture exact commands, dependencies, logs (redact sensitive information), file realpaths, runtime network denial, process exit/cleanup, original terminal PID 71219 and wineserver PID 35411 unchanged. If GUI/display requires sharing host desktop socket or expanding host access, **STOP** and report the needed access without mounting it.
+## No authority to do
 
-## Prohibited
-
-Do not launch Tester/MetaEditor or broker session; no original MT5 app/prefix/profile/account/history copies; no simulation/orders, downloads, history imports, Python historical trading replay, package installs, production strategy edits, branch changes, force-push or local-control.
+No Wine/MT5/MetaEditor/Strategy Tester starts, account or native-history copies, imports/downloads, broker connection, Python historical economic backtest, simulation/orders, installs, repository edits, original state changes, force-push/new branch, or local-control.
 
 ## Following decision
 
-Only after Stage 1L verified standalone application startup and an independently approved offline market-data-only provisioning plan may a later isolated no-order clock/bar tester diagnostic be considered. Empty terminal startup is not parity evidence.
+Only if standalone-test prerequisites are evidence-supported can an isolated no-order diagnostic launch or data provisioning step be separately considered. Historical clock offset, native bar/tick identity and trading parity remain unproven.
