@@ -21,8 +21,9 @@ def test_independent_source_has_no_python_strategy_imports():
 
 def test_csv_parser_has_utc_bar_time_and_daily_date_guard():
     source = DATA.read_text(encoding="utf-8")
+    assert "timestamp.Date != date.Date" not in source
     for fragment in (
-        "FromUnixTimeSeconds", "timestamp.Date != date.Date",
+        "FromUnixTimeSeconds", "bool isLiveMode",
         "result.Time = timestamp", "result.EndTime = timestamp.AddMinutes",
         "result.Value = close", "SubscriptionTransportMedium.LocalFile",
         '"M1_ASK"', '"M5"',
