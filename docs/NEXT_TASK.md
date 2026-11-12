@@ -1,30 +1,26 @@
-# Next Authorized Task — M030 Stage 1H-I source validation and isolated compiler
+# Next Authorized Task — M030 Stage 1H-II canonical CSV parser validation
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **INDEPENDENT CLOCK DISCOVERY SOURCE COMMITTED; VALIDATION PENDING**
+Status: **STAGE 1H-I TESTS AND ISOLATED EA COMPILATION PASSED; PYTHON FORMAT FIX UNTESTED**
 
-## Stage 1H source scope
+## Evidence accepted
 
-New `mql5/M030_ClockBarProbe.mq5` provides separate **no-order**, tester-only EURUSD native M1/M5 candle export with raw server timestamps and an explicit offset-free server-date envelope, mandatory run identity and bounded collision-resistant CSV output. It is not the production strategy and does not change existing `M030_DecisionProbe.mq5`, trading parameters or market data.
+At source HEAD `cfa0bc7ac4eea21f32be279e13c8eab35f628194`, Codex passed 46 focused tests, 59 regressions, Python syntax checks, and isolated MetaEditor 6316 compilation of the standalone no-order `M030_ClockBarProbe.mq5` (0 errors/warnings, EX5 SHA-256 `59cf2288212bc8d215b32f23a7bda89c9faf25dbcd486706999ad5251c5f2496`). The copied source hash was `9b6b4782402c0eea268ccea8325ca81bf03b0e265054d58904c598137834a2fe`. Wine CLI code 1 is the existing anomaly; no tester was launched.
 
-New `mamba2/backtest/m030_clock_discovery.py` compares hash-verified probe + canonical source M1/M5 CSVs, rejecting duplicate, missing, stale or unequal bars and accepting historical offset **only after a unique complete M1+M5 match** within the frozen window. `tests/test_m030_clock_discovery.py` covers synthetic success/fail cases.
+Codex additionally discovered that canonical EURUSD M1/M5 CSV files use integer Unix epoch seconds in `time`, not ISO text. ChatGPT corrected `mamba2/backtest/m030_clock_discovery.py` to support an **explicit** `reference_timestamp_format="unix_seconds_utc"` parameter with strict minute alignment and hash verification, plus synthetic format tests. The existing MQL5 source was not changed. See `docs/milestones/030-stage1hi-validation.md`.
 
-Full description and unverified constraints: `docs/milestones/030-stage1h-clock-probe.md`.
+## Next Codex task under explicit bounded instruction
 
-## Next bounded Codex task
+1. Verify clean, synchronized `scalping-recovery`; read `AGENTS.md`, this file and Stage 1H-I milestone.
+2. Run `PYTHONPATH=. ./.venv/bin/pytest tests/test_m030_clock_discovery.py tests/test_m030_parity.py tests/test_m030_incremental_contract.py -q`, report exact counts/failures, Python syntax and relevant regressions.
+3. **Read-only, offline** inspect canonical original M1/M5 CSVs with the new explicit epoch reader. Confirm hashes `19a3a92141989e9d1ed174447e43ada627c13ed8b3cef39d800a07d587fdc2fe` (M1) and `c8dc043c301531b11452a95273bd2fceec8f7ca933d99c5d7338d3f4ab2bb2e9` (M5), correct first timestamps, sample rows 1,440/288, and no parsing errors. Do not generate/rewrite CSVs or silently infer UTC from numeric values; record that exporter semantics are an unverified timestamp claim.
+4. Confirm original `M030_ClockBarProbe.mq5` SHA-256 remains `9b6b4782402c0eea268ccea8325ca81bf03b0e265054d58904c598137834a2fe`; no MQL5 recompile necessary unless source changes.
+5. Return evidence and remaining blockers, and a plan for proving an isolated offline tester can access native EURUSD history without copying account data or allowing network access. **Do not create a tester or attempt data provisioning.**
 
-Under explicit instruction:
-1. Verify clean synchronized `scalping-recovery`; read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, this file and the Stage 1H milestone.
-2. Run `PYTHONPATH=. ./.venv/bin/pytest tests/test_m030_clock_discovery.py tests/test_m030_parity.py tests/test_m030_incremental_contract.py -q`, relevant regression tests, and Python syntax checks. Report exact failure details; do not repair code locally.
-3. Static-review new MQL5 discovery probe: no orders/account/broker operations, required explicit raw server-date inputs, fresh completed M1/M5 semantics, bounds, no-output overwrite and missing-history response.
-4. Independently compile **`mql5/M030_ClockBarProbe.mq5`**, not the old decision probe, using a newly initialized disposable Wine prefix + separate copied MetaEditor app. First finish bounded `wineboot -u`, check safety restrictions (Z: and user-folder links removed) and protect original terminal/account/config/history. Report source/EX5 hashes, compiler diagnostics and exit code.
-5. Inspect offline reference CSV format from the local canonical dataset; check whether time column is explicitly UTC ISO-compatible and whether any adapter would be needed. Do not modify/export data.
-6. Note that native M1/M5 historical coverage and server-to-UTC mapping remain **unproven**; a successful compiler is not tester readiness or parity proof.
+## Not authorized
 
-## No authority to run
-
-No MT5 Strategy Tester or terminal launch, no broker login/session, downloads, imports, simulated/real trades, Python historical replay, installs, changes to production strategy, original MT5 environment modifications, new branches, reset/force-push, or local-control. A decision-free isolated tester probe requires separate authorization **after** data availability, clock envelope and OS-level network isolation are reviewed.
+No Wine/MT5/MetaEditor/Strategy Tester launch, Python historical backtest or trades, broker connections, data download/import, package installation, source edits locally, original terminal modifications, new branches, or local-control. A separate explicit authorization is mandatory before any decision-free tester discovery exercise.
 
 ## References
 
@@ -32,3 +28,4 @@ No MT5 Strategy Tester or terminal launch, no broker login/session, downloads, i
 - `docs/BACKTEST_SEMANTICS.md`
 - `docs/milestones/030-stage1g-provenance.md`
 - `docs/milestones/030-stage1h-clock-probe.md`
+- `docs/milestones/030-stage1hi-validation.md`
