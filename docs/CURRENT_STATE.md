@@ -877,3 +877,34 @@ net-profit evidence. M028 produced no accepted forward performance record.
 Next work is the new, pre-frozen M029 prospective protocol and safety-tested
 month-generic decision engine. See `docs/NEXT_TASK.md`; do not use the former
 M028 first-decision action to resume retrospectively.
+
+## M029 prospective recovery — Stage 1 and Stage 2 accepted (2026-11-12)
+
+Feature branch: `prospective-paper-recovery`.
+
+M028 October 7 and November 6 decision windows were missed and may not
+be backfilled. The first possible future decision remains December 7, 2026,
+12:00–12:10 UTC, contingent on a separately accepted live-readiness adapter.
+
+Stage 1: source-free UTC calendar/window gates, metadata readiness and
+exclusive hash-verified immutable journal. Native acceptance:
+**345 passed, 2 skipped** at `eefcda398009a9d366bcbbb192d5a38b62df6191`;
+result `2033f647e28d5d51ef52816c2c7115f4321853ce`.
+
+Stage 2: synthetic-only supplied BIS/OECD source and broker snapshot assembly,
+with source/quote gates before M028 signal/target reuse, unproven cost fields
+left null, and explicit prior paper ledger required for subsequent months.
+Accepted feature `bd73d29751b376523e8fd4d74b357e5925744cf1`,
+synthetic test SHA `05981c916e5a334200b3a42bbd55bfbebdcbd609`.
+Full native **356 passed, 2 skipped, 13 existing warnings** at
+`bcb873c4d1b812b290e1066fde12e943a7912e49`.
+
+Stage 3 real-readiness/live-input bridge is NOT implemented or accepted.
+There is no scheduled trading decision, real order, or published paper record.
+M027 remains supported only as a GROSS public-data approximation; real
+execution profitability and broker costs remain unproven.
+
+Read the frozen protocol and latest handoff:
+`docs/milestones/029-prospective-paper-recovery.md`;
+`docs/NEXT_TASK.md`.
+
