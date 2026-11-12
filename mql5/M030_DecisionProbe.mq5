@@ -15,6 +15,10 @@ input datetime M1SourceStartServer = 0;
 input datetime M5SourceStartServer = 0;
 input datetime ComparisonStart = D'2026.09.10 00:00';
 input datetime ComparisonEnd = D'2026.09.11 00:00';
+// ComparisonStart/End are UTC labels. Never infer server clock from Kenya.
+// The sentinel requires an independently established historical server offset.
+input int VerifiedServerUtcOffsetMinutes = 99999;
+datetime server_sample_start=0, server_sample_end=0;
 
 int handle = INVALID_HANDLE;
 int audit_handle = INVALID_HANDLE;
@@ -121,8 +125,16 @@ int OnInit() {
     Print("M030 DENIED: EA may only run in Strategy Tester");
     return INIT_FAILED;
   }
+  if(VerifiedServerUtcOffsetMinutes==99999 ||
+     VerifiedServerUtcOffsetMinutes < -840 || VerifiedServerUtcOffsetMinutes > 840) {
+    Print("M030 DENIED: independently verified historical server offset required");
+    return INIT_FAILED;
+  }
+  server_sample_start=ComparisonStart+VerifiedServerUtcOffsetMinutes*60;
+  server_sample_end=ComparisonEnd+VerifiedServerUtcOffsetMinutes*60;
   if(M1SourceStartServer<=0 || M5SourceStartServer<=0 ||
-     M1SourceStartServer>=ComparisonStart || M5SourceStartServer>=ComparisonStart ||
+     M1SourceStartServer>=server_sample_start ||
+     M5SourceStartServer>=server_sample_start ||
      ComparisonStart>=ComparisonEnd) {
     Print("M030 DENIED: missing history start or invalid frozen date window");
     return INIT_FAILED;
@@ -161,7 +173,7 @@ void OnTick() {
   datetime boundary=iTime(_Symbol,PERIOD_M1,0);
   if(boundary==0 || boundary==lastBoundary) return;
   lastBoundary=boundary;
-  if(boundary<ComparisonStart || boundary>=ComparisonEnd) return;
+  if(boundary<server_sample_start || boundary>=server_sample_end) return;
   Bar m1[],m5[];
   if(!GetBars(PERIOD_M1,M1SourceStartServer,m1) ||
      !GetBars(PERIOD_M5,M5SourceStartServer,m5)) {
@@ -179,11 +191,17 @@ void OnTick() {
     for(int tf=0;tf<2;tf++) {
       int size=(tf==0?ArraySize(m1):ArraySize(m5));
       for(int i=0;i<size;i++) {
-        Bar bar = (tf==0?m1[i]:m5[i]);
-        FileWrite(audit_handle,RunId,_Symbol,(tf==0?"M1":"M5"),
-                  TimeToString(bar.start,TIME_DATE|TIME_SECONDS),
-                  DoubleToString(bar.open,_Digits),DoubleToString(bar.high,_Digits),
-                  DoubleToString(bar.low,_Digits),DoubleToString(bar.close,_Digits));
+        if(tf==0) {
+          FileWrite(audit_handle,RunId,_Symbol,"M1",
+                    TimeToString(m1[i].start,TIME_DATE|TIME_SECONDS),
+                    DoubleToString(m1[i].open,_Digits),DoubleToString(m1[i].high,_Digits),
+                    DoubleToString(m1[i].low,_Digits),DoubleToString(m1[i].close,_Digits));
+        } else {
+          FileWrite(audit_handle,RunId,_Symbol,"M5",
+                    TimeToString(m5[i].start,TIME_DATE|TIME_SECONDS),
+                    DoubleToString(m5[i].open,_Digits),DoubleToString(m5[i].high,_Digits),
+                    DoubleToString(m5[i].low,_Digits),DoubleToString(m5[i].close,_Digits));
+        }
       }
     }
     FileFlush(audit_handle);
