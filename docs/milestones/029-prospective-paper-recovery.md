@@ -219,3 +219,20 @@ real-source/broker acquisition, and on-time immutable journal must be
 implemented and independently accepted under the next, prospectively frozen
 Stage-3 contract. No actual paper decision has been created.
 
+## Stage-3 operational protocol reference — 2026-11-12
+
+The Stage-3 **live-readiness integration** referred to in the Stage-2 closeout
+is governed by the *separate pre-implementation freeze*:
+
+- `docs/milestones/029-stage3-operational-protocol.md`
+- Freeze commit: `c74ca08fe32bf9ac9954cee5b033f808f3932ddd`.
+
+This is distinct from the earlier future **forward-performance assessment**
+heading above: performance assessment remains prohibited until at least
+12 completed prospective monthly paper holding periods.
+
+Only Stage **3A** synthetic implementation and tests are currently authorized;
+Stage **3B** read-only connectivity and Stage **3C** real-source paper decision
+need separate explicit approval. Wine GUI compatibility alone does not
+establish Python/broker bridge readiness. No strategy economics or forward
+decision is authorized by the protocol freeze.
