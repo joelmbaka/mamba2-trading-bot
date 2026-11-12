@@ -128,3 +128,21 @@ writable staging directory for the build. Never expose the rootful Docker
 socket inside the container or use the LEAN engine image solely for compilation.
 
 See `docs/milestones/031-stage5-runtime-diagnostics.md`.
+
+## Preferred compile-only environment (Stage 6B, not yet authorized)
+
+`global.json` pins .NET SDK **10.0.404** without roll-forward. Instead of
+changing Docker socket permissions, this small C# project can be compiled
+with the official Linux x64 SDK archive extracted into a **user-owned**
+toolchain directory. The archive's official SHA-512 is recorded in
+`docs/milestones/031-stage6a-durable-evidence-and-sdk-plan.md`. Always
+verify the host architecture and downloaded archive hash before extraction.
+
+The `QuantConnect.Algorithm` 2.5.18248 NuGet restore needs a separately
+approved initial network access and generates `packages.lock.json` in a
+new scratch build copy, not in this Git working tree. A subsequent
+`dotnet build --no-restore` validates compilation only; it must not be
+called independent signal parity or an engine execution test.
+
+The persistent Python comparison reference is private at
+`/home/joel/.local/share/mamba2/evidence/m031-2026-09-10/`.
