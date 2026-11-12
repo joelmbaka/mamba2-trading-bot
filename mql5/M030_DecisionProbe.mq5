@@ -181,8 +181,9 @@ void OnTick() {
     ExpertRemove();
     return;
   }
+  datetime expected_m5_open=(datetime)(((long)boundary/300)*300-300);
   if(m1[ArraySize(m1)-1].start != boundary-60 ||
-     m5[ArraySize(m5)-1].start+300>boundary) {
+     m5[ArraySize(m5)-1].start != expected_m5_open) {
     Print("M030 DENIED: M1/M5 latest completed bar misaligned");
     ExpertRemove();
     return;
