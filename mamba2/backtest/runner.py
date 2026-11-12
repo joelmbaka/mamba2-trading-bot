@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from dataclasses import dataclass, field
 from typing import Any
 
 from .broker import HistoricalBroker
 from .feed import ReplayFeed
+from .m030_parity import event as m030_event, utc_millis
 
 
 class BacktestBrokerAdapter:
@@ -64,7 +66,9 @@ class BacktestRunner:
         position_manager: Any | None = None,
         atr_manager: Any | None = None,
         rate_fetcher: Any | None = None,
+        event_sink: Any | None = None,
     ):
+        self.event_sink = event_sink
         self.feed = feed
         self.broker = broker
         self.strategy = strategy
@@ -116,6 +120,15 @@ class BacktestRunner:
             max_steps is None or result.evaluations < max_steps
         ):
             timestamp = self.broker.advance()
+            if self.event_sink is not None:
+                # Observability only; never change the replay event order.
+                opening = timestamp - timedelta(minutes=1)
+                self.event_sink.emit(m030_event(
+                    engine='python', kind='M1_CLOSE',
+                    symbol=getattr(self.strategy, 'symbol', ''),
+                    utc_time_ms=utc_millis(timestamp.to_pydatetime()),
+                    m1_source_open_utc=opening.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                ))
 
             if self.atr_manager is not None:
                 self.atr_manager.refresh_once()
@@ -193,7 +206,9 @@ class PortfolioBacktestRunner:
         atr_manager: Any | None = None,
         rate_fetcher: Any | None = None,
         strategy_reporting_enabled: bool = True,
+        event_sink: Any | None = None,
     ):
+        self.event_sink = event_sink
         self.feed = feed
         self.broker = broker
         self.strategies = tuple(strategies)
@@ -288,6 +303,14 @@ class PortfolioBacktestRunner:
             max_steps is None or result.evaluations < max_steps
         ):
             timestamp = self.broker.advance()
+            if self.event_sink is not None:
+                opening = timestamp - timedelta(minutes=1)
+                for symbol in self.symbols:
+                    self.event_sink.emit(m030_event(
+                        engine='python', kind='M1_CLOSE', symbol=symbol,
+                        utc_time_ms=utc_millis(timestamp.to_pydatetime()),
+                        m1_source_open_utc=opening.strftime('%Y-%m-%dT%H:%M:%SZ'),
+                    ))
 
             if self.atr_manager is not None:
                 self.atr_manager.refresh_once()
