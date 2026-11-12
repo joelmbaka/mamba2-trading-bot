@@ -121,13 +121,11 @@ connections, Docker pulls or cloud uploads without their own approval.
 M031 C# files. Its purpose is to surface real C# and LEAN API compilation
 errors **without starting the engine or executing historical signals**.
 
-Compilation has **not** yet happened. A .NET 10 SDK and exact transitive NuGet
-dependencies must be provided under separate approval. The selected SDK
-container needs an immutable digest; an initial network-enabled package
-restore is separate from a later offline `dotnet build --no-restore`.
-The original git source should be mounted read-only and copied into a fresh
-writable staging directory for the build. Never expose the rootful Docker
-socket inside the container or use the LEAN engine image solely for compilation.
+Stage 6B **compiled successfully** on a local .NET SDK 10.0.404 with
+exactly pinned NuGet dependencies in an untracked user-owned scratch project.
+The build used `dotnet build --no-restore`, produced a 42,496-byte M031.dll
+and did not start the LEAN engine or process historical prices.
+No Docker socket, privileged container or installation was used.
 
 See `docs/milestones/031-stage5-runtime-diagnostics.md`.
 
