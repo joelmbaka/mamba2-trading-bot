@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-20261112-stage3b-isolated-preflight-v1",
-  "action": "m029_stage3b_isolated_preflight",
+  "id": "mamba2-20261112-stage3b-targeted-discovery-v1",
+  "action": "m029_stage3b_targeted_discovery",
   "args": {},
   "requested_by": "chatgpt"
 }
