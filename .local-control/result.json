@@ -1,17 +1,136 @@
 {
   "version": 1,
-  "command_id": "mamba2-20261112-post-handoff-status-v1",
-  "completed_at": "2026-11-12T07:40:06.605270+00:00",
+  "command_id": "mamba2-20261112-m029-branch-switch-v1",
+  "completed_at": "2026-11-12T08:24:07.668262+00:00",
   "ok": true,
-  "action": "status",
+  "action": "switch_branch",
   "data": {
-    "hostname": "joel-OptiPlex-7080",
-    "repo": "/home/joel/Dev/mamba2-trading-bot",
-    "branch": "execution-realism",
-    "head": "e4cabba73243651ef86b1ffe194bf64124ff8000",
-    "clean": true,
-    "changed_paths": [],
-    "divergence": "0\t0",
-    "time": "2026-11-12T07:40:02.354503+00:00"
+    "target_branch": "prospective-paper-recovery",
+    "before_branch": "execution-realism",
+    "after_branch": "prospective-paper-recovery",
+    "before_sha": "e4cabba73243651ef86b1ffe194bf64124ff8000",
+    "after_sha": "eefcda398009a9d366bcbbb192d5a38b62df6191",
+    "reason": null,
+    "commands": [
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "execution-realism\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "e4cabba73243651ef86b1ffe194bf64124ff8000\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "check-ref-format",
+          "--branch",
+          "prospective-paper-recovery"
+        ],
+        "exit_code": 0,
+        "stdout": "prospective-paper-recovery\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "fetch",
+          "origin",
+          "prospective-paper-recovery:refs/remotes/origin/prospective-paper-recovery"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "From github.com:joelmbaka/mamba2-trading-bot\n * [new branch]      prospective-paper-recovery -> origin/prospective-paper-recovery\n"
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/remotes/origin/prospective-paper-recovery"
+        ],
+        "exit_code": 0,
+        "stdout": "eefcda398009a9d366bcbbb192d5a38b62df6191\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "--verify",
+          "refs/heads/prospective-paper-recovery"
+        ],
+        "exit_code": 128,
+        "stdout": "",
+        "stderr": "fatal: Needed a single revision\n"
+      },
+      {
+        "command": [
+          "git",
+          "switch",
+          "--track",
+          "-c",
+          "prospective-paper-recovery",
+          "origin/prospective-paper-recovery"
+        ],
+        "exit_code": 0,
+        "stdout": "branch 'prospective-paper-recovery' set up to track 'origin/prospective-paper-recovery'.\n",
+        "stderr": "Switched to a new branch 'prospective-paper-recovery'\n"
+      },
+      {
+        "command": [
+          "git",
+          "branch",
+          "--show-current"
+        ],
+        "exit_code": 0,
+        "stdout": "prospective-paper-recovery\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "rev-parse",
+          "HEAD"
+        ],
+        "exit_code": 0,
+        "stdout": "eefcda398009a9d366bcbbb192d5a38b62df6191\n",
+        "stderr": ""
+      },
+      {
+        "command": [
+          "git",
+          "status",
+          "--porcelain",
+          "--untracked-files=all"
+        ],
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": ""
+      }
+    ]
   }
 }
