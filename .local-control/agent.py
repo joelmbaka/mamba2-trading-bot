@@ -632,6 +632,129 @@ def m029_stage3b_isolated_preflight():
     }
 
 
+
+def m029_stage3b_targeted_discovery():
+    """Bounded metadata-only search for Wine 11 test artifacts.
+
+    No shell, home-wide search, Wine prefix execution or account reads.
+    Only known temporary/installer-related roots and shallow package metadata.
+    """
+    import os
+
+    home = Path.home()
+    roots = [
+        Path("/tmp"), Path("/var/tmp"), Path("/opt"),
+        home / "Downloads", home / "Dev",
+        home / ".local", home / ".cache",
+    ]
+    ignore = {
+        (home / ".mt5").resolve(),
+        (home / ".wine").resolve(),
+        (home / ".mamba2-mt5").resolve(),
+    }
+    visited = 0
+    max_dirs = 3000
+    found_wine = []
+    found_prefixes = []
+    found_python = []
+    for root in roots:
+        if not root.is_dir():
+            continue
+        stack = [(root, 0)]
+        while stack and visited < max_dirs:
+            folder, depth = stack.pop()
+            visited += 1
+            try:
+                if folder.is_symlink() or folder.resolve() in ignore:
+                    continue
+                with os.scandir(folder) as scanner:
+                    entries = list(scanner)
+            except (OSError, PermissionError):
+                continue
+            if (folder / "system.reg").is_file() and folder.resolve() not in ignore:
+                found_prefixes.append(str(folder.resolve()))
+            if depth > 6:
+                continue
+            for item in entries:
+                try:
+                    if item.is_symlink():
+                        continue
+                    if item.is_file(follow_symlinks=False):
+                        name = item.name.lower()
+                        if name == "wine" and (
+                            "/bin/" in item.path or "/usr/" in item.path
+                        ):
+                            if os.access(item.path, os.X_OK):
+                                found_wine.append(item.path)
+                        if name == "python.exe" and (
+                            "python310" in item.path.lower()
+                            or "python311" in item.path.lower()
+                        ):
+                            found_python.append(item.path)
+                        continue
+                    if not item.is_dir(follow_symlinks=False):
+                        continue
+                    if depth >= 2 and not any(
+                        key in str(item.path).lower()
+                        for key in (
+                            "wine", "staging", "mt5", "mamba2", "python",
+                            "compat", "isolate", "scratch", "test",
+                            "debian", "ubuntu", "work", "tmp",
+                        )
+                    ):
+                        continue
+                    if depth <= 5:
+                        stack.append((Path(item.path), depth + 1))
+                except (OSError, PermissionError):
+                    continue
+
+    package_info = []
+    try:
+        proc = subprocess.run(
+            ["dpkg-query", "-W", "winehq-staging", "wine-staging",
+             "wine-staging-amd64", "winehq-devel", "wine-devel"],
+            capture_output=True, text=True, check=False, timeout=8,
+        )
+        package_info = [
+            line[:160] for line in proc.stdout.splitlines()
+            if "wine" in line.lower()
+        ][:20]
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    wine_versions = []
+    for path in list(dict.fromkeys(found_wine))[:20]:
+        try:
+            proc = subprocess.run(
+                [path, "--version"], capture_output=True, text=True,
+                check=False, timeout=7,
+            )
+            if proc.returncode == 0:
+                wine_versions.append({
+                    "path": path,
+                    "version": proc.stdout.strip()[:80],
+                })
+        except (OSError, subprocess.TimeoutExpired):
+            pass
+    return {
+        "ok": True,
+        "action": "m029_stage3b_targeted_discovery",
+        "data": {
+            "read_only": True,
+            "search_bounded": True,
+            "directories_examined": visited,
+            "wine_binaries": wine_versions,
+            "isolated_prefix_paths": list(dict.fromkeys(found_prefixes))[:20],
+            "python_exe_paths": list(dict.fromkeys(found_python))[:20],
+            "wine_package_metadata": package_info,
+            "terminal_launched": False,
+            "mt5_imported": False,
+            "broker_initialized": False,
+            "account_data_read": False,
+            "order_api_called": False,
+        },
+    }
+
+
 def execute(command):
     action = command.get("action")
     if action == "status":
@@ -644,6 +767,8 @@ def execute(command):
         return probe_mt5_pe_version()
     if action == "m029_stage3b_isolated_preflight":
         return m029_stage3b_isolated_preflight()
+    if action == "m029_stage3b_targeted_discovery":
+        return m029_stage3b_targeted_discovery()
     if action == "sync":
         return git_sync()
     if action == "switch_branch":
