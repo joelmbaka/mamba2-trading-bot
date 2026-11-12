@@ -850,3 +850,30 @@ First decision:
 
 No M028 strategy work beyond source-readiness checks is authorized before
 the scheduled decision.
+
+## 2026-11-12 audit — M028 first paper decision missed, no backfill
+
+The workstation local-agent was contacted through the allowlisted `status`
+action. It reported a clean `execution-realism` checkout, HEAD
+`270d7c5e0e04b45ec2ce32b108cd2e7d334cdb3b`, with zero divergence.
+
+The read-only, single-path paper-record audit completed successfully and was
+committed to `local-control-results` at
+`5d1ccfd0460908946cc74cad36c6c712e81679a7`. The expected immutable
+`~/.local/share/mamba2-forward-paper/2026-10-decision.json` **does not
+exist**; its parent directory also does not exist. This does not establish
+whether any other, untracked record exists elsewhere.
+
+The Oct 7 prospective decision is missed. The Nov 6 fifth-weekday decision is
+also in the past. No October/November signal, positions, strategy P/L or
+decision record may be backfilled. The `local-control` safeguard
+`6f1f71c219b7e4e1ef50f6392e4b902311ce9b99` rejects attempts to create
+the missing October record after its decision day.
+
+No real broker order or strategy computation was performed in this audit.
+M027 is still only a **gross public-data approximation**, not executable
+net-profit evidence. M028 produced no accepted forward performance record.
+
+Next work is the new, pre-frozen M029 prospective protocol and safety-tested
+month-generic decision engine. See `docs/NEXT_TASK.md`; do not use the former
+M028 first-decision action to resume retrospectively.
