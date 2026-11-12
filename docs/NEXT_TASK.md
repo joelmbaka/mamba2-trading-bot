@@ -1,27 +1,34 @@
-# Next Authorized Task — M030 Stage 1E-II isolated compiler retry after completed wineboot
+# Next Authorized Task — M030 Stage 1F tester/data readiness preflight (read-only)
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1E-I STARTUP DIAGNOSIS ACCEPTED; FRESH COMPILE RETRY ONLY**
+Status: **STAGE 1E INCREMENTAL ENGINE VALIDATED AND COMPILED; NO TESTER RUN AUTHORIZED**
 
-## Evidence
+## Accepted evidence
 
-Stage 1E Python validation passed 39 focused and 45 regression tests. The revised no-order MQL5 EA's attempt timed out (status 124, empty log, no EX5). Stage 1E-I read-only inspection found an unfinished `wineboot.exe --init` and related disposable prefix-specific Wine initialization processes after timeout, along with smaller prefix registry files than on successful previous runs. The likely failure is incomplete new-prefix startup, **not a proven MQL5 compiler error**. Original MT5 PID `71219` remained untouched. Source SHA-256: `125c0f44cb2118a5ce74d5c8165fdb78c2a17e1dcb64351043f16e168f20e35f`.
+Codex verified Stage 1E incremental MQL5 EA source and synthetic validation: **39 focused Python tests passed**, **45 regressions passed**, syntax checks passed. The revised observation-only EA was compiled in a newly initialized isolated Wine 11.21 prefix with MetaEditor build 6316: **0 errors, 0 warnings**, EX5 SHA-256 `ea46dcb09e4bbc77fdb6b764918ab38c2b269909ae4520459ea7261c131609b4`; source SHA-256 `125c0f44cb2118a5ce74d5c8165fdb78c2a17e1dcb64351043f16e168f20e35f`. Exit code 1 is a previously observed CLI anomaly, but compiler output is explicit. Original terminal PID 71219 untouched. Full report: `docs/milestones/030-stage1eii-compile-acceptance.md`.
 
-See `docs/milestones/030-stage1e-validation.md` and `docs/milestones/030-stage1ei-wine-startup-diagnosis.md`.
+## Next bounded Codex task
 
-## Next task for Codex under explicit instruction
-
-1. Confirm the branch is clean/synchronized. Read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md` and the Stage 1E-I diagnosis.
-2. Allocate a new disposable root, initialize a brand-new prefix with a bounded `wineboot -u` using the installed Wine 11.21 runtime, confirm initialization finished and no unfinished wineboot initialization remains. Stop if initialization times out; do **not** run MetaEditor before it succeeds.
-3. Protect original environment: separate app and prefix, remove/restrict broad `Z:` mapping and host home-directory links in disposable prefix, use only minimal copied MetaEditor/support files + exact unchanged EA source. Never clone original Wine prefix or copy accounts, history, config, profiles, logs or common files.
-4. In that successfully initialized disposable context only, compile no-order `mql5/M030_DecisionProbe.mq5`. Report source/EX5 hashes, compiler build/log/error/warning counts, CLI exit status, remaining prefix processes and original terminal unchanged. If compilation fails, report exact diagnostics; do not edit source locally.
-5. Do not reuse the failed Stage 1E prefix, change original terminal or launch Strategy Tester.
+**Read-only** inspect availability/readiness for an isolated no-order decision-only Strategy Tester configuration, but do not execute it:
+1. Verify clean synced `scalping-recovery` branch and read Stage 1C provenance, 1E-II compile acceptance, and source-level guards.
+2. Identify exact installed tester build, existing history/cache coverage evidence, and whether full earliest M1 (2025-08-25 00:03 UTC) and M5 (2025-08-25 00:00 UTC) bar prefixes can be supplied without downloads. Distinguish manifest claims from actual terminal-cache proof; do not assume a source alignment.
+3. Seek independent historical server-to-UTC clock evidence for MetaQuotes-Demo. Do not guess a UTC offset; the EA must remain fail-closed on unknown clock.
+4. Inspect feasibility of isolated tester inputs and safe immutable CSV evidence output paths (including large optional prefix audit), without copying account profiles or launching MT5. Do not start tester, MetaEditor, Wine, broker connection or Python backtest in this gate.
+5. Return exact paths, build/version evidence, interval coverage proof or gaps, input readiness, time offset evidence, remaining blockers, and proposed *separately authorized* diagnostic procedure.
 
 ## Prohibited
 
-No historical replay/backtest, simulated/live trades, broker login/init, market-data downloads, installations, performance tuning, repository source modifications, new branch, force-push or local-control.
+No live/demo broker login, tester/terminal launch, historical replay, order calls (including simulated), data downloads, installs, changes to original MT5 app or Wine prefix, production strategy changes, optimization, reset/rebase/force-push/new branch, or local-control.
 
-## Subsequent decision
+## Following decision
 
-Only after successful independent compiler evidence may the team assess real MT5 source-history availability and independently verified UTC/server clock before separately authorizing a no-order decision-only tester run.
+If enough clock and history evidence exists, propose an isolated **decision-only** tester step with no-order EA and frozen EURUSD 2026-09-10 UTC sample for explicit later authorization. If not, design a provenance-preserving alignment path before any tester execution.
+
+## References
+
+- `AGENTS.md`
+- `docs/BACKTEST_SEMANTICS.md`
+- `docs/milestones/030-stage1c-data-provenance.md`
+- `docs/milestones/030-stage1e-incremental-engine.md`
+- `docs/milestones/030-stage1eii-compile-acceptance.md`
