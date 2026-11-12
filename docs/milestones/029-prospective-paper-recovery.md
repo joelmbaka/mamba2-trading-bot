@@ -191,3 +191,31 @@ signals/sizing/cost rules are unchanged. Stage 3 (future) alone may connect
 read-only real source/broker acquisition and the trusted UTC wall clock,
 after a separate gate, code review and regression. Stage 3 must prohibit
 source or quote snapshots acquired outside the actual processing window.
+
+## M029 Stage 2 accepted — 2026-11-12
+
+- Frozen Stage-2 protocol: `13bf3ff3931135fcf203921e6c6b4addf7257682`
+  (recorded after Stage-1 accepted evidence).
+- Synthetic supplied-source/broker assembly implementation:
+  `c9e77aa3a95983684701fccff2223145596d3a44`.
+- Safety repair to require explicit prior-ledger state for later months:
+  `bd73d29751b376523e8fd4d74b357e5925744cf1`.
+- Synthetic tests: `59b1a78ff5dcf3700af26dd7d27420c9a00f2795`
+  and supplementary prior-state cases
+  `05981c916e5a334200b3a42bbd55bfbebdcbd609`.
+- Full native suite on exact tested Stage-2 HEAD
+  `05981c916e5a334200b3a42bbd55bfbebdcbd609`:
+  **356 passed, 2 skipped, 13 existing warnings**, 0 failures.
+- Accepted result on `local-control-results`:
+  `bcb873c4d1b812b290e1066fde12e943a7912e49`.
+- No live source, broker initialization, signal-derived paper position,
+  strategy performance or real orders were computed in acceptance.
+- Source and broker inputs were supplied entirely as synthetic fixtures;
+  the Stage-2 module has no network or MT5 imports and does not persist
+  workstation records.
+
+**Stage 2 CLOSED.** The remaining bridge to trusted UTC time, read-only
+real-source/broker acquisition, and on-time immutable journal must be
+implemented and independently accepted under the next, prospectively frozen
+Stage-3 contract. No actual paper decision has been created.
+
