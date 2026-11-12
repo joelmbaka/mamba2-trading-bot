@@ -10,6 +10,7 @@ from typing import Any
 from .broker import HistoricalBroker
 from .feed import ReplayFeed
 from .m030_parity import event as m030_event, utc_millis
+from .m030_signal_observer import observe_candidate
 
 
 class BacktestBrokerAdapter:
@@ -139,6 +140,8 @@ class BacktestRunner:
                 self.atr_manager.refresh_once()
 
             if not await self._strategy_is_blocked_by_open_position():
+                if self.event_sink is not None:
+                    self.event_sink.emit(observe_candidate(self.feed, self.strategy.symbol))
                 await self.strategy.evaluate(self.market_context())
 
             self.broker.settle_pending_orders()
@@ -330,6 +333,8 @@ class PortfolioBacktestRunner:
                 if await self._symbol_is_blocked(symbol):
                     continue
 
+                if self.event_sink is not None:
+                    self.event_sink.emit(observe_candidate(self.feed, symbol))
                 await strategy.evaluate(self.market_context())
                 result.per_symbol_evaluations[symbol] += 1
 
