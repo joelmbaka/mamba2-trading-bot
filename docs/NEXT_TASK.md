@@ -1,51 +1,55 @@
 # Next Authorized Task
 
-## M029 Stage 1 — validate prospective safety machinery
+## M029 Stage 3 — trusted read-only data bridge and prospectively scheduled paper decision
 
-Milestone branch: `prospective-paper-recovery`.
+**Prerequisite evidence completed 2026-11-12**
 
-**Protocol frozen before implementation:**
-`b84456f256cd701738b20ff30dc5be37f4f36dfb`
-(`docs/milestones/029-prospective-paper-recovery.md`).
+- Branch: `prospective-paper-recovery` (keep `main` unchanged).
+- Frozen M029 protocol: `b84456f256cd701738b20ff30dc5be37f4f36dfb`.
+- Stage-1 pure window/journal implementation accepted with 345 native passes.
+- Stage-2 synthetic supplied-BIS/OECD/broker draft assembly accepted,
+  feature `bd73d29751b376523e8fd4d74b357e5925744cf1`.
+- Latest accepted exact-head native result:
+  `bcb873c4d1b812b290e1066fde12e943a7912e49`,
+  **356 passed, 2 skipped, 13 existing warnings**.
 
-Stage-1 feature implementation:
-`03f0e0dfd918ad7c4827253c864a373a671abe8c`
-(`mamba2/backtest/m029_prospective.py`).
+### Immediate engineering scope (not yet accepted)
 
-Synthetic tests:
-`23234f97688d284476ccb4404cf1ce87407a60e1`
-(`tests/test_m029_prospective.py`).
+1. Freeze a separate M029 Stage-3 operational protocol **before** any real
+   source-derived strategy signal is inspected.
+2. Design and implement an allowlisted **metadata-only readiness** command:
+   source publisher cutoffs/hashes and broker quote/margin viability, with
+   read-only MT5 methods only. No signal signs, targets, prices of fills or P/L
+   may be generated before the proper window.
+3. Wire M029 Stage-2 assembly to source snapshots downloaded **inside the
+   decision window**, with actual UTC retrieval timestamps and quote times.
+4. Read the workstation UTC clock internally; reject early and late execution,
+   including after **2026-12-07T12:10:00Z** for the December month.
+5. Use exclusive immutable paper-decision creation and hash verification;
+   on record collision never recompute or overwrite.
+6. Require both fixed source cutoff and >=4 broker-eligible currencies or
+   produce an on-time immutable flat/not-ready record with null P/L.
+7. Synthetic-only pre-decision tests, full native regression, safety audit and
+   explicit Stage-3 acceptance before authorizing a real-source paper signal.
 
-### Authorized immediate action
+### Prospective decision schedule
 
-1. Verify the Dell checkout is clean and switch, without force, to the
-   `prospective-paper-recovery` branch.
-2. Run the full native test suite; inspect any failing tests and fix
-   implementation/test defects without changing the frozen economic contract.
-3. Record exact accepted feature SHA and test evidence.
-4. Close only Stage 1 once tests pass and the result has been inspected.
+First eligible, if Stage 3 is approved and ready:
 
-### Permanently missed months
+- Month: `2026-12`
+- Opens: **2026-12-07T12:00:00Z** (15:00 East Africa Time)
+- Closes: **2026-12-07T12:10:00Z** (15:10 East Africa Time)
+- Do NOT create any record for October or November 2026.
+- Do NOT reconstruct a missed December decision after its close.
+- Do NOT assume the December execution is automated or scheduled yet.
 
-The October 2026 and November 2026 prospective windows passed without a
-record. The 2026-11-12 workstation audit proved the configured October path
-and directory absent. No historical paper decision may be backfilled.
-The first eligible future window is:
-**2026-12-07 12:00:00Z <= clock < 2026-12-07 12:10:00Z**.
+### Safety and strategy invariants
 
-### Not authorized in Stage 1
-
-- No real-source signal or target-lot calculation.
-- No real or paper position creation on broker.
-- No live MT5 account read, order check, or order send.
-- No M028 October first-decision action.
-- No M027 retrospective economics rerun.
-- No historical result retune or post-fact selection.
-- No production merge/deploy.
-- No M029 paper-decision record on the actual workstation.
-
-The upcoming M029 Stage 2 must receive its own prospective implementation
-authorization *after* Stage-1 regression is green. It will integrate
-metadata-only readiness and broker/source adapters using the fixed Stage-1
-calendar/journal invariants. The full M029 strategy remains unproven at
-executable net-cost level.
+Preserve M027 12-month signal and volatility, M028 8 currencies and broker
+pair mapping, USD 10k reference equity, 4x gross cap, 25% margin cap and
+minimum four viable positions. No net P/L with unproven financing/commission
+or unobserved slippage. No actual MT5 orders, position changes, trade history,
+account balance reads, strategy retuning, historical economics reruns,
+production deploy or merge. No assessment before 12 completed prospective
+paper holding periods. Tests may use synthetic fixtures only until the
+separately frozen Stage-3 approval.
