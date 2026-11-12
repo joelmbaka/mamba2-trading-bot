@@ -1,34 +1,35 @@
-# Next Authorized Task — M030 Stage 1D independent data-alignment contract
+# Next Authorized Task — M030 Stage 1D synthetic and isolated compile validation
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1C READ-ONLY PROVENANCE AUDIT ACCEPTED; SOURCE ALIGNMENT REPAIR NEXT**
+Status: **SOURCE-ONLY ALIGNMENT UPDATE COMMITTED — VALIDATION PENDING**
 
-## Accepted Stage 1C evidence
+## Changes awaiting independent Codex validation
 
-Codex inspected the canonical `backtest_data/m022-history-inventory-tick-m1-v2/` MetaQuotes-Demo export without modifying data or opening the terminal/tester. EURUSD Sep 10, 2026 UTC contains M1=1,440, Ask M1=1,440, M5=288 complete bars. The canonical M1/Ask first source bar is 2025-08-25 00:03 UTC; the native M5 source starts 2025-08-25 00:00 UTC. These different origins are valid **per-timeframe warm-up starts**; both engines must agree within each timeframe, not artificially synchronize M1 start with M5 start. Raw ticks were not preserved; MT5 caches cannot yet prove coverage or historical server clock offset. See `docs/milestones/030-stage1c-data-provenance.md` for hashes, row counts and unresolved risks.
+See `docs/milestones/030-stage1d-alignment-contract.md`.
 
-Prior gates: 10 focused + 45 regression tests passed; independent no-order EA compiled with MetaEditor build 6316, zero errors/warnings and a generated EX5. CLI returned code 1 despite a successful log; note the anomaly. No tester execution.
+GitHub source now requires separate source-history starts for M1 (canonical 2025-08-25 00:03 UTC) and M5 (canonical 2025-08-25 00:00 UTC), a separately verified MT5 server-to-UTC offset (unknown), and strict completed-bar alignment. The independent tester-only MQL5 probe optionally exports timestamped native OHLC prefix records; Python has a strict per-timeframe audit comparator. Synthetic tests have been extended.
 
-## Next source work (ChatGPT GitHub only)
+**This is not yet validated or compiled**. Prior EX5 from Stage 1B-II does not correspond to the revised source. MT5 historical cache coverage, time offset, tick provenance and large-history performance remain unresolved.
 
-1. Revise `mql5/M030_DecisionProbe.mq5` as necessary to explicitly assert **separate M1 and M5 source origins**, correct `CopyRates` closed-bar ordering and startup seeds, and fail closed if the exact frozen history prefix is unavailable. Do not silently trim or shift warm-up data.
-2. Capture or verify per-timeframe bar timestamps/OHLC using a deterministic export schema and manifest with independent source hash and time-zone declarations. MQL5 server timestamps are not assumed UTC.
-3. Strengthen Python importer and synthetic tests to reject missing/duplicate/misaligned M1/M5 identities and unverified offset assumptions.
-4. Document exact Codex source validation and disposable compilation instructions. Preserve original strategy semantics and all historical data. No new branch.
+## Next bounded Codex task
 
-## Runtime boundaries
+Under explicit instruction: verify clean synced branch, run `PYTHONPATH=. ./.venv/bin/pytest tests/test_m030_parity.py -q` and relevant regressions, then **compile only** the revised no-order MQL5 probe in an independently disposable Wine prefix/application directory using the already accepted Stage 1B-II isolation safeguards. Report hashes, compiler errors/warnings, exact exit status, paths and original terminal unchanged. Read-only evaluate worst-case full-prefix performance/Memory cost without running a Strategy Tester or historical replay.
 
-Stage 1D GitHub source work only; Codex tests/compile require a distinct bounded instruction and report. Do **not** automatically launch MT5 or its Strategy Tester, run a historical Python backtest, connect a broker, download/replace historical data, submit simulated/real orders, optimize strategy, install packages, or use `local-control`/`local-control-results`.
+Do not install dependencies or modify repository source locally; source defects go back to ChatGPT for GitHub edits.
 
-## Subsequent decision
+## Forbidden
 
-After Stage 1D source validation and isolated compile, decide whether to authorize a *decision-only* MT5 tester session in an isolated environment to establish actual broker cache data coverage and clock alignment. No order-capable EA or economic parity is authorized at this stage.
+No MT5 Strategy Tester launch, historical Python replay, simulated or live trade, broker connection/init, market data downloads, strategy optimization, local-control mailbox, modifying original Wine prefix/app, branch proliferation or rewriting Git history.
+
+## Following gate
+
+After compiler/test review: design bounded causal incremental indicator computation without altering full-source EMA seed, and independently verify server-to-UTC clock evidence before authorizing the first isolated decision-only tester session.
 
 ## References
 
 - `AGENTS.md`
 - `docs/BACKTEST_SEMANTICS.md`
 - `docs/milestones/030-stage1a-parity-harness.md`
-- `docs/milestones/030-stage1bii-compiler-validation.md`
 - `docs/milestones/030-stage1c-data-provenance.md`
+- `docs/milestones/030-stage1d-alignment-contract.md`
