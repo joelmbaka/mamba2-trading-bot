@@ -1,49 +1,52 @@
-# Next Task — M031 Stage 6A preserve evidence; compile-only approval gate
+# Next Task — M031 Stage 6B pinned user-local C# compile (requires operator approval)
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 5 DOCKER DIAGNOSIS ACCEPTED; PINNED C# BUILD PROJECT ADDED; NO COMPILATION YET**
+Status: **STAGE 6A DURABLE EVIDENCE ACCEPTED; SDK/DEPENDENCY DOWNLOADS AND COMPILATION NOT YET AUTHORIZED**
 
-## Responsibility and workflow
+## Responsibilities
 
-**ChatGPT writes and reviews repository source through GitHub; Codex executes and validates.** Codex may edit source only when a genuinely executed test/build produces a concrete error, and then only the smallest necessary correction with its diff reported. No proactive source redesign in Codex.
+ChatGPT authors/reviews source and documentation via GitHub. Codex runs user-approved workstation checks. Codex only edits code if an actually executed test/build raises a concrete error and the smallest change is required; preserve output and report any changes/diffs. Never use `local-control`.
 
-Read `docs/milestones/031-stage5-runtime-diagnostics.md`, `docs/milestones/031-stage4-validation.md`, `docs/BACKTEST_SEMANTICS.md` and `lean/M031/README.md`.
+## Completed Stage 6A
 
-## Verified Stage 5 blocker
+- Python reference saved privately and persistently in `/home/joel/.local/share/mamba2/evidence/m031-2026-09-10/` (ext4, `joel:joel`, directory `0700`, files `0600`), byte-identical to original `/tmp` artifacts.
+- SHA-256: `input_manifest.json` `1c448f2bf4066f4a79f75823c429db8db63739d143abb30afd1d4ad815073b92`; `indicator_trace.jsonl` `cd810ce1bdf4fc4aacd74db522b699a24c8c7061a71f0f553951150fa785ad58`; `events.jsonl` `a1a6227badaf85b5302f1b3a2ab0fb319dda87d62534b85037493f9eee16d37a`; `summary.json` `fc07f1f4b0eb3cb51ddcf0c470bce50dadd0c1ad6fe6f746222a374b00b9140f`.
+- No SDK, NuGet, C# compilation, LEAN, Docker provisioning, backtest, MT5, broker or source mutation occurred.
 
-- Rootful Docker daemon active, normal socket `/var/run/docker.sock` owned `root:docker` with mode 660; local user not in `docker` group; Docker client permission denied. Rootless context not present.
-- `lean`, `dotnet`, `csc`, `mcs` absent; no actual C# compilation happened.
-- **Do not add user to `docker` group automatically**: official Docker docs state it grants root-level privileges. Operator-reviewed one-off Docker access or separately provisioned rootless daemon require approval.
+See `docs/milestones/031-stage6a-durable-evidence-and-sdk-plan.md`, `lean/M031/README.md`, `docs/BACKTEST_SEMANTICS.md`.
 
-## Reference evidence — must persist
+## Chosen smaller compile-only path
 
-`/tmp/mamba2-m031-baseline-authorized/` (byte-identical preserved copy `/tmp/mamba2-m031-baseline-authorized-evidence/`) is tmpfs with 10-day cleanup; not durable.
+User lacks Docker socket access because `/var/run/docker.sock` is owned by root:docker. Docker daemon is active; no need to start/reinstall it or grant persistent docker-group privileges. To validate C# types, a **user-scoped, non-admin SDK archive** is sufficient and avoids the Docker permission issue.
 
-| File | Bytes | SHA-256 |
-| --- | ---: | --- |
-| `input_manifest.json` | 1624 | `1c448f2bf4066f4a79f75823c429db8db63739d143abb30afd1d4ad815073b92` |
-| `indicator_trace.jsonl` | 666374 | `cd810ce1bdf4fc4aacd74db522b699a24c8c7061a71f0f553951150fa785ad58` |
-| `events.jsonl` | 301499 | `a1a6227badaf85b5302f1b3a2ab0fb319dda87d62534b85037493f9eee16d37a` |
-| `summary.json` | 646 | `fc07f1f4b0eb3cb51ddcf0c470bce50dadd0c1ad6fe6f746222a374b00b9140f` |
+ChatGPT added `lean/M031/global.json` pinning exact .NET SDK **10.0.404** and a static contract test; `lean/M031/M031.csproj` already pins `QuantConnect.Algorithm` NuGet **2.5.18248**, `net10.0` and compile-only two source files.
 
-## Next bounded Codex task — Stage 6A evidence durability, no network
+Microsoft official SDK 10.0.404 Linux x64 artifact:
+- URL: `https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.404/dotnet-sdk-10.0.404-linux-x64.tar.gz`
+- SHA-512: `577d0eb17fec33d029104c5c63a1ab0accc3e28776274abef2218dbac5af18d2109b5406d26b31d76f5c245215e3ba0926a94c20246c672c41847c9e1eb1dc50`
+- Official release metadata: `https://builds.dotnet.microsoft.com/dotnet/release-metadata/10.0/releases.json`
+- NuGet project dependency: `https://www.nuget.org/packages/QuantConnect.Algorithm/2.5.18248`
 
-1. Verify clean synchronized branch; read `AGENTS.md`, this task and Stage 5 evidence doc.
-2. Check existing local original/preserved artifact paths and hashes again. **Copy** exactly the four preserved reference files to a new user-owned durable local directory outside the Git working tree, proposed `/home/joel/.local/share/mamba2/evidence/m031-2026-09-10/`, but STOP and report if this destination already exists, is a symlink, is not user-controlled or would overwrite any file. Do not delete, alter or rename source `/tmp` files. Apply owner-only directory permissions if creating a new private destination.
-3. Verify file sizes and SHA-256 against the table; show destination and disk/filesystem type and return exact matches. No market replay or strategy execution.
-4. Review source-only `lean/M031/M031.csproj` and its pinned `QuantConnect.Algorithm` dependency v`2.5.18248`, target `net10.0`. Run only the lightweight synthetic/source contract tests and syntax checks if helpful; no attempts to compile without a runtime.
-5. Return the precise *future approval request* for a one-off .NET 10 SDK container build: official image digest/architecture to be independently resolved, operator-controlled Docker access (or rootless), disk space, separate initial network-enabled SDK/NuGet download/restore with lockfile hashes, then no-network compile of scratch copies of the 2 C# files and project. No assumption that the full `quantconnect/lean` engine image is necessary for a compile-only step.
-6. Stop. Do not execute Docker setup, image pull, NuGet restore, C# compilation, LEAN engine, backtest or native MT5. Operator approval remains outstanding for those.
+## Stage 6B — wait for explicit user authorization for these *specific* operations
 
-## Later separately approved Stage 6B — actual C# compile-only
+Request approval for: (a) network download of that exact official SDK archive into a fresh user-owned toolchain directory, followed by SHA-512 check **before extraction**, (b) user-owned isolated NuGet cache and a **network-enabled** `dotnet restore` for the exact pinned project, and (c) local compile-only `dotnet build --no-restore` in a new scratch copy. **No sudo/Docker/socket/group changes**. No original repo/source or evidence mutation.
 
-- Rootless Docker or one-off operator-reviewed Docker access; **no persistent docker group membership by default**.
-- Resolve/pin official Microsoft .NET 10 SDK **immutable digest**, separate download approval. `QuantConnect.Algorithm` v`2.5.18248` pinned; NuGet dependency restore may require a controlled network-enabled phase before final `--network none` build. Record lockfile.
-- Mount repository original sources read-only, mount only a fresh staging/output directory writable, no original Wine/MT5 profiles, no `/var/run/docker.sock` inside container, use unprivileged user, drop capabilities, limit CPU/memory.
-- Compile project only; no LEAN engine run/orders. Compiler errors go back to ChatGPT (Codex only minimal fixes on real compilation errors).
-- After successful build, separately authorize a single independent **observation-only** LEAN engine candidate comparison on canonical sealed M1/M1 Ask/direct M5 and full first-source warm-up. Mass Python backtesting and tuning blocked until independent per-boundary signal and execution-model parity.
+Once authorized, Codex should:
 
-## Prohibitions for 6A
+1. Verify branch sync, clean tree, `uname -s` = Linux, `uname -m` = x86_64, and source versions. Abort on other platform/arch; don't reuse this x64 hash.
+2. Choose fresh private paths outside Git, e.g. `/home/joel/.local/share/mamba2/toolchains/dotnet-10.0.404/` for SDK, `/home/joel/.local/share/mamba2/build/m031-stage6b/` for scratch source/build, and a dedicated user-owned download folder. Abort if these paths exist, are symlinks, are unsafe, or risk overwriting anything.
+3. Download **only** the official pinned SDK tarball over HTTPS; check SHA-512 against the complete checksum above, then extract as an unprivileged user. Verify `dotnet --version` = `10.0.404`. Do not pipe downloaded shell scripts to Bash.
+4. Copy `lean/M031/global.json`, `M031.csproj`, `M031FrozenData.cs` and `M031FrozenBaselineAlgorithm.cs` to fresh scratch. Do not load trading CSV data: none is necessary for compilation. Disable .NET telemetry and first-time experience, use a dedicated private NuGet cache/home.
+5. **Network-enabled phase, distinctly labeled:** `dotnet restore M031.csproj --source https://api.nuget.org/v3/index.json --use-lock-file`. Record complete resolved transitive dependency versions and `packages.lock.json` SHA-256. If restore fails or finds unexpected source/package issues, report exact error; do not expand network sources or privileges.
+6. **No-restore compile phase:** `dotnet build M031.csproj -c Release --no-restore`. Do not claim OS network isolation unless actually enforced; `--no-restore` only forbids implicit restore. Record errors/warnings, generated assembly SHA-256, SDK and package metadata. No executable LEAN algorithm invocation is allowed.
+7. If errors, report full compiler diagnostics to ChatGPT for source corrections; Codex may only implement a minimal direct fix after an actual compilation error, and must report exact diff and not alter trading semantics. Keep repo clean.
+8. Stop after compilation. No independent historical LEAN run is authorized by this compile-only approval.
 
-No `sudo`/root actions, service starts, group/user changes, Docker pulls, package downloads/installation, C# build, LEAN execution, Python historical rerun, MT5/Wine/Strategy Tester, broker access/trading, data mutation, force-push/reset or local-control.
+## Still blocked / separate authorization
+
+An independently running LEAN engine needs a later runtime decision (rootless/user access or cloud). First stage is observation-only **candidate/indicator parity**, not trades: 1,440 UTC boundaries, 59 raw BUY/SELL candidates, direct canonical M1/M5, full warm-up, exact per-boundary signal/reason and numerical tolerance. Actual Python `SIGNAL`, fills, ATR SLTP/exit, economics and mass tuning remain blocked until separately modeled/tested. Original MT5 clock/tick parity remains unresolved.
+
+## Prohibited
+
+No Docker access escalation, group or service changes, `sudo`, LEAN engine runs, historical Python baseline rerun, Wine/MT5/Strategy Tester, broker access, order placement, optimization, mass testing, source dataset or preserved evidence edits, force-push/reset, local-control or unreviewed package download source.
