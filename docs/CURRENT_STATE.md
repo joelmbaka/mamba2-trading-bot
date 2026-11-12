@@ -993,3 +993,34 @@ once the isolated Wine executable, prefix and bridge interpreter have
 been located or provisioned in a separate environment. No broker
 initialization, account data, market quotes, credentials, source downloads,
 strategy signals, paper decisions, trading orders or scheduling occurred.
+
+## 2026-11-12 — Stage 3B isolated runtime LOCATED; Python bridge missing
+
+Operator reconciled the local and remote `prospective-paper-recovery`
+history without reset/force-push, resulting in merge `3fda38c`, clean and
+synced according to operator report. Persistent separate Wine environment
+provided at `~/.local/share/mamba2-mt5-wine1121/`.
+
+Read-only workstation evidence:
+
+- `05ed5e694db0451c1257f18ebf6a1cdc4ec1658c`: isolated
+  `runtime/opt/wine-staging/bin/wine` reports **11.21 Staging**, the
+  `prefix/` Windows product is **Windows 11**, the isolated
+  `app/terminal64.exe` exists. No standard-prefix Windows Python detected.
+- `2537f1f769c182e289921cf74f4fbd491ff91b0d`: bounded traversal
+  examined all **334** isolated-root directories without reaching its limit;
+  found no Windows `python.exe`, `pythonw.exe` or `pypy.exe`.
+
+**The old Wine discovery blocker is resolved.** A separate Windows Python
+bridge is not installed in this isolated environment. Therefore the
+Stage-3B MetaTrader5 **import-only test is still UNEXECUTED**, not failed,
+and broker connectivity remains unproven. No Wine prefix settings,
+system Wine, original `~/.mt5`, project strategy, source records, credentials
+or trading interfaces were modified by either probe.
+
+Next step requires separately approved isolated Windows Python 3.10 +
+compatible MetaTrader5/NumPy provisioning. No unapproved automatic package
+installation, real source/broker data access, broker initialization,
+paper decision or scheduling occurred.
+
+See `docs/NEXT_TASK.md` for exact safe handoff.
