@@ -1,23 +1,28 @@
-# Next Authorized Task — M030 Stage 1J sandbox feasibility test (no MT5)
+# Next Authorized Task — M030 Stage 1K isolated Wine startup compatibility
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1I READ-ONLY ACCEPTED; NETWORK/FILESYSTEM ISOLATION UNPROVEN**
+Status: **STAGE 1J NON-MT5 NETWORK/FILESYSTEM SANDBOX VERIFIED; WINE/MT5 NOT YET VERIFIED**
 
-## Prior evidence
+## Accepted Stage 1J
 
-Stage 1H-II: 49 focused tests, 59 relevant regressions and Python syntax checks passed. Original EURUSD M1/M5 canonical epoch-second CSV formats/hashes verified; independent no-order `M030_ClockBarProbe.mq5` built with 0 MetaEditor errors/warnings in isolated environment. Native terminal cache content, historical server offset and MT5 history portability remain unverified.
+Codex validated clean synchronized source `1e0fcc0825d2780a942db5165ccd850b7fb1784d`; disposable `bwrap --unshare-all --clearenv` harmless Python process had outbound IP attempts fail ENETUNREACH, zero routes, loopback only, inaccessible original home/repo/MT5/prefix, writable scratch only, and clean process/scratch teardown. Original MT5 PID 71219 untouched. See `docs/milestones/030-stage1j-sandbox-verification.md`.
 
-Stage 1I: clean synchronized branch `4e3e818434f80b0bbe64e7c25c7946e665edc69b`; original MT5 terminal PID 71219 remained untouched. Opaque EURUSD cache files exist under a MetaQuotes-Demo base co-located with sensitive server/account state; entire base must never be copied for the diagnostic. Existing user namespace and bwrap/unshare tools may permit offline isolation, but no network blocking has been proven. Full report: `docs/milestones/030-stage1i-history-feasibility.md`.
+This is **not** proof that Wine/MetaEditor/MT5/tester can run inside isolation or that native EURUSD history is portable. Historical server UTC offset and native OHLC remain unverified.
 
-## Proposed next task after explicit Codex instruction
+## Next bounded Codex task after explicit authorization
 
-M030 Stage 1J: prove a **harmless, non-MT5** disposable process can run inside a least-privilege sandbox, with network namespace denying connectivity, host root/home/repo/original terminal inaccessible, and writable paths restricted to an isolated scratch directory. Use already installed tooling, bounded lifetime and clean teardown. No original app/prefix/history modifications or copies. Record exact command(s), exit codes, network/filesystem probe results, remaining processes and limitations; stop on inability to establish controls. No assumed security guarantee from presence of bwrap or unshare alone.
+Stage 1K is an **isolated Wine startup diagnostic only**:
+1. Confirm branch clean/synced and read AGENTS.md, docs/BACKTEST_SEMANTICS.md, NEXT_TASK.md and Stage 1J evidence.
+2. Reuse the established *deny-network and home-inaccessible* bubblewrap pattern, with only necessary read-only system runtime mounts and a newly allocated disposable writable prefix/scratch.
+3. Probe Wine 11.21 availability using `wine --version` inside the sandbox, and if safe, bounded `wineboot -u` in a **brand-new** disposable prefix. Allow only Wine initialization-related activity in that prefix. No MT5/MetaEditor binaries launched.
+4. Verify network routes/interfaces and outbound denial **within this new sandbox**, plus no access to original app/prefix, accounts, repo or user home. Log exact isolation mounts and any Wine-specific dependencies that are required. Stop if Wine requires granting original environment access or network.
+5. After exit, confirm scoped Wine/wineserver processes terminated, scratch removed, original terminal PID 71219 unchanged. Report command, init exit codes, registry presence, logs and unresolved blockers.
 
-## Still prohibited
+## Prohibitions
 
-No Wine, MetaEditor, terminal/Strategy Tester launch, native history copies, account/profile files, market data downloads or imports, broker connection, Python historic economic replay, simulated/real orders, installs, production changes, force-push/reset/new branches or local-control. A proven toy-process sandbox does **not** automatically authorize a copied Wine/MT5 run.
+Do not launch MT5, MetaEditor, Strategy Tester or compile anything; do not copy original MT5 program or cached market history/account profiles/configuration, connect broker, download/import market data, place simulated/live orders, run Python historical backtest, install software, change source, modify original prefix, open new branch, force push or use local-control.
 
-## Following gate
+## Next decision
 
-Review Stage 1J evidence. Only then assess separate, staged native market-data-only provisioning feasibility under a network-denied disposable environment, with explicit authorization. If native history cannot be accessed without account state, remain blocked rather than fabricating offset/parity.
+Only after successful Wine isolation may a **separately authorized** isolated tester application compatibility and market-data-only history feasibility experiment be scoped. Still no permission for strategy/clock-probe execution or broker activity.
