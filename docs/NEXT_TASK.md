@@ -1,28 +1,28 @@
-# Next Authorized Task — M030 Stage 1P Python parity-gap audit (read-only)
+# Next Authorized Task — M030 Stage 1Q deterministic signal/indicator boundary tests
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1O COMPLETED — ACCOUNT-FREE NATIVE MT5 TESTER PATH PAUSED**
+Status: **STAGE 1P READ-ONLY PYTHON AUDIT ACCEPTED; P0 TEST IMPLEMENTATION NEXT**
 
-## Accepted findings
+## Evidence
 
-Codex Stage 1O read-only inspection confirmed repeating the blank, sandboxed MT5 startup under Wine 11.21 produced consistent but unexplained shutdown (outer status 69, internal exit 0, shutdown 10053). The cause is **not established**. No supported standalone agent startup contract, account-free native EURUSD history portability, verified historical server-to-UTC mapping, or native OHLC parity was found. Do not repeat blank terminal attempts or run `metatester64.exe` based on guesses. See `docs/milestones/030-stage1o-stop-standalone.md`.
+Stage 1P Codex found strong existing deterministic coverage for completed-bar semantics, synthetic runner position/pending-order guards, stochastic 21/7/7 arithmetic, EMA/ATR caching, stop/target exits, trailing and M030 schema. Four main gaps remain: real production ten-candle extreme *not fresh crossover*, indicator warm-up/first-source seeding, full M030 lifecycle event ordering and real strategy + runner position blocking. Full ranked audit: `docs/milestones/030-stage1p-python-gap-audit.md`.
 
-Prior independent no-order MQL5 decision and clock probes compiled; focused Python/synthetic tests passed. Compilations and synthetic tests are **not** independent native MT5 parity or trading-profit evidence.
+The original standalone MT5 account-free launcher/tester attempt remains stopped under `docs/milestones/030-stage1o-stop-standalone.md`. No native historical clock, native OHLC/ticks or broker execution parity has been established.
 
-## Next bounded Codex task — read-only Python correctness inventory
+## Next task — ChatGPT GitHub source only: Stage 1Q
 
-1. Verify clean synchronized `scalping-recovery`, read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, this file and the Stage 1O stop decision.
-2. Read existing Python production strategy, stochastic 21/7/7, EMA7 and ATR14 code, replay feed, position manager, broker, backtest runner, and M030 event signal observer.
-3. Inventory currently asserted **synthetic** behavior and gaps for M5/M1 completed-bar eligibility, recent-ten-K extremes (not crossover), EMA warm-up, ATR14 exact TR, candidate action vs account/position-blocking order, SL/TP attachment timing, trailing/closure lifecycle, price-source assumptions and event ordering.
-4. Create a prioritized **read-only report** recommending narrowly scoped synthetic unit/property tests or source-only corrections, with exact file/line references where available. Identify invariants that cannot be proven without native MT5 observations or broker costs/tick data. Avoid claiming reproducibility/profitability from tests.
-5. Do not run historical price replay, Strategy Tester, Wine/MetaEditor/MT5, order simulations, broker connections, or downloads. Do not change source/files or branch; return findings for GitHub-only fixes after separate review.
+1. Add **synthetic tests** calling actual production strategy or `m030_signal_observer.py` for BUY/SELL using a full ten-candle M1 stochastic K sequence. An earlier oversold/overbought K plus valid latest K/D, M5 direction and EMA/candle filter must emit ENTRY without requiring a fresh K/D crossover. Change only earlier extreme and assert no signal.
+2. Explicitly test Stochastic(21,7,7) public-API 34-row insufficient-history and 35-row first eligible boundary; decision cannot use pre-warm-up K/D.
+3. Replace tautological short-prefix EMA test with an intentionally discriminating first-source/short-source vector and assert a nonzero divergence while correctly seeded recurrence equals `ewm(adjust=False)`.
+4. Explicitly test ATR14 14 vs 15 completed M5-bar availability and a gap-sensitive hand-computed TR mean.
+5. Do **not** modify frozen production strategy, settings, dataset, historical timestamp mapping or trading execution code just to satisfy a test. If expected semantics conflict with actual implementation, record the precise discrepancy for review rather than silently changing behavior.
+6. After GitHub source-only implementation, hand to Codex for focused synthetic tests, regressions and syntax/static analysis. No MT5/Wine/Tester run.
 
-## Prohibited pending new evidence
+## Subsequent task
 
-No more blank-terminal retries or undocumented bare tester starts; no copying account-specific MT5 history/config, broker login, network history synchronization, simulated/live orders, strategy/economic optimization, installs, reset/force-push/branch creation or local-control.
+Stage 1R (separate gate): M030 lifecycle event ordering and production strategy position-blocking integration, only after Stage 1Q validation.
 
-## Future split
+## Prohibited
 
-- **Track A**: strengthen deterministic Python strategy correctness and execution state invariants, starting read-only.
-- **Track B**: native MT5 time/bar/tick parity remains explicitly blocked until a genuinely new, vetted data interface or privacy-preserving independent native export is available.
+No historical Python economic backtest, Strategy Tester/Wine/MT5, order execution even simulated outside bounded synthetic mocks, broker connection, data downloads, optimization, production strategy edits without review, native account/history copies, reset/force-push/branch creation or local-control.
