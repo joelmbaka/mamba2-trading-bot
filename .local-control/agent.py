@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import hashlib
 import json
 import os
 import socket
@@ -311,10 +312,52 @@ def git_switch_branch(target, fetch=True):
     return switch_result(True, target, before_branch, after_branch, before, after, commands)
 
 
+
+def audit_m028_record():
+    """Read only the existence and non-sensitive metadata of the October paper record."""
+    record_path = Path.home() / ".local/share/mamba2-forward-paper/2026-10-decision.json"
+    data = {
+        "record_exists": record_path.is_file(),
+        "record_directory_exists": record_path.parent.is_dir(),
+        "read_only": True,
+        "broker_initialized": False,
+        "order_api_called": False,
+        "strategy_economics_computed": False,
+    }
+    if not record_path.is_file():
+        return {"ok": True, "action": "m028_record_audit", "data": data}
+    raw = record_path.read_bytes()
+    data["record_sha256"] = hashlib.sha256(raw).hexdigest()
+    data["record_bytes"] = len(raw)
+    try:
+        record = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        data["parse_error"] = type(exc).__name__
+        return {"ok": False, "action": "m028_record_audit", "data": data}
+    if not isinstance(record, dict):
+        data["parse_error"] = "record_not_object"
+        return {"ok": False, "action": "m028_record_audit", "data": data}
+    plan = record.get("plan") or {}
+    costs = plan.get("cost_evidence") or {}
+    data.update({
+        "decision_id": record.get("decision_id"),
+        "scheduled_decision_utc": record.get("scheduled_decision_utc"),
+        "created_at_utc": record.get("created_at_utc"),
+        "feature_sha": record.get("feature_sha"),
+        "plan_status": plan.get("status"),
+        "source_gate_pass": record.get("source_gate_pass"),
+        "holding_period_return_exists": record.get("holding_period_return") is not None,
+        "net_pnl_exists": costs.get("net_pnl") is not None,
+    })
+    return {"ok": True, "action": "m028_record_audit", "data": data}
+
+
 def execute(command):
     action = command.get("action")
     if action == "status":
         return {"ok": True, "action": action, "data": git_status()}
+    if action == "m028_record_audit":
+        return audit_m028_record()
     if action == "sync":
         return git_sync()
     if action == "switch_branch":
