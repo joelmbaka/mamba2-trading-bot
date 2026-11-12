@@ -1024,3 +1024,12 @@ installation, real source/broker data access, broker initialization,
 paper decision or scheduling occurred.
 
 See `docs/NEXT_TASK.md` for exact safe handoff.
+
+
+## 2026-11-12 — Scalping recovery reauthorization
+
+Following operator-directed branch consolidation, validated M020–M029 and M023/M024 research history was merged to `main` at `954a90124d1355e865f05fd05d394d99d8944b56`. Operator reports successful removal of 15 redundant local/remote feature branches and a clean synchronized `main`. The active `scalping-recovery` branch was created from `main`; only `main`, `scalping-recovery`, `local-control` and `local-control-results` should exist on the remote.
+
+The operator explicitly restored M5-direction/M1-entry intraday scalping as the **primary research direction** and approved independent Python-versus-MT5 visual backtest verification before further strategy optimization. M025–M029 monthly strategy research is historical/inactive for this line of work; its approved evidence is preserved, not reinterpreted as a validated live strategy. The previously scheduled monthly paper process is not authorized for activation.
+
+`docs/NEXT_TASK.md` now supersedes prior M029 Stage-3B operational handoff **for active development**. The next authorized work is a read-only audit and parity design. No trading strategy code, production parameters, real MT5 orders, account access, or broker connections were changed by this reauthorization.
