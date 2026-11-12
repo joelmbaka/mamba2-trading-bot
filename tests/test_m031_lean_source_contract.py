@@ -57,6 +57,7 @@ def test_exact_one_day_boundary_and_full_prefix_notional_guard():
     assert "SealedStart.AddMinutes(1)" in source
     assert "_lastBoundary != DateTime.MinValue && boundary != _lastBoundary.AddMinutes(1)" in source
     assert "canonical_m5_direct = true" in source
+    assert "_m5Stochastic.LastEndTime.Value > boundary" in source
 
 
 def test_incremental_indicators_and_sealed_input_contract():
