@@ -1,33 +1,38 @@
-# Next Task — M031 Stage 0 same-data independent-engine feasibility (read-only)
+# Next Task — M031 Stage 1 frozen input seal and independent adapter design (read-only)
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **M031 PREPARATION ONLY — CROSS-ENGINE REPRODUCTION REQUIRED BEFORE MASS PYTHON BACKTESTS/TUNING**
+Status: **M031 STAGE 0 ACCEPTED; SINGLE-DAY BASELINE AND INDEPENDENT RUN NOT YET EXECUTED**
 
-## Why this task
+## User objective
 
-After Stage 1S concluded that frozen M030 Python deterministic semantics were tested but independent native MT5 parity and economics remained unresolved, the user agreed to study historical performance **only with an explicit independent comparison gate**. The same frozen EURUSD Python-tested period must be reproduced in MT5 **or** a genuinely independent web-based engine **before** any mass Python evaluation or strategy fine-tuning.
+Prove same-data independent **MT5 or web-based backtesting engine** decision and trade parity for the *identical Python-tested EURUSD period* before mass Python historical tests or parameter tuning. Match source timestamps, source OHLC, full causal warmup, indicator outputs and every eligible BUY/SELL/NONE decision—not merely overall profit statistics. Trade/fill and economic parity are separate gates because feed spread/tick and engine fill assumptions differ.
 
-See: `docs/milestones/031-independent-engine-parity-gate.md`. This is **not** authorization to execute a backtest, connect a broker, download/upload data or alter the original MT5 environment.
+Read `docs/milestones/031-independent-engine-parity-gate.md` and `docs/milestones/031-stage0-independent-tester-feasibility.md` for exact provenance and contract.
 
-## Initial platform findings requiring scrutiny
+## Stage 0 accepted findings
 
-Official MetaTrader 5 documentation supports custom financial symbols built from imported M1 rates/ticks and tested using Strategy Tester; higher timeframes are normally generated from imported M1. That is a *documented feature*, not proof a safe standalone account-free terminal can start under Wine. The previously tested isolated blank MT5 build 6316 exited; repeated startup attempts and undocumented standalone tester invocation remain prohibited under M030 Stage 1O.
+- Frozen UTC period `[2026-09-10,2026-09-11)`: 1,440 EURUSD M1 bars, 288 M5 bars, all 288 M1 5-bar groups complete. **288/288 derived M5 OHLC bars matched native-source M5 OHLC on this day**.
+- All 288 M5 tick-volume and spread fields **differ** between derived M5 and canonical M5 records. Do **not** claim full-record, native spread or execution equivalence.
+- Pinned original canonical source `backtest_data/m022-history-inventory-tick-m1-v2/`: manifest SHA-256 `cfaf3d130eb8fc2abf2e467e43cc5bba735df711ebb8bc9766e865713ba4065b`; M1 `19a3a92141989e9d1ed174447e43ada627c13ed8b3cef39d800a07d587fdc2fe`; M1 Ask `7cca2326ead010df7dcc38fdbd787ec051804ce7145b4645325ea9f67ca0548c`; M5 `c8dc043c301531b11452a95273bd2fceec8f7ca933d99c5d7338d3f4ab2bb2e9`. Existing exporter’s integer Unix-second UTC interpretation is **not independent MT5 server-clock verification**.
+- MT5 custom-symbol import and Tester are supported platform features but currently existing isolated Wine/MT5 starter is not stable; no account-free safe tester workflow proven. Do not retry blank startup or undocumented tester agent.
+- Local `lean`/`dotnet` missing; Docker available, no LEAN image, no local adapter. LEAN provisioning, image pull, cloud uploads and runtime execution require separate approval.
 
-QuantConnect LEAN cloud provides a possible second execution engine with user-defined external datasets, but its object storage and licensing restrictions, CSV OHLC loader and export limitations require feasibility review before any sign-up, paid tier, upload or algorithm execution. TradingView provider data is not an independent *same-input* comparison unless all source M1 and M5 rows can be matched.
+## Next bounded Codex task — Stage 1 read-only input sealing
 
-## Next bounded Codex read-only task — M031 Stage 0
+1. Verify clean synchronized branch. Read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, this file and both M031 milestones.
+2. Read-only audit source manifests/hash provenance, M1/M5/Ask day records, **complete actual indicator warmup prefixes** and whether M1-derived M5 OHLC equals independently exported M5 OHLC for all needed earlier bars (not only 288 sample bars). Detect mismatches, missing minutes, spread/Ask assumptions, and source ambiguity. Do not execute any trading replay.
+3. Determine exactly which bar series and time fields a LEAN independently implemented strategy must consume; avoid implicit LEAN M5 consolidation where input history mismatches. Pin full-prefix indicator seeding, trading-session boundary behavior, UTC timestamp/source-open event keys, no fresh crossover, deferred initial SLTP, blocked candidate observability and tester-mode tick/cost caveats.
+4. Produce a *reproducible but unexecuted* single-day Python baseline command and output manifest contract for per-boundary indicators, signal reasons, order/SLTP/exit events, hashes, and no portfolio optimization. Identify any code instrumentation needed and propose reviewed source-only changes, without editing.
+5. Produce a minimal LEAN Docker or cloud adapter plan with precise runtime dependencies, source-code independence from Python Mamba2 strategy, CSV mount/privacy, expected outputs and package/network requirements. Distinguish local Docker image pulls from cloud uploading and cost commitments; neither is approved by this read-only task.
+6. Report pass/fail dataset seal, blockers and the smallest separately approved bounded Python baseline + independent-engine provisioning gate.
 
-1. Verify clean synchronized `scalping-recovery`. Read `AGENTS.md`, `docs/NEXT_TASK.md`, `docs/BACKTEST_SEMANTICS.md`, `docs/milestones/030-stage1s-readiness-decision.md` and `docs/milestones/031-independent-engine-parity-gate.md`.
-2. Inspect frozen source manifests and checksum evidence, timestamps and M1/M5 normalization/derived M5 behavior for the UTC interval `2026-09-10 00:00` to `2026-09-11 00:00` plus full warm-up. Determine whether MT5 M1-to-M5 aggregation can match the frozen independent M5 dataset; do **not** assume equality. Read-only inspection, no backtest/replay.
-3. Inspect existing M030 observer/exporter, MQL5 probes, entry/position semantics and trace schema. Design a canonical same-input comparison of indicator outputs, per-M1 candidate decisions, submissions/fills/SLTP/exits and source bar times, with explicit tolerances and a STOP on unexplained mismatches.
-4. Evaluate documentation evidence for MT5 custom symbol import/tester in a **newly isolated, no-account, no-network** hypothetical runtime and for a QuantConnect custom-CSV cloud project. Distinguish documented capabilities from locally verified startup viability; spell out data input/output, costs, privacy, source time zone, synthetic ticks and spread/slippage limitations.
-5. Propose exactly one evidence-based next authorization gate: a bounded Python frozen-day baseline, if inputs/data lineage verified, and an independent no-order decision test design, or formal stop if impossible. No mass backtests or optimization before approved independent comparison.
+## Prohibited for this stage
 
-## Prohibited
+No tests or historical economic replay, no Wine/MT5/MetaEditor/Strategy Tester starts, undocumented metatester invocations, broker sessions, market-data downloads, Docker pulls/installations, cloud uploads, live/paper/simulated orders, parameter optimization, repo edits, reset/force-push or local-control.
 
-Do not run tests, Python historical performance simulations, Wine/MT5/MetaEditor/Strategy Tester, undocumented tester agents, connect any broker, copy original terminal credentials/profiles/history, import/alter data, upload sensitive data to cloud, install packages, run real/paper orders, optimize/tune, edit repository locally, reset/force-push/create branch or use local-control. Read-only audit only.
+## Subsequent explicit gates
 
-## M030 remains paused
+A single **frozen-day Python baseline** may be authorized once data seal passes; a LEAN custom data runtime or supported MT5 custom-symbol tester requires separately reviewed privacy/technical approval. **Mass Python tests/tuning only after cross-engine matching eligible-boundary decisions and execution assumptions**, with broker economics considered separately.
 
-Python deterministic synthetic strategy/indicator/event semantics have passed focused tests; native MetaQuotes-Demo raw timestamp, independent M1/M5 OHLC and tick identity, execution parity and profitability are **unproven**. Imported custom-symbol data can test platform semantics on *our* data but **cannot independently certify original broker historical data provenance**.
+M030 remains: Python synthetic semantics validated; independent native MT5 market-data/clock and broker execution parity unverified.
