@@ -104,3 +104,14 @@ def test_pinned_standalone_csproj_for_compilation_only():
     assert packages == {"QuantConnect.Algorithm": "2.5.18248"}
     included = {elem.attrib["Include"] for elem in root.iter("Compile")}
     assert included == {"M031FrozenData.cs", "M031FrozenBaselineAlgorithm.cs"}
+
+
+def test_local_dotnet_sdk_is_exactly_pinned():
+    import json
+
+    sdk = json.loads((LEAN / "global.json").read_text(encoding="utf-8"))["sdk"]
+    assert sdk == {
+        "version": "10.0.404",
+        "rollForward": "disable",
+        "allowPrerelease": False,
+    }
