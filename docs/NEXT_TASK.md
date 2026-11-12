@@ -1,32 +1,37 @@
-# Next Authorized Task — M030 Stage 1A Parity Harness
+# Next Authorized Task — M030 Stage 1B-I isolated compilation preflight
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1A SOURCE IMPLEMENTATION AUTHORIZED — LOCAL EXECUTION / BACKTEST NOT AUTHORIZED**
+Status: **PYTHON VALIDATION PASSED; MQL5 COMPILATION BLOCKED; ISOLATION PREFLIGHT ONLY**
 
-## Current boundary
+## Evidence
 
-Stage 0 source audit and Codex read-only runtime preflight completed. The operator's latest handoff selects the next implementation milestone after Stage 0 and prohibits automatic MT5 backtests. Implement **Stage 1A independent Python/MQL5 parity harness** under `docs/milestones/030-stage1a-parity-harness.md`, preserving `docs/milestones/030-scalping-parity-audit.md` as the Stage 0 record.
+Codex validated source commit `07487976dd76cb03fd5022503810d2d85800a4f1` with a clean synchronized working tree. Focused M030 Python tests: **10 passed** using `PYTHONPATH=. ./.venv/bin/pytest tests/test_m030_parity.py -q`. Relevant regression tests: **45 passed**. Python `py_compile` passed. The standalone MQL5 decision probe was statically inspected and found to contain no trade/order/broker initialization calls. MetaEditor compilation was not attempted because the existing MT5 terminal was running from the same Wine environment. See `docs/milestones/030-stage1b-validation.md`.
 
-Start at reported clean, synchronized `scalping-recovery` commit `c36296c3fe3c74d82e50d30164595f78e9351bee`, but check the GitHub branch head before every write and do not overwrite newer changes. No new branch.
+## Current objective
 
-## Work now permitted for ChatGPT on GitHub
+Plan a **separately isolated MetaEditor compilation context**, without changing running MT5 state. Codex may inspect read-only paths, process/environment identity, symlinks, destination separation, and required compilation inputs, then report an exact safe isolation plan.
 
-- Implement opt-in Python event ledger, independent MQL5 test-only EA, versioned manifest/schema, first-divergence comparator, synthetic fixtures and test cases, Codex execution guide.
-- Preserve original M5/M1 signal, 21/7/7 stochastic, EMA7, M5 ATR14 (simple TR average), 0.1 lot, SL1×/TP2×ATR and current stop/trailing timing; no optional M020-D filter applied to this frozen baseline.
-- Freeze EURUSD 2026-09-10 UTC as initial sample, with pre-roll. Do not silently substitute a date based on economics.
-- Prefer isolated instrumentation rather than intrusive refactors; economic outputs must be unchanged when tracing is disabled.
-- Document all assumptions and outstanding availability/precision issues.
+The executable tools are present at:
+- `/home/joel/.local/share/mamba2-mt5-wine1121/runtime/opt/wine-staging/bin/wine`
+- `/home/joel/.local/share/mamba2-mt5-wine1121/app/MetaEditor64.exe`
+- `/home/joel/.local/share/mamba2-mt5-wine1121/app/terminal64.exe`
+- `/home/joel/.local/share/mamba2-mt5-wine1121/app/metatester64.exe`
 
-## Still not authorized
+An isolated Wine prefix **alone is not sufficient** if compiler/application/common-data paths still overlap the original MT5 installation. The design must isolate compiler input/output files, Wine prefix, platform data folders and terminal common files, and avoid copying private credentials/accounts. Do not launch MetaEditor or compile in the original environment.
 
-- Any local commands, tests, MetaEditor compile, MT5 GUI operations or Python/MT5 backtest without a separately scoped Codex instruction and execution authorization.
-- Any broker login/init, real or demo account trading, external history fetch, installs, strategy optimization, changes to production strategy semantics or monthly paper scheduling.
-- Any MQL5 simulated order outside isolated Strategy Tester. Test EA default must be no-order, fail-closed outside tester.
+## Allowed now
 
-## Next gate
+- ChatGPT: inspect GitHub source and documentation, document source-level defects, and prepare GitHub-only safe fixes without changing trading semantics.
+- Codex upon explicit scope: **read-only** workstation isolation feasibility and exact-path inventory. No executable compilation, installation, file copying or terminal GUI interactions are authorized by this document.
 
-After source implementation, request Codex Stage 1B **compile + synthetic validation + read-only tester readiness**, with exact paths, build evidence, tests and blockers. Only after reviewing Stage 1B may the operator authorize Stage 2 one-day historical Python replay and isolated MT5 visual Strategy Tester simulated orders.
+## Gate following preflight
+
+After an isolation plan is reviewed, a separately scoped Codex step can be authorized to prepare a disposable environment, compile the tester-only no-order EA and report build/error evidence. Only after that may data provenance, independent decision comparison and a later Strategy Tester execution be considered.
+
+## Prohibited
+
+No Python historical replay, MT5 Strategy Tester run, broker initialization/login, live or demo trading, simulated orders, market-data download, package installation, strategy optimization, resuming monthly paper schedules, use of `local-control` or `local-control-results`, force-push, reset/rebase/stash, or feature-branch proliferation.
 
 ## References
 
@@ -35,3 +40,5 @@ After source implementation, request Codex Stage 1B **compile + synthetic valida
 - `docs/WORKFLOW.md`
 - `docs/milestones/030-scalping-parity-audit.md`
 - `docs/milestones/030-stage1a-parity-harness.md`
+- `docs/milestones/030-stage1a-source-checkpoint.md`
+- `docs/milestones/030-stage1b-validation.md`
