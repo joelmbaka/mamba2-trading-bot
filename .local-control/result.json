@@ -1,28 +1,17 @@
 {
   "version": 1,
-  "command_id": "mamba2-m028-stage3-first-decision-time-gate-v1",
-  "completed_at": "2026-10-01T12:32:22.138561+00:00",
-  "ok": false,
-  "action": "m028_stage3_first_decision",
+  "command_id": "mamba2-20261112-readonly-status-v1",
+  "completed_at": "2026-11-12T07:33:54.397836+00:00",
+  "ok": true,
+  "action": "status",
   "data": {
-    "ok": false,
-    "feature_branch": "execution-realism",
-    "feature_sha": "499e088e8d77bdf7fff81f34b549ae93c5c7e8be",
-    "reason": "TIME_GATE_NOT_OPEN",
-    "scheduled_decision_utc": "2026-10-07T12:00:00Z",
-    "current_time_utc": "2026-10-01T12:32:18.456505Z",
-    "safety": {
-      "live_source_signal_computed": false,
-      "target_side_computed": false,
-      "target_lots_computed": false,
-      "forward_strategy_outcome_computed": false,
-      "real_order_api_called": false,
-      "order_check_called": false,
-      "position_change_api_called": false,
-      "trade_history_read": false,
-      "balance_or_equity_returned": false,
-      "m027_economics_rerun": false,
-      "m021_post_cutoff_outcomes_used": false
-    }
+    "hostname": "joel-OptiPlex-7080",
+    "repo": "/home/joel/Dev/mamba2-trading-bot",
+    "branch": "execution-realism",
+    "head": "270d7c5e0e04b45ec2ce32b108cd2e7d334cdb3b",
+    "clean": true,
+    "changed_paths": [],
+    "divergence": "0\t0",
+    "time": "2026-11-12T07:33:49.993483+00:00"
   }
 }
