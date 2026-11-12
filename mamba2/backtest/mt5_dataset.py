@@ -218,6 +218,100 @@ def _normalize_rates(
     return canonical
 
 
+def _normalize_tick_bid_ask_bars(
+    ticks: Any,
+    *,
+    start_utc: pd.Timestamp,
+    end_utc: pd.Timestamp,
+    point: float,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, int | float | None]]:
+    """Aggregate one MT5 tick stream into synchronized Bid/Ask M1 OHLC.
+
+    This is opt-in inventory/research infrastructure. It does not change the
+    default native-M1 exporter path.
+    """
+
+    if ticks is None:
+        raise HistoricalDataError("MT5 returned no tick history object")
+    if point <= 0:
+        raise HistoricalDataError("symbol point size must be positive")
+
+    frame = pd.DataFrame(ticks)
+    if frame.empty:
+        raise HistoricalDataError("MT5 returned no ticks for M1 reconstruction")
+    if "bid" not in frame.columns or "ask" not in frame.columns:
+        raise HistoricalDataError("MT5 ticks are missing bid/ask")
+
+    if "time_msc" in frame.columns:
+        frame["_time"] = pd.to_datetime(frame["time_msc"], unit="ms", utc=True)
+    elif "time" in frame.columns:
+        frame["_time"] = pd.to_datetime(frame["time"], unit="s", utc=True)
+    else:
+        raise HistoricalDataError("MT5 ticks are missing time/time_msc")
+
+    frame["bid"] = pd.to_numeric(frame["bid"], errors="coerce")
+    frame["ask"] = pd.to_numeric(frame["ask"], errors="coerce")
+    frame = frame.loc[
+        (frame["_time"] >= start_utc)
+        & (frame["_time"] < end_utc)
+        & frame["bid"].notna()
+        & frame["ask"].notna()
+        & (frame["bid"] > 0)
+        & (frame["ask"] > 0)
+        & (frame["ask"] >= frame["bid"])
+    ].copy()
+    if frame.empty:
+        raise HistoricalDataError(
+            "no valid synchronized Bid/Ask ticks in requested UTC range"
+        )
+
+    frame["_minute"] = frame["_time"].dt.floor("min")
+    frame["_spread_points"] = (frame["ask"] - frame["bid"]) / point
+
+    grouped = frame.groupby("_minute", sort=True)
+    bid_values = grouped["bid"]
+    ask_values = grouped["ask"]
+    bid = pd.DataFrame(
+        {
+            "open": bid_values.first(),
+            "high": bid_values.max(),
+            "low": bid_values.min(),
+            "close": bid_values.last(),
+            "tick_volume": grouped.size(),
+            "spread": grouped["_spread_points"].last().round().clip(lower=0),
+            "real_volume": 0,
+        }
+    )
+    bid.index.name = "time"
+    ask = pd.DataFrame(
+        {
+            "open": ask_values.first(),
+            "high": ask_values.max(),
+            "low": ask_values.min(),
+            "close": ask_values.last(),
+        }
+    )
+    ask.index.name = "time"
+
+    bid = canonicalize_bars(bid)
+    ask = canonicalize_price_bars(ask)
+    if not bid.index.equals(ask.index):
+        raise HistoricalDataError(
+            "tick-derived Bid/Ask M1 indexes must be identical"
+        )
+
+    spread_points = frame["_spread_points"]
+    quality: dict[str, int | float | None] = {
+        "valid_ticks": int(len(frame)),
+        "covered_m1_rows": int(len(bid)),
+        "missing_m1_rows": 0,
+        "spread_points_min": float(spread_points.min()),
+        "spread_points_max": float(spread_points.max()),
+        "zero_spread_ticks": int((spread_points == 0).sum()),
+    }
+    return bid, ask, quality
+
+
 def _normalize_tick_ask_bars(
     ticks: Any,
     *,
@@ -407,6 +501,7 @@ def export_mt5_dataset(
     history_warmup_count: int = 5000,
     history_sync_wait_seconds: float = 2.0,
     include_tick_ask: bool = False,
+    derive_m1_from_ticks: bool = False,
     tick_chunk_minutes: int = 1440,
     rate_chunk_days: int | None = None,
 ) -> Path:
@@ -423,6 +518,11 @@ def export_mt5_dataset(
         raise ValueError("history_sync_wait_seconds cannot be negative")
     if tick_chunk_minutes < 1:
         raise ValueError("tick_chunk_minutes must be at least 1")
+    if derive_m1_from_ticks and not include_tick_ask:
+        raise ValueError(
+            "derive_m1_from_ticks requires include_tick_ask so Bid/Ask "
+            "come from the same observable tick stream"
+        )
     if rate_chunk_days is not None and rate_chunk_days < 1:
         raise ValueError("rate_chunk_days must be at least 1")
 
@@ -478,36 +578,77 @@ def export_mt5_dataset(
         }
 
         exported_frames: dict[str, pd.DataFrame] = {}
+        derived_ask_frame: pd.DataFrame | None = None
+        derived_tick_quality: dict[str, int | float | None] | None = None
+        derived_tick_sync_retry = False
+
+        if derive_m1_from_ticks:
+            if not hasattr(mt5_module, "copy_ticks_range"):
+                raise RuntimeError(
+                    "MT5 module does not expose copy_ticks_range required "
+                    "for tick-derived M1 history"
+                )
+            if not hasattr(mt5_module, "copy_ticks_from"):
+                raise RuntimeError(
+                    "MT5 module does not expose copy_ticks_from required "
+                    "for tick-history synchronization"
+                )
+            if not hasattr(mt5_module, "COPY_TICKS_ALL"):
+                raise RuntimeError("MT5 module does not expose COPY_TICKS_ALL")
+
+            ticks, derived_tick_sync_retry = _fetch_tick_chunks(
+                mt5_module,
+                symbol=symbol,
+                start_utc=start,
+                end_utc=end,
+                flags=mt5_module.COPY_TICKS_ALL,
+                chunk_minutes=tick_chunk_minutes,
+                warmup_count=history_warmup_count,
+                sync_wait_seconds=history_sync_wait_seconds,
+            )
+            derived_m1, derived_ask_frame, derived_tick_quality = (
+                _normalize_tick_bid_ask_bars(
+                    ticks,
+                    start_utc=start,
+                    end_utc=end,
+                    point=float(info.point),
+                )
+            )
+
         for timeframe in normalized_timeframes:
-            mt5_timeframe = _timeframe_value(mt5_module, timeframe)
-            if rate_chunk_days is None:
-                rates, history_sync_retry = _fetch_rates_with_history_sync(
-                    mt5_module,
-                    symbol=symbol,
-                    mt5_timeframe=mt5_timeframe,
-                    start_utc=start,
-                    end_utc=end,
-                    warmup_count=history_warmup_count,
-                    sync_wait_seconds=history_sync_wait_seconds,
-                )
-                frame = _normalize_rates(
-                    rates,
-                    timeframe=timeframe,
-                    start_utc=start,
-                    end_utc=end,
-                )
+            if timeframe == "M1" and derive_m1_from_ticks:
+                frame = derived_m1
+                history_sync_retry = derived_tick_sync_retry
             else:
-                frame, history_sync_retry = _fetch_rates_in_chunks(
-                    mt5_module,
-                    symbol=symbol,
-                    mt5_timeframe=mt5_timeframe,
-                    timeframe=timeframe,
-                    start_utc=start,
-                    end_utc=end,
-                    chunk_days=rate_chunk_days,
-                    warmup_count=history_warmup_count,
-                    sync_wait_seconds=history_sync_wait_seconds,
-                )
+                mt5_timeframe = _timeframe_value(mt5_module, timeframe)
+                if rate_chunk_days is None:
+                    rates, history_sync_retry = _fetch_rates_with_history_sync(
+                        mt5_module,
+                        symbol=symbol,
+                        mt5_timeframe=mt5_timeframe,
+                        start_utc=start,
+                        end_utc=end,
+                        warmup_count=history_warmup_count,
+                        sync_wait_seconds=history_sync_wait_seconds,
+                    )
+                    frame = _normalize_rates(
+                        rates,
+                        timeframe=timeframe,
+                        start_utc=start,
+                        end_utc=end,
+                    )
+                else:
+                    frame, history_sync_retry = _fetch_rates_in_chunks(
+                        mt5_module,
+                        symbol=symbol,
+                        mt5_timeframe=mt5_timeframe,
+                        timeframe=timeframe,
+                        start_utc=start,
+                        end_utc=end,
+                        chunk_days=rate_chunk_days,
+                        warmup_count=history_warmup_count,
+                        sync_wait_seconds=history_sync_wait_seconds,
+                    )
 
             exported_frames[timeframe] = frame
 
@@ -515,7 +656,7 @@ def export_mt5_dataset(
             path = output / filename
             _write_csv(frame, path)
             minutes = TIMEFRAME_MINUTES[timeframe]
-            symbol_entry["files"][timeframe] = {
+            file_entry = {
                 "path": filename,
                 "sha256": _sha256(path),
                 "rows": int(len(frame)),
@@ -526,6 +667,10 @@ def export_mt5_dataset(
                 ),
                 "history_sync_retry": history_sync_retry,
             }
+            if timeframe == "M1" and derive_m1_from_ticks:
+                file_entry["source"] = "copy_ticks_range_bid_aggregation"
+                file_entry["flags"] = "COPY_TICKS_ALL"
+            symbol_entry["files"][timeframe] = file_entry
 
         if include_tick_ask:
             if not hasattr(mt5_module, "copy_ticks_range"):
@@ -543,22 +688,31 @@ def export_mt5_dataset(
                     "MT5 module does not expose COPY_TICKS_ALL"
                 )
 
-            ticks, tick_sync_retry = _fetch_tick_chunks(
-                mt5_module,
-                symbol=symbol,
-                start_utc=start,
-                end_utc=end,
-                flags=mt5_module.COPY_TICKS_ALL,
-                chunk_minutes=tick_chunk_minutes,
-                warmup_count=history_warmup_count,
-                sync_wait_seconds=history_sync_wait_seconds,
-            )
-            ask_frame, tick_quality = _normalize_tick_ask_bars(
-                ticks,
-                start_utc=start,
-                end_utc=end,
-                m1_index=exported_frames["M1"].index,
-            )
+            if derive_m1_from_ticks:
+                if derived_ask_frame is None or derived_tick_quality is None:
+                    raise HistoricalDataError(
+                        "tick-derived M1 state was not initialized"
+                    )
+                ask_frame = derived_ask_frame
+                tick_quality = dict(derived_tick_quality)
+                tick_sync_retry = derived_tick_sync_retry
+            else:
+                ticks, tick_sync_retry = _fetch_tick_chunks(
+                    mt5_module,
+                    symbol=symbol,
+                    start_utc=start,
+                    end_utc=end,
+                    flags=mt5_module.COPY_TICKS_ALL,
+                    chunk_minutes=tick_chunk_minutes,
+                    warmup_count=history_warmup_count,
+                    sync_wait_seconds=history_sync_wait_seconds,
+                )
+                ask_frame, tick_quality = _normalize_tick_ask_bars(
+                    ticks,
+                    start_utc=start,
+                    end_utc=end,
+                    m1_index=exported_frames["M1"].index,
+                )
 
             point = float(info.point)
             spread_min_price = tick_quality.pop("_spread_price_min", None)
@@ -791,6 +945,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="Export tick-derived M1 Ask OHLC for spread-accurate replay.",
     )
+    parser.add_argument(
+        "--derive-m1-from-ticks",
+        action="store_true",
+        help=(
+            "Opt in to reconstruct synchronized Bid/Ask M1 from COPY_TICKS_ALL. "
+            "Requires --include-tick-ask and leaves the default native-M1 path "
+            "unchanged."
+        ),
+    )
     parser.add_argument("--tick-chunk-minutes", type=int, default=1440)
     parser.add_argument(
         "--rate-chunk-days",
@@ -827,6 +990,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             history_warmup_count=args.history_warmup_count,
             history_sync_wait_seconds=args.history_sync_wait_seconds,
             include_tick_ask=args.include_tick_ask,
+            derive_m1_from_ticks=args.derive_m1_from_ticks,
             tick_chunk_minutes=args.tick_chunk_minutes,
             rate_chunk_days=args.rate_chunk_days,
         )

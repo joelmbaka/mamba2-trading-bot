@@ -392,3 +392,67 @@ def test_rate_chunk_days_validation_is_opt_in_and_positive(tmp_path):
             history_sync_wait_seconds=0,
             rate_chunk_days=0,
         )
+
+
+class NoNativeM1FakeMT5(FakeMT5):
+    def copy_rates_range(self, symbol, timeframe, date_from, date_to):
+        if timeframe == self.TIMEFRAME_M1:
+            raise AssertionError(
+                "native M1 must not be requested in tick-derived M1 mode"
+            )
+        return super().copy_rates_range(symbol, timeframe, date_from, date_to)
+
+
+def test_tick_derived_m1_uses_one_synchronized_bid_ask_stream(tmp_path):
+    manifest_path = export_mt5_dataset(
+        NoNativeM1FakeMT5(),
+        symbols=["EURUSD"],
+        timeframes=["M1", "M5", "M15"],
+        start_utc="2025-01-02T10:00:00Z",
+        end_utc="2025-01-02T10:15:00Z",
+        output_dir=tmp_path,
+        exported_at_utc="2025-01-03T00:00:00Z",
+        history_sync_wait_seconds=0,
+        include_tick_ask=True,
+        derive_m1_from_ticks=True,
+        tick_chunk_minutes=5,
+    )
+    dataset = load_mt5_dataset(manifest_path)
+
+    bid = dataset.m1_bars["EURUSD"]
+    ask = dataset.ask_m1_bars["EURUSD"]
+    assert bid.index.equals(ask.index)
+    assert len(bid) == 15
+    assert bid.iloc[0]["open"] == pytest.approx(1.1000)
+    assert bid.iloc[0]["close"] == pytest.approx(1.1002)
+    assert bid.iloc[0]["tick_volume"] == 2
+    assert ask.iloc[0]["open"] == pytest.approx(1.10012)
+    assert ask.iloc[0]["close"] == pytest.approx(1.10035)
+
+    symbol = dataset.manifest["symbols"]["EURUSD"]
+    assert symbol["files"]["M1"]["source"] == (
+        "copy_ticks_range_bid_aggregation"
+    )
+    assert symbol["files"]["M1"]["flags"] == "COPY_TICKS_ALL"
+    assert symbol["ask_m1"]["rows"] == 15
+    assert symbol["ask_m1"]["missing_m1_rows"] == 0
+    assert symbol["ask_m1"]["spread_points_min"] == pytest.approx(12.0)
+    assert symbol["ask_m1"]["spread_points_max"] == pytest.approx(15.0)
+
+
+def test_tick_derived_m1_requires_tick_ask_sidecar(tmp_path):
+    with pytest.raises(
+        ValueError,
+        match="derive_m1_from_ticks requires include_tick_ask",
+    ):
+        export_mt5_dataset(
+            FakeMT5(),
+            symbols=["EURUSD"],
+            timeframes=["M1"],
+            start_utc="2025-01-02T10:00:00Z",
+            end_utc="2025-01-02T10:15:00Z",
+            output_dir=tmp_path,
+            exported_at_utc="2025-01-03T00:00:00Z",
+            history_sync_wait_seconds=0,
+            derive_m1_from_ticks=True,
+        )

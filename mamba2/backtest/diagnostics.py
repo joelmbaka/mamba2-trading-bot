@@ -16,7 +16,7 @@ import math
 from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import median
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 import pandas as pd
 
@@ -790,6 +790,7 @@ def run_diagnostic_baseline(
     manifest_path: str | Path,
     *,
     starting_balance: float = 10_000.0,
+    strategy_transform: Callable[[Any], Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     dataset = load_mt5_dataset(manifest_path)
     symbols = tuple(config.symbols)
@@ -827,6 +828,11 @@ def run_diagnostic_baseline(
         StochasticTripleTFStrategy(symbol)
         for symbol in symbols
     ]
+    if strategy_transform is not None:
+        strategies = [
+            strategy_transform(strategy)
+            for strategy in strategies
+        ]
     runner = PortfolioBacktestRunner(
         feed,
         broker,

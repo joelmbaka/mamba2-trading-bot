@@ -16,6 +16,7 @@ dependencies = [
     "mplfinance>=0.12.10b0",
     "metatrader5>=5.0.37; sys_platform == 'win32'",
     "pywin32>=310; sys_platform == 'win32'",
+    "xlrd==2.0.2",
 ]
 
 [project.optional-dependencies]

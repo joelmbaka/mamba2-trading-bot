@@ -1,22 +1,21 @@
 # Current State
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ## Latest accepted implementation milestone
 
-**019 — Broader-history validation**
+**020 — Controlled experiments**
 
 Accepted implementation SHA:
 
-`94a74211175d0f1db7e4c00cb3ab1f8ca1f286bb`
+`0d85b82278ae08a88f8b5b942fb23ec000b11411`
 
-Starting M018 closeout SHA:
+Accepted prior milestone:
 
-`94c031a852751973e3f7541cfbb7ebf636844223`
+**019 — Broader-history validation**
 
-Milestone 019 changed historical-export/replay infrastructure only. It did not
-intentionally change strategy parameters, production fetcher behavior, or
-execution semantics.
+Milestone 020 changed experiment/backtest infrastructure only. It did not
+promote experimental behavior into the production/live strategy.
 
 ## M019 final validation
 
@@ -170,6 +169,99 @@ The deepest drawdown episode peaked at **USD 10,042.761998581507** on
 See `docs/milestones/019-broader-history-validation.md` for the complete
 acceptance record.
 
+## M020 closeout — controlled experiments
+
+Milestone 020 is **CLOSED**.
+
+Accepted implementation SHA:
+
+`0d85b82278ae08a88f8b5b942fb23ec000b11411`
+
+M020-A:
+
+**PROMISING, NOT PROMOTED**
+
+M020-B:
+
+**COMPLETE — fill-spread confound diagnosis**
+
+M020-C:
+
+**COMPLETE — decision-time spread observability**
+
+M020-D:
+
+**PROMISING**
+
+The final accepted M020-D treatment rejects only a new order whose observable
+decision-time spread is **>10 points**. It does not stack the M020-A session
+filter and does not change production/live strategy behavior.
+
+Final validation after correcting rejected-order reporting:
+
+- native: **195 passed, 2 skipped**;
+- Wine: **195 passed, 2 skipped**;
+- immutable control command:
+  `mamba2-m020d-reporting-fix-control-20260926-0843`;
+- accepted M019 baseline preserved:
+  `114df816acf9900e9255a89c4ab203aab40ea56d898c19b25c7be29d6403d983`;
+- accepted M019 diagnostic preserved:
+  `84c474e3e10ebb36eb05b80bbef7726161858cd8fa18b986e2cf7515c121aba8`;
+- authoritative treatment command:
+  `mamba2-m020d-authoritative-treatment-pair-20260926-1014`;
+- treatment baseline SHA-256:
+  `94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`;
+- treatment diagnostic SHA-256:
+  `45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`;
+- treatment evidence SHA-256:
+  `e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`;
+- result branch SHA:
+  `53e79d1da25994c87330faaaf805928de08c427e`;
+- rejected attempts: **976**;
+- accepted spread violations: **0**;
+- maximum accepted decision spread: **10 points**;
+- wrong-side initial TP violations: **0**;
+- negative-P/L take-profit exits: **0**;
+- new strategy-reporting artifacts: **0**;
+- remaining open positions: **0**.
+
+Control -> M020-D:
+
+- accepted/closed: **4,922/4,922 -> 4,664/4,664**;
+- wins/losses/flats:
+  **1,899/3,020/3 -> 1,860/2,800/4**;
+- non-flat win rate:
+  **38.60540760317138% -> 39.91416309012876%**;
+- net realized P/L:
+  **USD -1,716.607632002333 -> USD -677.647148799515**;
+- ending balance/equity:
+  **USD 8,283.392367997667 -> USD 9,322.352851200485**;
+- maximum equity drawdown:
+  **USD 1,929.6969567926317 / 19.214803229083717% ->
+  USD 1,067.1062318369404 / 10.629228567139583%**.
+
+P/L improvement:
+
+**USD +1,038.960483202818**
+
+All four inspected calendar periods, all five symbols, and both sides improve
+relative to control. GBPJPY contributes about **56.03%** of the improvement,
+but all four other symbols also improve. The treatment remains loss-making:
+three of four calendar periods, four of five symbols, and both sides remain
+negative.
+
+M020-D is therefore **PROMISING**, but remains in-sample experimental evidence.
+It is not promoted to live risk.
+
+The first M020-D treatment pair also revealed a replay-reporting bug where
+intentional `retcode=1` rejections were counted under `accepted_orders`.
+That accounting bug was fixed and regression-tested before the authoritative
+pair. Rejected orders had never reached the pending execution queue, so the
+economic treatment behavior did not change.
+
+No M020-E is authorized. Further tuning of thresholds or stacking M020-A would
+reuse an already-inspected dataset and is outside the closed milestone.
+
 ## Durable handoff
 
 A fresh ChatGPT or Codex session must start with:
@@ -213,11 +305,722 @@ action is exposed, and no real MT5 order action is permitted.
 - End-of-data does not force-liquidate.
 - Historical spread uses tick-derived Ask where available.
 
-## Next milestone
+## Active milestone — M021 prospective paper/forward validation
 
-**020 — Controlled experiments**
+M021 is **OPEN — PROTOCOL AND EXECUTION MACHINERY FROZEN**.
 
-M020 must test one explicitly stated hypothesis at a time against the accepted
-M019 control. The first authorized hypothesis is a new-entry session filter for
-00:00–03:59 UTC; it must not be combined with a spread, symbol, side, ATR,
-trailing, or parameter change.
+Branch:
+
+`prospective-forward-validation`
+
+Protocol-freeze commit:
+
+`471892e247942ed91c0bbd9adae46e4a990c5db6`
+
+Accepted machinery implementation SHA:
+
+`f53d38b93434eb52b19f0f12a441e4439822e39e`
+
+The protocol was frozen before later outcomes were inspected.
+
+Primary prospective source-data window:
+
+`[2026-09-25T00:00:00Z, 2026-10-23T00:00:00Z)`
+
+The candidate remains exactly M020-D:
+
+- reject new order submissions only when observable decision-time spread is
+  **>10 points**;
+- allow **<=10 points**;
+- do not stack M020-A;
+- do not tune the threshold.
+
+M021 machinery validation on 2026-09-26:
+
+- native: **206 passed, 2 skipped**;
+- Wine: **206 passed, 2 skipped**;
+- historical M019 control baseline/diagnostic hashes: **exactly preserved**;
+- historical M020-D baseline/diagnostic/evidence hashes:
+  **exactly preserved**;
+- new strategy artifacts during regression: **0**;
+- readiness before primary cutoff: **false**;
+- early primary export: **refused before MT5 history access**;
+- early paired replay: **refused before economic computation**.
+
+No post-cutoff P/L, drawdown, symbol, side, period, or classification result has
+been inspected.
+
+M021 remains dormant until the primary cutoff
+`2026-10-23T00:00:00Z`. At that point the fixed protocol controls whether the
+window is classified or extended by a predeclared seven-day increment.
+
+Real MT5 trading remains disabled. M020-D is not promoted to production/live
+behavior.
+
+
+## M025 independent public-benchmark research
+
+M025 is **OPEN — PROTOCOL FROZEN; STAGE 1 IMPLEMENTATION ONLY** on
+`public-strategy-benchmarks`, based from the closed M022 docs SHA
+`7047d5ff3fd4c74163b62f2142742a124462bb7d`.
+
+It is intentionally isolated from M023. M023 results may not be used to choose,
+replace, or tune M025 benchmark definitions.
+
+Frozen benchmark families are:
+
+- MOP TSMOM 12/1;
+- currency momentum MOM(1,1), MOM(6,1), MOM(12,1);
+- HML-FX carry;
+- M020-D as the frozen internal Mamba comparator.
+
+Stage 1 authorizes signal/portfolio machinery, data sufficiency gates, and
+synthetic tests only. No M025 historical economics are authorized yet.
+
+
+## M025 fidelity review checkpoint
+
+Branch:
+
+`public-strategy-benchmarks`
+
+M025 remains independent of M024/M023 outcome selection. No M025 historical
+economics have been run.
+
+Primary-source review found:
+
+- MOP centered EWMA variance semantics are correct in principle and should be
+  preserved;
+- Menkhoff formation returns require additive aggregation of monthly **log
+  currency excess returns**;
+- HML-FX attribution is Lustig, Roussanov, and Verdelhan (2011);
+- the five-year-plus-warmup sufficiency gate must be consecutive, not a count
+  of scattered eligible months.
+
+Stage 1 remains code/tests/data-gate only.
+
+
+## M025 Stage-1 fidelity implementation checkpoint
+
+Feature repair:
+
+`35775c872ef83fa161732f7975ef3c0513e1b847`
+
+Fixed local-control support:
+
+`6c5342e804c24f9a4ca8ee2b46f7991192713839`
+
+No M025 economics have run. The next gate is exact Dell branch switch, focused
+public-benchmark tests, then full native regression.
+
+
+## M025 Stage 1 accepted
+
+Accepted feature SHA:
+
+`d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
+
+Focused acceptance:
+
+`a9d4ce84b5cc35e911407082c056c24668b79401`
+— **23 passed**.
+
+Full native acceptance:
+
+`28a5c79dd49e10f1255a97bc24a05b0df721bb1b`
+— **260 passed, 2 skipped**.
+
+No M025 economics have run.
+
+The Stage-2 data-source inventory protocol is frozen. The next work is public
+source metadata/schema inventory only, with no benchmark P/L.
+
+
+## M025 Stage 2 source inventory accepted
+
+Inventory artifact:
+
+`docs/research/m025-public-source-inventory.md`
+
+Result:
+
+- no public/free raw-eligible source established for publication-faithful B1,
+  B2, or B3;
+- AQR TSMOM and CurrencyPortfolios are retained as derived external references;
+- H.10/Dukascopy spot are retained only as possible TSMOM spot-proxy sources.
+
+No M025 economics have run. Raw publication-faithful reconstruction stops here
+under the current free-data boundary.
+
+
+## M025 Stage-3 reference/proxy protocol frozen
+
+Stage-2 inventory acceptance:
+
+`efbf59094ff226542201a32963a5e75a1fccd416`
+
+Stage 3 prospectively selects:
+
+- **Federal Reserve H.10** for the explicit
+  `TSMOM SPOT PROXY — FED H.10` path;
+- AQR monthly TSMOM as a derived reference, currency factor only if schema
+  proves it exists;
+- LRV `CurrencyPortfolios.xls` as a derived HML-FX reference;
+- accepted M020-D artifacts as the internal reference.
+
+The H.10 source universe is frozen at all 23 daily currency-rate series, with
+USD-per-foreign normalization and no fill/interpolation.
+
+Economic metrics and cross-series comparison formulas are frozen before any
+Stage-3 economic download/calculation.
+
+Next gate: deterministic schema/ingestion only.
+
+
+## M025 Stage-3 ingestion implementation checkpoint
+
+Protocol:
+
+`6b6592237fe4f9e087745c914e916bda6521012d`
+
+Snapshot-range addendum:
+
+`a7fa66244e57c9f0e214526ab8dee9b96537f87c`
+
+Ingestion implementation:
+
+`184f0fbd0e58e0d451120232a2cb9295c729f7f2`
+
+Fixed controls:
+
+`cd985e2f29d6814b1aec54ffff1b57b2c9a1ab6a`
+
+Runtime probe:
+
+`315a03a0ba1967d30a884b0fc0d33c39543f6e70`
+
+No Stage-3 source has been economically evaluated. Next: focused ingestion
+tests, then the immutable non-economic source snapshot.
+
+
+## M025 Stage-3 H.10 VES/VEB metadata repair
+
+Non-economic ingestion v4 stopped before publication because the exact frozen
+Fed series `RXI_N.B.VES` carries legacy SDMX metadata
+`CURRENCY="VEB"`.
+
+The parser now accepts only `VES`/legacy `VEB` for that exact series and
+still rejects all other currency-code drift.
+
+Repair:
+
+`82c9665f9dd29f7985b71dd2fa0e70422efba9fc`
+
+No Stage-3 economics have run.
+
+
+## M025 Stage-3 LRV transport repair
+
+Non-economic ingestion v5 reached the LRV workbook step but the prior
+Wharton-hosted URL did not produce a loadable XLS.
+
+The same frozen `CurrencyPortfolios.xls` reference will use the historical
+MIT mirror:
+
+`https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls`
+
+and must pass an OLE-XLS magic-byte check before conversion.
+
+No Stage-3 economics have run.
+
+
+## M025 Stage-3 LRV conversion-path repair
+
+Ingestion v6 proved the MIT payload is a real OLE XLS but LibreOffice failed on
+relative temp paths.
+
+Repair:
+
+`26de5ae69742a7913ab56e0f5f73af2084e2c511`
+
+Conversion now uses verified absolute paths. No economics have run.
+
+
+## M025 Stage-3 LRV conversion-free schema repair
+
+The validated MIT LRV workbook is a genuine OLE Excel file but LibreOffice
+cannot convert it. Stage-3 now validates its schema directly from deterministic
+OLE binary strings, requiring P1-P6 and HML labels while explicitly avoiding
+numeric-cell parsing.
+
+Feature repairs:
+
+- `3302ab0fdaa698811ef549888bba5fbe1b541be6`
+- `a267f626ad13281a0976e78c6f50fa3773efb042`
+
+Control repair:
+
+`2ab3bceb0f1506002490f6f2a18863e872045e1a`
+
+No Stage-3 economics have run.
+
+
+## M025 Stage 3 ingestion accepted
+
+Accepted feature:
+
+`554ab3a827163732f4dec335c716fec2f386bfe8`
+
+Focused tests:
+
+`2d3e36ca14c4a277666a74d4f300a982a19d88be` — **33 passed**.
+
+Immutable ingestion:
+
+`61bb9c5d591e8519f5bebc024d670204d9a71eab`
+
+Report SHA:
+
+`d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505`
+
+H.10 raw SHA:
+
+`38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046`
+
+H.10 normalized panel SHA:
+
+`015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419`
+
+All 23 frozen H.10 currencies pass the 72-month gate.
+
+AQR exposes dedicated currency factor `TSMOM^FX`.
+
+LRV exposes P1-P6 and HML schema.
+
+No Stage-3 economics have run.
+
+Next gate: freeze Stage-4 economic execution protocol.
+
+
+## M025 Stage-4 implementation checkpoint
+
+Protocol: `6511131792e32e74b6c98ce9de1d11dded5522b7`
+
+Locked `xlrd==2.0.2` dependency:
+`07facca9a04cc5f8154b7c648208f186326c0f2e`
+
+Implementation:
+`f74bd6606b91f38a4255d38af6d4770500004ec5`
+
+Focused-test control:
+`7ab842c005e45d07c6790ba037a0bd9c1ce86599`
+
+No Stage-4 economics have run. Economic execution remains disabled pending
+focused tests and full native regression.
+
+
+## M025 Stage-4 validated; blocked on LRV unit metadata probe
+
+Accepted focused Stage-4 tests:
+
+`d95bf9911368d11c79e0e247247bc991c49a06dd`
+— **42 passed**.
+
+Accepted full native regression:
+
+`f77ba7f1e424058a52d3c6f139b86347b1714852`
+— **279 passed, 2 skipped**.
+
+Stage-4 economics attempt `d1703515...` stopped at the frozen LRV unit gate
+before a successful report; no unit was inferred from return magnitude.
+
+Corrected metadata-only probe command
+`mamba2-m025-stage4-lrv-unit-probe-v2` is queued on `local-control` at
+`b61a2b6caeac49dd200d067678a28a2ec718ca72`, but the Dell local-agent has not
+consumed it. Latest result remains the v1 environment failure.
+
+No Stage-4 terminal economic result is accepted yet.
+
+## M025 closed — Stage-4 terminal economics accepted
+
+M025 is **CLOSED**.
+
+Final repaired economic feature SHA:
+
+`2aed0444c8f0e214d14f9dc90d4c2813388555db`
+
+Post-repair validation:
+
+- focused Stage-4: **43 passed / 0 failed**
+  (`894ce65d5a1a83910fcacc3d3dfd5ccf551c1a8d`);
+- full native: **280 passed / 2 skipped**
+  (`d5f85857a3f4014f44b3f5970f16bca2090c87ca`).
+
+Sole accepted Stage-4 economic execution:
+
+`mamba2-m025-stage4-economics-after-unit-evidence-v1`
+
+Result branch commit:
+
+`c01ab5df81bdf31b3279b2c0d7e99843c7437ef7`
+
+Deterministic A/B report SHA-256:
+
+`633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9`
+
+A/B byte identity: **PASS**.
+
+Accepted headline references:
+
+- H.10 TSMOM spot proxy annualized mean: **-1.6058975079063509**
+- AQR TSMOM^FX annualized mean: **0.10093357261356833**
+- LRV HML-FX annualized mean: **0.0003586837489041334**
+- H.10 vs AQR zero-lag correlation: **-0.07400075645466087**
+
+The LRV scale `0.01` was established through the prospectively frozen
+Stage-4.1 evidence rule, not by return-magnitude inference.
+
+Stop rule is active: no retuning, rescaling, lag/sign search, source
+replacement, universe pruning, or production/live promotion is authorized
+inside M025. Any further benchmark work requires a new prospectively frozen
+milestone.
+
+## M026 closed at source-fidelity gate
+
+Branch:
+
+`tradeable-fx-tsmom-reconstruction`
+
+Protocol freeze:
+
+`c9dbe03e7f08f2c7c26355d7bf3761684622fb90`
+
+Source inventory:
+
+`0f72b1928f06d90f12409396982867db92ca037f`
+
+Result:
+
+**DATA GATE NOT PASSED — NO ECONOMICS RUN**
+
+CME continuous FX futures were the strongest raw-data path, but historical
+access is licensed/purchased. No public/free direct forward source survived,
+and the reviewed official rate datasets were insufficient to turn spot into
+the exact frozen futures/forward excess-return process without introducing a
+new proxy.
+
+M026 is closed. Do not weaken it after the inventory.
+## M027 closed — gross carry-aware spot TSMOM supported
+
+Branch:
+
+`carry-aware-spot-tsmom`
+
+Final economic feature SHA:
+
+`ebd650204cb8d03d4eb144d2b3bc431f8b838409`
+
+Validation:
+
+- focused Stage-2: **17 passed**
+- full native: **297 passed / 2 skipped**
+
+Accepted economic result:
+
+- result commit: `5cebd54c14833dadd7e2de302213c059cd8b2116`
+- deterministic A/B SHA-256: `08be7e8002410ad36e32caa98cb3cf6e66110bef2c24815b2c1582b96b957e00`
+- A/B byte identity: **PASS**
+- evaluation: **1980-02 → 2020-04, 483 months**
+- annualized arithmetic mean: **37.5794%**
+- annualized volatility: **34.6032%**
+- Sharpe: **1.0860**
+- max drawdown: **-62.1427%**
+- positive months: **66.67%**
+- positive years: **30 / 41**
+- all three frozen folds had positive annualized mean
+- largest positive-currency contribution share: **39.30%**
+
+Mechanical classification:
+
+**SUPPORTED AS A GROSS PUBLIC-DATA APPROXIMATION**
+
+This does **not** authorize live trading. Costs, executable forward/futures prices, slippage, and real broker financing remain unmodeled. M027 is closed and may not be retuned.
+## M028 Stage 0 accepted — broker availability only
+
+Branch: `execution-realism`
+
+Stage-0 result commit:
+
+`3258372afbf11aa8178cddd54c61b810c5e514d6`
+
+Stage-0 feature SHA:
+
+`de05a0207c6679e58f17fded969ab3e5401c2d68`
+
+Broker metadata result:
+
+- 22 / 25 frozen M027 currencies mapped unambiguously to direct-USD symbols;
+- unavailable: **CNY, ISK, RON**;
+- no ambiguous mappings;
+- mapped-universe SHA-256:
+  `5f1ae15c35b3b20e24b4f999c7628d3534b54e30eb535295a69e359f285dd996`;
+- terminal/server: **MetaTrader 5 / MetaQuotes-Demo**;
+- account currency: **USD**;
+- leverage: **100:1**;
+- commission: **UNPROVEN**;
+- no strategy economics or order APIs were used.
+
+Quote caveat:
+
+- six mapped symbols had same-day non-zero quotes;
+- AUDUSD/USDCAD had stale Sep-25 quotes;
+- fourteen mapped symbols returned zero/epoch quote snapshots.
+
+Therefore Stage 0 proves symbol metadata availability only, not that all 22
+symbols are currently executable.
+
+M028 Stage-1 execution-evidence protocol is frozen at:
+
+`13507ae2bb06af4daa24f4df70b97a11a8606fa9`
+
+No M028 economics are authorized yet.
+## M028 Stage 1 accepted — forward paper only
+
+Accepted result commit:
+
+`bf90b33409aa78d303d0928404e73f3d1a7da1bf`
+
+Accepted feature SHA:
+
+`2dcbdb5e05c5f7e9a1a06fb711f0c9f85bfd7455`
+
+Mechanical result:
+
+- quote-viable currencies: **8** — AUD, CAD, CHF, EUR, GBP, JPY, NZD, SEK;
+- quote gate: **PASS** (8 >= 4);
+- valid current margin calculations: **8**;
+- margin gate: **PASS** (8 >= 4);
+- commission: **UNPROVEN**;
+- historical swap/financing: **UNPROVEN**;
+- path: **FORWARD_PAPER_ONLY**.
+
+Frozen historical tick checkpoints completed for AUD, CAD, EUR, GBP, and
+JPY. CHF, NZD, and SEK history probes timed out and are retained as missing
+execution-history evidence.
+
+No retrospective net-execution backtest is authorized. No M028 strategy
+economics have been run.
+
+Stage-1 closeout commit:
+
+`08e795a1ce90563642c0403c0266fffa4307fc4d`
+## M028 ready for first prospective decision
+
+Branch: `execution-realism`
+
+Pre-decision feature SHA:
+
+`499e088e8d77bdf7fff81f34b549ae93c5c7e8be`
+
+Stage-1 path remains:
+
+**FORWARD_PAPER_ONLY**
+
+Stage-2/3 implementation validation:
+
+- focused: **24 passed**
+- full native: **321 passed / 2 skipped**
+- no live-source signal or forward outcome has been observed.
+
+Latest readiness:
+
+- BIS spot last date: **2026-09-29**
+- required: **2026-09-30**
+- OECD rates: **2026-08**, requirement satisfied
+- broker quote+margin readiness: **8 / 8**
+- classification: **SOURCE_NOT_READY**
+
+First decision:
+
+- ID: `2026-10`
+- scheduled: **2026-10-07T12:00:00Z**
+- time gate independently verified on 2026-10-01
+- control action: `m028_stage3_first_decision`
+- append-only/recoverable; no recomputation after a record exists.
+
+No M028 strategy work beyond source-readiness checks is authorized before
+the scheduled decision.
+
+## 2026-11-12 audit — M028 first paper decision missed, no backfill
+
+The workstation local-agent was contacted through the allowlisted `status`
+action. It reported a clean `execution-realism` checkout, HEAD
+`270d7c5e0e04b45ec2ce32b108cd2e7d334cdb3b`, with zero divergence.
+
+The read-only, single-path paper-record audit completed successfully and was
+committed to `local-control-results` at
+`5d1ccfd0460908946cc74cad36c6c712e81679a7`. The expected immutable
+`~/.local/share/mamba2-forward-paper/2026-10-decision.json` **does not
+exist**; its parent directory also does not exist. This does not establish
+whether any other, untracked record exists elsewhere.
+
+The Oct 7 prospective decision is missed. The Nov 6 fifth-weekday decision is
+also in the past. No October/November signal, positions, strategy P/L or
+decision record may be backfilled. The `local-control` safeguard
+`6f1f71c219b7e4e1ef50f6392e4b902311ce9b99` rejects attempts to create
+the missing October record after its decision day.
+
+No real broker order or strategy computation was performed in this audit.
+M027 is still only a **gross public-data approximation**, not executable
+net-profit evidence. M028 produced no accepted forward performance record.
+
+Next work is the new, pre-frozen M029 prospective protocol and safety-tested
+month-generic decision engine. See `docs/NEXT_TASK.md`; do not use the former
+M028 first-decision action to resume retrospectively.
+
+## M029 prospective recovery — Stage 1 and Stage 2 accepted (2026-11-12)
+
+Feature branch: `prospective-paper-recovery`.
+
+M028 October 7 and November 6 decision windows were missed and may not
+be backfilled. The first possible future decision remains December 7, 2026,
+12:00–12:10 UTC, contingent on a separately accepted live-readiness adapter.
+
+Stage 1: source-free UTC calendar/window gates, metadata readiness and
+exclusive hash-verified immutable journal. Native acceptance:
+**345 passed, 2 skipped** at `eefcda398009a9d366bcbbb192d5a38b62df6191`;
+result `2033f647e28d5d51ef52816c2c7115f4321853ce`.
+
+Stage 2: synthetic-only supplied BIS/OECD source and broker snapshot assembly,
+with source/quote gates before M028 signal/target reuse, unproven cost fields
+left null, and explicit prior paper ledger required for subsequent months.
+Accepted feature `bd73d29751b376523e8fd4d74b357e5925744cf1`,
+synthetic test SHA `05981c916e5a334200b3a42bbd55bfbebdcbd609`.
+Full native **356 passed, 2 skipped, 13 existing warnings** at
+`bcb873c4d1b812b290e1066fde12e943a7912e49`.
+
+Stage 3 real-readiness/live-input bridge is NOT implemented or accepted.
+There is no scheduled trading decision, real order, or published paper record.
+M027 remains supported only as a GROSS public-data approximation; real
+execution profitability and broker costs remain unproven.
+
+Read the frozen protocol and latest handoff:
+`docs/milestones/029-prospective-paper-recovery.md`;
+`docs/NEXT_TASK.md`.
+
+## 2026-11-12 — M029 Stage 3 operational protocol frozen
+
+Operator-reported isolated MT5 compatibility test: Wine 11.21 Staging with
+Windows 11 compatibility launched a **copied** MT5 terminal; the window showed
+`MetaTrader 5 - Netting` without a debugger warning. No credentials, broker
+quotes, orders, existing MT5 installation files, or existing test environments
+were used/changed. System Wine remains 9.0. The Python/MetaTrader5 read-only
+bridge is **NOT YET VALIDATED**.
+
+The distinct Stage-3 operational protocol was frozen on
+`prospective-paper-recovery` before any M029 Stage-3 source/quote read:
+`c74ca08fe32bf9ac9954cee5b033f808f3932ddd`,
+`docs/milestones/029-stage3-operational-protocol.md`.
+
+Its gates separate:
+- Stage 3A: implementation and synthetic/native regression **only**;
+- Stage 3B: separately approved read-only source and broker connectivity;
+- Stage 3C: separately approved/scheduled December on-time paper decision.
+
+Stage 3A explicitly requires real acquisition UTC provenance rather than
+the synthetic Stage-2 `now` placeholder, a repeated close-of-window check,
+strict eight-symbol quote/margin validation, isolated Wine bridge handling,
+and fail-closed append-only journal integrity. The 2026-12 decision window
+remains 2026-12-07T12:00Z to strictly before 12:10Z; no scheduling was
+authorized. October/November are still missed without backfill.
+
+No Stage-3 code, real market-data ingestion, MT5 initialization, broker read,
+paper decision, live order or strategy economics were run by the protocol
+freeze. Refer to `docs/NEXT_TASK.md` for the exact Stage-3A handoff.
+
+
+## 2026-11-12 — M029 Stage 3A CLOSED (synthetic integration only)
+
+Branch: `prospective-paper-recovery`.
+Accepted feature/test HEAD: `50cc8dded6003fc6f7558263c8f5186cda796989`.
+
+Full native suite run by the workstation local agent:
+`mamba2-20261112-m029-stage3a-native-v1`, recorded on results branch at
+`bb68fab6c7e55543717a33b9a27fb788093d359f`.
+Result: **382 passed, 2 skipped, 13 pre-existing warnings, zero failures**.
+
+Stage 3A additions: `mamba2/backtest/m029_stage3a.py` with source
+download/parse acquisition times measured by a mock UTC clock, source raw
+and normalized hashes, source completeness, a strict mock allowlist of
+eight symbol info/tick/margin calls, freshness at observation and after
+potentially blocking margin calls, no strategy or P/L paths, synthetic
+isolated runtime path preflight. M029 journal adds a final-clock gate before
+exclusive file creation and rejects a symlinked journal directory.
+
+All inputs were synthetic. No real BIS/OECD data were downloaded, Wine/MT5
+bridge initialized, account information inspected, quotes obtained, trades
+placed, or actual workstation paper decisions created. Passing mocks is not
+evidence of real broker connectivity or profitability.
+
+The operational Stage-3 protocol and acceptance are documented in
+`docs/milestones/029-stage3-operational-protocol.md`.
+Stage **3B** real read-only connectivity is pending separate authorization.
+Stage **3C** paper decisions/scheduling remain unauthorized. December
+7, 2026 at 12:00–12:10 UTC remains a prospective window only.
+
+## 2026-11-12 — Stage 3B isolated runtime preflight BLOCKED
+
+Under the user's "go" instruction, only the noninvasive environment
+preflight and import-only test preparation were attempted. Stage-3B
+connectivity, quote/margin reads and Stage-3C paper decisions were not run.
+
+Read-only local-control results:
+- `e97616f2200fd9ea9f717c40aff4069fb34ed3e2`:
+  standard-path preflight detected only system Wine 9.0 and an older
+  Windows 10 backup prefix; no separate Wine 11.21 Python bridge.
+- `219898b7d142ed32097e2831be9f46e59bd10dfa`:
+  bounded targeted discovery inspected 3,000 directories (limit reached)
+  and found no further isolated Wine 11.21 executable/prefix, Python
+  interpreter or installed WineHQ staging package in the paths examined.
+
+This does not contradict the operator's prior isolated MT5 GUI smoke test:
+that environment may be at another path or may have been temporary.
+The executable/prefix identity is not yet established.
+
+**No Python MetaTrader5 import was executed.** Never substitute the
+existing system Wine 9.0/`~/.mt5` setup. Resume import-only checks only
+once the isolated Wine executable, prefix and bridge interpreter have
+been located or provisioned in a separate environment. No broker
+initialization, account data, market quotes, credentials, source downloads,
+strategy signals, paper decisions, trading orders or scheduling occurred.
+
+## 2026-11-12 — Stage 3B isolated runtime LOCATED; Python bridge missing
+
+Operator reconciled the local and remote `prospective-paper-recovery`
+history without reset/force-push, resulting in merge `3fda38c`, clean and
+synced according to operator report. Persistent separate Wine environment
+provided at `~/.local/share/mamba2-mt5-wine1121/`.
+
+Read-only workstation evidence:
+
+- `05ed5e694db0451c1257f18ebf6a1cdc4ec1658c`: isolated
+  `runtime/opt/wine-staging/bin/wine` reports **11.21 Staging**, the
+  `prefix/` Windows product is **Windows 11**, the isolated
+  `app/terminal64.exe` exists. No standard-prefix Windows Python detected.
+- `2537f1f769c182e289921cf74f4fbd491ff91b0d`: bounded traversal
+  examined all **334** isolated-root directories without reaching its limit;
+  found no Windows `python.exe`, `pythonw.exe` or `pypy.exe`.
+
+**The old Wine discovery blocker is resolved.** A separate Windows Python
+bridge is not installed in this isolated environment. Therefore the
+Stage-3B MetaTrader5 **import-only test is still UNEXECUTED**, not failed,
+and broker connectivity remains unproven. No Wine prefix settings,
+system Wine, original `~/.mt5`, project strategy, source records, credentials
+or trading interfaces were modified by either probe.
+
+Next step requires separately approved isolated Windows Python 3.10 +
+compatible MetaTrader5/NumPy provisioning. No unapproved automatic package
+installation, real source/broker data access, broker initialization,
+paper decision or scheduling occurred.
+
+See `docs/NEXT_TASK.md` for exact safe handoff.

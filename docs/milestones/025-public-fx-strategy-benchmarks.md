@@ -1,0 +1,1745 @@
+# Milestone 025 — Public FX Strategy Benchmarks
+
+Status: **STAGE 3 INGESTION ACCEPTED — ECONOMICS NOT YET AUTHORIZED**
+
+Protocol date: 2026-09-29
+
+Branch:
+
+`public-strategy-benchmarks`
+
+Base commit:
+
+`7047d5ff3fd4c74163b62f2142742a124462bb7d`
+
+M025 is intentionally independent of M023. It must not read, branch from, tune
+against, or otherwise use M023 outcomes. M021 remains frozen and untouched.
+
+## Objective
+
+Implement public, literature-defined FX benchmark strategies beside Mamba2 so
+future research can ask whether the existing strategy adds value relative to
+simple documented anomalies.
+
+M025 is not a search for a profitable parameter combination. Strategy
+definitions are fixed from published research before any M025 economic result is
+inspected.
+
+## Frozen benchmark families
+
+### B1 — MOP-TSMOM-12-1
+
+Source definition: Moskowitz, Ooi, and Pedersen (2012), Time Series Momentum.
+
+Frozen mechanics:
+
+- formation horizon: **12 months**;
+- holding/rebalance horizon: **1 month**;
+- direction: long when the instrument's trailing 12-month excess return is
+  positive, short when negative;
+- per-instrument ex-ante annualized volatility target: **40%**;
+- volatility estimator: exponentially weighted variance of lagged **daily** returns around the exponentially weighted lagged-return mean;
+- annualization scalar: **261**;
+- EWMA decay: `delta = 60 / 61`, matching a 60-day center of mass;
+- the volatility estimate at time `t` may use information only through
+  `t-1`.
+
+Publication-faithful execution requires an excess-return/forward-compatible
+currency return series. A spot-price-only implementation must be labelled
+**TSMOM SPOT PROXY**, never silently presented as the paper's exact futures or
+forward strategy.
+
+No alternate lookback, holding period, target volatility, or volatility
+estimator is authorized in M025.
+
+### B2 — MSSS-CURRENCY-MOMENTUM
+
+Source definition: Menkhoff, Sarno, Schmeling, and Schrimpf (2012), Currency
+Momentum Strategies.
+
+Frozen benchmark variants:
+
+- **MOM(1,1)**;
+- **MOM(6,1)**;
+- **MOM(12,1)**.
+
+Frozen mechanics:
+
+- month-end formation;
+- rank currencies by lagged currency **log excess return** over the fixed formation
+  horizon; multi-month formation returns are additive sums of monthly log excess
+  returns;
+- split the available cross-section into **six** deterministic portfolios;
+- long the highest-return portfolio;
+- short the lowest-return portfolio;
+- holding period: **1 month**;
+- equal weight currencies inside each extreme portfolio;
+- rebalance monthly.
+
+No formation horizon other than 1, 6, or 12 months is authorized in M025.
+
+Publication-faithful economics require monthly spot and one-month forward data
+(or an equivalent directly observed excess-return series) and a sufficiently
+broad currency cross-section. The existing five Mamba2 symbols are not a valid
+six-portfolio currency universe and must fail the data gate.
+
+### B3 — HML-FX-CARRY
+
+Source definition: Lustig, Roussanov, and Verdelhan (2011), *Common Risk Factors in Currency Markets*. Sort currencies into six portfolios on the one-month forward discount (equivalently, under covered interest parity, the short-term interest-rate differential) and define HML-FX as portfolio 6 minus portfolio 1.
+
+Frozen mechanics:
+
+- month-end sort;
+- **six** deterministic portfolios;
+- short the lowest-carry portfolio;
+- long the highest-carry portfolio;
+- equal weight currencies inside each extreme portfolio;
+- hold/rebalance monthly.
+
+No price-only substitute for carry is permitted. Carry economics require
+observed one-month forward discounts or corresponding short-term rate
+differentials.
+
+### B4 — MAMBA-M020D-SNAPSHOT
+
+The internal comparator is frozen now, before M023 completes:
+
+- stochastic: 21 / 7 / 7;
+- boundaries: 20 / 80;
+- EMA: 7;
+- ATR: 14 on M5;
+- ATR SL/TP: 1.0 / 2.0;
+- decision-time spread rule: reject new submissions only when spread is
+  **>10 points**;
+- all hours;
+- both BUY and SELL.
+
+This comparator is the accepted M020-D research candidate, not a claim that it
+is production-safe or profitable. M023 outcomes may later be reported
+separately but may not replace this frozen M025 comparator.
+
+## Data sufficiency gates
+
+Before any benchmark economics:
+
+### TSMOM
+
+Require:
+
+- daily observations with deterministic calendar handling;
+- at least **5 complete consecutive years** of usable history after cleaning;
+- at least 12 months of pre-signal history before the first eligible trade;
+- no forward filling across missing trading observations;
+- explicit source, timezone/calendar, instrument convention, and hashes.
+
+A 10+ year dataset is preferred, but M025 mechanically blocks only below five
+complete years.
+
+### Cross-sectional momentum and carry
+
+Require:
+
+- at least **12 distinct foreign currencies versus one common base currency**
+  at every evaluated month;
+- monthly spot observations;
+- monthly one-month forward observations or directly observed excess returns;
+- carry additionally requires observed forward discount / short-rate
+  differential;
+- at least **5 complete consecutive years** after the common-universe gate;
+- deterministic treatment of missing currencies and ties;
+- bid/ask or other transaction-cost inputs must be separately labelled; costs
+  may not be invented.
+
+The current five-symbol MT5 universe must be classified **INSUFFICIENT** for
+B2/B3.
+
+## Stage 1 authorization
+
+Stage 1 may only:
+
+1. implement deterministic pure benchmark-signal/portfolio machinery;
+2. implement data-audit and sufficiency gates;
+3. add synthetic/unit tests for no-lookahead, exact parameter constants,
+   deterministic ranking, and data-gate refusal;
+4. add a spot-proxy label/path for TSMOM without running economic research;
+5. preserve all M019/M020/M021/M022 behavior and artifacts.
+
+Stage 1 must not:
+
+- run benchmark economics on historical market data;
+- inspect M022 historical holdout for M025;
+- inspect M021 post-cutoff data;
+- read M023 results;
+- source-select or parameter-select based on profitability;
+- add local-control economic actions;
+- merge to main;
+- deploy;
+- enable or place real MT5 orders.
+
+## Stage 1 acceptance
+
+Stage 1 closes only when:
+
+- exact public benchmark constants are regression-tested;
+- future-data mutation cannot change earlier TSMOM volatility/signals;
+- six-portfolio momentum and carry ranking is deterministic;
+- insufficient universe/history fails before economic calculation;
+- current five-symbol universe is explicitly rejected for B2/B3;
+- no existing production strategy defaults change;
+- full native tests pass.
+
+Only after Stage 1 acceptance may a separate, prospectively frozen data-source
+inventory gate be authorized.
+
+
+## Stage-1 fidelity review — 2026-09-29
+
+No M025 historical economics had been run before this review.
+
+Primary-source reconciliation:
+
+- Moskowitz, Ooi, and Pedersen (2012), *Time Series Momentum*:
+  the ex-ante variance is an exponentially weighted variance of lagged daily
+  returns around the exponentially weighted mean, annualized by 261, with
+  delta chosen so the center of mass is 60 days. Therefore the existing
+  centered EWM-variance implementation is retained and is now regression-tested
+  against the explicit weighted-mean/weighted-variance equation.
+- Menkhoff, Sarno, Schmeling, and Schrimpf (2012), *Currency Momentum
+  Strategies*:
+  monthly currency excess returns are log returns derived from spot and
+  one-month forward rates. Formation returns over f months must therefore be
+  additive sums of monthly log excess returns. The prior Stage-1 implementation
+  incorrectly compounded them as arithmetic returns; this is a fidelity bug,
+  not a parameter change.
+- Lustig, Roussanov, and Verdelhan (2011), *Common Risk Factors in Currency
+  Markets*:
+  HML-FX is the excess-return spread between the sixth (highest forward
+  discount / highest interest-rate) and first (lowest) of six monthly
+  forward-discount-sorted currency portfolios.
+
+Data-gate clarification:
+
+- "five complete years + 12-month warmup" means one consecutive eligible run,
+  not a count of scattered eligible months;
+- monthly cross-sectional inputs must have at most one observation per calendar
+  month;
+- no forward filling is introduced.
+
+These corrections occur before any M025 economic replay and therefore preserve
+the prospective benchmark-research boundary.
+
+
+## Stage-1 fidelity implementation checkpoint — 2026-09-29
+
+Primary-source fidelity repair commit:
+
+`35775c872ef83fa161732f7975ef3c0513e1b847`
+
+Fixed local-control Stage-1 support:
+
+`6c5342e804c24f9a4ca8ee2b46f7991192713839`
+
+Feature changes at the fidelity-repair commit:
+
+- Menkhoff multi-month formation returns now sum monthly **log excess
+  returns**;
+- MOP ex-ante volatility remains a centered EWM variance and is now tested
+  against an explicit finite-history implementation of the paper equation;
+- cross-sectional sufficiency now requires a consecutive 72-month eligible run
+  (12-month warmup + 60 evaluation months);
+- TSMOM sufficiency requires a consecutive 72-month usable run for each
+  instrument;
+- duplicate calendar-month rows are rejected for monthly cross-sectional
+  inputs;
+- M025 numbering and HML-FX source attribution are corrected.
+
+Fixed local-control actions:
+
+- `m025_switch_public_benchmarks`;
+- `m025_public_benchmark_tests`.
+
+No M025 historical economics have run.
+
+### Recovery sequence
+
+1. switch Dell with `m025_switch_public_benchmarks`;
+2. require exact remote feature HEAD and clean 0/0;
+3. run `m025_public_benchmark_tests`;
+4. if focused tests pass, run `test_full_native`;
+5. review failures without weakening literature definitions or data gates;
+6. durably accept Stage 1 only after focused + full native pass;
+7. stop before any data-source inventory or benchmark economics.
+
+
+## Stage-1 acceptance — 2026-09-29
+
+Primary-source fidelity implementation:
+
+`35775c872ef83fa161732f7975ef3c0513e1b847`
+
+Test-fixture-only repair:
+
+`d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
+
+Fixed local-control Stage-1 support:
+
+`6c5342e804c24f9a4ca8ee2b46f7991192713839`
+
+First focused run:
+
+`446ebdaf8b100fda2ae7b6c1f925a48672847098`
+
+It reached **22 passed / 1 failed**. The sole failure was a synthetic fixture
+that duplicated the exact timestamp, causing the pre-existing unique-index
+guard to fire before the newer duplicate-calendar-month guard. No scientific
+or benchmark behavior failed.
+
+Accepted focused run after fixture correction:
+
+`a9d4ce84b5cc35e911407082c056c24668b79401`
+
+Focused result:
+
+**23 passed / 0 failed**
+
+Final full native regression:
+
+`28a5c79dd49e10f1255a97bc24a05b0df721bb1b`
+
+Final full native result:
+
+**260 passed / 2 skipped**
+
+Exact accepted Stage-1 feature SHA:
+
+`d2a6b1b1c2e4e6894e4564c615475ee4df571d55`
+
+Stage-1 safety:
+
+- M025 historical benchmark economics: **not run**;
+- M021 post-cutoff outcomes: **unused**;
+- M023 outcomes: **unused**;
+- M024 holdout outcomes used to define/tune benchmarks: **no**;
+- production defaults changed: **no**;
+- real-order API: **unused**.
+
+Stage 1 is accepted.
+
+
+## Stage-2 data-source inventory protocol freeze — 2026-09-29
+
+Status: **FROZEN BEFORE ANY M025 BENCHMARK ECONOMICS**
+
+Stage 2 is a source/metadata gate only. It does not authorize strategy-return
+calculation.
+
+### Objective
+
+Identify whether accessible historical data exist that can support the already
+frozen B1/B2/B3 benchmark definitions without substituting economically
+different inputs.
+
+No source may be preferred because of its returns.
+
+### Inventory classifications
+
+Each candidate source/series must receive exactly one classification:
+
+- **RAW-ELIGIBLE-CANDIDATE** — fields/frequency/history/universe can support
+  the frozen publication-faithful calculation, subject to later deterministic
+  ingestion validation;
+- **DERIVED-REFERENCE-ONLY** — published portfolio/factor return series useful
+  for external reference/equivalence checks but insufficient to reconstruct
+  the frozen raw benchmark;
+- **PROXY-ONLY** — can support an explicitly labelled proxy such as
+  `TSMOM SPOT PROXY`, but not publication-faithful economics;
+- **INSUFFICIENT** — missing required fields/history/universe;
+- **UNAVAILABLE/RESTRICTED** — source exists but cannot be accessed under the
+  current public/free research boundary.
+
+No ranking among eligible sources based on economic performance is allowed.
+
+### B1 — MOP TSMOM inventory requirements
+
+A RAW-ELIGIBLE-CANDIDATE must provide:
+
+1. daily returns or prices from a futures/forward-compatible currency
+   instrument whose excess-return convention can be stated exactly;
+2. enough raw information to construct daily excess returns without inventing
+   financing/carry;
+3. at least 72 consecutive usable calendar months per evaluated instrument
+   (12-month warmup + 60 evaluation months);
+4. stable instrument identifiers and roll/contract convention where futures
+   are used;
+5. source timezone/calendar documentation;
+6. no synthetic forward filling across missing observations;
+7. reproducible access metadata and source hashes once ingested.
+
+Spot-only daily prices are **PROXY-ONLY**.
+
+A published TSMOM factor return series is **DERIVED-REFERENCE-ONLY** unless it
+contains the instrument-level raw data required by the frozen signal and
+volatility calculation.
+
+### B2 — currency momentum inventory requirements
+
+A RAW-ELIGIBLE-CANDIDATE must provide, for a common base currency:
+
+1. at least 12 distinct foreign currencies in every evaluated month;
+2. end-of-month spot rates;
+3. one-month forward rates or directly observed monthly currency **log excess
+   returns**;
+4. at least 72 consecutive eligible months;
+5. quote convention sufficient to reproduce the U.S./base-investor return
+   sign;
+6. deterministic currency identifiers through redenominations/euro entry;
+7. missing-data and availability metadata.
+
+A spot-only cross-section is **INSUFFICIENT** for publication-faithful B2.
+
+### B3 — HML-FX carry inventory requirements
+
+A RAW-ELIGIBLE-CANDIDATE must satisfy the B2 cross-sectional requirements and
+also provide either:
+
+- observed one-month forward discounts; or
+- corresponding directly observed short-term rate differentials with an
+  explicit covered-interest-parity convention.
+
+Price momentum, trailing spot returns, or an inferred carry score from price
+history are not permitted substitutes.
+
+A published HML-FX factor/portfolio series is
+**DERIVED-REFERENCE-ONLY** unless currency-level formation data are also
+available.
+
+### B4 — internal M020-D comparator
+
+The accepted M020-D snapshot remains the fixed internal comparator.
+
+Stage 2 may inventory its already-accepted source/artifact references but may
+not rerun or retune M020-D.
+
+### Source evidence to record
+
+For every candidate source record:
+
+- source/publisher;
+- public URL or canonical identifier;
+- access status;
+- license/reuse limitation where visible;
+- raw versus derived;
+- fields;
+- frequency;
+- first/last available dates where documented;
+- currency/instrument universe where documented;
+- base/quote convention;
+- forward/interest-rate availability;
+- transaction-cost fields if any;
+- whether the 72-month gate is plausibly satisfiable;
+- classification;
+- exact reason for classification;
+- date the source metadata were checked.
+
+Do not record strategy P/L, Sharpe ratio, drawdown, winning periods, or other
+candidate economic outcomes during this gate.
+
+### Stop rule
+
+If no public/free RAW-ELIGIBLE-CANDIDATE exists for a publication-faithful
+benchmark family, record that fact and stop that family at the data gate.
+
+Do not weaken the benchmark or silently substitute spot data.
+
+A PROXY-ONLY TSMOM path may proceed later only under its explicit proxy label
+and under a separately frozen execution protocol.
+
+### Stage-2 authorized sequence
+
+1. prospectively freeze this inventory protocol;
+2. inspect public source documentation/metadata only;
+3. publish a deterministic source-inventory document/artifact;
+4. independently review classifications against the frozen field gates;
+5. do not download/compute benchmark return panels yet unless needed solely to
+   prove schema/access and explicitly authorized in a later ingestion gate;
+6. freeze a separate ingestion/economic protocol only for
+   RAW-ELIGIBLE-CANDIDATE sources that survive inventory;
+7. stop before economics.
+
+
+## Stage-2 source-inventory result — 2026-09-29
+
+Deterministic inventory artifact:
+
+`docs/research/m025-public-source-inventory.md`
+
+Inventory decision:
+
+- B1 MOP TSMOM: **no public/free RAW-ELIGIBLE-CANDIDATE established**;
+- B2 Menkhoff momentum: **no public/free RAW-ELIGIBLE-CANDIDATE established**;
+- B3 HML-FX carry: **no public/free RAW-ELIGIBLE-CANDIDATE established**;
+- B4 M020-D: accepted frozen internal reference only.
+
+Non-raw paths retained without weakening definitions:
+
+- AQR TSMOM factor datasets — **DERIVED-REFERENCE-ONLY**;
+- Roussanov/Lustig/Verdelhan CurrencyPortfolios.xls —
+  **DERIVED-REFERENCE-ONLY**;
+- Federal Reserve H.10 / Dukascopy spot —
+  **PROXY-ONLY** for a separately labelled TSMOM spot proxy.
+
+The frozen Stage-2 stop rule fires for publication-faithful B1/B2/B3 raw
+reconstruction.
+
+No M025 benchmark economics were run during source inventory.
+
+
+## Stage-3 reference/proxy evidence protocol freeze — 2026-09-29
+
+Status: **FROZEN BEFORE ANY STAGE-3 ECONOMIC DOWNLOAD/CALCULATION**
+
+Stage-2 inventory acceptance:
+
+`efbf59094ff226542201a32963a5e75a1fccd416`
+
+Stage 3 keeps the two surviving evidence types scientifically separate:
+
+1. externally published **DERIVED REFERENCE SERIES**;
+2. a locally reconstructed **TSMOM SPOT PROXY**.
+
+Neither may be described as publication-faithful raw reconstruction.
+
+### P1 — Federal Reserve H.10 TSMOM spot proxy
+
+Prospectively selected source:
+
+**Federal Reserve Board H.10 — Daily Foreign Exchange Rates**
+
+The selection is based only on source authority, public access, long history,
+stable documented identifiers, and explicit quote convention. No return
+outcome was inspected to choose H.10.
+
+Canonical H.10 daily-rate package contains exactly these 23 frozen source
+series:
+
+| Currency | H.10 series ID | Source quote |
+|---|---|---|
+| AUD | H10/H10/RXI$US_N.B.AL | USD per AUD |
+| EUR | H10/H10/RXI$US_N.B.EU | USD per EUR |
+| NZD | H10/H10/RXI$US_N.B.NZ | USD per NZD |
+| GBP | H10/H10/RXI$US_N.B.UK | USD per GBP |
+| BRL | H10/H10/RXI_N.B.BZ | BRL per USD |
+| CAD | H10/H10/RXI_N.B.CA | CAD per USD |
+| CNY | H10/H10/RXI_N.B.CH | CNY per USD |
+| DKK | H10/H10/RXI_N.B.DN | DKK per USD |
+| HKD | H10/H10/RXI_N.B.HK | HKD per USD |
+| INR | H10/H10/RXI_N.B.IN | INR per USD |
+| JPY | H10/H10/RXI_N.B.JA | JPY per USD |
+| MYR | H10/H10/RXI_N.B.MA | MYR per USD |
+| MXN | H10/H10/RXI_N.B.MX | MXN per USD |
+| NOK | H10/H10/RXI_N.B.NO | NOK per USD |
+| ZAR | H10/H10/RXI_N.B.SF | ZAR per USD |
+| SGD | H10/H10/RXI_N.B.SI | SGD per USD |
+| KRW | H10/H10/RXI_N.B.KO | KRW per USD |
+| LKR | H10/H10/RXI_N.B.SL | LKR per USD |
+| SEK | H10/H10/RXI_N.B.SD | SEK per USD |
+| CHF | H10/H10/RXI_N.B.SZ | CHF per USD |
+| TWD | H10/H10/RXI_N.B.TA | TWD per USD |
+| THB | H10/H10/RXI_N.B.TH | THB per USD |
+| VES | H10/H10/RXI_N.B.VES | VES per USD |
+
+No H.10 dollar indexes enter the proxy.
+
+#### Frozen source snapshot range
+
+The H.10 ingestion request is frozen prospectively to:
+
+- from: **1971-01-04**;
+- through: **2026-08-31**, inclusive.
+
+August 2026 is the last complete calendar month before the Stage-3 protocol
+date. September 2026 observations are excluded from this snapshot so later
+H.10 releases cannot alter a partially observed month.
+
+The exact downloaded bytes must be hashed before parsing.
+
+#### Frozen normalization
+
+Every source series is normalized to:
+
+**USD value of one foreign-currency unit**
+
+Therefore:
+
+- AUD/EUR/NZD/GBP: keep source observation unchanged;
+- all other frozen series: normalized price = `1 / source_rate`.
+
+No sign or quote convention may be changed after economics.
+
+#### Frozen data handling
+
+- use only source observation dates;
+- source `ND`/missing values become missing observations;
+- do not forward-fill or backward-fill missing observations;
+- do not interpolate;
+- do not synthesize weekend/holiday observations;
+- normalized prices must be finite and strictly positive;
+- duplicate source dates are invalid;
+- source rows are sorted chronologically;
+- preserve source series identifiers and original quote convention in metadata.
+
+The ingestion gate must freeze the downloaded bytes SHA-256 and a normalized
+panel SHA-256 before any proxy return is calculated.
+
+#### Frozen history / universe gate
+
+The **source universe is exactly the 23 series above**.
+
+Each instrument must have a consecutive source history sufficient for:
+
+- 12 months pre-signal formation history; and
+- at least 60 subsequent complete evaluation months.
+
+The complete source panel must therefore demonstrate the Stage-1
+72-consecutive-month gate before proxy economics.
+
+An instrument may not be removed because of its later performance.
+
+If an instrument fails the predeclared data gate, the ingestion result must
+name it and classify P1 as **DATA GATE FAILED** unless a protocol-defined
+source-level reason proves that the H.10 series itself is discontinued or
+structurally unavailable. No economic subset search is allowed.
+
+#### Frozen P1 strategy semantics
+
+Label every artifact/result:
+
+**TSMOM SPOT PROXY — FED H.10**
+
+For each eligible normalized spot-price series:
+
+1. compute simple spot returns with no fill;
+2. use the already accepted MOP Stage-1 mechanics:
+   - 12-month formation;
+   - 1-month hold/rebalance;
+   - centered ex-ante EWMA daily volatility;
+   - `delta = 60/61`;
+   - annualization = 261;
+   - 40% per-instrument target volatility;
+   - volatility information only through `t-1`;
+3. long when the trailing 12-month spot return is positive;
+4. short when negative;
+5. a zero signal receives zero directional exposure;
+6. a non-finite/non-positive volatility observation is ineligible for that
+   formation month; no volatility floor or leverage cap may be invented;
+7. apply the month-end formation weight only to the following month;
+8. form the proxy portfolio as the equal-weight mean of valid
+   volatility-scaled instrument returns for the month.
+
+No currency is weighted or excluded based on realized performance.
+
+#### Costs and financing
+
+H.10 supplies reference spot rates, not executable bid/ask/forward funding.
+
+Therefore P1 is reported:
+
+**GROSS SPOT-PRICE PROXY / TRANSACTION COSTS UNMODELED / CARRY AND FINANCING UNMODELED**
+
+Do not invent spreads, commissions, swaps, or financing.
+
+This limitation must accompany every economic result.
+
+### R1 — AQR TSMOM derived reference
+
+Canonical reference:
+
+**AQR — Time Series Momentum: Factors, Monthly**
+
+Use the published **currency TSMOM factor** only if ingestion/schema inspection
+can identify a currency-specific monthly factor unambiguously.
+
+If the downloadable artifact contains only a combined all-asset factor, classify
+the currency-reference comparison as **SCHEMA INELIGIBLE** rather than silently
+using the combined factor.
+
+Do not reconstruct AQR's underlying positions.
+
+### R2 — LRV currency-portfolio derived reference
+
+Canonical reference:
+
+**Lustig / Roussanov / Verdelhan — CurrencyPortfolios.xls**
+
+Use the published six currency portfolio return series only after a
+schema-only ingestion gate identifies P1 through P6 (or an unambiguous
+equivalent).
+
+Reference HML-FX is frozen as:
+
+**P6 − P1**
+
+If the sheet already publishes HML-FX, verify its identity against P6 − P1
+before using it.
+
+Do not treat these portfolio returns as raw spot/forward formation data.
+
+### R3 — M020-D internal reference
+
+Use only the already accepted M020-D snapshot/artifact hashes.
+
+Do not rerun M020-D in Stage 3.
+
+### Frozen economic summary metrics
+
+For every monthly derived-reference or proxy return series admitted by a later
+execution gate, report exactly:
+
+- first/last included month;
+- observation count;
+- arithmetic mean monthly return;
+- annualized arithmetic mean = `12 * monthly_mean`;
+- annualized volatility = `sqrt(12) * sample_std(ddof=1)`;
+- annualized Sharpe = annualized mean / annualized volatility;
+- cumulative wealth from 1.0 by `cumprod(1 + r)`;
+- maximum drawdown of that cumulative-wealth series;
+- positive-month fraction.
+
+No metric may be used to retune benchmark definitions.
+
+### Frozen cross-series comparisons
+
+Only when two series overlap in calendar months, report:
+
+- exact common-window start/end/count;
+- zero-lag Pearson correlation of monthly returns;
+- annualized mean-return difference:
+  `12 * mean(proxy - reference)`;
+- annualized tracking error:
+  `sqrt(12) * std(proxy - reference, ddof=1)`.
+
+Do not optimize lags, scaling, signs, subperiods, or currency subsets to improve
+correlation.
+
+P1 may be compared with R1 only if R1 is a currency-specific TSMOM factor.
+
+R2 HML-FX remains a standalone derived reference because no B3 raw/proxy
+reconstruction is authorized.
+
+R3 M020-D remains an internal accepted snapshot and is not forced into a
+monthly return correlation comparison unless an already-accepted monthly
+artifact exists.
+
+### Stage-3 deterministic artifacts
+
+Before economics, a separate ingestion gate must publish deterministic:
+
+- source download URL/identifier;
+- retrieval timestamp;
+- raw source SHA-256;
+- parsed/schema metadata;
+- normalized panel SHA-256 where applicable;
+- exact included source IDs/columns;
+- first/last raw observation metadata;
+- missing-value counts;
+- 72-month gate result;
+- no-economic-computation safety assertion.
+
+Economic execution is unauthorized until those ingestion artifacts are
+accepted.
+
+### Stop / contamination rules
+
+- no source replacement after seeing returns;
+- no H.10 currency removal based on performance;
+- no lookback/hold/vol-target/estimator change;
+- no leverage cap/volatility floor invented after outcomes;
+- no transaction-cost estimate invented after outcomes;
+- no B2/B3 spot-only substitute;
+- no M021 post-cutoff use;
+- no M023/M024 outcome use to alter benchmark definitions;
+- no production/live promotion.
+
+Any later economic result is research evidence only.
+
+
+## Stage-3 ingestion implementation checkpoint — 2026-09-29
+
+Stage-3 protocol freeze:
+
+`6b6592237fe4f9e087745c914e916bda6521012d`
+
+H.10 snapshot-range freeze:
+
+`a7fa66244e57c9f0e214526ab8dee9b96537f87c`
+
+Non-economic ingestion implementation:
+
+`184f0fbd0e58e0d451120232a2cb9295c729f7f2`
+
+Fixed local-control ingestion support:
+
+`cd985e2f29d6814b1aec54ffff1b57b2c9a1ab6a`
+
+Runtime probe result:
+
+`315a03a0ba1967d30a884b0fc0d33c39543f6e70`
+
+Runtime probe established:
+
+- LibreOffice: `/usr/bin/libreoffice`;
+- `openpyxl`: absent;
+- `xlrd`: absent.
+
+No dependency change is required. AQR XLSX schema is inspected with Python
+standard-library ZIP/XML parsing. The legacy LRV XLS is converted by the
+already-installed LibreOffice to XLSX solely for string-schema inspection.
+
+Ingestion source endpoints are fixed:
+
+- Federal Reserve H.10 23-series daily-rate package,
+  1971-01-04 through 2026-08-31;
+- AQR `Time-Series-Momentum-Factors-Monthly.xlsx`;
+- author-hosted `CurrencyPortfolios.xls`.
+
+The ingestion module cannot import or call the benchmark signal/return
+functions. Its report contains hashes/schema/missingness/continuity only.
+
+### Recovery sequence
+
+1. fast-forward Dell to exact documented M025 feature HEAD;
+2. run `m025_stage3_ingestion_tests`;
+3. require focused PASS with no downloads/economics;
+4. run `m025_stage3_ingestion`;
+5. accept the first complete immutable source snapshot only;
+6. review H.10 72-month gate and AQR/LRV schema flags;
+7. durably freeze all raw/normalized/report hashes;
+8. stop before any Stage-3 economic calculation.
+
+
+## Stage-3 H.10 transport-only repair — 2026-09-29
+
+The first two non-economic ingestion attempts failed before parsing because the
+Federal Reserve DDP custom CSV `Output.aspx` endpoint returned an empty body.
+
+Failed local-control results:
+
+- `mamba2-m025-stage3-ingestion-v1`;
+- `mamba2-m025-stage3-ingestion-v2`.
+
+No final ingestion artifact was published and no return/economic calculation
+ran in either attempt.
+
+The Federal Reserve's official H.10 page separately exposes:
+
+`https://www.federalreserve.gov/datadownload/Output.aspx?filetype=zip&rel=h10`
+
+as the release-wide SDMX/XML ZIP. A schema-only fixed transport probe confirmed:
+
+- HTTP 200;
+- content type `application/x-zip-compressed`;
+- archive members exactly include:
+  `H10_data.xml`, `H10_struct.xml`, `H10_H10.xsd`,
+  `frb_common.xsd`;
+- `H10_data.xml` has `Series` keys including
+  `SERIES_NAME/CURRENCY/FREQ/FX/UNIT/UNIT_MULT`;
+- observations expose
+  `TIME_PERIOD/OBS_VALUE/OBS_STATUS`.
+
+Transport probe result:
+
+`mamba2-m025-stage3-h10-transport-probe-v1`
+
+This repair authorizes use of that official release-wide ZIP **only as the
+transport container**.
+
+Scientific source/sample semantics remain unchanged:
+
+1. source remains Federal Reserve H.10;
+2. exact frozen 23 daily series remain unchanged;
+3. the full DDP identifier is reconstructed as
+   `H10/H10/<SERIES_NAME>`;
+4. only observations in
+   **[1971-01-04, 2026-08-31] inclusive** may enter the normalized panel;
+5. observations after 2026-08-31 may exist in the release-wide raw archive but
+   must be ignored before normalized-panel construction and may not affect
+   missingness/continuity/economics;
+6. raw ZIP bytes receive a SHA-256, and the cutoff-normalized panel receives a
+   separate SHA-256;
+7. all other Stage-3 protocol rules remain frozen.
+
+This is a transport repair caused by DDP endpoint behavior, not a source,
+universe, date, strategy, or economic-rule change.
+
+
+## Stage-3 H.10 Venezuelan SDMX metadata alias repair — 2026-09-29
+
+The fourth non-economic ingestion attempt reached the exact frozen H.10
+Venezuelan series:
+
+`H10/H10/RXI_N.B.VES`
+
+and stopped because the release-wide SDMX archive reports:
+
+`CURRENCY="VEB"`
+
+for that series even though the Federal Reserve DDP/public package identifier
+remains `RXI_N.B.VES` and the series description remains **Venezuelan
+Bolivar**.
+
+Failed local-control result:
+
+`mamba2-m025-stage3-ingestion-v4`
+
+No immutable ingestion artifact was published and no economic calculation ran.
+
+This is accepted as one explicit transport/schema alias only:
+
+- frozen series remains exactly `H10/H10/RXI_N.B.VES`;
+- normalized proxy symbol remains **VES**;
+- accepted SDMX `CURRENCY` values for this exact series are only
+  `VES` or legacy `VEB`;
+- no other series receives a currency-code alias;
+- all other currency metadata drift remains a hard failure.
+
+Repair commit:
+
+`82c9665f9dd29f7985b71dd2fa0e70422efba9fc`
+
+This repair does not change source, universe, sample dates, quote
+normalization, missing-data treatment, strategy definition, or any economic
+rule.
+
+
+## Stage-3 LRV workbook transport repair — 2026-09-29
+
+The fifth non-economic ingestion attempt passed the H.10 parser and then failed
+before LRV schema inspection because the previously inventoried Wharton-hosted
+`CurrencyPortfolios.xls` URL did not yield a LibreOffice-loadable workbook in
+the deterministic ingestion environment.
+
+Failed local-control result:
+
+`mamba2-m025-stage3-ingestion-v5`
+
+No immutable Stage-3 ingestion artifact was published and no benchmark return
+or economic metric was calculated.
+
+The frozen scientific reference remains exactly:
+
+**Lustig / Roussanov / Verdelhan — CurrencyPortfolios.xls**
+
+Transport is changed only to the historical MIT-hosted mirror:
+
+`https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls`
+
+This mirror is independently cited in published research as the downloadable
+LRV global currency-risk-factor data file and responds as an Excel workbook.
+
+The ingestion implementation must require the legacy OLE Compound File magic
+bytes:
+
+`D0 CF 11 E0 A1 B1 1A E1`
+
+before LibreOffice conversion. HTML/error payloads must hard-fail before
+schema inspection.
+
+This transport repair changes no reference identity, portfolio definition,
+sample-selection rule, benchmark formula, metric, or economic authorization.
+
+
+## Stage-3 LRV local conversion-path repair — 2026-09-29
+
+The sixth non-economic ingestion attempt successfully passed the LRV OLE-XLS
+magic-byte guard, proving that the MIT transport payload is a real legacy Excel
+workbook.
+
+It then failed in the local LibreOffice conversion step with
+`source file could not be loaded` while using repository-relative temp paths.
+
+Failed local-control result:
+
+`mamba2-m025-stage3-ingestion-v6`
+
+No immutable ingestion result was published and no economics ran.
+
+Local execution repair:
+
+`26de5ae69742a7913ab56e0f5f73af2084e2c511`
+
+LibreOffice conversion now:
+
+- resolves the source workbook to an absolute path;
+- requires that absolute source path to exist before execution;
+- resolves the output directory to an absolute path.
+
+No source bytes, workbook identity, schema rule, benchmark definition, or
+economic rule changed.
+
+
+## Stage-3 LRV conversion-free schema repair — 2026-09-30
+
+The validated LRV workbook mirror is a genuine OLE Excel workbook:
+
+- URL: `https://web.mit.edu/adrienv/www/CurrencyPortfolios.xls`;
+- SHA-256:
+  `e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74`;
+- OLE magic: `D0CF11E0A1B11AE1`.
+
+The fixed binary probe identified schema strings including:
+
+- `All currencies`;
+- `Developed currencies`;
+- `Portfolio1` through `Portfolio6%`;
+- `HML`;
+- `HML = P6 - P1`.
+
+LibreOffice conversion is not required for Stage-3 acceptance because it fails
+to load this legacy workbook despite the file being a valid OLE Excel document.
+
+The ingestion implementation therefore uses deterministic schema-string
+extraction directly from the OLE binary and explicitly does **not** parse
+numeric cells.
+
+Feature repair commits:
+
+- `3302ab0fdaa698811ef549888bba5fbe1b541be6`
+- `a267f626ad13281a0976e78c6f50fa3773efb042`
+
+Control-plane repair:
+
+`2ab3bceb0f1506002490f6f2a18863e872045e1a`
+
+This changes only schema-ingestion mechanics. It does not change source,
+workbook, series definitions, HML rule, sample, or any economic rule.
+
+
+## Stage-3 ingestion acceptance — 2026-09-30
+
+Accepted feature SHA:
+
+`554ab3a827163732f4dec335c716fec2f386bfe8`
+
+Accepted focused tests:
+
+`2d3e36ca14c4a277666a74d4f300a982a19d88be` — **33 passed / 0 failed**
+
+Accepted immutable ingestion result:
+
+`61bb9c5d591e8519f5bebc024d670204d9a71eab`
+
+Metadata reinspection result:
+
+`2f82b6d955cb8c4d5a80e692c0b89489383a40e0`
+
+Ingestion report SHA-256:
+
+`d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505`
+
+### H.10
+
+Raw ZIP SHA-256:
+
+`38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046`
+
+Normalized USD-per-foreign panel SHA-256:
+
+`015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419`
+
+Window: **1971-01-04 through 2026-08-31**.
+
+All **23/23** frozen H.10 currency series pass the 72-consecutive-month gate.
+
+### AQR derived reference
+
+Raw workbook SHA-256:
+
+`33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb`
+
+The `TSMOM Factors` sheet explicitly exposes currency factor
+`TSMOM^FX` at cell `F18`.
+
+Classification: **SCHEMA ELIGIBLE** for a later execution gate.
+
+### LRV derived reference
+
+Raw workbook SHA-256:
+
+`e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74`
+
+String-only OLE schema inspection identifies P1 through P6 and HML, including
+`HML = P6 - P1`.
+
+Numeric cells were not parsed.
+
+Classification: **SCHEMA ELIGIBLE** for a later execution gate.
+
+### Safety
+
+Stage 3 computed no returns, P/L, Sharpe, drawdown, cumulative wealth,
+correlation, tracking error, or economic ranking.
+
+M021 post-cutoff outcomes were unused. M023/M024 outcomes were not used to
+alter definitions. Real-order APIs were unused.
+
+Stage 3 is accepted.
+
+No economic calculation is authorized until a separate Stage-4 execution
+protocol is frozen against the exact hashes above.
+
+
+## Stage-4 economic execution protocol freeze — 2026-09-30
+
+Status: **FROZEN BEFORE ANY M025 ECONOMIC VALUE IS PARSED OR CALCULATED**
+
+Stage-3 accepted ingestion result:
+
+`61bb9c5d591e8519f5bebc024d670204d9a71eab`
+
+Stage-3 ingestion report SHA-256:
+
+`d5f05a7aed82d1cac275bcb222913ec61a38f00b2df74b3727e479d7a4324505`
+
+Stage 4 may consume only these immutable inputs:
+
+- H.10 raw SHA:
+  `38b941973dd7e6570e590291a34ebd27873ef98c7d09fcb0e3097ee76e793046`;
+- H.10 normalized-panel SHA:
+  `015e61cffd504f61853167bfab1511ecd92c51e87abd21c935ee70b064f43419`;
+- AQR workbook SHA:
+  `33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb`;
+- LRV workbook SHA:
+  `e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74`.
+
+No source replacement is authorized after this freeze.
+
+### E1 — TSMOM SPOT PROXY — FED H.10
+
+Input:
+
+the exact normalized H.10 panel above, containing all 23 frozen source
+currencies and only dates through 2026-08-31.
+
+Daily spot returns:
+
+- simple return `p_t / p_(t-1) - 1`;
+- `pct_change(fill_method=None)` semantics;
+- if either current or immediately previous union-calendar observation is
+  missing for an instrument, that daily return is missing;
+- no forward/back fill;
+- no interpolation;
+- no synthetic weekend/holiday rows.
+
+Signal and volatility:
+
+- exact accepted Stage-1 `tsmom_spot_proxy_weights` mechanics;
+- 12-month formation;
+- one-month holding period;
+- sign of trailing compounded monthly spot return;
+- centered ex-ante EWM variance of daily spot returns;
+- `delta = 60/61`;
+- annualization scalar 261;
+- 40% per-instrument target volatility;
+- volatility at date t may use information only through t-1;
+- no volatility floor;
+- no leverage cap;
+- non-finite/non-positive volatility means no valid weight for that
+  instrument/month.
+
+Monthly instrument return:
+
+`(1 + daily_return).prod(min_count=1) - 1`
+
+within each calendar month.
+
+The month-end formation weight is shifted exactly once and is applied only to
+the following calendar month's instrument return.
+
+Portfolio return for month m:
+
+the arithmetic mean of `weight_i,m * monthly_spot_return_i,m` across the
+frozen 23-series source universe for instruments having both a finite shifted
+weight and a finite realized monthly return in m.
+
+A currency may be absent from a month only because the prospectively frozen
+source/missingness/volatility gates make its exposure invalid. It may never be
+removed because of realized performance.
+
+The artifact must report the valid-instrument count for every output month.
+
+Label:
+
+**TSMOM SPOT PROXY — FED H.10**
+
+Cost label:
+
+**GROSS SPOT-PRICE PROXY / TRANSACTION COSTS UNMODELED / CARRY AND FINANCING UNMODELED**
+
+### E2 — AQR currency TSMOM derived reference
+
+Immutable workbook:
+
+`33470930e2269c0d97be4732ec2d9c27ddbc69ac8133b059a263e27400263eeb`
+
+Exact sheet:
+
+`TSMOM Factors`
+
+Exact admitted factor header:
+
+`TSMOM^FX`
+
+Stage-3 schema located that header at:
+
+`F18`
+
+The monthly date field must be taken from column A on the data rows beneath
+the frozen header row.
+
+No other AQR factor column is admitted.
+
+Unit/scaling rule:
+
+- inspect workbook number-format/style metadata only;
+- if the TSMOM^FX data cells use an Excel percentage number format, preserve
+  the stored numeric value as the decimal return; do **not** divide again;
+- if the cells are not percentage-formatted, execution must stop
+  **UNIT SCHEMA INELIGIBLE** unless non-value workbook metadata explicitly
+  establishes the unit;
+- no scaling may be chosen from observed return magnitudes.
+
+Duplicate months, non-finite values, or non-monthly date ordering are hard
+failures.
+
+Label:
+
+**AQR TSMOM^FX — DERIVED REFERENCE**
+
+### E3 — LRV HML-FX derived reference
+
+Immutable workbook:
+
+`e08676e399a3c80714e55bd980350892785e8091f483af0784197fd815612d74`
+
+Exact admitted sample:
+
+**All currencies (net)**
+
+Rationale fixed before economics: the LRV paper's main currency excess-return
+portfolios account for transaction costs; the gross `All currencies` sheet
+is not the Stage-4 reference.
+
+The parser must identify in that exact sheet:
+
+- a monthly date field;
+- Portfolio1;
+- Portfolio2;
+- Portfolio3;
+- Portfolio4;
+- Portfolio5;
+- Portfolio6.
+
+No developed-only or gross sheet may substitute.
+
+Canonical Stage-4 HML-FX return is always:
+
+`P6 - P1`
+
+If the exact sheet also contains a published HML series, normalize it under the
+same unit rule and verify it equals `P6 - P1` within absolute tolerance
+`1e-10` on overlapping non-missing months. A mismatch is a hard failure.
+
+Unit/scaling rule:
+
+- establish unit from workbook cell-format metadata or explicit workbook text;
+- percentage-formatted cells are already stored as decimal fractions and are
+  not divided again;
+- if a non-percentage numeric format is used, explicit workbook metadata must
+  establish whether values are percent points before any scaling;
+- observed return magnitudes may never be used to infer units.
+
+Legacy-XLS parsing may use a deterministic library/tool, but parser choice may
+not change the admitted sheet, columns, dates, or scaling rules.
+
+Label:
+
+**LRV HML-FX — DERIVED REFERENCE — ALL CURRENCIES NET**
+
+### E4 — deterministic monthly-series rules
+
+For E1/E2/E3:
+
+- index is canonical calendar month end;
+- at most one observation per calendar month;
+- rows sorted chronologically;
+- no future values may affect earlier output;
+- missing months remain missing and are not synthesized;
+- deterministic A/B runs must produce byte-identical canonical JSON artifacts.
+
+### E5 — frozen summary metrics
+
+For each admitted monthly return series, report exactly:
+
+- first included month;
+- last included month;
+- observation count;
+- arithmetic mean monthly return;
+- annualized arithmetic mean = `12 * mean_monthly`;
+- annualized volatility = `sqrt(12) * sample_std(ddof=1)`;
+- annualized Sharpe = annualized mean / annualized volatility;
+- cumulative wealth from 1.0 via `cumprod(1 + r)`;
+- maximum drawdown of that cumulative-wealth series;
+- positive-month fraction.
+
+No alternate statistic may trigger parameter or source changes.
+
+### E6 — frozen cross-series comparison
+
+Only E1 versus E2 is compared directly.
+
+On their exact calendar-month intersection, report:
+
+- common start month;
+- common end month;
+- common observation count;
+- zero-lag Pearson correlation;
+- annualized mean-return difference:
+  `12 * mean(E1 - E2)`;
+- annualized tracking error:
+  `sqrt(12) * sample_std(E1 - E2, ddof=1)`.
+
+No lag search, sign flip, rescaling, subperiod search, or currency-subset search
+is allowed.
+
+E3 is a standalone derived carry reference; no price-only carry proxy is
+authorized.
+
+### E7 — M020-D internal comparator
+
+Do not rerun M020-D.
+
+Stage 4 may repeat only already-accepted M020-D snapshot/economic fields with
+their existing artifact/result hashes, clearly labelled as an internal
+historical comparator. It is not forced into monthly correlation analysis.
+
+### E8 — execution/acceptance order
+
+1. freeze this protocol;
+2. implement value parsers and pure economic functions;
+3. add synthetic tests for:
+   - H.10 no-fill semantics;
+   - one-shift 12/1 timing;
+   - future-value mutation invariance;
+   - AQR exact sheet/header/date column;
+   - workbook-unit metadata refusal when ambiguous;
+   - LRV exact `All currencies (net)` selection;
+   - P6-P1 identity;
+   - deterministic summary/comparison formulas;
+4. add fixed local-control focused-test action only;
+5. run focused tests;
+6. run full native regression;
+7. only after both pass, add/enable the fixed Stage-4 A/B economic action;
+8. execute E1/E2/E3 exactly once as deterministic A/B;
+9. mechanically publish the frozen summaries/comparison;
+10. durably close M025 or record the resulting evidence;
+11. stop.
+
+### E9 — contamination / stop rules
+
+After the first Stage-4 economic output:
+
+- do not change H.10 universe;
+- do not drop losing currencies;
+- do not change lookback/hold/volatility target/estimator;
+- do not add a leverage cap or volatility floor;
+- do not change AQR factor;
+- do not switch LRV sample/sheet;
+- do not change units/scaling;
+- do not tune sign, lag, or comparison window;
+- do not add transaction-cost estimates to E1;
+- do not use M021 post-cutoff outcomes;
+- do not use M023/M024 outcomes to alter M025;
+- do not promote any result to production/live trading.
+
+Stage-4 results are research evidence, not a production trading recommendation.
+
+
+## Stage-4 implementation checkpoint — 2026-09-30
+
+Protocol freeze:
+
+`6511131792e32e74b6c98ce9de1d11dded5522b7`
+
+Locked XLS parser dependency:
+
+`07facca9a04cc5f8154b7c648208f186326c0f2e`
+
+Stage-4 implementation:
+
+`f74bd6606b91f38a4255d38af6d4770500004ec5`
+
+Fixed Stage-4 focused-test control:
+
+`7ab842c005e45d07c6790ba037a0bd9c1ce86599`
+
+Implemented:
+
+- exact H.10 23-series TSMOM spot-proxy monthly series;
+- exact AQR `TSMOM Factors!TSMOM^FX` parser with percentage-format unit gate;
+- exact LRV `All currencies (net)` P1-P6 parser with canonical HML = P6-P1;
+- unit-schema refusal rather than magnitude inference;
+- frozen summary metrics;
+- H.10 versus AQR zero-lag comparison;
+- deterministic Stage-4 A/B report builder;
+- synthetic timing/no-fill/future-mutation/layout/metric tests.
+
+No Stage-4 economic action exists at this checkpoint.
+
+Next exact gate:
+
+1. sync Dell to exact current feature HEAD;
+2. run `m025_stage4_tests`;
+3. repair only implementation/test defects without changing frozen economics;
+4. run `test_full_native`;
+5. only after both pass, add the fixed Stage-4 A/B economic action;
+6. execute economics once and stop before any retuning.
+
+
+## Stage-4 validation + current blocker — 2026-09-30
+
+Current accepted Stage-4 feature SHA:
+
+`636478bf0ac6c55e138df418686b48492ee47486`
+
+This includes the AQR footer-string parser repair:
+
+`fix: ignore AQR footer strings in Stage-4 parser`
+
+Accepted focused Stage-4 test result:
+
+`d95bf9911368d11c79e0e247247bc991c49a06dd`
+
+Focused result:
+
+**42 passed / 0 failed**
+
+Accepted full native regression:
+
+`f77ba7f1e424058a52d3c6f139b86347b1714852`
+
+Full native result:
+
+**279 passed / 2 skipped**
+
+The second deterministic Stage-4 economic attempt:
+
+`d1703515dd09c7eff147aecac45772769f8d85a6`
+
+stopped before a successful Stage-4 report because the frozen LRV parser
+correctly refused to infer units:
+
+`UNIT SCHEMA INELIGIBLE: LRV return unit is not explicit`
+
+No definition, source, sheet, sign, scale, lag, universe, lookback, hold,
+volatility target, or metric was changed in response.
+
+A fixed metadata-only LRV probe was added. Its first run:
+
+`b11b9e46a11d661c7f84e3d5fce57e9f4aaf76f8`
+
+failed before workbook inspection because it imported `xlrd` outside the
+locked project environment:
+
+`ModuleNotFoundError: No module named 'xlrd'`
+
+The control action was repaired to run through the locked `uv` environment:
+
+local-control commit:
+
+`6aa1f79bb67274e9b6dafd6971df397fa809ff83`
+
+Corrected probe command:
+
+`mamba2-m025-stage4-lrv-unit-probe-v2`
+
+local-control command commit:
+
+`b61a2b6caeac49dd200d067678a28a2ec718ca72`
+
+As of this checkpoint the corrected v2 command has not been consumed by the
+Dell local-agent timer. The latest published result remains the failed v1
+probe. Treat this as a control-plane availability issue, not a scientific or
+economic result.
+
+### Recovery
+
+1. do not overwrite `mamba2-m025-stage4-lrv-unit-probe-v2`;
+2. restore/restart the existing Dell local-agent timer/service if it is not
+   polling;
+3. require the v2 metadata-only probe result;
+4. if workbook metadata explicitly proves a unit under the already-frozen
+   Stage-4 rule, repair only the parser's unit-schema handling if necessary;
+5. rerun focused Stage-4 tests and full native regression after any code repair;
+6. rerun the immutable deterministic Stage-4 A/B economic action exactly once;
+7. do not retune after economics.
+
+## Stage-4 LRV metadata probe resolution — 2026-09-30
+
+Dell local-control recovery completed and the metadata-only probe was rerun as
+`mamba2-m025-stage4-lrv-unit-probe-v3`.
+
+Accepted result branch commit:
+
+`14f863cba3e64c25a45754c0a74ebda8431ca4f5`
+
+The probe ran against feature checkout:
+
+`039f2e5d9c8536eae1c765c2d5775049d1ac6225`
+
+Observed non-economic workbook metadata for `All currencies (net)`:
+
+- date column: zero-based column 0;
+- P1-P6 columns: zero-based columns 1-6;
+- 2,706 inspected portfolio numeric cells use Excel format `General`;
+- sampled P1-P6 cells use the same non-percentage format/style;
+- sheet text contains `HML = P6 - P1`;
+- admitted workbook metadata does not explicitly state percent or percentage
+  units.
+
+The probe did not report return values or economic summaries.
+
+Under the frozen Stage-4 unit rule, this evidence does not establish an LRV
+scale. Magnitude-based inference remains prohibited. No parser-only scaling
+repair is authorized from this probe.
+
+### Stage-4.1 metadata-evidence extension protocol
+
+Status: **FROZEN BEFORE ANY NEW SOURCE INSPECTION OR ECONOMIC RERUN**
+
+The sole question is whether an authoritative non-value source explicitly
+states the unit used by the exact LRV `CurrencyPortfolios.xls` return series.
+
+Admissible evidence, in order:
+
+1. non-value metadata embedded in the same immutable workbook, including hidden
+   sheets, comments/notes, named ranges, document properties, and textual cells
+   outside the admitted return values;
+2. an author-controlled page, README, data description, appendix, or paper
+   text for the exact LRV currency-portfolio dataset;
+3. the publisher-hosted paper or official supplementary material for the exact
+   dataset.
+
+Not admissible:
+
+- observed return magnitudes;
+- secondary summaries, blogs, forums, or reconstructed datasets;
+- correlation or fit against another return series;
+- choosing a unit because it produces plausible economics;
+- changing the workbook, sheet, P1/P6 definition, sign, lag, source universe,
+  lookback, holding period, volatility target, estimator, or frozen metrics.
+
+Mechanical decision:
+
+- an explicit statement that the dataset values are percentages/percent points
+  authorizes scale `0.01`;
+- an explicit statement that values are decimal returns authorizes scale
+  `1.0`;
+- absent either statement, LRV remains `UNIT SCHEMA INELIGIBLE`.
+
+No Stage-4 economics may run until this metadata-only gate is resolved.
+
+## Stage-4 terminal economics + M025 closeout — 2026-09-30
+
+Status: **M025 CLOSED — FIRST FROZEN STAGE-4 ECONOMIC OUTPUT ACCEPTED; NO RETUNING**
+
+### Stage-4.1 unit evidence resolution
+
+The prospectively frozen metadata-evidence extension was committed before
+external unit evidence was inspected:
+
+`e2163df1bee7f598d64283669a6da08b052b1e73`
+
+The exact-workbook metadata probes established:
+
+- the P1-P6 cells on `All currencies (net)` use Excel `General` formatting;
+- no workbook named-range or text metadata states percent/percentage units;
+- the workbook `Notes` sheet identifies the data as currency excess returns
+  **in levels**, and identifies the `net` sheets as net of bid-ask transaction
+  costs;
+- the author-controlled data page identifies the exact
+  `CurrencyPortfolios.xls` workbook as the monthly currency excess-return
+  dataset for *Common Risk Factors in Currency Markets*;
+- the authors' paper states that the asset-pricing exercise uses excess returns
+  in levels and reports those returns in percentage points per annum, with
+  annualization by multiplication by 12.
+
+Under the predeclared Stage-4.1 mechanical decision rule, that chain establishes
+percent-point units for the exact frozen workbook and therefore a decimal scale
+of `0.01`.
+
+The exact-hash-only implementation repair:
+
+`664e819f0057a5dfa4abac9c54f907c81f101edf`
+
+The regression pin:
+
+`2aed0444c8f0e214d14f9dc90d4c2813388555db`
+
+The repair does not infer units from return magnitudes. It applies the external
+unit evidence only after the immutable LRV workbook SHA has been verified, and
+mixed workbook formats still fail.
+
+### Post-repair validation
+
+Focused Stage-4 command:
+
+`mamba2-m025-stage4-tests-after-unit-evidence-v1`
+
+Result branch commit:
+
+`894ce65d5a1a83910fcacc3d3dfd5ccf551c1a8d`
+
+Focused result:
+
+**43 passed / 0 failed**
+
+Full-native command:
+
+`mamba2-m025-full-native-after-unit-evidence-v1`
+
+Result branch commit:
+
+`d5f85857a3f4014f44b3f5970f16bca2090c87ca`
+
+Full-native result:
+
+**280 passed / 2 skipped**
+
+No Stage-4 economics ran in either validation gate.
+
+### Sole frozen Stage-4 economic execution
+
+Command:
+
+`mamba2-m025-stage4-economics-after-unit-evidence-v1`
+
+Economic feature SHA:
+
+`2aed0444c8f0e214d14f9dc90d4c2813388555db`
+
+Result branch commit:
+
+`c01ab5df81bdf31b3279b2c0d7e99843c7437ef7`
+
+Deterministic artifacts:
+
+- A SHA-256:
+  `633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9`
+- B SHA-256:
+  `633962e5896ac7e8edfe21626beaa09661b01afb286089c00e4c1349caf95ce9`
+- A/B byte identity: **PASS**
+
+#### E1 — TSMOM SPOT PROXY — FED H.10
+
+Cost/fidelity label:
+
+`GROSS SPOT-PRICE PROXY / TRANSACTION COSTS UNMODELED / CARRY AND FINANCING UNMODELED`
+
+- first / last month: **1972-01 / 2026-08**
+- observations: **656**
+- annualized arithmetic mean: **-1.6058975079063509**
+- annualized volatility: **10.234341095284732**
+- annualized Sharpe: **-0.1569126427343951**
+- maximum drawdown: **-24.360847720745745**
+- positive-month fraction: **0.5838414634146342**
+- terminal cumulative wealth from 1.0: **32932171.490252238**
+- first valid instrument count: **10**
+- last valid instrument count: **23**
+
+These are the frozen proxy outputs, not a publication-faithful forward/futures
+reconstruction. Their extreme scale is not grounds for post-result leverage,
+volatility-floor, universe, or other tuning.
+
+#### E2 — AQR TSMOM^FX — DERIVED REFERENCE
+
+- first / last month: **1985-01 / 2026-05**
+- observations: **497**
+- annualized arithmetic mean: **0.10093357261356833**
+- annualized volatility: **0.1835630620846714**
+- annualized Sharpe: **0.5498577517028513**
+- maximum drawdown: **-0.4709897364931771**
+- positive-month fraction: **0.5754527162977867**
+- terminal cumulative wealth from 1.0: **32.37616876346366**
+
+#### E3 — LRV HML-FX — DERIVED REFERENCE — ALL CURRENCIES NET
+
+- first / last month: **1983-11 / 2021-05**
+- observations: **451**
+- frozen unit scale to decimal: **0.01**
+- canonical definition: **P6 - P1**
+- annualized arithmetic mean: **0.0003586837489041334**
+- annualized volatility: **0.0008549433521508009**
+- annualized Sharpe: **0.4195409532126127**
+- maximum drawdown: **-0.0029366212487740295**
+- positive-month fraction: **0.5831485587583148**
+- terminal cumulative wealth from 1.0: **1.013557707308836**
+
+The small observed magnitude may not be used to revisit scaling after the first
+economic output. E9 prohibits post-result unit/scaling changes.
+
+#### Frozen E1 versus E2 comparison
+
+Common window:
+
+**1985-01 through 2026-05, 497 observations**
+
+- Pearson correlation: **-0.07400075645466087**
+- annualized mean-return difference E1-E2:
+  **-2.2772122401222**
+- annualized tracking error: **11.770051121804197**
+
+No lag search, sign flip, rescaling, subperiod search, or currency-subset search
+was run.
+
+### E7 — frozen M020-D internal historical comparator
+
+M020-D is repeated only as already-accepted historical evidence; it was not
+rerun for M025:
+
+- accepted/closed trades: **4,664 / 4,664**
+- non-flat win rate: **39.91416309012876%**
+- net realized P/L: **USD -677.647148799515**
+- ending realized balance/equity: **USD 9,322.352851200485**
+- maximum equity drawdown:
+  **USD 1,067.1062318369404 / 10.629228567139583%**
+- treatment baseline SHA-256:
+  `94259afb5657303c4eb8081feeec9fc4ad64c62d68addc550a0215c04cd2e766`
+- treatment diagnostic SHA-256:
+  `45c67d0ed51c2ec3fb80bff8f13d9f9984730bc68afad774cbbd1ade3806298e`
+- treatment evidence SHA-256:
+  `e9398c614a90e55399a8a5bb2c281277601c99457764a7f290771dc2f438b05a`
+
+It remains a loss-making historical internal comparator and is not forced into
+the monthly reference-series correlation analysis.
+
+### Stop rule
+
+The first accepted Stage-4 economic output has now been inspected.
+
+Therefore M025 stops here:
+
+- no H.10 universe changes;
+- no losing-currency removal;
+- no lookback/hold/volatility-target/estimator change;
+- no leverage cap or volatility floor;
+- no AQR factor replacement;
+- no LRV sheet, sign, unit, or scale change;
+- no lag/subperiod/currency-subset search;
+- no transaction-cost invention for the H.10 proxy;
+- no M021/M023/M024 outcome reuse to alter M025;
+- no production/live promotion.
+
+M025 is closed as research evidence. Any further benchmark investigation must
+start as a separately prospectively frozen milestone rather than modifying
+M025 after seeing these results.
+

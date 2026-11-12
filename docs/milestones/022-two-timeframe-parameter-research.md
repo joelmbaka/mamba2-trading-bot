@@ -1,0 +1,2494 @@
+# Milestone 022 — Two-Timeframe Parameter Research
+
+Status: **PHASE 2 VALIDATION COMPLETE — ZERO CANDIDATES SUPPORTED; HISTORICAL HOLDOUT SEALED**
+
+Protocol date: 2026-09-26
+
+Branch: `strategy-parameter-research`
+
+## Purpose
+
+Systematically test the hand-selected parameters of the existing M5 + M1 strategy without changing its basic two-timeframe idea.
+
+This milestone is independent of M021 prospective validation. M021 remains frozen on `prospective-forward-validation` and must not be modified, rebased, retuned, or interpreted early.
+
+This milestone does **not** authorize live trading or production promotion.
+
+## Fixed strategy structure
+
+Keep:
+
+- M5 as trading/direction timeframe;
+- M1 as entry timeframe;
+- M15/higher-TF filter disabled;
+- trend filter disabled;
+- RSI filter disabled;
+- existing M1 stochastic setup and candle/EMA confirmation semantics;
+- existing account-currency conversion and replay timing semantics;
+- five symbols: EURUSD, EURJPY, GBPUSD, GBPJPY, USDJPY;
+- position size 0.1 for comparability.
+
+Do not add a third timeframe in M022.
+
+## First task — historical data inventory
+
+Before parameter screening, determine the maximum trustworthy read-only MT5 history available for all five symbols for:
+
+- M1 Bid;
+- tick-derived/observable Ask M1 needed for spread-aware replay;
+- M5;
+- M15 only where existing replay/export compatibility requires it; M15 must not become a signal input.
+
+Prefer a materially longer history than the already-inspected 2026-06-23 through 2026-09-25 dataset.
+
+Record exact available UTC ranges, row counts, missing-data/Ask diagnostics, manifest/artifact hashes, broker/source metadata, and runtime versions.
+
+Do not silently fabricate or forward-fill unavailable Ask history.
+
+## Inventory implementation checkpoint — 2026-09-26
+
+The M022 start gate was verified before local execution:
+
+- starting branch: `strategy-parameter-research`;
+- starting SHA: `253b6ee840e5489a2c5db27d064500bb44f93e1e`;
+- Dell repository gate: clean worktree, local/remote divergence `0/0`, lock check passed;
+- no M021 economic result was inspected or used.
+
+Historical M019 evidence showed that broker-native M1 retention must not be treated as the same thing as total trustworthy market-data depth:
+
+- chunked native M1 history reached only to approximately 2026-06-22;
+- native M5/M15 history was already available from 2026-06-01;
+- synchronized tick samples containing Bid/Ask were also available on 2026-06-01 and 2026-06-15 for all five symbols.
+
+Therefore M022 must separately test whether an older M1 Bid/Ask stream can be truthfully reconstructed from the broker's own ticks. It must not fabricate or forward-fill missing minutes.
+
+The feature branch now contains an **opt-in research/export mode** that reconstructs synchronized Bid and Ask M1 OHLC from the same `COPY_TICKS_ALL` stream while leaving the existing native-M1 export path unchanged by default. Broker-native M5/M15 remain unchanged. This infrastructure requires overlap validation against previously accepted native/tick-derived history before any older tick-derived M1 range can be declared trustworthy.
+
+Local-control now contains fixed M022-only actions for:
+
+- repository/branch gating;
+- history-inventory cleanup;
+- historical inventory;
+- a bounded history-depth probe;
+- a fixed tick-derived inventory export with accepted-M019 overlap proof.
+
+The first inventory command was dispatched as:
+
+`mamba2-m022-history-inventory-20260926-1217`
+
+That first implementation attempted to discover the earliest Ask tick from a very old origin before exporting. It became a long-running read-only MT5 operation and **must not be repeated as the preferred discovery method**. Its published result, when available, is evidence only; do not infer history depth from runtime duration.
+
+The replacement depth probe is bounded:
+
+1. inspect retained native M1/M5/M15 depth with fixed `copy_rates_from_pos` limits;
+2. compute the common native M5/M15 start;
+3. probe synchronized Bid/Ask ticks only from that known common start;
+4. report source/broker/runtime metadata;
+5. run no strategy replay and compute no economic result.
+
+### Inventory evidence and mechanical protocol correction — 2026-09-26
+
+The bounded history checkpoint search established synchronized Bid/Ask ticks plus native M5/M15 for all five symbols through **2025-08-25**. The next tested checkpoint, **2025-07-28**, failed common synchronized Bid/Ask tick coverage because EURJPY had no qualifying tick rows there. Therefore the conservative common candidate start remains **2025-08-25**.
+
+A full tick-derived-M1 candidate export from 2025-08-25 through the frozen cutoff 2026-09-25 completed successfully, but it **failed the already-frozen accepted-M019 overlap rule**. The failure was specific to tick-derived **Bid M1**:
+
+- EURJPY: maximum Bid OHLC delta **1 point**;
+- EURUSD: maximum Bid OHLC delta **1 point**;
+- GBPUSD: maximum Bid OHLC delta **5 points**;
+- USDJPY: maximum Bid OHLC delta **2 points**;
+- GBPJPY: exact Bid overlap.
+
+In the same candidate:
+
+- Ask M1 overlap was exact for all five symbols;
+- Bid/Ask overlap indexes matched;
+- native M5/M15 overlap frames were exact;
+- no parameter/economic result was inspected.
+
+The frozen 0.5-point tolerance is **not relaxed**.
+
+The failure demonstrated a mechanical incompatibility between reconstructing historical Bid M1 from `COPY_TICKS_ALL` and the broker-native M1 bars used by the accepted M019 replay. Before parameter outcomes were inspected, M022 therefore exercised the protocol's allowed mechanical-impossibility correction.
+
+The terminal history-capacity investigation found:
+
+- MT5 `common.ini`: `MaxBars=100000`;
+- original config backup SHA-256:
+  `c04f195618eea41d7300a2459f0e9aa914967a90c534c449c6bbcf4fcebfbae0`;
+- revised config: `MaxBars=500000`;
+- revised config SHA-256:
+  `22032bc12c27fbb642f9c151f3d2256a733d8ac442772c736dfe7149a9b0fc91`;
+- runtime verification: `terminal_info().maxbars == 500000`;
+- broker/account: `MetaQuotes-Demo`, USD;
+- runtime: MT5 package 5.0.6180 / terminal build 6215 / Python 3.10.11;
+- native M1 on 2025-08-25 was exposed for every symbol:
+  - EURUSD 1,436 rows;
+  - EURJPY 1,437 rows;
+  - GBPUSD 1,437 rows;
+  - GBPJPY 1,437 rows;
+  - USDJPY 1,437 rows.
+
+No real-order API was called, no economic replay ran, and no M021 post-cutoff data was used.
+
+### Replacement inventory acceptance gate — frozen before parameter outcomes
+
+The replacement candidate must preserve accepted replay semantics rather than substitute tick-derived Bid M1:
+
+1. candidate range: conservative start **2025-08-25**, end-exclusive **2026-09-25T00:00:00Z**;
+2. **Bid M1:** broker-native MT5 M1;
+3. **Ask M1:** observable `COPY_TICKS_ALL` Ask aggregated/aligned to the native M1 index;
+4. **M5/M15:** broker-native;
+5. M15 remains compatibility/export data only and is never an M022 signal input.
+
+Accepted-M019 overlap must satisfy, for every symbol:
+
+- native Bid M1 overlap index identical to accepted M019;
+- native Bid M1 overlap frame exactly identical;
+- Ask M1 overlap index identical to accepted M019 and OHLC delta no more than **0.5 symbol point**;
+- candidate Ask M1 has zero missing/extra rows versus candidate native Bid M1 over the accepted common replay range;
+- native M5 and M15 overlap frames exactly identical;
+- Ask manifest source remains `copy_ticks_range`;
+- broker/server/account/runtime metadata are recorded;
+- candidate manifest and file hashes are recorded.
+
+This replacement gate is a source-parity correction only. It does not weaken the frozen price tolerance, inspect strategy performance, or change any parameter family.
+
+Only after this gate passes may M022 declare the longest common trustworthy range and materialize the already-frozen 60% / 20% / 20% chronological development / validation / untouched-holdout split.
+
+No Phase-1 parameter arm is authorized before that gate passes.
+
+## Data separation
+
+Before inspecting optimization results, predeclare chronological partitions.
+
+Use the longest common trustworthy range. Keep at least three chronological roles when the available history permits:
+
+1. **development** — parameter screening and combination search;
+2. **validation** — rank/filter candidates chosen from development;
+3. **historical holdout** — untouched until finalists and acceptance rules are frozen.
+
+M021 prospective data is not an M022 tuning partition and remains isolated.
+
+If trustworthy history is too short to support meaningful chronological separation, stop and document the limitation before broad optimization.
+
+### Predeclared partition rule — frozen before history-depth result
+
+The partitioning rule is fixed before inspecting the M022 history-depth result:
+
+1. Start from the **longest common trustworthy range** that passes the frozen M019 overlap gate, capped end-exclusive at `2026-09-25T00:00:00Z`.
+2. Build the ordered set of UTC trading dates represented in the accepted common M1/M5 data for all five symbols. Partition boundaries must fall at UTC day boundaries; do not choose boundaries after looking at parameter performance.
+3. Assign whole trading dates chronologically:
+   - **development:** first 60%;
+   - **validation:** next 20%;
+   - **historical holdout:** final 20%.
+   Use floor rounding for the first two allocations and give any remainder to the holdout.
+4. Require **at least 20 common trading dates in each partition**. If any partition would have fewer than 20, M022 broad optimization stops and the history limitation is documented instead of weakening the split after seeing results.
+5. The historical holdout remains unopened for candidate selection until the Phase-1 shortlist, Phase-2 matrix, and finalist acceptance criteria are frozen.
+6. Indicator warm-up may read immediately preceding historical bars needed to establish state at a partition boundary, but:
+   - no order may be submitted before the scored partition start;
+   - no position may be carried into the scored partition from warm-up;
+   - warm-up trades/P&L do not exist and are not scored;
+   - validation/holdout warm-up may use only prior **market-data state**, never prior partition outcome-based tuning.
+7. M021 prospective observations remain outside all three M022 partitions.
+
+This rule may be changed only for a demonstrated mechanical impossibility discovered before parameter results are inspected; any such change must be documented before the replacement split is executed.
+
+## History inventory accepted and partitions frozen — 2026-09-26
+
+The replacement native-M1 candidate was recovered from the existing versioned
+`v3` directory and passed full integrity plus the replacement M019 overlap gate.
+
+Accepted candidate:
+
+`backtest_data/m022-history-inventory-native-m1-v3/manifest.json`
+
+Manifest SHA-256:
+
+`143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`
+
+Accepted M019 manifest SHA-256:
+
+`595efa4d65e35ae06c464edcc1a8dd4e410f6f7b73dfaf16081e0887346f440f`
+
+Verified source/runtime:
+
+- broker: `MetaQuotes-Demo`;
+- account currency: USD;
+- terminal build: 6215 / 25 Sep 2026;
+- candidate requested range:
+  `2025-08-25T00:00:00Z` to
+  `2026-09-25T00:00:00Z` end-exclusive;
+- common trading dates: **282**;
+- common-trading-date-list SHA-256:
+  `2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5`.
+
+For every one of EURUSD, EURJPY, GBPUSD, GBPJPY, and USDJPY:
+
+- native Bid M1 accepted-M019 overlap index matched exactly;
+- native Bid M1 accepted-M019 overlap frame matched exactly;
+- Ask M1 accepted-M019 overlap index matched exactly;
+- Ask M1 accepted-M019 OHLC delta was **0 points**;
+- native M5 overlap frame matched exactly;
+- native M15 overlap frame matched exactly;
+- candidate Bid/Ask indexes matched with zero missing or extra Ask rows.
+
+Approximate full candidate M1 row counts:
+
+- EURUSD: 404,867;
+- EURJPY: 405,196;
+- GBPUSD: 404,959;
+- GBPJPY: 405,094;
+- USDJPY: 405,062.
+
+The already-frozen chronological partition rule was then materialized without
+running any strategy/economic replay.
+
+### Frozen M022 partitions
+
+**Development**
+
+- start: `2025-08-25T00:00:00Z`;
+- end-exclusive: `2026-04-21T00:00:00Z`;
+- trading dates: **169**;
+- first trading date: 2025-08-25;
+- last trading date: 2026-04-20.
+
+**Validation**
+
+- start: `2026-04-21T00:00:00Z`;
+- end-exclusive: `2026-07-08T00:00:00Z`;
+- trading dates: **56**;
+- first trading date: 2026-04-21;
+- last trading date: 2026-07-07.
+
+**Untouched historical holdout**
+
+- start: `2026-07-08T00:00:00Z`;
+- end-exclusive: `2026-09-25T00:00:00Z`;
+- trading dates: **57**;
+- first trading date: 2026-07-08;
+- last trading date: 2026-09-24.
+
+Each partition exceeds the predeclared minimum of 20 common trading dates.
+
+Safety evidence for the inventory and partition freeze:
+
+- no economic replay run;
+- no parameter result inspected;
+- no M021 post-cutoff data used;
+- no real-order API called.
+
+The history inventory gate is therefore **PASSED**. Phase 1 may now be
+implemented and run **one parameter family at a time on development only**.
+Validation remains unused until development screening has produced a frozen
+shortlist. Historical holdout remains unopened until the Phase-1 shortlist,
+Phase-2 matrix, and finalist acceptance criteria are frozen.
+
+## Parameter families — Phase 1 screening
+
+The initial research grid is deliberately bounded.
+
+### Stochastic
+
+Current reference: 21 / 7 / 7.
+
+Screen coherent tuples rather than every arbitrary K/D/slowing Cartesian product:
+
+- 9 / 3 / 3
+- 10 / 4 / 4
+- 10 / 6 / 6
+- 14 / 3 / 3
+- 14 / 5 / 5
+- 14 / 7 / 7
+- 21 / 5 / 5
+- 21 / 7 / 7
+- 28 / 7 / 7
+
+The executor may add a **small number** of neighboring tuples only when needed to test whether an observed region is smooth; additions must be documented before their results are inspected.
+
+### M1 oversold / overbought boundaries
+
+Test symmetric pairs:
+
+- 15 / 85
+- 20 / 80 — current reference
+- 25 / 75
+
+### EMA confirmation period
+
+- 5
+- 7 — current reference
+- 9
+- 12
+
+### Decision-time maximum spread
+
+Include:
+
+- no experimental spread rejection;
+- <= 5 points;
+- <= 8 points;
+- <= 10 points — M020-D reference;
+- <= 12 points;
+- <= 15 points.
+
+Spread decisions must use only bid/ask observable at submission time. Never use future/fill spread to decide entry.
+
+### ATR protection
+
+SL multiplier:
+
+- 0.75
+- 1.00 — current reference
+- 1.25
+- 1.50
+
+TP multiplier:
+
+- 1.00
+- 1.50
+- 2.00 — current reference
+- 2.50
+- 3.00
+
+Do not immediately test all SL x TP combinations. Screen the protection family first, then carry only stable regions into Phase 2.
+
+### Session
+
+Do not perform unrestricted hour-by-hour data mining.
+
+Phase 1 may compare only:
+
+- all hours;
+- block 00:00–03:59 UTC (the previously documented M020-A hypothesis).
+
+Any additional session window requires a separately documented hypothesis before its result is inspected.
+
+### Trailing
+
+Preserve existing directional trailing semantics during initial screening. Trailing variants are deferred until the entry/protection parameter families above have been screened, unless evidence shows trailing is the dominant unresolved mechanism.
+
+## Phase 1 method
+
+Change one parameter family at a time relative to a fixed documented reference configuration.
+
+For every arm record at minimum:
+
+- exact parameter set and experiment ID;
+- dataset partition and artifact hashes;
+- accepted/closed trades;
+- wins/losses/flats and non-flat win rate;
+- net realized P/L;
+- ending balance/equity;
+- maximum drawdown USD and percent;
+- per-symbol trade count and P/L;
+- BUY/SELL trade count and P/L;
+- fixed calendar-bucket trade count and P/L;
+- rejected-order counts where applicable;
+- remaining positions;
+- existing TP/safety invariants;
+- deterministic A/B hashes.
+
+Do not select an arm solely by highest P/L.
+
+## Phase-1 mechanical replay-clock corrections — before accepted results
+
+The first development reference attempt
+(`mamba2-m022-phase1-reference-20260926-1708`, `reference-v1`) was
+**not accepted**. It terminated with `AccountCurrencyConversionError` at
+`2025-09-17T00:01:00Z` when a JPY-denominated exit required JPY→USD
+conversion but USDJPY had no completed M1 bar on that exact portfolio
+boundary.
+
+This exposed a mechanical property of the accepted extended dataset:
+
+- Bid/Ask M1 indexes are exact **within each symbol**;
+- the five symbols do not share every individual M1 timestamp;
+- the accepted broker intentionally requires same-boundary historical
+  conversion and does not carry an older conversion quote forward.
+
+The conversion rule is **not changed**. In particular M022 will not:
+
+- forward-fill a missing USDJPY conversion bar;
+- use a future conversion bar;
+- weaken same-boundary conversion semantics;
+- treat a failed or superseded partial run as parameter evidence.
+
+An initial correction (`reference-v2`) physically intersected all symbol M1
+rows. Before any `reference-v2` economics were inspected, review identified
+that this would unnecessarily delete genuine per-symbol M1 bars from
+stochastic/EMA/ATR history. `reference-v2` is therefore **superseded and
+ineligible for acceptance regardless of whether its already-started local
+process eventually exits successfully**.
+
+The accepted correction for the next attempt (`reference-v3`) is instead a
+**strict shared replay-boundary clock**:
+
+1. Preserve every genuine per-symbol Bid/Ask M1 row inside the frozen
+   development partition.
+2. Preserve native M5/M15 histories unchanged.
+3. For each interior replay boundary `T`, require every configured symbol to
+   have both:
+   - completed Bid/Ask M1 open at `T-1 minute`; and
+   - execution Bid/Ask M1 open at `T`.
+4. Retain the partition-close boundary when `T-1 minute` is common, so the
+   final scored M1 bar can be processed without introducing an out-of-
+   partition execution bar.
+5. Keep the accepted same-boundary currency-conversion semantics unchanged.
+6. Never forward-fill or synthesize an M1 price to create a boundary.
+
+This design solves the conversion failure while keeping each symbol's full
+causal indicator history intact.
+
+Every accepted Phase-1 artifact must record:
+
+- `strict_common_boundary_clock = true`;
+- `full_symbol_m1_preserved = true`;
+- exact replay-boundary count;
+- first and last replay boundary;
+- SHA-256 of the ordered replay-boundary timestamp list.
+
+The failed `reference-v1` directory and superseded `reference-v2` directory
+must not be overwritten. The next accepted reference attempt must use
+`reference-v3`.
+
+The accepted v3 source dataset begins at the development partition start, so
+no pre-partition warm-up history exists inside the accepted artifact. Phase 1
+therefore starts flat and allows indicators/ATR to become ready causally from
+the partition's own bars. This rule is identical across all arms and is frozen
+before successful economic results.
+
+No validation data, historical holdout outcome, M021 prospective outcome,
+`reference-v1` partial P/L, or `reference-v2` economics were inspected to
+make these corrections.
+
+## Phase-1 replay performance gate — before accepted results
+
+Before any accepted `reference-v3` economics are inspected, the replay-only
+EMA path may use the same causal static-source caching pattern already used by
+stochastic and ATR.
+
+Reason:
+
+- the legacy replay EMA recalculates `ewm(...).mean()` over the full visible
+  M1 prefix on every boundary;
+- across ~169 development trading dates and later multi-arm screening, that is
+  computationally disproportionate;
+- the optimization changes only replay evaluation mechanics, not the
+  production strategy or mathematical EMA definition.
+
+Acceptance requirements for this performance change are frozen as:
+
+1. production/non-replay fetchers retain the existing path;
+2. cached replay EMA must equal the legacy visible-prefix EMA **exactly** at
+   deterministic checkpoints;
+3. focused M022 tests must pass;
+4. the full native test suite must pass;
+5. accepted M019 control baseline/diagnostic hashes must remain byte-exact;
+6. accepted M020-D baseline/diagnostic/evidence hashes must remain byte-exact.
+
+If any accepted hash changes, the cache is rejected and Phase 1 must not use
+its economic output.
+
+## Accepted Phase-1 development reference — reference-v3
+
+The first scientifically accepted M022 economic reference is
+`reference-v3`, command:
+
+`mamba2-m022-phase1-reference-v3-20260926-1859`
+
+Feature SHA:
+
+`3136d2143f79e80ea0ce9688559b7e7aaaca7ef5`
+
+Partition / replay evidence:
+
+- development only;
+- 169 common trading dates;
+- `2025-08-25T00:00:00Z` →
+  `2026-04-21T00:00:00Z` end-exclusive;
+- strict shared replay-boundary clock: **enabled**;
+- full per-symbol M1 histories preserved: **yes**;
+- replay boundaries: **241,474**;
+- replay-boundary SHA-256:
+  `17685ae6a08ce8e6e4f3af215f4215f92fe87de24f5a934d7935778634d47e28`.
+
+Determinism:
+
+- A/B deterministic: **PASS**;
+- baseline SHA-256:
+  `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+- diagnostic SHA-256:
+  `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+- summary SHA-256:
+  `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+
+Reference economics:
+
+- starting balance: **$10,000.00**;
+- accepted orders: **12,009**;
+- closed trades: **12,006**;
+- winning closed trades: **3,944**;
+- losing closed trades: **8,056**;
+- flat closed trades: **6**;
+- non-flat win rate: **32.8667%**;
+- net realized P/L: **-$15,499.3611**;
+- ending realized balance: **-$5,499.3611**;
+- ending equity: **-$5,499.1874**;
+- maximum equity drawdown: **$15,501.9142 / 155.0054%**;
+- remaining open positions at partition boundary: **3**.
+
+Per-symbol net realized P/L:
+
+- EURUSD: **-$1,447.1571**;
+- EURJPY: **-$4,682.2258**;
+- GBPUSD: **-$2,265.9643**;
+- GBPJPY: **-$5,883.9896**;
+- USDJPY: **-$1,220.0242**.
+
+Side split:
+
+- BUY: 5,505 closed trades, **-$6,212.4445**;
+- SELL: 6,501 closed trades, **-$9,286.9165**.
+
+Fixed entry-UTC buckets:
+
+- 00:00–03:59: **-$4,259.9982**;
+- 04:00–07:59: **-$2,079.5525**;
+- 08:00–11:59: **-$1,723.6605**;
+- 12:00–15:59: **-$1,244.1172**;
+- 16:00–19:59: **-$1,794.6665**;
+- 20:00–23:59: **-$4,397.3662**.
+
+Protection / safety:
+
+- all 12,006 closed trades had initial protection;
+- trades with trailing: **5,090**;
+- total trailing modifications: **8,633**;
+- negative-P/L take-profit exits: **0**;
+- wrong-side initial TP: **0**;
+- decision-spread rejections: **0**;
+- session-blocked evaluation boundaries: **0**.
+
+Cost contract:
+
+`SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`
+
+Safety:
+
+- validation economic data used: **no**;
+- historical holdout economic data used: **no**;
+- M021 post-cutoff outcome used: **no**;
+- real-order API called: **no**.
+
+This reference is now the fixed development comparator for Phase 1. Its poor
+absolute economics do not authorize ad hoc parameter search; all subsequent
+screening remains constrained to the predeclared families and frozen
+shortlisting rubric.
+
+## Post-reference replay-cache optimization gate — frozen before stochastic results
+
+The accepted `reference-v3` run, once complete, remains tied to feature SHA
+`3136d2143f79e80ea0ce9688559b7e7aaaca7ef5` and is not restarted for the
+optimization below.
+
+Before any stochastic-family outcome is inspected, a later replay-only
+performance optimization may remove residual O(N) work from indicator cache
+validation:
+
+- ReplayFeed exposes the exact visible prefix length for static M1/native
+  higher-timeframe sources.
+- replay stochastic/ATR/EMA caches may use that exact length instead of
+  comparing the entire visible timestamp prefix on every boundary.
+- stochastic may cache the prefix fact "has a non-zero high/low range appeared
+  yet?" instead of scanning the entire high/low arrays with `np.all` every
+  boundary.
+
+This optimization is mechanical only. It must not:
+
+- alter source bars or replay boundaries;
+- alter indicator arithmetic;
+- alter production/non-replay fetchers;
+- forward-fill any price;
+- change strategy parameters or decision rules.
+
+Before the optimized path may be used for stochastic screening, require:
+
+1. replay cached-vs-legacy stochastic/ATR/EMA parity tests pass exactly;
+2. focused M022 tests pass;
+3. full native tests pass;
+4. accepted M019 control baseline/diagnostic hashes remain byte-exact;
+5. accepted M020-D baseline/diagnostic/evidence hashes remain byte-exact;
+6. the frozen stochastic **21/7/7** arm reproduces the accepted
+   `reference-v3` aggregate, per-symbol, side, UTC-bucket, TP/safety and
+   protection evidence exactly (artifact file hashes may differ only where the
+   experiment ID/family metadata intentionally differs).
+
+If any economic field differs, reject the optimization and run stochastic
+screening on the accepted reference-v3 executable path instead.
+
+## Frozen stochastic-family execution scheduling — before non-reference results
+
+After the optimized 21/7/7 equivalence gate passes, the remaining eight
+predeclared stochastic tuples may be executed with **at most two independent
+arms concurrently** to reduce wall-clock time.
+
+This is scheduling only:
+
+- every arm remains a complete deterministic A/B pair;
+- every arm uses the same immutable accepted dataset and development partition;
+- each arm writes to a unique directory;
+- no process shares strategy/account/broker/cache state with another arm;
+- no result from one arm may alter another arm's parameters;
+- the set of tuples remains exactly the already-frozen nine-tuple grid;
+- 21/7/7 is reused from the separately accepted equivalence evidence rather
+  than replayed a third time;
+- validation, historical holdout, and M021 remain inaccessible.
+
+Maximum concurrency is fixed at **2 arms**. Do not raise it after observing
+runtime or results.
+
+The family action should be resumable from already-complete deterministic arm
+artifacts after an infrastructure interruption, but it must never overwrite a
+completed arm or silently accept a partial/inconsistent A/B pair.
+
+## Frozen stochastic-family screening rubric — before results
+
+Before inspecting any stochastic-family development result, the following
+shortlist rubric is frozen for the nine predeclared tuples.
+
+Mandatory gates for every arm:
+
+- deterministic A/B hashes must match;
+- TP/safety invariants must remain clean;
+- development partition/hash must match the frozen M022 partition;
+- validation and historical holdout must remain unopened;
+- closed-trade count must be at least **70% of the reference arm** so an
+  apparent improvement cannot come mainly from suppressing activity.
+
+Among arms that pass those gates, shortlist construction is multi-objective,
+not a single-score ranking:
+
+1. compare **net realized P/L** (higher is better);
+2. compare **maximum equity drawdown USD** (lower is better);
+3. compare **non-flat win rate** (higher is better);
+4. retain the **Pareto-nondominated** eligible tuples plus the reference tuple;
+5. do not promote an isolated development spike directly to Phase 2.
+
+Breadth / concentration checks for any arm whose net realized P/L improves
+over reference:
+
+- the positive P/L improvement must appear in at least **two symbols**;
+- the positive P/L improvement must appear in at least **two fixed 4-hour UTC
+  entry buckets**;
+- no single symbol may contribute more than **70%** of the sum of positive
+  symbol-level P/L deltas versus reference;
+- no single BUY/SELL side may contribute more than **80%** of the sum of
+  positive side-level P/L deltas versus reference.
+
+An otherwise Pareto-eligible tuple that fails breadth is labeled
+`FRAGILE / CONCENTRATED` and is not promoted to Phase 2 unless a neighboring
+tuple later shows the same broad direction. This rule does not authorize new
+neighboring runs after results are seen; any extra tuple still requires a
+separately documented pre-run addition under the existing milestone rule.
+
+No stochastic tuple is selected merely because it has the highest development
+P/L. Validation remains closed while this stochastic shortlist is constructed.
+
+## Accepted Phase-1 stochastic-family screening — 2026-09-27
+
+The frozen stochastic development screening completed successfully.
+
+Execution command:
+
+`mamba2-m022-stochastic-family-20260927-0552`
+
+Mechanical assessment command:
+
+`mamba2-m022-stochastic-assessment-20260927`
+
+Feature SHA:
+
+`db88bcc145754c50b6d7ad87a9ddef071ed2d9c5`
+
+All nine frozen tuples passed the mandatory deterministic/safety/partition
+gates. The accepted stochastic shortlist is:
+
+- **14 / 7 / 7** — Pareto-nondominated;
+- **21 / 7 / 7** — retained reference;
+- **28 / 7 / 7** — Pareto-nondominated and passed the frozen
+  breadth/concentration checks.
+
+The strongest broad improvement versus the 21/7/7 reference was 28/7/7:
+
+- net realized P/L: **-$12,788.2553** versus **-$15,499.3611**;
+- maximum equity drawdown: **$12,808.7863** versus **$15,501.9142**;
+- closed trades: **9,798** versus **12,006** (**81.61%** of reference and
+  above the frozen 70% activity floor);
+- non-flat win rate: **32.7377%** versus **32.8667%**;
+- positive P/L delta in **all five symbols**;
+- positive P/L delta in **all six fixed 4-hour UTC buckets**;
+- positive P/L delta on both BUY and SELL;
+- largest positive-symbol contribution share: **44.47%**;
+- largest positive-side contribution share: **56.09%**.
+
+14/7/7 remains on the Pareto frontier because its non-flat win rate
+(**32.9515%**) is higher, while its P/L and drawdown are worse than the
+reference. All other stochastic tuples were mechanically classified
+`DOMINATED`.
+
+Safety remained clean:
+
+- development only;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+The stochastic shortlist is evidence for later Phase 2 only. It does **not**
+change the fixed Phase-1 reference configuration for the remaining one-family
+screens.
+
+## Frozen boundary-family protocol — before boundary results
+
+The next Phase-1 family is the M1 oversold/overbought boundary family.
+
+To preserve one-family-at-a-time interpretation, the fixed reference remains:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.0x** / TP **2.0x**;
+- all hours;
+- existing directional trailing semantics.
+
+The boundary family changes **only** the symmetric M1 stochastic boundaries:
+
+- **15 / 85**;
+- **20 / 80** — reference;
+- **25 / 75**.
+
+Do not combine 14/7/7 or 28/7/7 with a boundary variant during this Phase-1
+screen. Such interactions belong only in the later predeclared Phase-2 matrix.
+
+Execution scheduling is frozen as follows:
+
+- reuse the accepted 20/80 reference-v3 evidence rather than replaying it;
+- run 15/85 and 25/75 as complete deterministic A/B pairs;
+- the two non-reference arms may execute concurrently with maximum concurrency
+  fixed at **2**;
+- each arm writes to a unique immutable output directory;
+- no result from one arm may alter the other arm;
+- no adaptive boundary values are authorized;
+- validation, historical holdout, and M021 remain inaccessible.
+
+The boundary-family screening rubric is also frozen before results.
+
+Mandatory gates:
+
+- deterministic A/B hashes must match;
+- TP/safety invariants must remain clean;
+- development partition/hash must match the frozen M022 partition;
+- closed trades must be at least **70% of the 20/80 reference**;
+- validation and historical holdout must remain unopened.
+
+Eligible arms are compared on the same three Phase-1 objectives:
+
+1. maximize net realized P/L;
+2. minimize maximum equity drawdown USD;
+3. maximize non-flat win rate.
+
+Retain the Pareto-nondominated eligible boundary pairs plus the 20/80
+reference.
+
+For any non-reference boundary pair whose net realized P/L improves versus
+20/80, require the same predeclared breadth checks used for stochastic
+screening:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving pair that fails breadth is labeled
+`FRAGILE / CONCENTRATED` and is not carried forward. No boundary pair is
+selected merely because it has the highest development P/L.
+
+
+## Accepted Phase-1 boundary-family screening — 2026-09-27
+
+The frozen boundary development screening completed successfully.
+
+Execution command:
+
+`mamba2-m022-boundary-family-20260927-0937`
+
+Mechanical assessment command:
+
+`mamba2-m022-boundary-assessment-20260927-1024`
+
+Reviewed feature SHA:
+
+`f0a45cc1aa285e6e0ad778b8d725ee45c3b125fe`
+
+Deterministic artifacts:
+
+- **15 / 85**
+  - baseline SHA-256:
+    `85ed83de094cc1687040448a63137373b779b7d14879a846e619fee55cf192a0`;
+  - diagnostic SHA-256:
+    `87431d9ea393b9495bf803b355336d2278f1cf78880437be9505ca697470809b`;
+  - summary SHA-256:
+    `2401eb6e270f5f0ae3f9f933cbb94add822570ccb77a28c30675464ea6038641`.
+- **20 / 80 reference**
+  - baseline SHA-256:
+    `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+  - diagnostic SHA-256:
+    `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+  - summary SHA-256:
+    `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+- **25 / 75**
+  - baseline SHA-256:
+    `8098d7357fd9a06d5edd4b9dfb5e9e9924031bb11c558d673078e73ede988908`;
+  - diagnostic SHA-256:
+    `bb01d6291200f59c89764c59e984f5857f36925e71eb3dc3a4a6adecf7a9fb9d`;
+  - summary SHA-256:
+    `ac0920033d4730858279634f483926b1863bd387ce1aeb9a9d6e6be77969592d`.
+
+Mechanical result:
+
+- **20 / 80** is the only retained boundary value.
+- **15 / 85**:
+  - closed trades: **8,071**;
+  - reference closed trades: **12,006**;
+  - trade retention: **67.22%**;
+  - frozen minimum: **70%** / **8,404.2** trades;
+  - net realized P/L: **-$10,129.6882**;
+  - maximum equity drawdown: **$10,134.4998**;
+  - non-flat win rate: **32.8664%**;
+  - improved P/L in all five symbols, both BUY/SELL sides, and all six
+    fixed UTC buckets;
+  - largest positive-symbol contribution share: **37.10%**;
+  - largest positive-side contribution share: **58.65%**;
+  - classification: **INELIGIBLE** because it failed the frozen activity
+    floor. Its broad economic improvement does not override that predeclared
+    gate.
+- **25 / 75**:
+  - closed trades: **15,240** (**126.94%** of reference);
+  - net realized P/L: **-$19,689.3742**;
+  - maximum equity drawdown: **$19,696.7597**;
+  - non-flat win rate: **32.6987%**;
+  - worse P/L in all five symbols, both sides, and all six fixed UTC buckets;
+  - classification: **DOMINATED** by the retained reference.
+
+Boundary shortlist:
+
+- **20 / 80 reference only**.
+
+Safety remained clean:
+
+- development only;
+- deterministic A/B evidence passed;
+- TP/safety invariants remained clean;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+The 15/85 result is useful descriptive evidence for later research design, but
+it is not eligible for Phase 2 under the frozen M022 rule because it suppressed
+activity below the predeclared floor.
+
+## Frozen EMA-family protocol — before EMA results
+
+The next Phase-1 family is the EMA confirmation period.
+
+The fixed Phase-1 reference remains unchanged:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.0x** / TP **2.0x**;
+- all hours;
+- existing directional trailing semantics.
+
+The EMA family changes **only** the EMA confirmation period:
+
+- **5**;
+- **7** — reference;
+- **9**;
+- **12**.
+
+Do not combine stochastic shortlist values or the ineligible 15/85 boundary
+with an EMA variant during this Phase-1 screen.
+
+Execution scheduling is frozen before outcomes as follows:
+
+- reuse the accepted EMA7 reference-v3 evidence rather than replaying it;
+- run EMA5, EMA9, and EMA12 as complete deterministic A/B pairs;
+- execute at most **2 independent non-reference arms concurrently**;
+- each arm writes to a unique immutable output directory;
+- completed deterministic arm artifacts may be resumed but never overwritten;
+- no adaptive EMA periods are authorized;
+- development only;
+- validation, historical holdout, and M021 remain inaccessible.
+
+The EMA-family screening rubric is frozen before outcomes and is identical to
+the already accepted Phase-1 family rubric.
+
+Mandatory gates:
+
+- deterministic A/B hashes match;
+- TP/safety invariants remain clean;
+- development partition/hash matches the frozen M022 partition;
+- closed trades are at least **70% of the EMA7 reference**;
+- validation and historical holdout remain unopened.
+
+Eligible arms are compared on:
+
+1. net realized P/L — higher is better;
+2. maximum equity drawdown USD — lower is better;
+3. non-flat win rate — higher is better.
+
+Retain Pareto-nondominated eligible EMA periods plus the EMA7 reference.
+
+For any non-reference EMA period whose net realized P/L improves versus EMA7,
+require the same frozen breadth checks:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving arm that fails breadth is
+`FRAGILE / CONCENTRATED` and is not carried forward. No EMA arm is selected
+solely because it has the highest development P/L.
+
+
+## Accepted Phase-1 EMA-family screening — 2026-09-27
+
+The frozen EMA development screening and mechanical assessment completed
+successfully.
+
+Execution command:
+
+`mamba2-m022-ema-family-20260927-1041`
+
+Mechanical assessment command:
+
+`mamba2-m022-ema-assessment-20260927-1309`
+
+Reviewed feature SHA:
+
+`bb6a774dc42a54e2a6be3fdd4a6a27bd1fcb3f05`
+
+Deterministic artifact hashes:
+
+- **EMA5**
+  - baseline:
+    `cc49db5aaeeb10857305a282e19b8e43cc2096ca267e3ffd782eff6e1ca32437`;
+  - diagnostic:
+    `3efbf993e8ad68a23267f6ad266075cedfe11c6819fb3bb04bfe46ac10c74196`;
+  - summary:
+    `af974c4fb2282f7eb55ee0155c7de5ec07efccd14649b658e621011bea86c52f`.
+- **EMA7 reference**
+  - baseline:
+    `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+  - diagnostic:
+    `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+  - summary:
+    `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+- **EMA9**
+  - baseline:
+    `395086c75eee519a3e67ad7c7872c6671977d1859926ea65a22e03d9a909245e`;
+  - diagnostic:
+    `dbce5e95b6d6c040925e31bf5f297d2e99d1f252922e1db94b2e935e9df4b8a7`;
+  - summary:
+    `03e8fc7978e1d68f4a55db6b0f93134afd7c32418dd8d821a94b6728b233deaf`.
+- **EMA12**
+  - baseline:
+    `1aac878006fa979f1e95883df7da56a53da01f37afbf3738e1e99124cae1c21f`;
+  - diagnostic:
+    `aad1ef0b677f6b22c38e46b0c836feb5989238d0dd57197f1200cf4a4f10a49f`;
+  - summary:
+    `d2ae477a7a037fa35c19936712b427dfa8c4ab8816935174b02dcd77ab07b1c9`.
+
+Mechanical result:
+
+- **EMA5**
+  - closed trades: **12,212** (**101.72%** of reference);
+  - net realized P/L: **-$15,351.7123**;
+  - maximum equity drawdown: **$15,354.6655**;
+  - non-flat win rate: **33.0629%**;
+  - Pareto-nondominated;
+  - positive P/L delta in three symbols and four UTC buckets;
+  - BUY delta was negative while SELL supplied all positive side contribution,
+    making positive-side concentration **100%**;
+  - classification: **FRAGILE / CONCENTRATED** because the frozen 80%
+    positive-side concentration cap was exceeded.
+- **EMA7**
+  - reference, always retained.
+- **EMA9**
+  - closed trades: **11,692** (**97.38%** of reference);
+  - net realized P/L: **-$15,253.9824**;
+  - maximum equity drawdown: **$15,256.5355**;
+  - non-flat win rate: **32.7542%**;
+  - positive P/L delta in four symbols and four UTC buckets;
+  - largest positive-symbol share: **43.21%**;
+  - largest positive-side share: **74.14%**;
+  - classification: **SHORTLIST**.
+- **EMA12**
+  - closed trades: **11,241** (**93.63%** of reference);
+  - net realized P/L: **-$14,731.4602**;
+  - maximum equity drawdown: **$14,739.2239**;
+  - non-flat win rate: **32.6805%**;
+  - positive P/L delta in four symbols and five UTC buckets;
+  - largest positive-symbol share: **51.11%**;
+  - largest positive-side share: **73.24%**;
+  - classification: **SHORTLIST**.
+
+EMA shortlist:
+
+- **7 reference**;
+- **9**;
+- **12**.
+
+Safety remained clean:
+
+- development only;
+- deterministic A/B evidence passed;
+- TP/safety invariants remained clean;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+EMA5 is retained only as descriptive evidence of the development response
+surface. It is not eligible for Phase 2 under the frozen concentration rule.
+
+## Frozen decision-time-spread family protocol — before spread results
+
+The next Phase-1 family is the decision-time maximum-spread threshold.
+
+The fixed Phase-1 reference remains unchanged:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- **no experimental decision-spread rejection**;
+- ATR SL **1.0x** / TP **2.0x**;
+- all hours;
+- existing directional trailing semantics.
+
+The spread family changes **only** the decision-time maximum spread:
+
+- **none** — fixed Phase-1 reference;
+- **<= 5 points**;
+- **<= 8 points**;
+- **<= 10 points**;
+- **<= 12 points**;
+- **<= 15 points**.
+
+The <=10-point arm is included because it corresponds to the previously
+documented M020-D threshold, but it is **not** the M022 Phase-1 reference.
+The M022 reference remains the accepted no-experimental-rejection reference-v3.
+
+Spread decisions must use only the Bid/Ask observable at submission time.
+Future/fill spread must never decide entry. The research proxy's rejection
+count must be reported for every thresholded arm.
+
+Execution scheduling is frozen before outcomes:
+
+- reuse the accepted no-spread-gate reference-v3 evidence;
+- run 5, 8, 10, 12, and 15-point arms as complete deterministic A/B pairs;
+- execute at most **2 independent non-reference arms concurrently**;
+- each arm writes to a unique immutable output directory;
+- completed deterministic arm artifacts may be resumed but never overwritten;
+- no adaptive or neighboring spread thresholds are authorized;
+- development only;
+- validation, historical holdout, and M021 remain inaccessible.
+
+The spread-family screening rubric is frozen before outcomes.
+
+Mandatory gates:
+
+- deterministic A/B hashes match;
+- TP/safety invariants remain clean;
+- development partition/hash matches the frozen M022 partition;
+- parameter metadata matches the exact declared threshold and all other fixed
+  reference parameters;
+- closed trades are at least **70% of the no-spread-gate reference**;
+- decision-spread rejection accounting is present for thresholded arms;
+- validation and historical holdout remain unopened.
+
+Eligible arms are compared on the same Phase-1 objectives:
+
+1. net realized P/L — higher is better;
+2. maximum equity drawdown USD — lower is better;
+3. non-flat win rate — higher is better.
+
+Retain Pareto-nondominated eligible thresholds plus the no-spread-gate
+reference.
+
+For any thresholded arm whose net realized P/L improves versus reference,
+require the same frozen breadth checks:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving threshold that fails breadth is
+`FRAGILE / CONCENTRATED` and is not carried forward. No spread threshold is
+selected merely because it maximizes development P/L.
+
+
+## Accepted Phase-1 decision-time-spread screening — 2026-09-27
+
+The frozen spread development screening and mechanical assessment completed
+successfully.
+
+Execution command:
+
+`mamba2-m022-spread-family-20260927-1317`
+
+Mechanical assessment command:
+
+`mamba2-m022-spread-assessment-20260927-1541`
+
+Reviewed feature SHA:
+
+`823a761c93d3f6df1162a5bb934190e461daf1de`
+
+Mechanical result:
+
+- **none** — fixed Phase-1 reference; retained.
+- **<= 5 points**
+  - closed trades: **6,528** (**54.37%** of reference);
+  - net realized P/L: **-$2,496.5414**;
+  - maximum equity drawdown: **$2,575.0294**;
+  - non-flat win rate: **38.7492%**;
+  - decision-spread rejections: **19,995**;
+  - improved all five symbols, both BUY/SELL sides, and all six UTC buckets;
+  - classification: **INELIGIBLE** because it failed the frozen 70% activity
+    floor.
+- **<= 8 points**
+  - closed trades: **7,090** (**59.05%** of reference);
+  - net realized P/L: **-$2,657.5905**;
+  - maximum equity drawdown: **$2,745.6295**;
+  - non-flat win rate: **38.5690%**;
+  - decision-spread rejections: **17,877**;
+  - improved all five symbols, both sides, and all six UTC buckets;
+  - classification: **INELIGIBLE** because it failed the frozen 70% activity
+    floor.
+- **<= 10 points**
+  - closed trades: **8,148** (**67.87%** of reference);
+  - net realized P/L: **-$4,441.3713**;
+  - maximum equity drawdown: **$4,473.1749**;
+  - non-flat win rate: **37.4632%**;
+  - decision-spread rejections: **14,131**;
+  - improved all five symbols, both sides, and all six UTC buckets;
+  - classification: **INELIGIBLE** because it failed the frozen 70% activity
+    floor.
+- **<= 12 points**
+  - closed trades: **8,756** (**72.93%** of reference);
+  - net realized P/L: **-$5,021.3198**;
+  - maximum equity drawdown: **$5,027.5412**;
+  - non-flat win rate: **37.1801%**;
+  - decision-spread rejections: **11,759**;
+  - improved all five symbols, both sides, and all six UTC buckets;
+  - largest positive-symbol share: **48.28%**;
+  - largest positive-side share: **58.53%**;
+  - classification: **SHORTLIST**.
+- **<= 15 points**
+  - closed trades: **9,139** (**76.12%** of reference);
+  - net realized P/L: **-$5,615.8667**;
+  - maximum equity drawdown: **$5,617.5347**;
+  - non-flat win rate: **36.8035%**;
+  - decision-spread rejections: **10,392**;
+  - classification: **DOMINATED** by <=12 among eligible non-reference arms.
+
+Spread shortlist:
+
+- **none** — retained reference;
+- **<= 12 points**.
+
+Deterministic artifact hashes:
+
+- **<=5**:
+  baseline `34683be4b3150d59811ae7d5bcd86f33f48600fd65781298c38839aafeeef2ce`,
+  diagnostic `c43706c8d928ecfe452ee857396d3e1587959a54d51382dbb207e7e13fbddd7e`,
+  summary `af3f95b6560ed99df9e7c2a416dd8a03f66eacc4a4ffaedffb45734fb1216aed`.
+- **<=8**:
+  baseline `d74452d1f4103579c25fc4b3e733c26aca917886a1dda8a9c9a4bfc15e9d8fd4`,
+  diagnostic `315016da4de97ded20eb3caa605073f30093e30ec04528c9a66b4a83814492c0`,
+  summary `a56084918b8f0283b8c3d65f27bb33aaedac8ecaa21b63a3d1e75ce4e100d39e`.
+- **<=10**:
+  baseline `82af3a702ea4f5cc4b93f4c898bd79968c446878edaab64c44841126c83c09a1`,
+  diagnostic `f52589089abaff61794cc5072921548439b43d584e01da3c4d427b710a5e8c0a`,
+  summary `fa485cf19957d96e9526bb34bdba803b675b0f9be8dd35a834b46bf2f16b26c5`.
+- **<=12**:
+  baseline `d9e3259424baeb1c3aedf0447fc8f14fc7e8f093bac87db572b824fc5f075c4c`,
+  diagnostic `ca531b4dda443954a94d869ed77cb8a18070e97c95840aad9c754bc802b0a759`,
+  summary `acdf3889f4b1395e8c7753149e8cf3bf9ae8a9de844bc68df677bde0728437b2`.
+- **<=15**:
+  baseline `41ff154d7aa2b6d598c37a9c93bdf80f69808fa84ef5c47e1d03615b3dc9469d`,
+  diagnostic `dc6e74d3a2debf13f5bf9ad1c67c0e0333cbe98f5d720f46f34f700d7156d79b`,
+  summary `bdb7cacf8d39d284a8eb9b15beceae53df2dcf0816aca23beff68f349bf1e6f8`.
+
+Safety remained clean:
+
+- development only;
+- deterministic A/B evidence passed;
+- submission-time Bid/Ask spread decision semantics preserved;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+The large spread effect is important descriptive development evidence, but the
+predeclared activity rule remains binding: <=5, <=8, and <=10 are not promoted
+despite their stronger development economics.
+
+## Frozen ATR-SL family protocol — before ATR-SL results
+
+ATR protection is screened sequentially to avoid an unfrozen SL x TP Cartesian
+search. The first protection family changes **only the ATR stop-loss
+multiplier** while TP remains fixed at the reference **2.0x**.
+
+The fixed Phase-1 reference remains unchanged:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.0x**;
+- ATR TP **2.0x**;
+- all hours;
+- existing directional trailing semantics.
+
+ATR-SL values:
+
+- **0.75x**;
+- **1.00x** — reference;
+- **1.25x**;
+- **1.50x**.
+
+Do not combine ATR-SL variants with stochastic 28/7/7, EMA12, spread <=12,
+or any other Phase-1 shortlist value during this screen.
+
+Execution scheduling is frozen before outcomes:
+
+- reuse the accepted 1.00x SL / 2.00x TP reference-v3 evidence;
+- run 0.75x, 1.25x, and 1.50x SL arms as complete deterministic A/B pairs;
+- TP remains exactly 2.00x in every ATR-SL arm;
+- execute at most **2 independent non-reference arms concurrently**;
+- each arm writes to a unique immutable output directory;
+- completed deterministic arm artifacts may be resumed but never overwritten;
+- no adaptive or neighboring SL values are authorized;
+- development only;
+- validation, historical holdout, and M021 remain inaccessible.
+
+Mandatory gates:
+
+- deterministic A/B hashes match;
+- TP/safety invariants remain clean;
+- development partition/hash matches the frozen M022 partition;
+- parameter metadata matches the exact declared SL multiplier and fixed TP 2.0x;
+- closed trades are at least **70% of the reference**;
+- validation and historical holdout remain unopened.
+
+Eligible ATR-SL arms are compared on the same three Phase-1 objectives:
+
+1. net realized P/L — higher is better;
+2. maximum equity drawdown USD — lower is better;
+3. non-flat win rate — higher is better.
+
+Retain Pareto-nondominated eligible ATR-SL values plus the 1.00x reference.
+
+For any non-reference ATR-SL arm whose net realized P/L improves versus
+reference, require the same frozen breadth checks:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving SL value that fails breadth is
+`FRAGILE / CONCENTRATED` and is not carried forward.
+
+ATR-TP screening is **not yet authorized to execute**. It remains a separate
+one-dimensional family with SL fixed at 1.00x and will be frozen/authorized
+only after the ATR-SL result and mechanical assessment are accepted.
+
+
+## Accepted Phase-1 ATR-SL screening — 2026-09-27
+
+The frozen ATR-SL development screening and mechanical assessment completed
+successfully.
+
+Execution command:
+
+`mamba2-m022-atr-sl-family-v1`
+
+Mechanical assessment command:
+
+`mamba2-m022-atr-sl-assessment-v1`
+
+Reviewed feature SHA:
+
+`723fe47ca83584d3619517bb9c811cf4386a4bc4`
+
+The TP multiplier remained fixed at **2.0x** for the full family.
+
+Mechanical result:
+
+- **0.75x**
+  - closed trades: **13,324** (**110.98%** of reference);
+  - net realized P/L: **-$16,171.2740**;
+  - maximum equity drawdown: **$16,174.2265**;
+  - non-flat win rate: **32.6903%**;
+  - remaining open positions: **2**;
+  - classification: **DOMINATED**.
+- **1.00x**
+  - fixed reference, always retained;
+  - closed trades: **12,006**;
+  - net realized P/L: **-$15,499.3611**;
+  - maximum equity drawdown: **$15,501.9142**;
+  - non-flat win rate: **32.8667%**;
+  - remaining open positions: **3**;
+  - classification: **REFERENCE**.
+- **1.25x**
+  - closed trades: **10,899** (**90.78%** of reference);
+  - net realized P/L: **-$14,267.8014**;
+  - maximum equity drawdown: **$14,301.0039**;
+  - non-flat win rate: **29.5440%**;
+  - remaining open positions: **3**;
+  - improved all five symbols and both sides, with positive delta in five of
+    six fixed UTC buckets;
+  - largest positive-symbol share: **51.26%**;
+  - largest positive-side share: **55.86%**;
+  - classification: **DOMINATED**.
+- **1.50x**
+  - closed trades: **9,887** (**82.35%** of reference);
+  - net realized P/L: **-$13,580.1591**;
+  - maximum equity drawdown: **$13,610.9903**;
+  - non-flat win rate: **32.4734%**;
+  - remaining open positions: **3**;
+  - improved four of five symbols;
+  - improved BUY and SELL;
+  - improved all six fixed UTC buckets;
+  - largest positive-symbol share: **43.00%**;
+  - largest positive-side share: **59.78%**;
+  - largest positive UTC-bucket share: **40.40%**;
+  - classification: **SHORTLIST**.
+
+ATR-SL shortlist:
+
+- **1.00x reference**;
+- **1.50x**.
+
+Deterministic artifact hashes:
+
+- **0.75x**
+  - baseline:
+    `65e97ff019ef51c9ea0f737da144ed9e6b951bc6c97beb88cba7d2b331a94055`;
+  - diagnostic:
+    `49fc4d534917b9f1ed1907277c4e772ffeb1339a0cd853633e261c052f4f5a67`;
+  - summary:
+    `a7f87691a96f194cf5a48e3836141a2025e2f62e5df4f06c520c992c09ac5a4c`.
+- **1.00x reference**
+  - baseline:
+    `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+  - diagnostic:
+    `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+  - summary:
+    `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+- **1.25x**
+  - baseline:
+    `25a4890f9fb045af0fbd54e19f2b8f13de11bfbc327b8cba6acc95c7762e6acf`;
+  - diagnostic:
+    `2fe50cea57c959797550dfd782e10a4a26fa87ea8f5fbe53a43ef415694ae222`;
+  - summary:
+    `25f80fd842a208b74c8440bd2ceba5732d312721b3e11c417ecf22dfce0fa3ec`.
+- **1.50x**
+  - baseline:
+    `8059f8d44536739ab4b65ccd8f283907d32338b9466b40542ddb7330a6b9170f`;
+  - diagnostic:
+    `e9d2d3675e1ad092bb321a0a15aeedbe3e631c020ee0f27cb2ea1b8828d33be6`;
+  - summary:
+    `803bcaac50f124b30ee16df83b39efcc845fb102e090d5ae6ca8c202a3a1ba41`.
+
+Safety remained clean:
+
+- deterministic A/B evidence passed;
+- TP/safety invariants remained clean;
+- development only;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+The 1.50x SL value is retained only as a Phase-1 candidate. It must not be
+combined with alternate TP values or other shortlisted family values yet.
+
+## Frozen ATR-TP family protocol — before ATR-TP results
+
+The next Phase-1 protection family changes **only the ATR take-profit
+multiplier**. ATR SL is deliberately reset to and held at the fixed reference
+**1.00x** for every ATR-TP arm.
+
+The fixed Phase-1 reference remains unchanged:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.00x**;
+- ATR TP **2.00x**;
+- all hours;
+- existing directional trailing semantics.
+
+ATR-TP values:
+
+- **1.00x**;
+- **1.50x**;
+- **2.00x** — reference;
+- **2.50x**;
+- **3.00x**.
+
+Do not use ATR-SL 1.50x during this screen. Do not combine any ATR-TP arm with
+stochastic, EMA, spread, or ATR-SL shortlist values.
+
+Execution scheduling is frozen before outcomes:
+
+- reuse accepted reference-v3 evidence for TP2.00x;
+- run TP1.00x, TP1.50x, TP2.50x, and TP3.00x as complete deterministic A/B
+  pairs;
+- keep ATR SL exactly **1.00x** for every arm;
+- execute at most **2 independent non-reference arms concurrently**;
+- each arm writes to a unique immutable output directory;
+- completed deterministic arm artifacts may be resumed but never overwritten;
+- no adaptive or neighboring TP values are authorized;
+- development only;
+- validation, historical holdout, and M021 remain inaccessible.
+
+Mandatory gates:
+
+- deterministic A/B hashes match;
+- TP/safety invariants remain clean;
+- development partition/hash matches the frozen M022 partition;
+- parameter metadata matches the exact declared TP multiplier and fixed
+  ATR SL 1.00x;
+- closed trades are at least **70% of the reference**;
+- remaining open positions are reported;
+- validation and historical holdout remain unopened.
+
+Eligible ATR-TP arms are compared on the same three Phase-1 objectives:
+
+1. net realized P/L — higher is better;
+2. maximum equity drawdown USD — lower is better;
+3. non-flat win rate — higher is better.
+
+Retain Pareto-nondominated eligible ATR-TP values plus the TP2.00x reference.
+
+For any non-reference ATR-TP arm whose net realized P/L improves versus
+reference, require the same frozen breadth checks:
+
+- positive P/L delta in at least **two symbols**;
+- positive P/L delta in at least **two fixed 4-hour UTC entry buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+An otherwise Pareto-eligible improving TP value that fails breadth is
+`FRAGILE / CONCENTRATED` and is not carried forward.
+
+No ATR-TP winner may be selected manually. The fixed mechanical assessment
+must produce the classification before the family is accepted.
+
+
+## Accepted Phase-1 ATR-TP screening — 2026-09-28
+
+The frozen ATR-TP development screening and mechanical assessment completed
+successfully.
+
+Execution command:
+
+`mamba2-m022-atr-tp-family-v1`
+
+Mechanical assessment command:
+
+`mamba2-m022-atr-tp-assessment-v1`
+
+Reviewed feature SHA:
+
+`01e7b73388ba15fe9da005575e551e6560acd336`
+
+ATR SL remained fixed at **1.00x** for the full family.
+
+Mechanical result:
+
+- **TP 1.00x**
+  - closed trades: **13,466** (**112.16%** of reference);
+  - net realized P/L: **-$16,680.9864**;
+  - maximum equity drawdown: **$16,685.1006**;
+  - non-flat win rate: **31.1251%**;
+  - remaining open positions: **2**;
+  - classification: **DOMINATED**.
+- **TP 1.50x**
+  - closed trades: **12,627** (**105.17%** of reference);
+  - net realized P/L: **-$15,512.8980**;
+  - maximum equity drawdown: **$15,517.6417**;
+  - non-flat win rate: **28.9980%**;
+  - remaining open positions: **2**;
+  - classification: **DOMINATED**.
+- **TP 2.00x**
+  - fixed reference, always retained;
+  - closed trades: **12,006**;
+  - net realized P/L: **-$15,499.3611**;
+  - maximum equity drawdown: **$15,501.9142**;
+  - non-flat win rate: **32.8667%**;
+  - remaining open positions: **3**;
+  - classification: **REFERENCE**.
+- **TP 2.50x**
+  - closed trades: **11,364** (**94.65%** of reference);
+  - net realized P/L: **-$14,828.5145**;
+  - maximum equity drawdown: **$14,833.2260**;
+  - non-flat win rate: **34.9349%**;
+  - remaining open positions: **1**;
+  - improved four of five symbols;
+  - improved BUY and SELL;
+  - improved four of six fixed UTC buckets;
+  - largest positive-symbol share: **37.02%**;
+  - largest positive-side share: **74.68%**;
+  - largest positive UTC-bucket share: **44.14%**;
+  - classification: **SHORTLIST**.
+- **TP 3.00x**
+  - closed trades: **10,733** (**89.40%** of reference);
+  - net realized P/L: **-$13,531.9346**;
+  - maximum equity drawdown: **$13,534.9374**;
+  - non-flat win rate: **31.8953%**;
+  - remaining open positions: **2**;
+  - improved all five symbols;
+  - improved BUY and SELL;
+  - improved all six fixed UTC buckets;
+  - largest positive-symbol share: **34.32%**;
+  - largest positive-side share: **52.61%**;
+  - largest positive UTC-bucket share: **27.24%**;
+  - classification: **SHORTLIST**.
+
+ATR-TP shortlist:
+
+- **2.00x reference**;
+- **2.50x**;
+- **3.00x**.
+
+Deterministic artifact hashes:
+
+- **TP 1.00x**
+  - baseline:
+    `28449c9211f06907c848cc3770e27beaef6580983747c06b371591e18ef6b4a4`;
+  - diagnostic:
+    `723073673e252c2cff01ad0ad470fbc755b229999f6c3a46278848d7521fd8b9`;
+  - summary:
+    `e4a7664d95260dc5b517abe1aefbf6d6a27ea52d41bfa7dff32ebf8d507b4969`.
+- **TP 1.50x**
+  - baseline:
+    `e1767cf696a01fe02127f9153b86abcef30f42d93eb7ca5a7da3e83d1b309262`;
+  - diagnostic:
+    `c2be5af7139152fcfc4b948aeff8155851db5d1ac5a86c32833ce0ce7830eb49`;
+  - summary:
+    `11f336c1f00efcfbc59793fa3da35ce21f8693e56d2316e3be29c62ffbc6d6da`.
+- **TP 2.00x reference**
+  - baseline:
+    `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+  - diagnostic:
+    `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+  - summary:
+    `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+- **TP 2.50x**
+  - baseline:
+    `896c09b15887ee860eea5f04d28492f2539d7bead7eb67fa34a24693391343e7`;
+  - diagnostic:
+    `517e2bd59df0965a2a85e6f3ce3d92a355038eca32bc19752685b5bf982feb37`;
+  - summary:
+    `f4ece5e3e5be3babce3fe672709eeeb678e8b749f70758a00253fa64a49c6641`.
+- **TP 3.00x**
+  - baseline:
+    `2b395323e5fb960c46e7d62eb68fcd24fe0be8884ce0a592716c6c123f8d903e`;
+  - diagnostic:
+    `aca8a3e1735dbeaa468ef3eb011eb9060706cf80331c0cb40874ceef55ca1115`;
+  - summary:
+    `82213e2293b3f84fa922122cfbca16210e5c5022b85c4066fec38b13f4a39647`.
+
+Safety remained clean:
+
+- deterministic A/B evidence passed;
+- TP/safety invariants remained clean;
+- development only;
+- validation unopened;
+- historical holdout unopened;
+- no M021 post-cutoff outcomes used;
+- no real-order API called.
+
+## Frozen session-family protocol — before session results
+
+The final Phase-1 family is the already-documented session hypothesis. Only
+two variants are authorized:
+
+- **all hours** — fixed Phase-1 reference;
+- **block new strategy evaluation during 00:00:00–03:59:59 UTC**.
+
+No other session window is authorized. This is the previously documented
+M020-A hypothesis, not an unrestricted hour-by-hour search.
+
+Every non-session parameter returns to the fixed Phase-1 reference:
+
+- stochastic **21 / 7 / 7**;
+- boundaries **20 / 80**;
+- EMA **7**;
+- no experimental decision-spread rejection;
+- ATR SL **1.00x**;
+- ATR TP **2.00x**;
+- existing directional trailing semantics.
+
+Do not use stochastic 28/7/7, EMA12, spread <=12, ATR SL1.50x, TP2.50x, or
+TP3.00x in this session screen.
+
+Execution semantics are frozen before outcomes:
+
+- reuse accepted reference-v3 evidence for the all-hours arm;
+- run only the **block-00-04-utc** non-reference arm as a deterministic A/B
+  pair;
+- development partition only;
+- block strategy evaluation for new-entry decisions during UTC hours 00, 01,
+  02, and 03;
+- broker advancement, exits, marks, pending-order settlement, protection, and
+  existing-position trailing continue under the accepted replay semantics;
+- do not artificially close positions at 04:00 UTC or at any session boundary;
+- strict shared replay-boundary clock remains unchanged;
+- full per-symbol M1 histories remain preserved;
+- no future data;
+- accepted cost contract remains
+  `SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`;
+- each arm writes immutable deterministic evidence;
+- completed deterministic artifacts may be resumed but never overwritten;
+- validation, historical holdout, and M021 remain inaccessible.
+
+The blocked-session report must include at minimum:
+
+- exact feature SHA;
+- exact parameter metadata;
+- deterministic baseline/diagnostic/summary hashes;
+- exact development partition/hash and replay-boundary evidence;
+- closed trades;
+- net realized P/L;
+- ending balance/equity;
+- maximum drawdown USD and percent;
+- non-flat win rate;
+- per-symbol trade count and P/L;
+- BUY/SELL trade count and P/L;
+- fixed 4-hour UTC-bucket diagnostics;
+- `session_evaluation_boundaries` blocked by the research wrapper;
+- remaining open positions;
+- TP/safety invariants.
+
+The blocked evaluation-boundary count is a direct wrapper diagnostic and must
+not be relabeled as an observed rejected trade signal unless the artifact
+explicitly supports that interpretation.
+
+### Frozen session mechanical assessment
+
+The existing Phase-1 mechanical framework remains binding:
+
+- minimum activity: **70%** of reference closed trades;
+- objectives:
+  1. maximize net realized P/L;
+  2. minimize maximum equity drawdown USD;
+  3. maximize non-flat win rate;
+- all-hours reference is always retained;
+- eligible candidates are Pareto-assessed against the reference;
+- for any blocked-session arm whose net realized P/L improves versus reference,
+  require:
+  - positive P/L delta in at least **two symbols**;
+  - positive P/L delta in at least **two fixed 4-hour UTC buckets**;
+  - no single symbol above **70%** of summed positive symbol deltas;
+  - no BUY/SELL side above **80%** of summed positive side deltas.
+
+Classification remains mechanical:
+
+- reference: `REFERENCE`;
+- failed mandatory gate: `INELIGIBLE`;
+- eligible but Pareto-dominated: `DOMINATED`;
+- Pareto-eligible improving candidate that fails breadth:
+  `FRAGILE / CONCENTRATED`;
+- Pareto-eligible candidate passing breadth: `SHORTLIST`.
+
+No additional time window or session hypothesis may be introduced after
+inspecting this result.
+
+
+## Accepted Phase-1 session screening — 2026-09-28
+
+The final frozen Phase-1 session family and its mechanical assessment completed
+successfully.
+
+Execution command:
+
+`mamba2-m022-session-family-v1`
+
+Mechanical assessment command:
+
+`mamba2-m022-session-assessment-v1`
+
+Reviewed feature SHA:
+
+`48dc49cd9f506aabdcb65b4e095a6a31e77290c1`
+
+Published assessment result commit:
+
+`978edf5696a798d80eb02e20d0b8688239130449`
+
+The only non-reference hypothesis was the predeclared block of new strategy
+evaluation during **00:00:00–03:59:59 UTC**. Existing-position management
+continued.
+
+Raw result:
+
+- **all hours reference**
+  - closed trades: **12,006**;
+  - net realized P/L: **-$15,499.3611**;
+  - maximum equity drawdown: **$15,501.9142 / 155.0054%**;
+  - non-flat win rate: **32.8667%**;
+  - remaining open positions: **3**.
+- **block 00:00–03:59 UTC**
+  - closed trades: **10,192** (**84.89%** of reference);
+  - net realized P/L: **-$11,259.0351**;
+  - ending realized balance: **-$1,259.0351**;
+  - ending equity: **-$1,258.8614**;
+  - maximum equity drawdown: **$11,263.5031 / 112.6035%**;
+  - non-flat win rate: **33.6572%**;
+  - blocked strategy-evaluation boundaries: **193,534**;
+  - remaining open positions: **3**.
+
+Deterministic artifact hashes:
+
+- all-hours reference:
+  - baseline:
+    `55630b2ff48b8594f04ed2d7ebb2012ef7c39db5f7b3b50f2fb1212049418530`;
+  - diagnostic:
+    `ae124fea75ead8f6d1e5e50cf090fb6db401ad5cdef6316f6851641f034205c7`;
+  - summary:
+    `4f73542c73d90d5d36ae2eb811fe438eb3c3bb56e742c22cf6a0886ed17de3a6`.
+- blocked-session arm:
+  - baseline:
+    `2c6993df64583bf85f25faeb976cfe4997d16f48a66f79ffa19fe656801bb776`;
+  - diagnostic:
+    `19a1487d3f9603d4a5fb012268a6d786a013624aa39c0f3e903cb95a7bba9ec2`;
+  - summary:
+    `c094cb7588f1856be6eab454ca6edaeb1a243bdc9ec7c25dcff42a767aede827`.
+
+Mechanical assessment:
+
+- mandatory activity/safety gates: **PASS**;
+- Pareto-nondominated: **yes**;
+- positive P/L delta: all **5 symbols**;
+- positive P/L delta: **BUY and SELL**;
+- largest positive-symbol share: **45.87%**;
+- largest positive-side share: **62.08%**;
+- fixed UTC-bucket positive deltas: only **1** bucket;
+- required positive UTC buckets: **2**;
+- breadth: **FAIL**;
+- classification: **FRAGILE / CONCENTRATED**.
+
+The strong raw development economics do not override the predeclared breadth
+rule. The blocked-session arm is not carried forward.
+
+Final session shortlist:
+
+- **all hours reference only**.
+
+Safety remained clean:
+
+- deterministic evidence present;
+- TP safety clean;
+- existing-position management remained active;
+- no artificial session-boundary closes;
+- development only;
+- validation unopened;
+- historical holdout unopened;
+- M021 unused;
+- no real-order API called.
+
+## Phase 1 COMPLETE — durable summary
+
+All frozen Phase-1 families are now mechanically assessed.
+
+Carry-forward values:
+
+| Family | Carry-forward |
+|---|---|
+| Stochastic | **14/7/7**, **21/7/7 reference**, **28/7/7** |
+| Boundary | **20/80 reference only** |
+| EMA | **7 reference**, **9**, **12** |
+| Decision-time spread | **none reference**, **<=12 points** |
+| ATR SL | **1.0x reference**, **1.5x** |
+| ATR TP | **2.0x reference**, **2.5x**, **3.0x** |
+| Session | **all hours reference only** |
+
+Major non-carried values:
+
+- boundary:
+  - 15/85 — **INELIGIBLE**;
+  - 25/75 — **DOMINATED**;
+- EMA:
+  - 5 — **FRAGILE / CONCENTRATED**;
+- decision-time spread:
+  - <=5 — **INELIGIBLE**;
+  - <=8 — **INELIGIBLE**;
+  - <=10 — **INELIGIBLE**;
+  - <=15 — **DOMINATED**;
+- ATR SL:
+  - 0.75x — **DOMINATED**;
+  - 1.25x — **DOMINATED**;
+- ATR TP:
+  - 1.0x — **DOMINATED**;
+  - 1.5x — **DOMINATED**;
+- session:
+  - block 00:00–03:59 UTC — **FRAGILE / CONCENTRATED**.
+
+Important development signals retained for interaction testing, not treated as
+final winners:
+
+- stochastic 28/7/7 showed broad improvement across all five symbols, both
+  sides, and all six UTC buckets;
+- EMA12 showed useful P/L/drawdown improvement with sufficient breadth;
+- spread <=12 produced the largest accepted single-family development
+  economic effect and improved all five symbols, both sides, and all six UTC
+  buckets;
+- ATR-SL1.5 improved broadly while retaining 82.35% reference activity;
+- ATR-TP3.0 improved all five symbols, both sides, and all six UTC buckets;
+- ATR-TP2.5 had the highest Phase-1 ATR-TP non-flat win rate and remains a
+  neighboring stability candidate.
+
+## Frozen Phase-2 development protocol — before any Phase-2 result
+
+Phase 2 tests a deliberately bounded set of interactions among Phase-1
+carry-forward regions. It is **not** a Cartesian search.
+
+Boundary is fixed at **20/80** in every arm.
+Session is fixed at **all hours** in every arm.
+Existing directional trailing and the cost contract remain unchanged.
+M15 remains disabled.
+
+### Exact frozen Phase-2 matrix
+
+Any parameter not explicitly changed below remains at the fixed reference.
+
+| Arm | Stochastic | EMA | Spread max | ATR SL | ATR TP |
+|---|---|---:|---:|---:|---:|
+| P2-R | 21/7/7 | 7 | none | 1.0 | 2.0 |
+| P2-01 | 28/7/7 | 12 | none | 1.0 | 2.0 |
+| P2-02 | 28/7/7 | 7 | 12 | 1.0 | 2.0 |
+| P2-03 | 28/7/7 | 7 | none | 1.5 | 2.0 |
+| P2-04 | 28/7/7 | 7 | none | 1.0 | 3.0 |
+| P2-05 | 21/7/7 | 12 | 12 | 1.0 | 2.0 |
+| P2-06 | 21/7/7 | 7 | 12 | 1.5 | 2.0 |
+| P2-07 | 21/7/7 | 7 | 12 | 1.0 | 3.0 |
+| P2-08 | 21/7/7 | 7 | none | 1.5 | 3.0 |
+| P2-09 | 28/7/7 | 12 | 12 | 1.0 | 2.0 |
+| P2-10 | 28/7/7 | 7 | 12 | 1.5 | 3.0 |
+| P2-11 | 28/7/7 | 12 | 12 | 1.5 | 3.0 |
+| P2-12 | 14/7/7 | 9 | 12 | 1.5 | 2.5 |
+
+There are exactly **12 non-reference arms plus P2-R**. No P2-13 or other
+development arm may be added after the first Phase-2 economic result exists.
+
+Coverage rationale:
+
+- P2-01 through P2-08 isolate low-order interactions among the strongest
+  Phase-1 regions;
+- P2-09 measures 28/7/7 + EMA12 + spread<=12 without altered ATR protection;
+- P2-10 measures the strong stochastic/spread/SL/TP bundle while holding EMA
+  at reference;
+- P2-11 is the predeclared near-full strong-value bundle;
+- P2-12 is the deliberate neighboring/stability bundle using 14/7/7, EMA9,
+  SL1.5 and TP2.5.
+
+### Phase-2 development execution
+
+- partition:
+  **2025-08-25T00:00:00Z → 2026-04-21T00:00:00Z**;
+- exact accepted source manifest SHA-256:
+  `143274a42cd5a1904202fa86a045d8b6fb61561709e1d8f305ded1a9b6ba1558`;
+- reuse accepted reference-v3 evidence as P2-R;
+- run every non-reference arm as a complete deterministic A/B pair;
+- at most **2 independent non-reference arms concurrently**;
+- unique immutable output directory per arm;
+- completed deterministic artifacts may be resumed but never overwritten;
+- exact feature SHA must be returned;
+- strict common replay-boundary clock and full per-symbol M1 histories remain
+  unchanged;
+- no future data;
+- validation, historical holdout, and M021 remain inaccessible;
+- no real-order API may be called.
+
+### Frozen Phase-2 activity/sample-size gate
+
+The Phase-1 70% aggregate activity floor is not copied blindly into combined
+filters because spread<=12 alone retained only 72.93% of reference activity.
+Instead, before outcomes, Phase 2 freezes a multi-level representation gate.
+
+Relative to the reference arm on the same partition, every non-reference arm
+must satisfy **all** of:
+
+1. total closed trades >= **50%** of reference total closed trades;
+2. each of the five symbols >= **40%** of that symbol's reference closed
+   trades;
+3. BUY closed trades >= **40%** of reference BUY closed trades;
+4. SELL closed trades >= **40%** of reference SELL closed trades;
+5. every one of the six fixed 4-hour UTC buckets is present and has closed
+   trades >= **25%** of its corresponding reference bucket.
+
+On development, the aggregate floor is therefore **6,003 closed trades**.
+The subgroup floors prevent a candidate from passing solely by retaining a
+large aggregate sample while collapsing one symbol, side, or time bucket.
+
+These ratios are frozen and must not be lowered after outcomes.
+
+### Frozen Phase-2 mechanical development assessment
+
+Mandatory gates:
+
+- deterministic A/B baseline, diagnostic, and summary hashes match;
+- exact declared P2 arm metadata;
+- exact development partition/source-manifest/replay-boundary evidence;
+- the complete sample-size gate above;
+- TP safety:
+  - wrong-side initial TP = 0;
+  - negative-P/L take-profit exits = 0;
+- exact cost contract:
+  `SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`;
+- validation unopened;
+- historical holdout unopened;
+- M021 unused;
+- no real-order API.
+
+Eligible arms are compared on:
+
+1. net realized P/L — maximize;
+2. maximum equity drawdown USD — minimize;
+3. non-flat win rate — maximize.
+
+P2-R is always retained as reference.
+
+Pareto dominance is evaluated across P2-R and all sample-eligible Phase-2 arms.
+
+For any non-reference Pareto-nondominated arm whose net P/L improves versus
+P2-R, preserve the existing Phase-1 breadth/concentration thresholds unchanged:
+
+- positive P/L delta in at least **2 symbols**;
+- positive P/L delta in at least **2 fixed UTC buckets**;
+- no single symbol above **70%** of summed positive symbol deltas;
+- no BUY/SELL side above **80%** of summed positive side deltas.
+
+A Pareto-nondominated improving arm that fails those breadth rules is
+`FRAGILE / CONCENTRATED` and does not become a development finalist.
+
+A mandatory-gate failure is `INELIGIBLE`.
+An eligible Pareto-dominated arm is `DOMINATED`.
+A Pareto-nondominated arm passing applicable breadth is `SHORTLIST`.
+
+The assessment must report accepted/closed trades, ending balance/equity,
+drawdown USD/percent, win rate, per-symbol counts/P&L, BUY/SELL counts/P&L,
+fixed UTC-bucket counts/P&L, decision-spread rejection counts where
+applicable, remaining positions, TP safety, exact hashes, and concentration
+diagnostics.
+
+### Development finalist cap and deterministic reduction
+
+At most **3 non-reference development finalists** may advance, plus P2-R.
+
+If mechanical `SHORTLIST` contains three or fewer non-reference arms, all
+advance.
+
+If more than three survive, rank only the surviving SHORTLIST arms by the
+predeclared maximin robustness value:
+
+`min(pl_gain_fraction, dd_improvement_fraction, win_rate_gain_fraction)`
+
+where:
+
+- `pl_gain_fraction = (candidate_net_pl - reference_net_pl) /
+  abs(reference_net_pl)`;
+- `dd_improvement_fraction = (reference_dd - candidate_dd) / reference_dd`;
+- `win_rate_gain_fraction = (candidate_win_rate - reference_win_rate) /
+  reference_win_rate`.
+
+Keep the top three. Exact ties are broken, in order, by:
+
+1. more symbols with positive P/L delta;
+2. more fixed UTC buckets with positive P/L delta;
+3. higher total closed-trade ratio;
+4. lexicographically smaller P2 arm ID.
+
+No alternative tie-breaker may be introduced after results.
+
+
+## Accepted Phase-2 development assessment — 2026-09-28
+
+Phase-2 development is complete under the predeclared bounded matrix and
+mechanical assessment.
+
+Protocol freeze checkpoint:
+
+`7c6e15cbfcdc09750b6089c092e4ea1446b51e30`
+
+Matrix implementation feature SHA:
+
+`890cf7a160d61be135ae945054498dbe7c70d17d`
+
+Native research gate:
+
+- **85 passed / 0 failed**;
+- economic replay during test gate: **no**;
+- M021 used: **no**;
+- real-order API called: **no**.
+
+Development family command:
+
+`mamba2-m022-phase2-development-family-v1`
+
+Development family result commit:
+
+`535921dcdde0f2a7a87266d0f677758037bab8a3`
+
+Mechanical assessment command:
+
+`mamba2-m022-phase2-development-assessment-v1`
+
+Assessment result commit:
+
+`03329379e9ca4394e09e9ff11c51fe5972f0b8ee`
+
+Exact feature SHA assessed:
+
+`890cf7a160d61be135ae945054498dbe7c70d17d`
+
+Development classifications:
+
+| Arm | Closed trades | Activity vs P2-R | Net P/L | Max DD | Win rate | Mechanical status |
+|---|---:|---:|---:|---:|---:|---|
+| P2-R | 12,006 | 100.00% | -$15,499.36 | $15,501.91 | 32.8667% | **REFERENCE** |
+| P2-01 | 9,181 | 76.47% | -$12,165.30 | $12,186.83 | 32.7302% | **SHORTLIST** |
+| P2-02 | 7,111 | 59.23% | -$4,182.13 | $4,201.66 | 37.2397% | **INELIGIBLE** |
+| P2-03 | 8,439 | 70.29% | -$11,229.83 | $11,261.21 | 32.3418% | **SHORTLIST** |
+| P2-04 | 9,035 | 75.25% | -$11,798.00 | $11,812.63 | 31.7986% | **DOMINATED** |
+| P2-05 | 8,170 | 68.05% | -$4,728.99 | $4,740.06 | 37.0897% | **INELIGIBLE** |
+| P2-06 | 7,298 | 60.79% | -$4,862.13 | $4,897.62 | 34.8911% | **INELIGIBLE** |
+| P2-07 | 7,854 | 65.42% | -$3,900.51 | $3,906.74 | 33.9827% | **INELIGIBLE** |
+| P2-08 | 8,620 | 71.80% | -$12,379.32 | $12,395.97 | 34.5172% | **SHORTLIST** |
+| P2-09 | 6,657 | 55.45% | -$3,894.14 | $3,919.00 | 37.2614% | **INELIGIBLE** |
+| P2-10 | 5,618 | 46.79% | -$3,445.34 | $3,457.62 | 38.3259% | **INELIGIBLE** |
+| P2-11 | 5,290 | 44.06% | -$3,237.39 | $3,249.68 | 38.2681% | **INELIGIBLE** |
+| P2-12 | 7,547 | 62.86% | -$4,770.13 | $4,904.33 | 32.1537% | **INELIGIBLE** |
+
+The frozen sample rule required every candidate to pass all representation
+gates, not only the aggregate trade-count floor:
+
+- total closed trades >=50% of P2-R;
+- every symbol >=40% of the corresponding P2-R symbol count;
+- BUY >=40%;
+- SELL >=40%;
+- every fixed 4-hour UTC bucket >=25%.
+
+Therefore the attractive raw economics of several spread-gated arms do not
+override their mechanical **INELIGIBLE** classification. In particular,
+P2-02, P2-05, P2-06, P2-07, P2-09, P2-10, P2-11, and P2-12 are not eligible
+for validation.
+
+The exactly three mechanically fixed development finalists are:
+
+- **P2-01** — stochastic 28/7/7, EMA12, no spread gate, ATR SL1.0, ATR TP2.0;
+- **P2-03** — stochastic 28/7/7, EMA7, no spread gate, ATR SL1.5, ATR TP2.0;
+- **P2-08** — stochastic 21/7/7, EMA7, no spread gate, ATR SL1.5, ATR TP3.0.
+
+Because exactly three non-reference arms are SHORTLIST, the predeclared max-3
+reduction procedure removes none of them. No manual replacement, reordering,
+or new arm is permitted.
+
+### Frozen validation entrants
+
+Validation entrants are now durably fixed as exactly:
+
+1. **P2-R** — fixed reference;
+2. **P2-01**;
+3. **P2-03**;
+4. **P2-08**.
+
+No other Phase-2 arm may enter validation.
+
+Development safety/isolation remained clean:
+
+- all non-reference arms completed deterministic A/B evidence;
+- development partition only;
+- validation economic data used: **no**;
+- historical holdout economic data used: **no**;
+- M021 post-cutoff data used: **no**;
+- real-order API called: **no**.
+
+Validation was unopened throughout development.
+
+Historical holdout remains sealed.
+
+## Frozen future validation-opening protocol
+
+Validation remains closed throughout Phase-2 development.
+
+Validation may be opened only after:
+
+1. all 12 non-reference development arms have completed deterministic evidence;
+2. the frozen mechanical development assessment has published;
+3. the <=3 non-reference finalists are mechanically fixed;
+4. the finalists, exact parameter definitions, development evidence, and
+   validation entrant list are durably committed before validation execution.
+
+Validation entrants are exactly:
+
+- P2-R;
+- the mechanically selected development finalists, maximum **3**.
+
+No replacement or new combination may be added after validation opens.
+
+Validation partition:
+
+**2026-04-21T00:00:00Z → 2026-07-08T00:00:00Z**, 56 trading dates.
+
+Each entrant must run deterministic A/B under identical semantics and cost
+contract. The same relative sample-size gates are recomputed against the
+validation P2-R:
+
+- total >=50%;
+- each symbol >=40%;
+- BUY >=40%;
+- SELL >=40%;
+- each fixed UTC bucket >=25%.
+
+A non-reference validation entrant is supported for possible historical
+holdout only if all are true:
+
+- mandatory deterministic/safety/sample gates pass;
+- net realized P/L is strictly better than validation P2-R;
+- maximum equity drawdown USD is no worse than validation P2-R;
+- non-flat win rate is no more than **1.0 percentage point below** validation
+  P2-R;
+- positive P/L delta in >=2 symbols;
+- positive P/L delta in >=2 fixed UTC buckets;
+- max positive-symbol contribution <=70%;
+- max positive-side contribution <=80%.
+
+Validation cannot modify the development matrix or produce a replacement arm.
+
+At most **2 non-reference** candidates may advance from validation to
+historical holdout. If more than two satisfy all support rules, apply the same
+maximin relative-improvement formula using validation P2-R, then the same
+tie-break order, and keep the top two.
+
+If no non-reference candidate satisfies validation support, do not open the
+historical holdout.
+
+
+## Accepted Phase-2 validation assessment — 2026-09-28
+
+Validation is complete under the predeclared frozen entrant list and support
+rules.
+
+Validation implementation feature SHA:
+
+`a409a5703e709feb0b45cbe870f4d8639189b6ba`
+
+Preflight result:
+
+`320a216f802aef3d0ea179234269c094975a3cd7`
+
+The preflight proved exact feature SHA, clean worktree, and 0/0 divergence.
+
+Native validation-runner gate:
+
+- command: `mamba2-m022-validation-native-tests-v1`;
+- published result: `0fe62cfa8c029f65b70ef4e926de75af3f373358`;
+- **89 passed / 0 failed**;
+- economic replay during the test gate: **no**;
+- M021 post-cutoff use: **no**;
+- real-order API called: **no**.
+
+Validation family evidence:
+
+- initial publication:
+  `969b6168a8a3767e267f3d3d85ae295c84d43554`;
+- the initial family publication stopped on P2-01 because its validation
+  evidence contained one negative-P/L take-profit exit;
+- read-only invariant diagnostic:
+  `103f99987881da9f5a973d2787041d460a930243`;
+- diagnostic result:
+  P2-R, P2-03, and P2-08 passed every structural/deterministic/partition/TP
+  invariant; P2-01 passed every structural/deterministic/partition invariant
+  but recorded exactly **1** negative-P/L take-profit exit;
+- local-control was narrowly repaired to preserve a non-reference TP-safety
+  failure as candidate evidence for the frozen mechanical assessment rather
+  than aborting the whole validation family;
+- no strategy/replay code or validation evidence changed;
+- repaired family command:
+  `mamba2-m022-phase2-validation-family-v2`;
+- repaired family result:
+  `f520aefda1341dd009412659957d37011138bab1`;
+- all four entrants reused their already-complete deterministic validation
+  artifacts; validation economics were **not rerun** after the repair.
+
+Exact validation partition:
+
+`2026-04-21T00:00:00Z` → `2026-07-08T00:00:00Z`,
+**56 trading dates**.
+
+Validation reference replay-boundary evidence:
+
+- strict common boundary count: **80,599**;
+- replay-boundary SHA-256:
+  `9e46ab331f9107dcf6fb5cf2313a44eef0e336b418e276b692f5a069c2b4613f`;
+- common trading dates SHA-256:
+  `2efcd016d0d346036a33415e794903b5fea86ad610519fbda056ceb2c94feac5`;
+- partition spec SHA-256:
+  `342891a247122ce44f9c3927ae003969044e9aa3923f87fb06586613368a50da`.
+
+Validation entrant evidence:
+
+| Arm | Closed | Net P/L | Max DD | Win rate | TP safety | Mechanical validation status |
+|---|---:|---:|---:|---:|---|---|
+| P2-R | 3,908 | -$2,967.71 | $2,998.48 | 33.8028% | PASS | **REFERENCE** |
+| P2-01 | 3,051 | -$2,925.05 | $2,929.58 | 32.6009% | **FAIL: 1 negative-P/L TP exit** | **INELIGIBLE** |
+| P2-03 | 2,860 | -$2,835.77 | $2,888.85 | 33.1235% | PASS | **NOT SUPPORTED** |
+| P2-08 | 2,884 | -$2,739.90 | $2,816.26 | 35.6103% | PASS | **NOT SUPPORTED** |
+
+Validation family deterministic hashes:
+
+- P2-R:
+  - baseline:
+    `b0103541cc843109a41c7f6df34c01fa912ae74351324cb6233de3df2090c1c6`;
+  - diagnostic:
+    `7a470bfebfa4434793f2f25bfcb416f4342187b5b08ca6f319237d9ea4856979`;
+  - summary:
+    `e5a2085c819e92e8a6a94eb8b721c9f828f8afc9c6a210e5c690702f8490e501`;
+- P2-01:
+  - baseline:
+    `e390066e1ed79d75382481bccc3c3ee26119ae11f060939cf8da7c336043c014`;
+  - diagnostic:
+    `52f84ca35d740466b44d2230089e97c31f8272f98a7212f9efb73281f43a1047`;
+  - summary:
+    `546c191c26a36905cec885c4f9a494423e416e656b94489009687dcc1d062400`;
+- P2-03:
+  - baseline:
+    `44e8e0b0b66823a681ab100d52c71ee0b75de55bbd2f3fa1c336ba8404308fae`;
+  - diagnostic:
+    `30b7718a0075278853a9224cd5939446ea4624bb73f2b566f333e1081ef8c0b8`;
+  - summary:
+    `14d8595fe7279d4de61d0f4d9858526c2a7a925b6f25529d851a8e4528162e6f`;
+- P2-08:
+  - baseline:
+    `f333b76323459395d4d3f007a03fb842f210f86783bc114bd3eed57af21f3aae`;
+  - diagnostic:
+    `a8e81708d5f1128f8ad17497ee35f08cae8d9bc70e4b018aca1be5acd765f2ce`;
+  - summary:
+    `ac0bf69b5a0992190c5dd0854cc10f2230e81b67220c7146b0e29494ba988c0a`.
+
+Frozen mechanical validation assessment:
+
+- command:
+  `mamba2-m022-phase2-validation-assessment-v1`;
+- result commit:
+  `7d28d11cc20b13b8f9a1a0794abc4b090d5689c5`;
+- `ok: true`;
+- reads existing validation evidence only;
+- historical holdout economic data used: **no**;
+- M021 post-cutoff data used: **no**;
+- real-order API called: **no**.
+
+Mechanical classifications:
+
+- **P2-R — REFERENCE**
+- **P2-01 — INELIGIBLE**
+- **P2-03 — NOT SUPPORTED**
+- **P2-08 — NOT SUPPORTED**
+
+P2-01 failed the mandatory TP-safety gate. It also failed the frozen
+win-rate and concentration support checks, so it could not be supported even
+apart from TP safety.
+
+P2-03 passed mandatory/sample gates and improved P/L and drawdown, but the
+positive side contribution was concentrated entirely on SELL
+(max positive-side contribution **100%**, above the frozen 80% limit).
+
+P2-08 passed mandatory/sample gates and improved P/L, drawdown, and win rate,
+but the positive side contribution was concentrated **93.19%** on SELL,
+above the frozen 80% limit.
+
+The mechanical assessment therefore fixed:
+
+- supported candidates: **none**;
+- historical-holdout entrants: **none**;
+- historical-holdout execution authorized: **false**.
+
+Per the predeclared protocol, **historical holdout must not be opened** when
+validation supports zero non-reference candidates.
+
+M022 progression therefore stops at the validation gate. These validation
+results must not be used to redesign the matrix, replace a finalist, weaken a
+gate, or retune parameters.
+
+Historical holdout remains sealed:
+
+`2026-07-08T00:00:00Z` → `2026-09-25T00:00:00Z`,
+**57 trading dates**.
+
+## Frozen historical-holdout opening and assessment protocol
+
+Historical holdout remains sealed until validation has completed and holdout
+entrants have been mechanically determined and durably committed.
+
+Historical-holdout partition:
+
+**2026-07-08T00:00:00Z → 2026-09-25T00:00:00Z**, 57 trading dates.
+
+Entrants may be only:
+
+- P2-R;
+- at most **2** mechanically supported validation candidates.
+
+No retuning or arm substitution is allowed.
+
+Use deterministic A/B, the same execution/cost/safety semantics, and the same
+relative sample-size gates against the holdout P2-R.
+
+A non-reference candidate receives historical-holdout support only if:
+
+- all deterministic/safety/sample gates pass;
+- net realized P/L is strictly better than holdout P2-R;
+- maximum equity drawdown USD is no worse than holdout P2-R;
+- non-flat win rate is no more than **1.0 percentage point below** holdout
+  P2-R;
+- positive P/L delta in >=2 symbols;
+- positive P/L delta in >=2 fixed UTC buckets;
+- max positive-symbol contribution <=70%;
+- max positive-side contribution <=80%.
+
+The holdout is a one-way information gate. Results cannot be used to redesign
+or retune M022. Historical-holdout support is evidence only and does not by
+itself authorize production/live promotion.
+
+## Phase 2 — bounded combinations
+
+Only parameter values/regions that show useful and reasonably stable Phase 1 behavior may enter Phase 2.
+
+Before running Phase 2:
+
+1. publish the shortlist;
+2. publish the exact combination matrix;
+3. cap the matrix to a manageable number of serious candidates;
+4. state the selection criteria before results are inspected.
+
+Prefer combinations that improve multiple dimensions without collapsing trade count or concentrating the benefit in one symbol, one side, or one short calendar period.
+
+## Robustness / anti-overfit rules
+
+A candidate is more credible when neighboring parameter values also behave reasonably. Treat isolated spikes as fragile.
+
+Do not choose a candidate merely because it is the historical maximum.
+
+Report concentration of improvement by symbol, side, and period.
+
+Preserve an untouched historical holdout for finalists whenever data availability permits.
+
+Do not use M021 prospective outcomes to tune M022.
+
+## Cost contract
+
+Historical comparisons must state exactly which costs are modeled.
+
+At minimum preserve the existing truthful label where applicable:
+
+`SPREAD-INCLUDED / EXPLICIT-COMMISSION-AND-SLIPPAGE-ZERO / SWAP-UNMODELED`
+
+Do not invent broker commission, slippage, or swap.
+
+## Regression and safety
+
+Before accepting research machinery:
+
+- preserve accepted M019 historical hashes where the unchanged control path applies;
+- preserve accepted M020-D artifacts where executable replay semantics overlap;
+- keep MT5 historical/market-data access read-only;
+- never place, modify, or close a real MT5 order from research/local-control actions;
+- never alter M021 frozen protocol or its branch;
+- never silently change production strategy behavior.
+
+## Local-control workflow
+
+Use permanent branches:
+
+- `local-control`
+- `local-control-results`
+
+The Dell workstation service is:
+
+`chatgpt-mamba2-local-agent.service`
+
+Cloud review/execution should do everything possible through GitHub and existing/fixed local-control actions. Add narrowly allowlisted local-control actions only when a required Dell/MT5 operation cannot be performed in the cloud. No arbitrary-shell or real-order action is permitted.
+
+Every local run must return enough evidence to identify:
+
+- command/action ID;
+- feature branch and exact SHA;
+- clean/divergence state;
+- runtime;
+- dataset/manifest hashes;
+- outputs and hashes;
+- test totals;
+- safety result.
+
+## Immediate authorized work
+
+The next executor may:
+
+1. inspect the branch/docs and existing replay/export architecture;
+2. document the historical-data inventory plan;
+3. implement deterministic parameter overrides for experiment-only replay without changing production defaults;
+4. implement bounded Phase 1 experiment definitions/reporting;
+5. add synthetic/unit tests;
+6. add narrowly fixed local-control actions required for history inventory/export and research runs;
+7. use Dell read-only MT5 access to establish available historical depth;
+8. predeclare chronological data partitions before parameter results are interpreted;
+9. execute Phase 1 only after those gates are documented.
+
+Do **not** start M15/three-timeframe research.
+
+Do **not** merge to main.
+
+Do **not** modify the frozen M021 branch.
+
+Do **not** deploy or enable real trading.
+
+## Handoff / documentation
+
+Keep this milestone file authoritative for M022. Record material decisions and accepted evidence here as the work progresses.
+
+A fresh session should read:
+
+1. `AGENTS.md`
+2. `docs/CURRENT_STATE.md`
+3. `docs/NEXT_TASK.md`
+4. `docs/BACKTEST_SEMANTICS.md`
+5. `docs/WORKFLOW.md`
+6. `docs/MILESTONES.md`
+7. this file
+
+before changing code or authorizing local runs.

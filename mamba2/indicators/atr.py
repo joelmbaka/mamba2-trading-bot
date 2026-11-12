@@ -39,7 +39,20 @@ def _replay_cached_atr(
         return None, False
 
     visible_length = len(visible_rates)
-    if not source.index[:visible_length].equals(visible_rates.index):
+    prefix_getter = getattr(
+        rate_fetcher,
+        "get_visible_prefix_length_for_indicator",
+        None,
+    )
+    expected_length = (
+        prefix_getter(symbol, str(timeframe))
+        if callable(prefix_getter)
+        else None
+    )
+    if expected_length is not None:
+        if int(expected_length) != visible_length:
+            return None, False
+    elif not source.index[:visible_length].equals(visible_rates.index):
         return None, False
 
     cache = getattr(rate_fetcher, "_replay_indicator_cache", None)

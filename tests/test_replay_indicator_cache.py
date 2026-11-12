@@ -5,6 +5,7 @@ import pandas as pd
 
 from mamba2.backtest.feed import ReplayFeed
 from mamba2.indicators.atr import get_atr
+from mamba2.indicators.moving_average import get_moving_average
 from mamba2.indicators.stochastic import get_stochastic
 
 
@@ -92,12 +93,20 @@ def test_replay_cached_indicators_match_visible_only_legacy_path_exactly():
             m1.index + pd.Timedelta(minutes=1) <= now
         ].rename_axis("time")
         pd.testing.assert_frame_equal(visible_m1, expected_m1)
+        assert (
+            feed.get_visible_prefix_length_for_indicator("EURUSD", "M1")
+            == len(expected_m1)
+        )
 
         visible_m5 = feed.get_rates("EURUSD", "M5")
         expected_m5 = m5.loc[
             m5.index + pd.Timedelta(minutes=5) <= now
         ].rename_axis("time")
         pd.testing.assert_frame_equal(visible_m5, expected_m5)
+        assert (
+            feed.get_visible_prefix_length_for_indicator("EURUSD", "M5")
+            == len(expected_m5)
+        )
 
         cached_m1 = get_stochastic(
             symbol="EURUSD",
@@ -137,6 +146,22 @@ def test_replay_cached_indicators_match_visible_only_legacy_path_exactly():
         )
         _assert_stochastic_equal(cached_m5, legacy_m5)
 
+        cached_ema = get_moving_average(
+            symbol="EURUSD",
+            timeframe="M1",
+            ma_period=7,
+            ma_method="ema",
+            rate_fetcher=feed,
+        )
+        legacy_ema = get_moving_average(
+            symbol="EURUSD",
+            timeframe="M1",
+            ma_period=7,
+            ma_method="ema",
+            rate_fetcher=legacy,
+        )
+        assert cached_ema == legacy_ema
+
         cached_atr = get_atr(
             symbol="EURUSD",
             timeframe="M5",
@@ -164,6 +189,8 @@ def test_replay_cached_indicators_match_visible_only_legacy_path_exactly():
                 assert cached_k_id == first_cached_k_id
 
     assert first_cached_k_id is not None
+    ema_key = ("moving_average", "EURUSD", "M1", 7, "ema")
+    assert ema_key in feed._replay_indicator_cache
 
 
 def test_static_indicator_hook_does_not_precompute_derived_timeframes():
@@ -172,3 +199,7 @@ def test_static_indicator_hook_does_not_precompute_derived_timeframes():
 
     assert feed.get_static_rates_for_indicator("EURUSD", "M1") is not None
     assert feed.get_static_rates_for_indicator("EURUSD", "M5") is None
+
+    feed.advance()
+    assert feed.get_visible_prefix_length_for_indicator("EURUSD", "M1") == 1
+    assert feed.get_visible_prefix_length_for_indicator("EURUSD", "M5") is None

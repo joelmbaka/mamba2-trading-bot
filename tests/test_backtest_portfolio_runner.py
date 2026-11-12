@@ -101,6 +101,19 @@ class FakePositionManager:
         self.calls += 1
 
 
+class RejectingBroker(HistoricalBroker):
+    def order_send(self, request):
+        if request.get("symbol") == "GBPUSD":
+            return {
+                "retcode": 1,
+                "deal": 0,
+                "order": 0,
+                "price": 0.0,
+                "comment": "rejected for test",
+            }
+        return super().order_send(request)
+
+
 def metadata():
     return {
         "EURUSD": SymbolExecutionMetadata(
@@ -167,6 +180,38 @@ def test_two_symbol_strategies_share_broker_and_fill_same_boundary():
     assert len(result.open_positions_by_symbol["EURUSD"]) == 1
     assert len(result.open_positions_by_symbol["GBPUSD"]) == 1
     assert result.final_account == broker.account_info()
+
+
+def test_rejected_order_response_is_not_counted_as_accepted():
+    feed = ReplayFeed(
+        {
+            "EURUSD": bars(base=1.1000),
+            "GBPUSD": bars(base=1.2500),
+        }
+    )
+    broker = RejectingBroker(feed, symbol_metadata=metadata())
+    calls = []
+    runner = PortfolioBacktestRunner(
+        feed,
+        broker,
+        [
+            RecordingStrategy("EURUSD", calls),
+            RecordingStrategy("GBPUSD", calls),
+        ],
+    )
+
+    result = runner.run(max_steps=1)
+
+    assert result.accepted_order_count == 1
+    assert result.accepted_order_count_by_symbol == {
+        "EURUSD": 1,
+        "GBPUSD": 0,
+    }
+    assert broker.positions_total() == 1
+    assert result.pending_orders_by_symbol == {
+        "EURUSD": [],
+        "GBPUSD": [],
+    }
 
 
 def test_open_position_blocks_only_its_own_symbol():
