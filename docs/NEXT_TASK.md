@@ -1,34 +1,33 @@
-# M030 — PAUSED after Stage 1S evidence assessment
+# Next Task — M031 Stage 0 same-data independent-engine feasibility (read-only)
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **PYTHON DETERMINISTIC SEMANTICS VALIDATED FOR TESTED SCOPE; NATIVE MT5 PARITY AND ECONOMIC PERFORMANCE UNRESOLVED**
+Status: **M031 PREPARATION ONLY — CROSS-ENGINE REPRODUCTION REQUIRED BEFORE MASS PYTHON BACKTESTS/TUNING**
 
-## Stage 1S decision
+## Why this task
 
-Codex reviewed clean synchronized branch `46c4cf1ae0b9e49889861f5e2e600a52c9bac898` read-only. No independent native MetaQuotes-Demo raw historical clock, M1/M5 OHLC, native tick/Ask, offline tester execution or broker cost/fill parity was available. The account-free blank terminal repeatedly shut down for an unknown reason; unsupported standalone tester-agent invocation is not authorized. The Stage 1S decision and evidence matrix are preserved at `docs/milestones/030-stage1s-readiness-decision.md`.
+After Stage 1S concluded that frozen M030 Python deterministic semantics were tested but independent native MT5 parity and economics remained unresolved, the user agreed to study historical performance **only with an explicit independent comparison gate**. The same frozen EURUSD Python-tested period must be reproduced in MT5 **or** a genuinely independent web-based engine **before** any mass Python evaluation or strategy fine-tuning.
 
-Prior Stage 1Q: 64 focused tests passed, 92 related regressions passed with one known legacy skip, 119 Python files parsed; real strategy ten-K extreme/no-fresh-crossover entry, indicator warmup, EMA7 seed, ATR14 boundaries.
+See: `docs/milestones/031-independent-engine-parity-gate.md`. This is **not** authorization to execute a backtest, connect a broker, download/upload data or alter the original MT5 environment.
 
-Prior Stage 1R: 59 focused tests passed; 109 synthetic regressions passed with one known legacy skip, 120 Python files parsed; correct deterministic causal source-bar timing, signal/order/fill/SLTP/exit sequence and real strategy pending/open position guard. Test totals are separate suite counts with potential overlap; **do not add them as distinct tests**.
+## Initial platform findings requiring scrutiny
 
-No production trading rules, source dataset or historical broker offset changed.
+Official MetaTrader 5 documentation supports custom financial symbols built from imported M1 rates/ticks and tested using Strategy Tester; higher timeframes are normally generated from imported M1. That is a *documented feature*, not proof a safe standalone account-free terminal can start under Wine. The previously tested isolated blank MT5 build 6316 exited; repeated startup attempts and undocumented standalone tester invocation remain prohibited under M030 Stage 1O.
 
-## No active M030 execution task
+QuantConnect LEAN cloud provides a possible second execution engine with user-defined external datasets, but its object storage and licensing restrictions, CSV OHLC loader and export limitations require feasibility review before any sign-up, paid tier, upload or algorithm execution. TradingView provider data is not an independent *same-input* comparison unless all source M1 and M5 rows can be matched.
 
-**PAUSE** rather than manufacturing a Stage 1T. Do not ask Codex to repeat blank MT5 terminal startup, invoke undocumented `metatester64.exe`, copy original account/server/history state, or endlessly add synthetic tests without a new diagnosed contract gap.
+## Next bounded Codex read-only task — M031 Stage 0
 
-M030 may reopen only when a material, independently verifiable capability is provided:
-- documented account-free offline native MT5 tester/history interface;
-- independently captured and UTC-anchored native raw M1/M5/ticks plus full causal prefixes and provenance;
-- or separately approved privacy-preserving native tester workflow with reproducible no-order probe traces.
+1. Verify clean synchronized `scalping-recovery`. Read `AGENTS.md`, `docs/NEXT_TASK.md`, `docs/BACKTEST_SEMANTICS.md`, `docs/milestones/030-stage1s-readiness-decision.md` and `docs/milestones/031-independent-engine-parity-gate.md`.
+2. Inspect frozen source manifests and checksum evidence, timestamps and M1/M5 normalization/derived M5 behavior for the UTC interval `2026-09-10 00:00` to `2026-09-11 00:00` plus full warm-up. Determine whether MT5 M1-to-M5 aggregation can match the frozen independent M5 dataset; do **not** assume equality. Read-only inspection, no backtest/replay.
+3. Inspect existing M030 observer/exporter, MQL5 probes, entry/position semantics and trace schema. Design a canonical same-input comparison of indicator outputs, per-M1 candidate decisions, submissions/fills/SLTP/exits and source bar times, with explicit tolerances and a STOP on unexplained mismatches.
+4. Evaluate documentation evidence for MT5 custom symbol import/tester in a **newly isolated, no-account, no-network** hypothetical runtime and for a QuantConnect custom-CSV cloud project. Distinguish documented capabilities from locally verified startup viability; spell out data input/output, costs, privacy, source time zone, synthetic ticks and spread/slippage limitations.
+5. Propose exactly one evidence-based next authorization gate: a bounded Python frozen-day baseline, if inputs/data lineage verified, and an independent no-order decision test design, or formal stop if impossible. No mass backtests or optimization before approved independent comparison.
 
-On receipt of new evidence, the **first** action is a read-only source/provenance and privacy-risk assessment, not automatically starting a tester. Preserve frozen EURUSD sample 2026-09-10 and checksum pinned canonical dataset.
+## Prohibited
 
-## Not yet approved
+Do not run tests, Python historical performance simulations, Wine/MT5/MetaEditor/Strategy Tester, undocumented tester agents, connect any broker, copy original terminal credentials/profiles/history, import/alter data, upload sensitive data to cloud, install packages, run real/paper orders, optimize/tune, edit repository locally, reset/force-push/create branch or use local-control. Read-only audit only.
 
-Historical **economic** backtest, new broker connections, market data downloads/imports, simulated/paper/live trades, strategy tuning, original MT5 state changes, Wine/MetaEditor/Strategy Tester execution, and local-control. Python semantics are validated within their synthetic scope, **not** independent native MT5 or real-broker parity, profit or deployment readiness.
+## M030 remains paused
 
-## Next user decision
-
-Await genuinely new evidence or separately scoped authorization for a different task. M030 itself is parked at Stage 1S.
+Python deterministic synthetic strategy/indicator/event semantics have passed focused tests; native MetaQuotes-Demo raw timestamp, independent M1/M5 OHLC and tick identity, execution parity and profitability are **unproven**. Imported custom-symbol data can test platform semantics on *our* data but **cannot independently certify original broker historical data provenance**.
