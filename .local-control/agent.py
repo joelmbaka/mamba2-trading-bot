@@ -352,12 +352,109 @@ def audit_m028_record():
     return {"ok": True, "action": "m028_record_audit", "data": data}
 
 
+
+def diagnose_mt5_wine_compat():
+    """Read-only Wine/MT5 compatibility triage; no Wine terminal launch."""
+    import re
+    from datetime import datetime, timezone
+
+    info = {
+        "read_only": True,
+        "mt5_started": False,
+        "mt5_initialized": False,
+        "order_api_called": False,
+        "wine_prefix_modified": False,
+    }
+    try:
+        proc = subprocess.run(
+            ["wine", "--version"],
+            check=False, text=True, capture_output=True, timeout=8,
+        )
+        info["wine_version"] = (proc.stdout.strip() or proc.stderr.strip())[:128]
+        info["wine_version_exit"] = proc.returncode
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        info["wine_version_error"] = type(exc).__name__
+
+    # Only inspect explicit standard prefixes, never enumerate private files.
+    candidates = [
+        Path.home() / ".mt5",
+        Path.home() / ".wine",
+        Path.home() / ".mt5-wine",
+    ]
+    seen = set()
+    prefixes = []
+    for prefix in candidates:
+        if prefix in seen or not prefix.is_dir():
+            continue
+        seen.add(prefix)
+        item = {"prefix_label": prefix.name}
+        for rel in (
+            "drive_c/Program Files/MetaTrader 5/terminal64.exe",
+            "drive_c/Program Files (x86)/MetaTrader 5/terminal64.exe",
+        ):
+            exe = prefix / rel
+            if exe.is_file():
+                stat = exe.stat()
+                item["terminal_exe_exists"] = True
+                item["terminal_exe_size_bytes"] = stat.st_size
+                item["terminal_exe_mtime_utc"] = datetime.fromtimestamp(
+                    stat.st_mtime, timezone.utc
+                ).isoformat()
+                break
+        reg = prefix / "system.reg"
+        if reg.is_file() and reg.stat().st_size < 25_000_000:
+            # Only return a Windows product label, never registry contents.
+            try:
+                src = reg.read_text(encoding="utf-8", errors="replace")
+                section = re.search(
+                    r'(?m)^\[Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\].*?\n(?=\[|\Z)',
+                    src,
+                    re.S,
+                )
+                if section:
+                    product = re.search(r'^"ProductName"="([^"\r\n]{1,100})"', section.group(), re.M)
+                    if product:
+                        item["windows_product_name"] = product.group(1)
+            except (OSError, UnicodeError):
+                pass
+        prefixes.append(item)
+    info["prefixes"] = prefixes
+
+    # Read kernel process names and TracerPid only. No command lines,
+    # environment, credentials, trading accounts or terminal logs.
+    processes = []
+    root = Path("/proc")
+    for entry in root.iterdir():
+        if not entry.name.isdecimal():
+            continue
+        try:
+            comm = (entry / "comm").read_text().strip()
+            if comm.lower() not in {
+                "terminal64.exe", "metatrader64.exe", "wineserver", "winedbg",
+                "gdb", "strace", "lldb",
+            }:
+                continue
+            lines = (entry / "status").read_text().splitlines()
+            tracer = next(
+                (line.split(":", 1)[1].strip() for line in lines
+                 if line.startswith("TracerPid:")),
+                "unknown",
+            )
+            processes.append({"process": comm, "tracer_pid": tracer})
+        except (OSError, UnicodeError):
+            continue
+    info["processes"] = processes[:35]
+    return {"ok": True, "action": "diagnose_mt5_wine_compat", "data": info}
+
+
 def execute(command):
     action = command.get("action")
     if action == "status":
         return {"ok": True, "action": action, "data": git_status()}
     if action == "m028_record_audit":
         return audit_m028_record()
+    if action == "diagnose_mt5_wine_compat":
+        return diagnose_mt5_wine_compat()
     if action == "sync":
         return git_sync()
     if action == "switch_branch":
