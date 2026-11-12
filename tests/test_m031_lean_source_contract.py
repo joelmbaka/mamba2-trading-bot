@@ -51,6 +51,9 @@ def test_exact_one_day_boundary_and_full_prefix_notional_guard():
     assert "_sampleM1Count != 1440" in source
     assert "_sampleM5Count != 288" in source
     assert "_sampleAskCount != 1440" in source
+    assert "_m1Stochastic.Count != 389448" in source
+    assert "_m5Stochastic.Count != 77868" in source
+    assert "_totalAskCount != 389448" in source
     assert "SealedStart.AddMinutes(1)" in source
     assert "_lastBoundary != DateTime.MinValue && boundary != _lastBoundary.AddMinutes(1)" in source
     assert "canonical_m5_direct = true" in source
@@ -63,7 +66,7 @@ def test_incremental_indicators_and_sealed_input_contract():
         "0.25m * m1.Close + 0.75m * _ema",
         "21 + 7 + 7", "RecentK.Any(k => k < 20m)",
         "RecentK.Any(k => k > 80m)", "Value = total / 14m",
-        "ValidateSource(", "ExpectedM1Sha256", "ExpectedM1AskSha256",
+        "ValidateSource(", "ExpectedManifestSha256", "ExpectedM1Sha256", "ExpectedM1AskSha256",
         "ExpectedM5Sha256", "ObjectStore.ContainsKey", "SaveExclusive",
     ):
         assert fragment in source
