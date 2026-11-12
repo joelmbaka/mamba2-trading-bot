@@ -19,7 +19,7 @@ KINDS = frozenset({
 })
 # Runtime-generated, implementation-specific ticket IDs are diagnostic; do not
 # incorrectly require identical numeric IDs from independent engines.
-ALIGNMENT_FIELDS = ("symbol", "event_kind", "utc_time_ms", "m1_source_open_utc")
+ALIGNMENT_FIELDS = ("symbol", "event_kind", "utc_time_ms", "m1_source_open_utc", "m5_source_open_utc")
 EXACT_FIELDS = ("side", "volume_lots", "signal", "reason_or_error_code")
 NUMERIC_FIELDS = ("m1_k", "m1_d", "m5_k", "m5_d", "ema", "atr",
                   "bid", "ask", "entry_or_exit_price", "sl", "tp",
@@ -111,6 +111,8 @@ def compare_events(
     if indicator_tolerance < 0 or price_tolerance < 0:
         raise ValueError("tolerances must be non-negative")
     a, b = list(python_events), list(mt5_events)
+    if any(row.get("schema_version") != SCHEMA_VERSION for row in a + b):
+        raise ValueError("event stream contains unknown schema version")
     for index in range(max(len(a), len(b))):
         if index >= len(a) or index >= len(b):
             return {"matched": False, "index": index, "category": "MISSING_EVENT",
