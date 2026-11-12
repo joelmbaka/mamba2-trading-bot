@@ -9,6 +9,7 @@ workstation action; test-injected timestamps are synthetic-only.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from typing import Callable
 import json
 import math
 import os
@@ -172,6 +173,7 @@ def write_decision(
     record: Mapping[str, Any],
     *,
     now: datetime,
+    clock: Callable[[], datetime] | None = None,
 ) -> tuple[dict[str, Any], bool]:
     """Exclusive on-time paper record creation; synthetic timestamps for tests.
 
@@ -180,6 +182,8 @@ def write_decision(
     Returns (record, reused_existing). A corrupt/colliding record is never fixed.
     """
     directory = Path(directory)
+    if directory.is_symlink():
+        raise ValueError("decision directory must not be a symlink")
     existing = read_decision(directory, month_id)
     if existing is not None:
         return existing, True
@@ -201,6 +205,15 @@ def write_decision(
     if directory.is_symlink():
         raise ValueError("decision directory must not be a symlink")
     path = record_path(directory, month_id)
+    if clock is not None:
+        # This is the last guard before the exclusive filesystem create.
+        # Live integration MUST pass its internally-read trusted UTC clock.
+        final_time = _utc(clock())
+        if final_time < _utc(now):
+            raise RuntimeError("CLOCK_MOVED_BACKWARD")
+        final_status = window_status(month_id, final_time)
+        if final_status != "WINDOW_OPEN":
+            raise RuntimeError(final_status)
     try:
         with path.open("x", encoding="utf-8") as stream:
             stream.write(encoded)
