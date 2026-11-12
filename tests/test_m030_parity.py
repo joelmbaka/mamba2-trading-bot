@@ -75,3 +75,42 @@ def test_schema_and_validations():
         sample(event_kind="EXIT")
     with pytest.raises(ValueError):
         compare_events([], [], price_tolerance=-0.1)
+
+
+def test_mt5_csv_converter_requires_explicit_server_offset(tmp_path):
+    from mamba2.backtest.m030_mt5_import import convert_decision_csv
+    path = tmp_path / "probe.csv"
+    path.write_text(
+        "run_id,symbol,server_boundary,m1_source_open,m5_source_open,"
+        "m1_k,m1_d,m5_k,m5_d,ema,atr,signal,reason\n"
+        "sample,EURUSD,2026.09.10 03:01:00,2026.09.10 03:00:00,"
+        "2026.09.10 02:55:00,19,21,49,51,1.1,0.001,NONE,NO_SIGNAL\n",
+        encoding="utf-8",
+    )
+    events = convert_decision_csv(path, verified_server_utc_offset_minutes=180,
+                                  expected_run_id="sample").events
+    assert len(events) == 1
+    assert events[0]["m1_source_open_utc"] == "2026-09-10T00:00:00Z"
+    assert events[0]["m5_source_open_utc"] == "2026-09-09T23:55:00Z"
+    assert events[0]["source_engine"] == "mt5"
+    with pytest.raises(ValueError):
+        convert_decision_csv(path, verified_server_utc_offset_minutes=180,
+                             expected_run_id="wrong")
+    with pytest.raises(ValueError):
+        convert_decision_csv(path, verified_server_utc_offset_minutes=900,
+                             expected_run_id="sample")
+
+
+def test_mt5_csv_rejects_noncompleted_m5_candle(tmp_path):
+    from mamba2.backtest.m030_mt5_import import convert_decision_csv
+    path = tmp_path / "probe.csv"
+    path.write_text(
+        "run_id,symbol,server_boundary,m1_source_open,m5_source_open,"
+        "m1_k,m1_d,m5_k,m5_d,ema,atr,signal,reason\n"
+        "sample,EURUSD,2026.09.10 00:01:00,2026.09.10 00:00:00,"
+        "2026.09.10 00:00:00,19,21,49,51,1.1,0.001,NONE,NO_SIGNAL\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="M5 bar is not completed"):
+        convert_decision_csv(path, verified_server_utc_offset_minutes=0,
+                             expected_run_id="sample")
