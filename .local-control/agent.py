@@ -481,6 +481,157 @@ def probe_mt5_pe_version():
                      "version_present": bool(versions),
                      "terminal_launched": False, "order_api_called": False}}
 
+
+def m029_stage3b_isolated_preflight():
+    """Bounded, read-only inventory of isolated Wine 11 and Python candidates.
+
+    Never initializes Wine/MT5, executes a Python interpreter, reads account
+    data, copies files, or modifies an existing prefix.
+    """
+    import re
+
+    home = Path.home()
+    original = (home / ".mt5").resolve()
+    forbidden = {
+        original,
+        (home / ".wine").resolve(),
+        (home / ".mamba2-mt5").resolve(),
+    }
+    result = {
+        "read_only": True,
+        "wine_started": False,
+        "terminal_started": False,
+        "python_started": False,
+        "broker_initialized": False,
+        "account_data_read": False,
+        "real_order_api_called": False,
+        "prefix_modified": False,
+    }
+
+    binaries = [
+        Path("/opt/wine-staging/bin/wine"),
+        Path("/opt/wine-staging/bin/wine64"),
+        Path("/opt/wine-devel/bin/wine"),
+        Path("/opt/wine-stable/bin/wine"),
+        Path("/usr/bin/wine-staging"),
+        Path("/usr/local/bin/wine-staging"),
+        Path("/usr/bin/wine"),
+    ]
+    try:
+        opt = Path("/opt")
+        for folder in opt.iterdir():
+            if len(binaries) >= 32:
+                break
+            if not folder.is_dir():
+                continue
+            if any(word in folder.name.lower() for word in ("wine", "staging")):
+                binaries.append(folder / "bin" / "wine")
+    except OSError:
+        pass
+
+    found = []
+    for binary in dict.fromkeys(binaries):
+        if not binary.is_file():
+            continue
+        try:
+            proc = subprocess.run(
+                [str(binary), "--version"], capture_output=True, text=True,
+                check=False, timeout=7,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            continue
+        version = (proc.stdout.strip() or proc.stderr.strip())[:90]
+        if proc.returncode == 0:
+            found.append({"binary": str(binary), "version": version})
+    result["wine_candidates"] = found
+
+    paths = []
+    roots = [home, Path("/tmp"), home / "Dev", home / ".local" / "share"]
+    for root in roots:
+        if not root.is_dir():
+            continue
+        try:
+            for item in root.iterdir():
+                if len(paths) >= 150:
+                    break
+                lower = item.name.lower()
+                if not any(
+                    token in lower
+                    for token in ("wine", "mt5", "mamba", "compat", "isolat")
+                ):
+                    continue
+                try:
+                    if item.is_symlink() or not item.is_dir():
+                        continue
+                    resolved = item.resolve()
+                    if resolved in forbidden:
+                        continue
+                    if not (resolved / "system.reg").is_file():
+                        continue
+                    paths.append(resolved)
+                except OSError:
+                    continue
+        except OSError:
+            continue
+    # A hidden prefix may be under the project root from the smoke test.
+    paths = list(dict.fromkeys(paths))
+    prefixes = []
+    py_rels = (
+        "drive_c/Python310/python.exe",
+        "drive_c/Python310/pythonw.exe",
+        "drive_c/Python311/python.exe",
+        "drive_c/Python312/python.exe",
+        "drive_c/Program Files/Python310/python.exe",
+    )
+    for prefix in paths[:30]:
+        python_paths = []
+        for rel in py_rels:
+            exe = prefix / rel
+            if exe.is_file() and not exe.is_symlink():
+                python_paths.append(str(exe))
+        regfile = prefix / "system.reg"
+        product_name = None
+        try:
+            if regfile.stat().st_size < 30_000_000:
+                registry = regfile.read_text(
+                    encoding="utf-8", errors="replace"
+                )
+                section = re.search(
+                    r'(?ms)^\[Software\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\].*?(?=^\[|\Z)',
+                    registry,
+                )
+                if section:
+                    match = re.search(
+                        r'^"ProductName"="([^"\r\n]{1,100})"',
+                        section.group(), re.M,
+                    )
+                    if match:
+                        product_name = match.group(1)
+        except OSError:
+            pass
+        prefixes.append({
+            "prefix": str(prefix),
+            "windows_product_name": product_name,
+            "bridge_python_candidates": python_paths,
+            "terminal_copy_present": any(
+                (prefix / rel).is_file()
+                for rel in (
+                    "drive_c/Program Files/MetaTrader 5/terminal64.exe",
+                    "drive_c/Program Files (x86)/MetaTrader 5/terminal64.exe",
+                )
+            ),
+        })
+    result["isolated_prefix_candidates"] = prefixes
+    result["isolated_python_available"] = any(
+        bool(p["bridge_python_candidates"]) for p in prefixes
+    )
+    return {
+        "ok": True,
+        "action": "m029_stage3b_isolated_preflight",
+        "data": result,
+    }
+
+
 def execute(command):
     action = command.get("action")
     if action == "status":
@@ -491,6 +642,8 @@ def execute(command):
         return diagnose_mt5_wine_compat()
     if action == "probe_mt5_pe_version":
         return probe_mt5_pe_version()
+    if action == "m029_stage3b_isolated_preflight":
+        return m029_stage3b_isolated_preflight()
     if action == "sync":
         return git_sync()
     if action == "switch_branch":
