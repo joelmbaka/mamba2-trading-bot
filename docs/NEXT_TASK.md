@@ -1,28 +1,33 @@
-# Next Authorized Task — M030 Stage 1Q deterministic signal/indicator boundary tests
+# Next Authorized Task — M030 Stage 1Q synthetic test validation
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: **STAGE 1P READ-ONLY PYTHON AUDIT ACCEPTED; P0 TEST IMPLEMENTATION NEXT**
+Status: **STAGE 1Q TEST SOURCE COMMITTED; EXECUTION/VALIDATION PENDING**
 
-## Evidence
+## What changed on GitHub
 
-Stage 1P Codex found strong existing deterministic coverage for completed-bar semantics, synthetic runner position/pending-order guards, stochastic 21/7/7 arithmetic, EMA/ATR caching, stop/target exits, trailing and M030 schema. Four main gaps remain: real production ten-candle extreme *not fresh crossover*, indicator warm-up/first-source seeding, full M030 lifecycle event ordering and real strategy + runner position blocking. Full ranked audit: `docs/milestones/030-stage1p-python-gap-audit.md`.
+Stage 1P audit identified missing real production ten-candle signal semantics tests, first-source EMA seed boundaries, stochastic warm-up and ATR14 gap sensitivity. Codex then produced a read-only implementation plan, confirming exact production path `mamba2/strategy/triple_cross.py` and public ATR14 insufficient-history **0.0** sentinel.
 
-The original standalone MT5 account-free launcher/tester attempt remains stopped under `docs/milestones/030-stage1o-stop-standalone.md`. No native historical clock, native OHLC/ticks or broker execution parity has been established.
+ChatGPT implemented **test-only** Stage 1Q on GitHub:
+- `tests/test_triple_cross_condition_semantics.py`: real production BUY and SELL ten-M1-K sequences, older extreme vs deleted extreme, no fresh last-candle K/D cross, M5 direction, EMA/candle filter and untouched initial SL/TP=0.
+- `tests/test_m030_stage1q_boundaries.py`: direct M030 observer candidate cases and explicit public `get_stochastic` 34/35 rows, `get_moving_average` EMA7 long-vs-short-prefix seeding, `get_atr` 14/15 bars including prior-close gap.
+- `tests/test_m030_incremental_contract.py`: removed always-true EMA divergence assertion.
+- `docs/milestones/030-stage1q-test-implementation.md`: scope and review notes.
 
-## Next task — ChatGPT GitHub source only: Stage 1Q
+**All new test changes remain UNTESTED.** Production strategy and indicators, M030 probes, broker/runner, frozen datasets and MT5 installation were NOT changed.
 
-1. Add **synthetic tests** calling actual production strategy or `m030_signal_observer.py` for BUY/SELL using a full ten-candle M1 stochastic K sequence. An earlier oversold/overbought K plus valid latest K/D, M5 direction and EMA/candle filter must emit ENTRY without requiring a fresh K/D crossover. Change only earlier extreme and assert no signal.
-2. Explicitly test Stochastic(21,7,7) public-API 34-row insufficient-history and 35-row first eligible boundary; decision cannot use pre-warm-up K/D.
-3. Replace tautological short-prefix EMA test with an intentionally discriminating first-source/short-source vector and assert a nonzero divergence while correctly seeded recurrence equals `ewm(adjust=False)`.
-4. Explicitly test ATR14 14 vs 15 completed M5-bar availability and a gap-sensitive hand-computed TR mean.
-5. Do **not** modify frozen production strategy, settings, dataset, historical timestamp mapping or trading execution code just to satisfy a test. If expected semantics conflict with actual implementation, record the precise discrepancy for review rather than silently changing behavior.
-6. After GitHub source-only implementation, hand to Codex for focused synthetic tests, regressions and syntax/static analysis. No MT5/Wine/Tester run.
+## Next bounded Codex validation under explicit instruction
 
-## Subsequent task
+1. Verify clean synchronized `scalping-recovery`, read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, this document and Stage 1Q milestone.
+2. Run `PYTHONPATH=. ./.venv/bin/pytest tests/test_triple_cross_condition_semantics.py tests/test_m030_stage1q_boundaries.py tests/test_m030_incremental_contract.py -q` and relevant stochastic, EMA, ATR, M030 parity and regression tests; Python syntax compilation.
+3. Static-review the synthetic ten-bar no-fresh-crossover scenarios, real strategy/observer calls, mocked broker/reporting path, first-source EMA divergent seed, ATR14 public 0.0 sentinel and gap-sensitive TR mean.
+4. Return exact test counts and failure traces, with source path/line defects; do not repair source locally or change production rules. If any test fails, send evidence for a GitHub-only test correction/contract review.
+5. Confirm original terminal/workstation and original historical dataset unchanged. No MT5/Wine/Tester operations.
 
-Stage 1R (separate gate): M030 lifecycle event ordering and production strategy position-blocking integration, only after Stage 1Q validation.
+## Following gate
+
+After all source/test validation passes, Stage 1R should address ordered M030 M1_CLOSE→SIGNAL→SUBMIT→FILL→SLTP_MODIFY→EXIT streams and real production strategy position-blocking integration using only deterministic synthetic fixtures.
 
 ## Prohibited
 
-No historical Python economic backtest, Strategy Tester/Wine/MT5, order execution even simulated outside bounded synthetic mocks, broker connection, data downloads, optimization, production strategy edits without review, native account/history copies, reset/force-push/branch creation or local-control.
+No Python historical economic replay, Wine/MT5/MetaEditor/Strategy Tester launch, native history import/copy, broker login or network data access, simulated/live trading, production strategy tuning, package installs, local source modifications, reset/force push/new branch or local-control. Native MT5 parity remains blocked under Stage 1O.
