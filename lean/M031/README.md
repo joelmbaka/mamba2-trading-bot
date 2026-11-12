@@ -111,3 +111,20 @@ After a separately approved pinned LEAN runtime provision, compile C# first,
 then run exactly one observation-only frozen-day comparison. Do not execute
 MT5/Wine, historical Python replay, mass backtests, tuning, broker
 connections, Docker pulls or cloud uploads without their own approval.
+
+## Compile-only project (not a tester)
+
+`M031.csproj` is a standalone C# library project targeting `net10.0` with
+`QuantConnect.Algorithm` NuGet version `2.5.18248`. It includes only the two
+M031 C# files. Its purpose is to surface real C# and LEAN API compilation
+errors **without starting the engine or executing historical signals**.
+
+Compilation has **not** yet happened. A .NET 10 SDK and exact transitive NuGet
+dependencies must be provided under separate approval. The selected SDK
+container needs an immutable digest; an initial network-enabled package
+restore is separate from a later offline `dotnet build --no-restore`.
+The original git source should be mounted read-only and copied into a fresh
+writable staging directory for the build. Never expose the rootful Docker
+socket inside the container or use the LEAN engine image solely for compilation.
+
+See `docs/milestones/031-stage5-runtime-diagnostics.md`.
