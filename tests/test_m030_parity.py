@@ -114,3 +114,78 @@ def test_mt5_csv_rejects_noncompleted_m5_candle(tmp_path):
     with pytest.raises(ValueError, match="M5 bar is not completed"):
         convert_decision_csv(path, verified_server_utc_offset_minutes=0,
                              expected_run_id="sample")
+
+
+def test_m030_bar_audit_accepts_distinct_m1_m5_origins(tmp_path):
+    from mamba2.backtest.m030_bar_alignment import compare_bar_audit
+    path = tmp_path / "audit.csv"
+    path.write_text(
+        "run_id,symbol,timeframe,server_bar_open,open,high,low,close\n"
+        "sample,EURUSD,M1,2025.08.25 03:03:00,1.1,1.2,1.0,1.15\n"
+        "sample,EURUSD,M5,2025.08.25 03:00:00,1.2,1.3,1.1,1.25\n",
+        encoding="utf-8",
+    )
+    reference = {
+        "M1": [{"bar_open_utc": "2025-08-25T00:03:00Z",
+                "open": 1.1, "high": 1.2, "low": 1.0, "close": 1.15}],
+        "M5": [{"bar_open_utc": "2025-08-25T00:00:00Z",
+                "open": 1.2, "high": 1.3, "low": 1.1, "close": 1.25}],
+    }
+    result = compare_bar_audit(
+        path, expected=reference, expected_run_id="sample",
+        verified_server_utc_offset_minutes=180,
+    )
+    assert result == {"matched": True, "rows": {"M1": 1, "M5": 1}}
+    modified = {**reference, "M5": [{**reference["M5"][0], "high": 1.31}]}
+    mismatch = compare_bar_audit(
+        path, expected=modified, expected_run_id="sample",
+        verified_server_utc_offset_minutes=180,
+    )
+    assert mismatch["category"] == "SOURCE_OHLC"
+    assert mismatch["timeframe"] == "M5"
+
+
+def test_m030_bar_audit_rejects_mismatch_and_duplicate(tmp_path):
+    from mamba2.backtest.m030_bar_alignment import compare_bar_audit
+    path = tmp_path / "audit.csv"
+    header = "run_id,symbol,timeframe,server_bar_open,open,high,low,close\n"
+    m1 = "sample,EURUSD,M1,2025.08.25 00:03:00,1,2,0,1\n"
+    m5 = "sample,EURUSD,M5,2025.08.25 00:00:00,1,2,0,1\n"
+    expected = {
+        tf: [{"bar_open_utc": f"2025-08-25T00:0{minute}:00Z",
+              "open": 1, "high": 2, "low": 0, "close": 1}]
+        for tf, minute in (("M1", 3), ("M5", 0))
+    }
+    path.write_text(header + m1 + m1 + m5, encoding="utf-8")
+    with pytest.raises(ValueError, match="duplicate or unsorted"):
+        compare_bar_audit(path, expected=expected, expected_run_id="sample",
+                          verified_server_utc_offset_minutes=0)
+    path.write_text(header + m1 + m5, encoding="utf-8")
+    result = compare_bar_audit(path, expected=expected, expected_run_id="sample",
+                               verified_server_utc_offset_minutes=180)
+    assert result["category"] == "SOURCE_TIME"
+
+
+def test_m030_bar_audit_detects_missing_prefix(tmp_path):
+    from mamba2.backtest.m030_bar_alignment import compare_bar_audit
+    path = tmp_path / "audit.csv"
+    path.write_text(
+        "run_id,symbol,timeframe,server_bar_open,open,high,low,close\n"
+        "sample,EURUSD,M1,2025.08.25 00:03:00,1,2,0,1\n"
+        "sample,EURUSD,M5,2025.08.25 00:00:00,1,2,0,1\n",
+        encoding="utf-8",
+    )
+    expected = {
+        "M1": [
+            {"bar_open_utc": "2025-08-25T00:02:00Z",
+             "open": 1, "high": 2, "low": 0, "close": 1},
+            {"bar_open_utc": "2025-08-25T00:03:00Z",
+             "open": 1, "high": 2, "low": 0, "close": 1},
+        ],
+        "M5": [{"bar_open_utc": "2025-08-25T00:00:00Z",
+                "open": 1, "high": 2, "low": 0, "close": 1}],
+    }
+    mismatch = compare_bar_audit(path, expected=expected, expected_run_id="sample",
+                                 verified_server_utc_offset_minutes=0)
+    assert mismatch["category"] == "SOURCE_TIME"
+    assert mismatch["timeframe"] == "M1"
