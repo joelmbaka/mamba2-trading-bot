@@ -9,11 +9,18 @@ input string RunId = "M030-stage1a";
 input string OutputName = "m030_decisions.csv";
 // Must be set to the exact earliest source-bar open in Python's dataset.
 // Default invalid: tester refuses to run without an explicit seed.
-input datetime SourceHistoryStart = 0;
+// These timestamps are SERVER clock bar opens, not UTC. Set both from
+// independently verified MT5-to-UTC mapping; default zero refuses to start.
+input datetime M1SourceStartServer = 0;
+input datetime M5SourceStartServer = 0;
 input datetime ComparisonStart = D'2026.09.10 00:00';
 input datetime ComparisonEnd = D'2026.09.11 00:00';
 
 int handle = INVALID_HANDLE;
+int audit_handle = INVALID_HANDLE;
+input string BarAuditOutputName = "m030_bar_audit.csv";
+input bool EmitBarAudit = false;
+bool bar_audit_done = false;
 datetime lastBoundary = 0;
 const int KPER = 21, DPER = 7, SLOW = 7;
 
@@ -22,14 +29,29 @@ struct Bar {
   datetime start;
   double open, high, low, close;
 };
-bool GetBars(ENUM_TIMEFRAMES tf, Bar &result[]) {
+bool GetBars(ENUM_TIMEFRAMES tf, datetime expected_start, Bar &result[]) {
   MqlRates rates[];
   ArraySetAsSeries(rates, false);
   // Complete source history; never seed EMA at an arbitrary 512-bar cutoff.
-  int count = CopyRates(_Symbol, tf, SourceHistoryStart, TimeCurrent(), rates);
-  if(count > 0 && rates[count-1].time >= iTime(_Symbol,tf,0)) count--;
-  // A source-by-source timestamp audit remains mandatory.
-  if(count < 40) return false;
+  int count = CopyRates(_Symbol, tf, expected_start, TimeCurrent(), rates);
+  if(count <= 0) return false;
+  // CopyRates range is inclusive by bar OPEN. Exclude the currently
+  // forming candle; assert the initial source candle instead of truncating.
+  datetime current_open = iTime(_Symbol,tf,0);
+  if(current_open <= 0) return false;
+  if(rates[count-1].time >= current_open) count--;
+  if(count < 40 || rates[0].time != expected_start) {
+    PrintFormat("M030 MISSING PREFIX tf=%d expected=%s first=%s count=%d",
+                (int)tf, TimeToString(expected_start), 
+                count>0?TimeToString(rates[0].time):"NONE", count);
+    return false;
+  }
+  for(int i=1;i<count;i++) {
+    if(rates[i].time <= rates[i-1].time || rates[i].time >= current_open) {
+      Print("M030 DENIED: duplicate, reversed or unclosed history bars");
+      return false;
+    }
+  }
   ArrayResize(result, count);
   for(int i=0;i<count;i++) {
     result[i].start=rates[i].time;
@@ -99,12 +121,19 @@ int OnInit() {
     Print("M030 DENIED: EA may only run in Strategy Tester");
     return INIT_FAILED;
   }
-  if(SourceHistoryStart<=0 || SourceHistoryStart>=ComparisonStart || ComparisonStart>=ComparisonEnd) {
+  if(M1SourceStartServer<=0 || M5SourceStartServer<=0 ||
+     M1SourceStartServer>=ComparisonStart || M5SourceStartServer>=ComparisonStart ||
+     ComparisonStart>=ComparisonEnd) {
     Print("M030 DENIED: missing history start or invalid frozen date window");
     return INIT_FAILED;
   }
   if(_Symbol!="EURUSD") {
     Print("M030 DENIED: frozen first symbol must be EURUSD");
+    return INIT_FAILED;
+  }
+  if(EmitBarAudit && (BarAuditOutputName==OutputName ||
+      FileIsExist(BarAuditOutputName,FILE_COMMON))) {
+    Print("M030 DENIED: audit path collides or already exists");
     return INIT_FAILED;
   }
   if(FileIsExist(OutputName,FILE_COMMON)) {
@@ -113,6 +142,12 @@ int OnInit() {
   }
   handle=FileOpen(OutputName,FILE_CSV|FILE_WRITE|FILE_ANSI|FILE_COMMON,',');
   if(handle==INVALID_HANDLE) return INIT_FAILED;
+  if(EmitBarAudit) {
+    audit_handle=FileOpen(BarAuditOutputName,FILE_CSV|FILE_WRITE|FILE_ANSI|FILE_COMMON,',');
+    if(audit_handle==INVALID_HANDLE) { FileClose(handle);handle=INVALID_HANDLE;return INIT_FAILED; }
+    FileWrite(audit_handle,"run_id","symbol","timeframe","server_bar_open",
+              "open","high","low","close");
+  }
   FileWrite(handle,"run_id","symbol","server_boundary","m1_source_open",
             "m5_source_open","m1_k","m1_d","m5_k","m5_d",
             "ema","atr","signal","reason");
@@ -120,6 +155,7 @@ int OnInit() {
 }
 void OnDeinit(const int reason) {
   if(handle!=INVALID_HANDLE) FileClose(handle);
+  if(audit_handle!=INVALID_HANDLE) FileClose(audit_handle);
 }
 void OnTick() {
   datetime boundary=iTime(_Symbol,PERIOD_M1,0);
@@ -127,7 +163,32 @@ void OnTick() {
   lastBoundary=boundary;
   if(boundary<ComparisonStart || boundary>=ComparisonEnd) return;
   Bar m1[],m5[];
-  if(!GetBars(PERIOD_M1,m1)||!GetBars(PERIOD_M5,m5)) return;
+  if(!GetBars(PERIOD_M1,M1SourceStartServer,m1) ||
+     !GetBars(PERIOD_M5,M5SourceStartServer,m5)) {
+    Print("M030 DENIED: missing complete source prefix; stopping probe");
+    ExpertRemove();
+    return;
+  }
+  if(m1[ArraySize(m1)-1].start != boundary-60 ||
+     m5[ArraySize(m5)-1].start+300>boundary) {
+    Print("M030 DENIED: M1/M5 latest completed bar misaligned");
+    ExpertRemove();
+    return;
+  }
+  if(EmitBarAudit && !bar_audit_done) {
+    for(int tf=0;tf<2;tf++) {
+      int size=(tf==0?ArraySize(m1):ArraySize(m5));
+      for(int i=0;i<size;i++) {
+        Bar bar = (tf==0?m1[i]:m5[i]);
+        FileWrite(audit_handle,RunId,_Symbol,(tf==0?"M1":"M5"),
+                  TimeToString(bar.start,TIME_DATE|TIME_SECONDS),
+                  DoubleToString(bar.open,_Digits),DoubleToString(bar.high,_Digits),
+                  DoubleToString(bar.low,_Digits),DoubleToString(bar.close,_Digits));
+      }
+    }
+    FileFlush(audit_handle);
+    bar_audit_done=true;
+  }
   double k1,d1,k5,d5; bool low1,high1,low5,high5;
   if(!Stoch(m1,k1,d1,low1,high1) || !Stoch(m5,k5,d5,low5,high5)) return;
   double ema=Ema(m1,7),atr=Atr(m5,14);
