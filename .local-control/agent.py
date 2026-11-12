@@ -882,6 +882,63 @@ def m029_stage3b_known_runtime_probe():
     }
 
 
+
+def m029_stage3b_isolated_python_inventory():
+    """Read-only bounded inventory only inside the exact isolated Wine 11 root."""
+    import os
+    root = Path("/home/joel/.local/share/mamba2-mt5-wine1121")
+    wine = root / "runtime/opt/wine-staging/bin/wine"
+    prefix = root / "prefix"
+    original = (Path.home() / ".mt5").resolve()
+    if root.is_symlink() or prefix.is_symlink() or prefix.resolve() == original:
+        return {"ok": False, "action": "m029_stage3b_isolated_python_inventory",
+                "data": {"reason": "ISOLATION_NOT_PROVEN"}}
+    if not wine.is_file() or not prefix.is_dir():
+        return {"ok": False, "action": "m029_stage3b_isolated_python_inventory",
+                "data": {"reason": "ISOLATED_RUNTIME_MISSING"}}
+    found = []
+    visited = 0
+    max_dirs = 2000
+    stack = [(root, 0)]
+    while stack and visited < max_dirs:
+        folder, depth = stack.pop()
+        visited += 1
+        try:
+            if folder.is_symlink():
+                continue
+            with os.scandir(folder) as scan:
+                entries = list(scan)
+        except (PermissionError, OSError):
+            continue
+        for e in entries:
+            try:
+                if e.is_symlink():
+                    continue
+                if e.is_file(follow_symlinks=False):
+                    lower = e.name.lower()
+                    if lower in {"python.exe", "pythonw.exe", "pypy.exe"}:
+                        found.append(e.path)
+                elif e.is_dir(follow_symlinks=False) and depth < 9:
+                    if len(stack) < 4500:
+                        stack.append((Path(e.path), depth + 1))
+            except (PermissionError, OSError):
+                continue
+    return {"ok": True, "action": "m029_stage3b_isolated_python_inventory",
+            "data": {
+                "read_only": True, "isolated_root_only": True,
+                "directories_examined": visited,
+                "inventory_limit_reached": visited >= max_dirs,
+                "python_executables": found[:25],
+                "python_available": bool(found),
+                "mt5_initialized": False,
+                "python_import_attempted": False,
+                "broker_quote_read": False,
+                "account_data_read": False,
+                "order_api_called": False,
+                "prefix_modified": False,
+            }}
+
+
 def execute(command):
     action = command.get("action")
     if action == "status":
@@ -900,6 +957,8 @@ def execute(command):
         return m029_branch_divergence_report()
     if action == "m029_stage3b_known_runtime_probe":
         return m029_stage3b_known_runtime_probe()
+    if action == "m029_stage3b_isolated_python_inventory":
+        return m029_stage3b_isolated_python_inventory()
     if action == "sync":
         return git_sync()
     if action == "switch_branch":
