@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-20261112-stage3b-blocked-handoff-status-v1",
-  "action": "status",
+  "id": "mamba2-20261112-stage3b-divergence-audit-v1",
+  "action": "m029_branch_divergence_report",
   "args": {},
   "requested_by": "chatgpt"
 }
