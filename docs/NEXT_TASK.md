@@ -1,6 +1,6 @@
 # Next Authorized Task
 
-## M029 — Stage 3A accepted; Stage 3B read-only bridge is pending authorization
+## M029 — Stage 3B preflight attempted; import-only smoke blocked by missing isolated runtime
 
 Branch: `prospective-paper-recovery`. Do not merge or promote to `main`.
 
@@ -26,10 +26,41 @@ freeze SHA `c74ca08fe32bf9ac9954cee5b033f808f3932ddd`.
 - Reported isolated Wine 11.21/Windows 11 terminal launch success is GUI
   evidence ONLY. Python MT5 import/broker API compatibility remains unknown.
 
-### Next gate — Stage 3B, NOT YET AUTHORIZED
+### Stage 3B preflight evidence — 2026-11-12
 
-When a subsequent explicit authorization is given, the next safest sequence
-is **bounded and read-only**, stopping on any unsuccessful step:
+The operator's next "go" authorized the **first Stage-3B read-only
+environment preflight and import-only smoke test**, not a broker connection.
+
+Two allowlisted workstation checks ran without invoking Wine/MT5:
+- `mamba2-20261112-stage3b-isolated-preflight-v1` (result on
+  `local-control-results` at `e97616f2200fd9ea9f717c40aff4069fb34ed3e2`):
+  detected only system Wine 9.0, one older Windows 10 backup prefix,
+  **no isolated Wine 11.21 binary or separate Python bridge** in the
+  bounded standard candidate paths.
+- `mamba2-20261112-stage3b-targeted-discovery-v1` (result on
+  `local-control-results` at `219898b7d142ed32097e2831be9f46e59bd10dfa`):
+  found no further Wine executable, isolated prefix, bridge Python or
+  installed WineHQ package in the bounded locations checked. The search
+  reached its **3,000-directory** limit and is **not exhaustive**.
+
+**STATUS: BLOCKED AT ENVIRONMENT DISCOVERY.** The reported isolated Wine
+11.21 GUI test is not disputed, but its binary and prefix locations are not
+yet established in the current local-agent environment. No Python import
+was attempted; no broker/data tests were performed.
+
+Do not silently fall back to Wine 9.0, the original `~/.mt5` prefix or
+`.venv-wine`. The next step is to obtain the actual isolated Wine 11.21
+executable path and isolated prefix directory, and establish whether a
+separate Python 3.10 interpreter exists there. If the ephemeral test
+environment was deleted, a separately isolated bridge must be recreated
+before any import check.
+
+### Next gate — Stage 3B, import-only smoke not yet executed
+
+Once the isolated runtime paths are established, the remaining sequence is
+**bounded and read-only**, stopping on any unsuccessful step. The user's
+current authorization covers environment preflight/import-only, not broker
+initialization or quote/margin reads:
 
 1. **Environment preflight:** inspect only isolated Wine 11.21 Staging and
    copied Windows 11 compatibility prefix, separate bridge interpreter and
