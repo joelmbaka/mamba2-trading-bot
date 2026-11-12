@@ -967,3 +967,29 @@ The operational Stage-3 protocol and acceptance are documented in
 Stage **3B** real read-only connectivity is pending separate authorization.
 Stage **3C** paper decisions/scheduling remain unauthorized. December
 7, 2026 at 12:00–12:10 UTC remains a prospective window only.
+
+## 2026-11-12 — Stage 3B isolated runtime preflight BLOCKED
+
+Under the user's "go" instruction, only the noninvasive environment
+preflight and import-only test preparation were attempted. Stage-3B
+connectivity, quote/margin reads and Stage-3C paper decisions were not run.
+
+Read-only local-control results:
+- `e97616f2200fd9ea9f717c40aff4069fb34ed3e2`:
+  standard-path preflight detected only system Wine 9.0 and an older
+  Windows 10 backup prefix; no separate Wine 11.21 Python bridge.
+- `219898b7d142ed32097e2831be9f46e59bd10dfa`:
+  bounded targeted discovery inspected 3,000 directories (limit reached)
+  and found no further isolated Wine 11.21 executable/prefix, Python
+  interpreter or installed WineHQ staging package in the paths examined.
+
+This does not contradict the operator's prior isolated MT5 GUI smoke test:
+that environment may be at another path or may have been temporary.
+The executable/prefix identity is not yet established.
+
+**No Python MetaTrader5 import was executed.** Never substitute the
+existing system Wine 9.0/`~/.mt5` setup. Resume import-only checks only
+once the isolated Wine executable, prefix and bridge interpreter have
+been located or provisioned in a separate environment. No broker
+initialization, account data, market quotes, credentials, source downloads,
+strategy signals, paper decisions, trading orders or scheduling occurred.
