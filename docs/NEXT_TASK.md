@@ -2,7 +2,7 @@
 
 Date: 2026-11-12
 Branch: `scalping-recovery`
-Status: PLANNING / READ-ONLY AUDIT FIRST
+Status: M030 STAGE 0 SOURCE AUDIT DOCUMENTED — CODE/EXECUTION NOT AUTHORIZED
 
 ## Owner-approved strategy direction
 
@@ -14,7 +14,7 @@ Restore **intraday Forex scalping** as the primary Mamba2 research objective:
 - Do not interpret a target near 50% win rate as sufficient: also require positive net expectancy *after* costs, robustness and acceptable drawdown.
 - Do not modify real production trading behavior, enable MT5 orders, or change trading account credentials.
 
-## Stage 0 — mandatory audit (this is the ONLY currently authorized implementation scope)
+## Stage 0 — GitHub source audit completed; workstation evidence outstanding
 
 1. Confirm the local checkout on `scalping-recovery`, a clean worktree and 0/0 divergence with `origin/scalping-recovery`.
 2. Read `AGENTS.md`, `docs/BACKTEST_SEMANTICS.md`, `docs/WORKFLOW.md`, `docs/CURRENT_STATE.md`, and M019–M024 milestone records.
@@ -24,6 +24,12 @@ Restore **intraday Forex scalping** as the primary Mamba2 research objective:
 6. Design an independent Python-vs-MT5 trade-level parity contract: same historical input, UTC decision/fill times, symbol digits/point/pip conventions, price, volume, protective orders, modifications, exit reason, raw cost and converted P/L. Define exact matches where possible and tolerances / expected differences for tick-vs-OHLC cases. Include first-divergence report and screenshot/journal evidence.
 7. Identify a single fixed one-symbol one-day sample plus adversarial examples (wide spread, SL/TP in same M1 bar, trailing modification, rollover) *before* looking at comparative outcomes. Then propose a deterministic expansion set.
 8. Report the exact paths requiring future changes, test plan, constraints and milestone gates. No economic optimization at this stage.
+
+## Stage 0 source audit outcome
+
+Read `docs/milestones/030-scalping-parity-audit.md`. It identifies historical M1/M5 implementation, priority signal/fill/trailing/cost risks, real-tick versus OHLC limitations, an independent Python-vs-MT5 trade-event ledger, and the proposed fixed EURUSD 2026-09-10 UTC one-day test window.
+
+The read-only GitHub audit and operating-contract documentation were completed. **No code was executed**, so no claims of parity, historical tick completeness, MT5 tester compatibility, or visual result matching have been made. Next workstation evidence collection must be delegated to Codex, not the local-control mailbox, and must be explicitly scoped to read-only preflight before any test EA runs or simulated trade execution.
 
 ## Later stages — NOT YET AUTHORIZED
 
