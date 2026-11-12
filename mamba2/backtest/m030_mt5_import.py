@@ -42,8 +42,16 @@ def convert_decision_csv(path: str | Path, *, verified_server_utc_offset_minutes
             m5_open = _server_datetime(row["m5_source_open"], verified_server_utc_offset_minutes)
             if (boundary - opening) != timedelta(minutes=1):
                 raise ValueError("M1 decision does not use most recently completed candle")
-            if (boundary - m5_open) < timedelta(minutes=5):
+            # At a minute boundary the most recent *completed* M5 bar is
+            # the bar beginning one M5 interval before its aligned close.
+            m5_boundary = boundary.replace(
+                minute=(boundary.minute // 5) * 5, second=0, microsecond=0
+            )
+            expected_m5_open = m5_boundary - timedelta(minutes=5)
+            if m5_open > expected_m5_open:
                 raise ValueError("M5 bar is not completed")
+            if m5_open != expected_m5_open:
+                raise ValueError("M5 source bar is stale or misaligned")
             if previous is not None and boundary <= previous:
                 raise ValueError("duplicate or nonmonotonic tester boundary")
             previous = boundary
