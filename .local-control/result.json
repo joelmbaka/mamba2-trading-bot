@@ -1,21 +1,17 @@
 {
   "version": 1,
-  "command_id": "mamba2-20261112-stage3b-isolated-python-inventory-v1",
-  "completed_at": "2026-11-12T10:44:00.283659+00:00",
+  "command_id": "mamba2-20261112-stage3b-python-gap-status-v1",
+  "completed_at": "2026-11-12T10:46:01.226069+00:00",
   "ok": true,
-  "action": "m029_stage3b_isolated_python_inventory",
+  "action": "status",
   "data": {
-    "read_only": true,
-    "isolated_root_only": true,
-    "directories_examined": 334,
-    "inventory_limit_reached": false,
-    "python_executables": [],
-    "python_available": false,
-    "mt5_initialized": false,
-    "python_import_attempted": false,
-    "broker_quote_read": false,
-    "account_data_read": false,
-    "order_api_called": false,
-    "prefix_modified": false
+    "hostname": "joel-OptiPlex-7080",
+    "repo": "/home/joel/Dev/mamba2-trading-bot",
+    "branch": "prospective-paper-recovery",
+    "head": "06d903633d5b7089c194c610aafb40c563dab4a5",
+    "clean": true,
+    "changed_paths": [],
+    "divergence": "0\t0",
+    "time": "2026-11-12T10:45:54.973357+00:00"
   }
 }
