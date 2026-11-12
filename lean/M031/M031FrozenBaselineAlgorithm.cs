@@ -132,6 +132,8 @@ public sealed class M031FrozenBaselineAlgorithm : QCAlgorithm
              _totalAskCount != 389448))
             throw new InvalidOperationException(
                 $"incomplete original indicator prefix: M1={_m1Stochastic.Count}, M5={_m5Stochastic.Count}, Ask={_totalAskCount}");
+        if (_m5Stochastic.LastEndTime.HasValue && _m5Stochastic.LastEndTime.Value > boundary)
+            throw new InvalidOperationException("future incomplete M5 bar was exposed at decision boundary");
         if (_lastAskOpen != sourceOpen)
             throw new InvalidOperationException("canonical Ask minute missing at boundary " + Iso(boundary));
         if (_lastBoundary != DateTime.MinValue && boundary != _lastBoundary.AddMinutes(1))
@@ -308,6 +310,7 @@ public sealed class M031FrozenBaselineAlgorithm : QCAlgorithm
         private readonly List<Bar> _bars = new();
         private readonly List<decimal> _kHistory = new();
         public DateTime? LastSourceTime => _bars.Count == 0 ? null : _bars[^1].Time;
+        public DateTime? LastEndTime => _bars.Count == 0 ? null : _bars[^1].EndTime;
         public int Count => _bars.Count;
         public bool Ready => _bars.Count >= 21 + 7 + 7;
         public decimal K => _kHistory.Count == 0 ? 0m : _kHistory[^1];
