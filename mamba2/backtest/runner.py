@@ -69,6 +69,11 @@ class BacktestRunner:
         event_sink: Any | None = None,
     ):
         self.event_sink = event_sink
+        if event_sink is not None:
+            existing_sink = getattr(broker, "event_sink", None)
+            if existing_sink is not None and existing_sink is not event_sink:
+                raise ValueError("broker and runner must share the same M030 event sink")
+            broker.event_sink = event_sink
         self.feed = feed
         self.broker = broker
         self.strategy = strategy
@@ -209,6 +214,11 @@ class PortfolioBacktestRunner:
         event_sink: Any | None = None,
     ):
         self.event_sink = event_sink
+        if event_sink is not None:
+            existing_sink = getattr(broker, "event_sink", None)
+            if existing_sink is not None and existing_sink is not event_sink:
+                raise ValueError("broker and runner must share the same M030 event sink")
+            broker.event_sink = event_sink
         self.feed = feed
         self.broker = broker
         self.strategies = tuple(strategies)
