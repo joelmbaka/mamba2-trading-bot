@@ -6,7 +6,6 @@ using System;
 using System.Globalization;
 using QuantConnect;
 using QuantConnect.Data;
-using QuantConnect.Data.UniverseSelection;
 
 namespace Mamba2.M031;
 
@@ -51,11 +50,16 @@ public abstract class M031CsvBar : BaseData
             CultureInfo.InvariantCulture, out var unixSeconds))
             return null!;
 
+        // LEAN may request the same full-file source for successive UTC days.
+        // Emit only that day\x27s bar: otherwise daily source renewal can replay
+        // earlier history and invalidate first-source EMA and event counts.
+        var timestamp = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime;
+        if (timestamp.Date != date.Date) return null!;
+
         var open = decimal.Parse(fields[1], CultureInfo.InvariantCulture);
         var high = decimal.Parse(fields[2], CultureInfo.InvariantCulture);
         var low = decimal.Parse(fields[3], CultureInfo.InvariantCulture);
         var close = decimal.Parse(fields[4], CultureInfo.InvariantCulture);
-        var timestamp = DateTimeOffset.FromUnixTimeSeconds(unixSeconds).UtcDateTime;
 
         var result = Create();
         result.Symbol = config.Symbol;
@@ -65,6 +69,7 @@ public abstract class M031CsvBar : BaseData
         result.High = high;
         result.Low = low;
         result.Close = close;
+        result.Value = close; // Required BaseData price for LEAN custom subscriptions.
         result.TickVolume = fields.Length > 5 ? long.Parse(fields[5], CultureInfo.InvariantCulture) : 0;
         result.Spread = fields.Length > 6 ? long.Parse(fields[6], CultureInfo.InvariantCulture) : 0;
         result.RealVolume = fields.Length > 7 ? long.Parse(fields[7], CultureInfo.InvariantCulture) : 0;
