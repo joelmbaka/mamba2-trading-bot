@@ -1,23 +1,21 @@
 {
   "version": 1,
-  "command_id": "mamba2-20261112-stage3b-known-runtime-v1",
-  "completed_at": "2026-11-12T10:42:18.837975+00:00",
+  "command_id": "mamba2-20261112-stage3b-isolated-python-inventory-v1",
+  "completed_at": "2026-11-12T10:44:00.283659+00:00",
   "ok": true,
-  "action": "m029_stage3b_known_runtime_probe",
+  "action": "m029_stage3b_isolated_python_inventory",
   "data": {
-    "wine_version": "wine-11.21 (Staging)",
-    "wine_binary": "/home/joel/.local/share/mamba2-mt5-wine1121/runtime/opt/wine-staging/bin/wine",
-    "wine_prefix": "/home/joel/.local/share/mamba2-mt5-wine1121/prefix",
-    "isolated_terminal_present": true,
-    "prefix_windows_product": "Microsoft Windows 11",
-    "python_candidates": [],
-    "isolated_bridge_python_present": false,
-    "wine_terminal_started": false,
-    "python_import_attempted": false,
+    "read_only": true,
+    "isolated_root_only": true,
+    "directories_examined": 334,
+    "inventory_limit_reached": false,
+    "python_executables": [],
+    "python_available": false,
     "mt5_initialized": false,
-    "account_data_read": false,
+    "python_import_attempted": false,
     "broker_quote_read": false,
+    "account_data_read": false,
     "order_api_called": false,
-    "prefix_modified_by_probe": false
+    "prefix_modified": false
   }
 }
