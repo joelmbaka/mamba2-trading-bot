@@ -87,3 +87,20 @@ def test_common_comparison_keys_and_outputs_are_present():
         "summary.json", "m030.events.v1",
     ):
         assert field in source
+
+
+
+def test_pinned_standalone_csproj_for_compilation_only():
+    from xml.etree import ElementTree
+
+    project = LEAN / "M031.csproj"
+    root = ElementTree.parse(project).getroot()
+    props = {child.tag: (child.text or "").strip() for group in root.findall("PropertyGroup") for child in group}
+    assert props["TargetFramework"] == "net10.0"
+    assert props["OutputType"] == "Library"
+    assert props["EnableDefaultCompileItems"] == "false"
+    assert props["RestorePackagesWithLockFile"] == "true"
+    packages = {elem.attrib["Include"]: elem.attrib["Version"] for elem in root.iter("PackageReference")}
+    assert packages == {"QuantConnect.Algorithm": "2.5.18248"}
+    included = {elem.attrib["Include"] for elem in root.iter("Compile")}
+    assert included == {"M031FrozenData.cs", "M031FrozenBaselineAlgorithm.cs"}
