@@ -1,54 +1,55 @@
 # Next Authorized Task
 
-## M028 — await first prospective paper decision
+## M028 — October forward-paper decision missed; do not backfill
 
-Current pre-decision feature SHA:
+Read-only audit date: **2026-11-12**.
 
-`499e088e8d77bdf7fff81f34b549ae93c5c7e8be`
+Evidence:
+- workstation `execution-realism` at `270d7c5e0e04b45ec2ce32b108cd2e7d334cdb3b`, clean, no divergence;
+- remote local-agent audit result: `5d1ccfd0460908946cc74cad36c6c712e81679a7`;
+- configured immutable record `~/.local/share/mamba2-forward-paper/2026-10-decision.json`: **ABSENT**;
+- configured forward-paper record directory: **ABSENT**;
+- no October paper signal, position target or forward outcome is supported by durable evidence;
+- no broker order, MT5 signal evaluation or strategy economics was invoked in this audit.
 
-Latest readiness result:
+The frozen October decision was scheduled for **2026-10-07T12:00:00Z**.
+It cannot now be reconstructed using later quotes or revised published sources.
+The November fifth-Monday-through-Friday decision (**2026-11-06T12:00:00Z**) is also past.
+Do **not** execute `m028_stage3_first_decision` to create a missing October record.
 
-`8b715961e58c2e8a56069d26c780db52d46b194c`
+Control safety interlock (not a strategy change):
+`6f1f71c219b7e4e1ef50f6392e4b902311ce9b99` on `local-control`
+refuses a post-October-7 first-decision command if no existing record exists.
 
-Current readiness:
+## Next authorized work — design M029 prospective recovery
 
-**SOURCE_NOT_READY**
+Before any new monthly signal or shadow position:
 
-Reason:
+1. Freeze a **new, named** M029 paper-validation protocol; preserve M027/M028
+   strategy, signal parameters, currency universe, leverage/margin caps and cost
+   evidence semantics, without inspecting any newly generated strategy outcomes.
+2. The earliest future fifth-Mon–Fri business-day decision is
+   **2026-12-07T12:00:00Z** (December 2026). This is only a proposed eligible
+   date until the M029 protocol and validation are accepted.
+3. Implement and test a **month-generic**, append-only prospective decision
+   machine with both an opening time and a missed-window refusal.
+4. Add a safe metadata-only readiness gate, never calculate strategy signals
+   ahead of a frozen decision timestamp, and never backfill October/November.
+5. Require source timestamps, immutable hashes, quote/margin viability and
+   reproducible synthetic tests before authorizing M029's first decision.
+6. Record decisions prospectively, one per month; do not claim strategy support
+   before 12 completed forward-paper months with cost limitations disclosed.
 
-- BIS currently reaches **2026-09-29**;
-- October requires BIS through **2026-09-30**;
-- OECD **2026-08** requirement already passes;
-- all eight fixed broker currencies currently pass quote+margin readiness.
+Until M029 is explicitly frozen and its implementation validated, the only
+permitted work is read-only status/evidence audit, documentation, synthetic
+tests and implementation of prospective safety controls. No paper decision,
+real broker order or strategy economic result is authorized.
 
-Before the scheduled decision, the only authorized action is:
+## Unchanged safety boundaries
 
-`m028_stage3_readiness`
-
-It may be rerun to check whether the fixed source gate has become ready. It
-must not compute formation signs, target sides/lots, or P/L.
-
-First decision timestamp:
-
-**2026-10-07T12:00:00Z**
-
-At or after that timestamp, run exactly:
-
-`m028_stage3_first_decision`
-
-The action is time-gated and append-only. It creates or returns the single
-`2026-10` decision record. Do not change parameters, sources, universe,
-leverage/margin caps, or timing before that run.
-
-After the first record exists, document its result before authorizing any
-holding-period mark or subsequent monthly decision.
-
-Safety remains:
-
-- paper/shadow only;
-- no real orders or position changes;
-- no trade-history/balance/equity reads;
-- no retrospective M028 net economics;
-- no M027 rerun;
+- paper/shadow only, **no real orders**;
+- no position changes, MT5 order-check/order-send, or trade history reads;
+- no retrospective M028 net-economics claim;
+- no M027 economics rerun or parameter retune;
 - no M021 post-cutoff outcome use;
 - no merge/deploy/live promotion.
