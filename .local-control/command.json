@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "id": "mamba2-20261112-m029-final-status-v1",
-  "action": "status",
+  "id": "mamba2-20261112-mt5-wine-readonly-diagnostic-v1",
+  "action": "diagnose_mt5_wine_compat",
   "args": {},
   "requested_by": "chatgpt"
 }
